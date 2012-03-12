@@ -1,0 +1,106 @@
+Here are some thoughts I've been having about my next step: a Window Manager.
+
+(N.B. These will be moved once I've started my window manager repository.)
+
+Desktop model
+=============
+Each physical head contains one and only one workspace. Every window belongs
+to one and only one workspace OR belongs to all of them.
+
+Any workspace can appear on any single physical head.
+
+(Possible variation: each physical head has an enforced and defined set of
+                     available workspaces. This make "next/prev workspace"
+                     commands sensible again.)
+
+I like the former. I'll only implement the latter if it doesn't require
+significant added complexity to the code.
+
+Modal
+=====
+A window/workspace is always in one of three states: floating, auto tiling or
+manual tiling. (I may only implement 'floating' and 'auto tiling' at first.)
+
+If a workspace is in state X then... X is its "default" state. Implying that
+if a new window is added to this workspace, it is automatically put into
+state X. The only exception is when the window has been tagged with EITHER 
+"float" or "sticky". ('float' means the window can never be moved out of the 
+floating state unless 'float' is unset by the user, and 'sticky' means the 
+window appears on all desktops and thus cannot be in any state BUT 'float'.)
+
+Each 'state' corresponds to an implementation of 'layout' (i.e., an 
+interface!). Thus, every layout must conform to some minimal spec of methods. 
+For example, moving and/or resizing a window. Namely, the methods in the
+'layout' interface should probably correspond to precisely the methods that
+workspaces and clients need to call. That is, workspaces and clients needn't
+be aware of the particular implementation of a layout.
+
+Each implementation of 'layout' also conforms to one of three other
+interfaces: 'Floater', 'AutoTiler', and 'ManualTiler'. Namely, each of the
+aforementioned interfaces are more specific 'layouts' that define methods
+specific to each layout type. For example, 'AutoTiler' would provide a method
+called 'IncreaseMaster' while 'Floater' and 'ManualTiler' would not.
+
+
+State
+=====
+How do we tie the above model together? Here's my current idea:
+
+Clients
+-------
+Clients are 'tagged' with attributes. For example, to get all clients on
+workspace 5, use: (where clients is a slice)
+
+  for _, client := range clients {
+    if client.workspace == 5 {
+      // do something with client on workspace 5 here
+    }
+  }
+
+(N.B. I think I can provide nice iterators using channels. I'll have to look
+      into that.)
+
+Additionally, no other state regarding clients is kept. No lists of clients
+in tilers or desktops. (I made this mistake of overengineering/overoptimizing
+and it ended up being a complexity nightmare.)
+
+Workspaces
+----------
+Workspaces should be managed as a global map of workspace number to some
+workspace struct. The workspace struct should contain the workspace name 
+(provide a default name if one isn't available/given), along with its default 
+state as a constant. It should also contain a layout index (explained below) 
+that will allow us to find the implementation of the current state.
+
+Layouts
+-------
+There can be several different implementations of each layout. This applies 
+especially to 'AutoTiler', but probably not so much with 'Floater'. There may 
+be a couple variations to 'ManualTiler'.
+
+In order to keep track of which implementation is active, each workspace will
+have a 'layout index' property. It will be an index into one of three slices
+in the workspace struct: Floater implementations, AutoTiler implementations, 
+and ManualTiler implementations. Thus, the 'state' and 'layout index' 
+properties completely determine which layout implementation is 'active'. (The 
+'floater' implementation is special in that it is always active for windows 
+that can only be in a floating state.)
+
+Note that each layout implementation typically needs to keep some kind of state 
+(but not necessarily). Therefore, there must be one instance of each 
+implementation attached to each workspace. Also note that layout 
+implementations may violate our constraint that state of each client is 
+maintained only in the client. This adds some complexity, but we can handle it 
+with a hammer: whenever a window is added or removed from a workspace and does 
+not have the 'float' or 'sticky' properties set, it will be correspondingly 
+added or removed from EVERY layout implementation, sans floating.
+If a window switches from a 'float' or 'sticky' state, this operation is also 
+run. This way, we can be reasonably sure that we never have stale state.
+
+The exception here is the 'floater' implementation. It does not need state and 
+can find all of its corresponding windows using the 'state' property in its 
+workspace and the 'float'/'sticky' tags in the client windows list. This line 
+of reasoning starting with 'floater is the exception' will be a constant theme 
+throughout the design of our window manager. It's special and deserves to be 
+treated as such.
+
