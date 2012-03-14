@@ -1,7 +1,6 @@
 package main
 
 import (
-    "log"
     "os"
     "os/exec"
 )
@@ -15,34 +14,31 @@ import (
     "github.com/BurntSushi/xgbutil/xwindow"
 )
 
-// state is the master singleton the carries all window manager related state
-type state struct {
-    clients []*client
-}
-
 // global variables!
 var X *xgbutil.XUtil
 var WM *state
 
 func quit() {
-    log.Println("The User has told us to quit.")
+    logMessage.Println("The User has told us to quit.")
     os.Exit(0)
 }
 
 func konsole() {
-    print("Konsole time\n")
     exec.Command("konsole").Start()
 }
 
 func main() {
     var err error
-    X, err = xgbutil.Dial(":10")
+    X, err = xgbutil.Dial("")
     if err != nil {
-        log.Println(err)
-        log.Println("Error connecting to X, quitting...")
+        logError.Println(err)
+        logError.Println("Error connecting to X, quitting...")
         return
     }
     defer X.Conn().Close()
+
+    // Create WM state
+    WM = newState()
 
     // Allow key bindings to do their thang
     keybind.Initialize(X)
@@ -64,6 +60,16 @@ func main() {
         func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
             konsole()
     }).Connect(X, X.RootWin(), "Mod4-j")
+
+    keybind.KeyPressFun(
+        func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+            WM.logClientList()
+    }).Connect(X, X.RootWin(), "Mod4-l")
+
+    keybind.KeyPressFun(
+        func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+            cmd_close_active()
+    }).Connect(X, X.RootWin(), "Mod4-c")
 
     xevent.Main(X)
 }
