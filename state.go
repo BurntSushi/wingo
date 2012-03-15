@@ -62,6 +62,7 @@ func (wm *state) fallback() {
     for i := len(wm.focus) - 1; i >= 0; i-- {
         c = wm.focus[i]
         if c.mapped() {
+            logMessage.Printf("Focus falling back to %s", c)
             c.focus()
             return
         }

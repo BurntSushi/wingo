@@ -122,10 +122,10 @@ func (c *abstractClient) manage() {
     c.window.listen(xgb.EventMaskPropertyChange)
 
     // attach some event handlers
-    xevent.PropertyNotifyFun(
-        func(X *xgbutil.XUtil, ev xevent.PropertyNotifyEvent) {
-            c.updateProperty(ev)
-    }).Connect(X, c.window.id)
+    // xevent.PropertyNotifyFun( 
+        // func(X *xgbutil.XUtil, ev xevent.PropertyNotifyEvent) { 
+            // c.updateProperty(ev) 
+    // }).Connect(X, c.window.id) 
     xevent.UnmapNotifyFun(
         func(X *xgbutil.XUtil, ev xevent.UnmapNotifyEvent) {
             if !c.isMapped {
@@ -140,10 +140,10 @@ func (c *abstractClient) manage() {
             c.unmapped()
             c.unmanage()
     }).Connect(X, c.window.id)
-    xevent.DestroyNotifyFun(
-        func(X *xgbutil.XUtil, ev xevent.DestroyNotifyEvent) {
-            c.unmanage()
-    }).Connect(X, c.window.id)
+    // xevent.DestroyNotifyFun( 
+        // func(X *xgbutil.XUtil, ev xevent.DestroyNotifyEvent) { 
+            // c.unmanage() 
+    // }).Connect(X, c.window.id) 
 
     // If the initial state isn't iconic or is absent, then we can map
     if c.hints.Flags & icccm.HintState == 0 ||
@@ -180,6 +180,9 @@ func (c *abstractClient) unmapped() {
 }
 
 func (c *abstractClient) close_() {
+    X.Grab()
+    defer X.Ungrab()
+
     if strIndex("WM_DELETE_WINDOW", c.protocols) > -1 {
         wm_protocols, err := xprop.Atm(X, "WM_PROTOCOLS")
         if err != nil {
@@ -204,6 +207,8 @@ func (c *abstractClient) close_() {
     } else {
         c.window.kill()
     }
+
+    c.unmanage()
 }
 
 func (c *abstractClient) focus() {
