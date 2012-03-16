@@ -53,9 +53,9 @@ func newFrameNada(child *window) (*frameNada, error) {
 func (f *frameNada) destroy() {
     // Unparent before destroying the parent window so we don't kill
     // the client prematurely.
-    X.Conn().ReparentWindow(f.parent.child.id, X.RootWin(),
-                            f.parent.window.geom.X(),
-                            f.parent.window.geom.Y())
+    // X.Conn().ReparentWindow(f.parent.child.id, X.RootWin(), 
+                            // f.parent.window.geom.X(), 
+                            // f.parent.window.geom.Y()) 
     f.parent.window.destroy()
 }
 

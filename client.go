@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    // "time" 
 )
 
 import "code.google.com/p/jamslam-x-go-binding/xgb"
@@ -35,6 +36,7 @@ type abstractClient struct {
     frm frame
     name string
     isMapped bool
+    initialMap bool
     lastTime uint32
     unmapIgnore int
     hints *icccm.Hints
@@ -46,6 +48,9 @@ type normalClient struct {
 }
 
 func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
+    X.Grab()
+    defer X.Ungrab()
+
     client, err := newNormalClient(ev.Window)
     if err != nil {
         logWarning.Printf("Could not manage window %X because: %v\n",
@@ -90,6 +95,7 @@ func newAbstractClient(id xgb.Id) (*abstractClient, error) {
         frm: nil,
         name: name,
         isMapped: false,
+        initialMap: false,
         lastTime: 0,
         unmapIgnore: 0,
         hints: &hints,
@@ -100,9 +106,6 @@ func newAbstractClient(id xgb.Id) (*abstractClient, error) {
 // manage sets everything up to bring a client window into window management.
 // It is still possible for us to bail.
 func (c *abstractClient) manage() {
-    X.Grab()
-    defer X.Ungrab()
-
     // time for reparenting
     var err error
     c.frm, err = newFrameNada(c.window)
@@ -119,13 +122,14 @@ func (c *abstractClient) manage() {
     WM.clientAdd(c)
     WM.focusAdd(c)
 
-    c.window.listen(xgb.EventMaskPropertyChange)
+    c.window.listen(xgb.EventMaskPropertyChange |
+                    xgb.EventMaskStructureNotify)
 
     // attach some event handlers
-    // xevent.PropertyNotifyFun( 
-        // func(X *xgbutil.XUtil, ev xevent.PropertyNotifyEvent) { 
-            // c.updateProperty(ev) 
-    // }).Connect(X, c.window.id) 
+    xevent.PropertyNotifyFun(
+        func(X *xgbutil.XUtil, ev xevent.PropertyNotifyEvent) {
+            c.updateProperty(ev)
+    }).Connect(X, c.window.id)
     xevent.UnmapNotifyFun(
         func(X *xgbutil.XUtil, ev xevent.UnmapNotifyEvent) {
             if !c.isMapped {
@@ -140,10 +144,10 @@ func (c *abstractClient) manage() {
             c.unmapped()
             c.unmanage()
     }).Connect(X, c.window.id)
-    // xevent.DestroyNotifyFun( 
-        // func(X *xgbutil.XUtil, ev xevent.DestroyNotifyEvent) { 
-            // c.unmanage() 
-    // }).Connect(X, c.window.id) 
+    xevent.DestroyNotifyFun(
+        func(X *xgbutil.XUtil, ev xevent.DestroyNotifyEvent) {
+            c.unmanage()
+    }).Connect(X, c.window.id)
 
     // If the initial state isn't iconic or is absent, then we can map
     if c.hints.Flags & icccm.HintState == 0 ||
@@ -157,6 +161,7 @@ func (c *abstractClient) unmanage() {
         c.unmapped()
     }
 
+    c.frm.destroy()
     WM.focusRemove(c)
     xevent.Detach(X, c.window.id)
     WM.clientRemove(c)
@@ -180,9 +185,6 @@ func (c *abstractClient) unmapped() {
 }
 
 func (c *abstractClient) close_() {
-    X.Grab()
-    defer X.Ungrab()
-
     if strIndex("WM_DELETE_WINDOW", c.protocols) > -1 {
         wm_protocols, err := xprop.Atm(X, "WM_PROTOCOLS")
         if err != nil {
