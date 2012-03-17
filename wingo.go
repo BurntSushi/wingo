@@ -1,8 +1,10 @@
 package main
 
 import (
-    "os"
+    // "log" 
+    // "os" 
     "os/exec"
+    // "runtime/pprof" 
 )
 
 import "code.google.com/p/jamslam-x-go-binding/xgb"
@@ -10,6 +12,7 @@ import "code.google.com/p/jamslam-x-go-binding/xgb"
 import (
     "github.com/BurntSushi/xgbutil"
     "github.com/BurntSushi/xgbutil/keybind"
+    "github.com/BurntSushi/xgbutil/mousebind"
     "github.com/BurntSushi/xgbutil/xevent"
     "github.com/BurntSushi/xgbutil/xwindow"
 )
@@ -20,7 +23,7 @@ var WM *state
 
 func quit() {
     logMessage.Println("The User has told us to quit.")
-    os.Exit(0)
+    X.Quit()
 }
 
 func konsole() {
@@ -29,6 +32,14 @@ func konsole() {
 
 func main() {
     var err error
+
+    // f, err := os.Create("zzz.prof") 
+    // if err != nil { 
+        // log.Fatal(err) 
+    // } 
+    // pprof.StartCPUProfile(f) 
+    // defer pprof.StopCPUProfile() 
+
     X, err = xgbutil.Dial("")
     if err != nil {
         logError.Println(err)
@@ -40,8 +51,9 @@ func main() {
     // Create WM state
     WM = newState()
 
-    // Allow key bindings to do their thang
+    // Allow key and mouse bindings to do their thang
     keybind.Initialize(X)
+    mousebind.Initialize(X)
 
     // Listen to Root. It is all-important.
     xwindow.Listen(X, X.RootWin(), xgb.EventMaskPropertyChange |
@@ -50,6 +62,9 @@ func main() {
 
     // Oblige map request events
     xevent.MapRequestFun(clientMapRequest).Connect(X, X.RootWin())
+
+    // Oblige configure requests from windows we don't manage.
+    xevent.ConfigureRequestFun(configureRequest).Connect(X, X.RootWin())
 
     keybind.KeyPressFun(
         func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {

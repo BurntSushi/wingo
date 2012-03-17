@@ -11,12 +11,14 @@ import (
     "github.com/BurntSushi/xgbutil"
     "github.com/BurntSushi/xgbutil/ewmh"
     "github.com/BurntSushi/xgbutil/icccm"
+    "github.com/BurntSushi/xgbutil/mousebind"
     "github.com/BurntSushi/xgbutil/xevent"
     "github.com/BurntSushi/xgbutil/xprop"
-    // "github.com/BurntSushi/xgbutil/xwindow" 
+    "github.com/BurntSushi/xgbutil/xwindow"
 )
 
 type client interface {
+    alive() bool
     close_()
     focus()
     frame() frame
@@ -24,6 +26,7 @@ type client interface {
     manage()
     map_()
     mapped() bool
+    win() *window
 
     String() string
 }
@@ -75,19 +78,25 @@ func newNormalClient(id xgb.Id) (*normalClient, error) {
 func newAbstractClient(id xgb.Id) (*abstractClient, error) {
     hints, err := icccm.WmHintsGet(X, id)
     if err != nil {
-        return nil, err
+        logWarning.Println(err)
+        logMessage.Printf("Using reasonable defaults for WM_HINTS for %X", id)
+        hints = icccm.Hints{
+            Flags: icccm.HintInput | icccm.HintState,
+            Input: 1,
+            InitialState: icccm.StateNormal,
+        }
     }
 
     protocols, err := icccm.WmProtocolsGet(X, id)
     if err != nil {
-        return nil, err
+        logWarning.Printf("Window %X does not have WM_PROTOCOLS set.", id)
+        protocols = []string{}
     }
 
     name, err := ewmh.WmNameGet(X, id)
     if err != nil {
         name = "N/A"
-        logWarning.Printf("Could not find name for window %X, using 'N/A'.",
-                          id)
+        logWarning.Printf("Could not find name for window %X, using 'N/A'.", id)
     }
 
     return &abstractClient{
@@ -108,7 +117,7 @@ func newAbstractClient(id xgb.Id) (*abstractClient, error) {
 func (c *abstractClient) manage() {
     // time for reparenting
     var err error
-    c.frm, err = newFrameNada(c.window)
+    c.frm, err = newFrameNada(c)
     if err != nil {
         logWarning.Printf("Could not manage window %X because we could not " +
                           "get its geometry. The reason given: %s",
@@ -130,6 +139,11 @@ func (c *abstractClient) manage() {
         func(X *xgbutil.XUtil, ev xevent.PropertyNotifyEvent) {
             c.updateProperty(ev)
     }).Connect(X, c.window.id)
+    xevent.ConfigureRequestFun(
+        func(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
+            c.frm.configure(ev.ValueMask, ev.X, ev.Y, ev.Width, ev.Height,
+                            ev.Sibling, ev.StackMode)
+    }).Connect(X, c.window.id)
     xevent.UnmapNotifyFun(
         func(X *xgbutil.XUtil, ev xevent.UnmapNotifyEvent) {
             if !c.isMapped {
@@ -149,11 +163,50 @@ func (c *abstractClient) manage() {
             c.unmanage()
     }).Connect(X, c.window.id)
 
+    c.setupMoveDrag(c.frm.parentWin().window.id, "Mod4-1")
+    c.setupResizeDrag(c.frm.parentWin().window.id, "Mod4-3")
+
     // If the initial state isn't iconic or is absent, then we can map
     if c.hints.Flags & icccm.HintState == 0 ||
        c.hints.InitialState != icccm.StateIconic {
         c.map_()
     }
+}
+
+// setupMoveDrag does the boiler plate for registering this client's
+// "move" drag.
+func (c *abstractClient) setupMoveDrag(dragWin xgb.Id, buttonStr string) {
+    dStart := xgbutil.MouseDragFun(
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
+            c.frm.moveBegin(rx, ry, ex, ey)
+    })
+    dStep := xgbutil.MouseDragFun(
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
+            c.frm.moveStep(rx, ry, ex, ey)
+    })
+    dEnd := xgbutil.MouseDragFun(
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
+            c.frm.moveEnd(rx, ry, ex, ey)
+    })
+    mousebind.Drag(X, dragWin, buttonStr, dStart, dStep, dEnd)
+}
+
+// setupResizeDrag does the boiler plate for registering this client's
+// "resize" drag.
+func (c *abstractClient) setupResizeDrag(dragWin xgb.Id, buttonStr string) {
+    dStart := xgbutil.MouseDragFun(
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
+            c.frm.resizeBegin(rx, ry, ex, ey)
+    })
+    dStep := xgbutil.MouseDragFun(
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
+            c.frm.resizeStep(rx, ry, ex, ey)
+    })
+    dEnd := xgbutil.MouseDragFun(
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
+            c.frm.resizeEnd(rx, ry, ex, ey)
+    })
+    mousebind.Drag(X, dragWin, buttonStr, dStart, dStep, dEnd)
 }
 
 func (c *abstractClient) unmanage() {
@@ -211,6 +264,14 @@ func (c *abstractClient) close_() {
     }
 
     c.unmanage()
+}
+
+func (c *abstractClient) alive() bool {
+    _, err := xwindow.RawGeometry(X, c.window.id)
+    if err != nil {
+        return false
+    }
+    return true
 }
 
 func (c *abstractClient) focus() {
@@ -291,6 +352,10 @@ func (c *abstractClient) id() xgb.Id {
 
 func (c *abstractClient) mapped() bool {
     return c.isMapped
+}
+
+func (c *abstractClient) win() *window {
+    return c.window
 }
 
 func (c *abstractClient) String() string {

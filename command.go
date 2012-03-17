@@ -4,9 +4,7 @@ package main
 func cmd_close_active() {
     focused := WM.focused()
     if focused != nil {
-        logMessage.Printf("### Should be umanaging %s", focused)
         focused.close_()
-        logMessage.Printf("### Did we?")
     }
 }
 

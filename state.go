@@ -6,6 +6,10 @@ import (
 
 import "code.google.com/p/jamslam-x-go-binding/xgb"
 
+import (
+    // "github.com/BurntSushi/xgbutil/xevent" 
+)
+
 // state is the master singleton the carries all window manager related state
 type state struct {
     clients []client // a list of clients in order of being added
@@ -61,7 +65,7 @@ func (wm *state) fallback() {
     var c client
     for i := len(wm.focus) - 1; i >= 0; i-- {
         c = wm.focus[i]
-        if c.mapped() {
+        if c.mapped() && c.alive() {
             logMessage.Printf("Focus falling back to %s", c)
             c.focus()
             return
@@ -70,6 +74,7 @@ func (wm *state) fallback() {
 
     // No windows to fall back on... root focus
     // this is IMPORTANT. if we fail here, we risk a lock-up
+    logMessage.Printf("Focus falling back to ROOT")
     X.Conn().SetInputFocus(xgb.InputFocusPointerRoot, X.RootWin(), 0)
 }
 
