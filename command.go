@@ -4,7 +4,7 @@ package main
 func cmd_close_active() {
     focused := WM.focused()
     if focused != nil {
-        focused.close_()
+        focused.Close()
     }
 }
 

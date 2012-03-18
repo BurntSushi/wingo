@@ -55,6 +55,9 @@ func main() {
     keybind.Initialize(X)
     mousebind.Initialize(X)
 
+    // Setup some cursors we use
+    setupCursors()
+
     // Listen to Root. It is all-important.
     xwindow.Listen(X, X.RootWin(), xgb.EventMaskPropertyChange |
                                    xgb.EventMaskSubstructureNotify |

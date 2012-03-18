@@ -79,6 +79,8 @@ func (w *window) focus() {
 // moveresize is a wrapper around configure that only accepts parameters
 // related to size and position.
 func (win *window) moveresize(flags uint16, x, y int16, w, h uint16) {
+    // Kill any hopes of stacking
+    flags = uint16((int16(flags) & ^DoSibling) & ^DoStack)
     win.configure(flags, x, y, w, h, xgb.Id(0), 0)
 }
 
@@ -111,6 +113,11 @@ func (win *window) configure(flags uint16, x, y int16, w, h uint16,
     }
     if DoStack & flags > 0 {
         vals = append(vals, uint32(stackMode))
+    }
+
+    // Don't send anything if we have nothing to send
+    if len(vals) == 0 {
+        return
     }
 
     X.Conn().ConfigureWindow(win.id, flags, vals)

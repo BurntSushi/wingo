@@ -7,67 +7,82 @@ import (
 import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 import (
-    // "github.com/BurntSushi/xgbutil/xevent" 
+    "github.com/BurntSushi/xgbutil/ewmh"
 )
 
 // state is the master singleton the carries all window manager related state
 type state struct {
-    clients []client // a list of clients in order of being added
-    stack []client // clients ordered by visual stack
-    focus []client // focus ordering of clients; may be smaller than 'clients'
+    clients []Client // a list of clients in order of being added
+    stack []Client // clients ordered by visual stack
+    focus []Client // focus ordering of clients; may be smaller than 'clients'
 }
 
 func newState() *state {
     return &state{
-        clients: make([]client, 0),
-        stack: make([]client, 0),
-        focus: make([]client, 0),
+        clients: make([]Client, 0),
+        stack: make([]Client, 0),
+        focus: make([]Client, 0),
     }
 }
 
-func (wm *state) clientAdd(c client) {
+func (wm *state) clientAdd(c Client) {
     if cliIndex(c, wm.clients) == -1 {
-        wm.clients = append(wm.clients, c)
         logMessage.Println("Managing new client:", c)
+        wm.clients = append(wm.clients, c)
+        wm.updateEwmhClients()
     } else {
         logMessage.Println("Already managing client:", c)
     }
 }
 
-func (wm *state) clientRemove(c client) {
+func (wm *state) clientRemove(c Client) {
     if i := cliIndex(c, wm.clients); i > -1 {
-        wm.clients = append(wm.clients[:i], wm.clients[i+1:]...)
         logMessage.Println("Unmanaging client:", c)
+        wm.clients = append(wm.clients[:i], wm.clients[i+1:]...)
+        wm.updateEwmhClients()
     }
 }
 
-func (wm *state) focused() client {
+func (wm *state) updateEwmhClients() {
+    numWins := len(wm.clients)
+    winList := make([]xgb.Id, numWins)
+    for i, c := range wm.clients {
+        winList[i] = c.Win().id
+    }
+    err := ewmh.ClientListSet(X, winList)
+    if err != nil {
+        logWarning.Printf("Could not update _NET_CLIENT_LIST " +
+                          "because %v", err)
+    }
+}
+
+func (wm *state) focused() Client {
     for i := len(wm.focus) - 1; i >= 0; i-- {
-        if wm.focus[i].mapped() {
+        if wm.focus[i].Mapped() {
             return wm.focus[i]
         }
     }
     return nil
 }
 
-func (wm *state) focusAdd(c client) {
+func (wm *state) focusAdd(c Client) {
     wm.focusRemove(c)
     wm.focus = append(wm.focus, c)
 }
 
-func (wm *state) focusRemove(c client) {
+func (wm *state) focusRemove(c Client) {
     if i := cliIndex(c, wm.focus); i > -1 {
         wm.focus = append(wm.focus[:i], wm.focus[i+1:]...)
     }
 }
 
 func (wm *state) fallback() {
-    var c client
+    var c Client
     for i := len(wm.focus) - 1; i >= 0; i-- {
         c = wm.focus[i]
-        if c.mapped() && c.alive() {
+        if c.Mapped() && c.Alive() {
             logMessage.Printf("Focus falling back to %s", c)
-            c.focus()
+            c.Focus()
             return
         }
     }
