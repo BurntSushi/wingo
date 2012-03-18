@@ -1,0 +1,40 @@
+#!/bin/sh
+
+export PWD="/home/andrew/src/go/me/src/github.com/BurntSushi/wingo"
+
+# Build first. if we fail, stop everything.
+cd $PWD
+go build -o zzz
+if [ ! $? = 0 ]; then
+  exit
+fi
+
+# Before launching Xephyr,
+# we have to create a temporary xauth file to get XGB to connect.
+echo "add :10 . $(mcookie)" | xauth -f /tmp/xeph.auth
+
+Xephyr :10 -auth /tmp/xeph.auth -ac -screen 1920x1080 \
+       -br -once -reset -terminate -zap &
+xemu=$!
+
+sleep 0.5
+export XAUTHORITY=/tmp/xeph.auth
+export DISPLAY=:10
+
+DISPLAY=:10 ./zzz &
+# DISPLAY=:10 openbox & 
+# go run $PWD/wingo.go & 
+wingo=$!
+
+sleep 0.5
+xbindkeys -f ~/.xbindkeysrc
+xsetroot -solid white
+xsetroot -cursor_name left_ptr
+xmodmap /home/andrew/.Pmodmap
+DISPLAY=:0 xdotool key ctrl+shift 
+
+wait $wingo
+kill $xemu
+
+# sleep 1 ; DISPLAY=:0 xdotool key Return 
+
