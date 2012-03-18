@@ -184,7 +184,7 @@ func (c *abstractClient) Manage() {
     }).Connect(X, c.window.id, "1", true, true)
 
     c.setupMoveDrag(c.frame.Parent().window.id, "Mod4-1")
-    c.setupResizeDrag(c.frame.Parent().window.id, "Mod4-3")
+    c.setupResizeDrag(c.frame.Parent().window.id, "Mod4-3", ewmh.Infer)
 
     // If the initial state isn't iconic or is absent, then we can map
     if c.hints.Flags & icccm.HintState == 0 ||
@@ -214,10 +214,11 @@ func (c *abstractClient) setupMoveDrag(dragWin xgb.Id, buttonStr string) {
 
 // setupResizeDrag does the boiler plate for registering this client's
 // "resize" drag.
-func (c *abstractClient) setupResizeDrag(dragWin xgb.Id, buttonStr string) {
+func (c *abstractClient) setupResizeDrag(dragWin xgb.Id, buttonStr string,
+                                         direction uint32) {
     dStart := xgbutil.MouseDragBeginFun(
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) (bool, xgb.Id) {
-            return c.frame.resizeBegin(ewmh.Infer, rx, ry, ex, ey)
+            return c.frame.resizeBegin(direction, rx, ry, ex, ey)
     })
     dStep := xgbutil.MouseDragFun(
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
