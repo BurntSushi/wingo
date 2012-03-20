@@ -8,8 +8,8 @@ import (
 
 type Frame interface {
     Client() Client
-    Configure(flags uint16, x, y int16, w, h uint16,
-              sibling xgb.Id, stackMode byte, ignoreHints bool)
+    ConfigureClient(flags uint16, x, y int16, w, h uint16,
+                    sibling xgb.Id, stackMode byte, ignoreHints bool)
     ConfigureFrame(flags uint16, x, y int16, w, h uint16,
                    sibling xgb.Id, stackMode byte, ignoreHints bool)
     Destroy()
@@ -23,6 +23,12 @@ type Frame interface {
     Unmap()
     ValidateHeight(height uint16) uint16
     ValidateWidth(width uint16) uint16
+
+    // The margins of this frame's decorations.
+    Top() int16
+    Bottom() int16
+    Left() int16
+    Right() int16
 
     // These are temporary. I think they will move to 'layout'
     moveBegin(rx, ry, ex, ey int16)

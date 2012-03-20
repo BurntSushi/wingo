@@ -135,8 +135,9 @@ func (c *abstClient) manage() {
             if c.frame.Moving() || c.frame.Resizing() {
                 return
             }
-            c.frame.Configure(ev.ValueMask, ev.X, ev.Y, ev.Width, ev.Height,
-                              ev.Sibling, ev.StackMode, false)
+            c.frame.ConfigureClient(ev.ValueMask, ev.X, ev.Y,
+                                    ev.Width, ev.Height,
+                                    ev.Sibling, ev.StackMode, false)
     }).Connect(X, c.window.id)
     xevent.UnmapNotifyFun(
         func(X *xgbutil.XUtil, ev xevent.UnmapNotifyEvent) {
@@ -400,6 +401,14 @@ func (c *abstClient) updateProperty(ev xevent.PropertyNotifyEvent) {
             c.lastTime = newTime
         }
     }
+}
+
+func (c *abstClient) GravitizeX(x int16) int16 {
+    return x
+}
+
+func (c *abstClient) GravitizeY(y int16) int16 {
+    return y
 }
 
 func (c *abstClient) ValidateHeight(height uint16) uint16 {

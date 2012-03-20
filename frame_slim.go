@@ -15,3 +15,19 @@ func newFrameSlim(c Client) (*frameSlim, error) {
     return &frameSlim{abst}, nil
 }
 
+func (f *frameSlim) Top() int16 {
+    return 20
+}
+
+func (f *frameSlim) Bottom() int16 {
+    return 20
+}
+
+func (f *frameSlim) Left() int16 {
+    return 20
+}
+
+func (f *frameSlim) Right() int16 {
+    return 20
+}
+

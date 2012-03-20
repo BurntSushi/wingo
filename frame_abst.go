@@ -50,12 +50,26 @@ func (f *abstFrame) Client() Client {
 
 func (f *abstFrame) Moveresize(flags uint16, x, y int16, w, h uint16,
                                ignoreHints bool) {
-    f.Configure(flags, x, y, w, h, xgb.Id(0), 0, ignoreHints)
+    f.ConfigureClient(flags, x, y, w, h, xgb.Id(0), 0, ignoreHints)
 }
 
-func (f *abstFrame) Configure(flags uint16, x, y int16, w, h uint16,
-                              sibling xgb.Id, stackMode byte,
-                              ignoreHints bool) {
+// Configure is from the perspective of the client.
+// Namely, the width and height specified here will be precisely the width
+// and height that the client itself ends up with, assuming it passes
+// validation. (Therefore, the actual window itself will be bigger, because
+// of decorations.)
+// Moreover, the x and y coordinates are gravitized. Yuck.
+func (f *abstFrame) ConfigureClient(flags uint16, x, y int16, w, h uint16,
+                                    sibling xgb.Id, stackMode byte,
+                                    ignoreHints bool) {
+    // Defy gravity!
+    if DoX & flags > 0 {
+        x = f.Client().GravitizeX(x)
+    }
+    if DoY & flags > 0 {
+        y = f.Client().GravitizeY(y)
+    }
+
     // This will change with other frames
     if DoW & flags > 0 {
         w += f.clientPos.w
@@ -67,6 +81,11 @@ func (f *abstFrame) Configure(flags uint16, x, y int16, w, h uint16,
     f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints)
 }
 
+// ConfigureFrame is from the perspective of the frame.
+// The fw and fh specify the width of the entire window, so that the client
+// will end up slightly smaller than the width/height specified here.
+// Also, the fx and fy coordinates are interpreted plainly as root window
+// coordinates. (No gravitization.)
 func (f *abstFrame) ConfigureFrame(flags uint16, fx, fy int16, fw, fh uint16,
                                    sibling xgb.Id, stackMode byte,
                                    ignoreHints bool) {
