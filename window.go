@@ -101,10 +101,16 @@ func (win *window) configure(flags uint16, x, y int16, w, h uint16,
         win.geom.YSet(y)
     }
     if DoW & flags > 0 {
+        if int16(w) <= 0 {
+            w = 1
+        }
         vals = append(vals, uint32(w))
         win.geom.WidthSet(w)
     }
     if DoH & flags > 0 {
+        if int16(h) <= 0 {
+            h = 1
+        }
         vals = append(vals, uint32(h))
         win.geom.HeightSet(h)
     }
@@ -137,9 +143,15 @@ func configure(window xgb.Id, flags uint16, x, y int16, w, h uint16,
         vals = append(vals, uint32(y))
     }
     if DoW & flags > 0 {
+        if int16(w) <= 0 {
+            w = 1
+        }
         vals = append(vals, uint32(w))
     }
     if DoH & flags > 0 {
+        if int16(h) <= 0 {
+            h = 1
+        }
         vals = append(vals, uint32(h))
     }
     if DoSibling & flags > 0 {

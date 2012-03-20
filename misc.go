@@ -23,3 +23,13 @@ func cliIndex(needle Client, haystack []Client) int {
     return -1
 }
 
+// Why isn't this in the Go standard library?
+// Maybe it is and I couldn't find it...
+func round(f float64) int {
+    i := int(f)
+    if f - float64(i) < 0.5 {
+        return i
+    }
+    return i + 1
+}
+

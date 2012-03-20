@@ -8,6 +8,7 @@ import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 import (
     "github.com/BurntSushi/xgbutil/ewmh"
+    // "github.com/BurntSushi/xgbutil/xevent" 
 )
 
 // state is the master singleton the carries all window manager related state

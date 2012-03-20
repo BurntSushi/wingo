@@ -8,26 +8,28 @@ import (
 
 var newx, newy int16 // prevent memory allocation in 'step' functions
 
-func (f *frameNada) moveBegin(rx, ry, ex, ey int16) {
+func (f *frameAbst) moveBegin(rx, ry, ex, ey int16) {
+    f.moving.moving = true
     f.moving.lastRootX, f.moving.lastRootY = rx, ry
 
     // call for side-effect; makes sure parent window has a valid geometry
     f.parent.window.geometry()
 }
 
-func (f *frameNada) moveStep(rx, ry, ex, ey int16) {
+func (f *frameAbst) moveStep(rx, ry, ex, ey int16) {
     newx = f.Geom().X() + rx - f.moving.lastRootX
     newy = f.Geom().Y() + ry - f.moving.lastRootY
     f.moving.lastRootX, f.moving.lastRootY = rx, ry
 
-    f.configureFrame(DoX | DoY, newx, newy, 0, 0, 0, 0)
+    f.ConfigureFrame(DoX | DoY, newx, newy, 0, 0, 0, 0, false)
 }
 
-func (f *frameNada) moveEnd(rx, ry, ex, ey int16) {
+func (f *frameAbst) moveEnd(rx, ry, ex, ey int16) {
+    f.moving.moving = false
     f.moving.lastRootX, f.moving.lastRootY = 0, 0
 }
 
-func (f *frameNada) resizeBegin(direction uint32,
+func (f *frameAbst) resizeBegin(direction uint32,
                                 rx, ry, ex, ey int16) (bool, xgb.Id) {
     dir := direction
     w, h := f.Geom().Width(), f.Geom().Height()
@@ -96,10 +98,24 @@ func (f *frameNada) resizeBegin(direction uint32,
     }
 
     // Save some state that we'll need when computing a window's new geometry
+    f.resizing.resizing = true
     f.resizing.rootX, f.resizing.rootY = rx, ry
     f.resizing.x, f.resizing.y = f.Geom().X(), f.Geom().Y()
     f.resizing.width, f.resizing.height = f.Geom().Width(), f.Geom().Height()
-    f.resizing.direction = dir
+
+    // Our geometry calculations depend upon which direction we're resizing.
+    // Namely, the direction determines which parts of the geometry need to
+    // be modified. Pre-compute those parts (i.e., x, y, width and/or height)
+    f.resizing.xs = dir == ewmh.SizeLeft || dir == ewmh.SizeTopLeft ||
+                    dir == ewmh.SizeBottomLeft
+    f.resizing.ys = dir == ewmh.SizeTop || dir == ewmh.SizeTopLeft ||
+                    dir == ewmh.SizeTopRight
+    f.resizing.ws = dir == ewmh.SizeTopLeft || dir == ewmh.SizeTopRight ||
+                    dir == ewmh.SizeRight || dir == ewmh.SizeBottomRight ||
+                    dir == ewmh.SizeBottomLeft || dir == ewmh.SizeLeft
+    f.resizing.hs = dir == ewmh.SizeTopLeft || dir == ewmh.SizeTop ||
+                    dir == ewmh.SizeTopRight || dir == ewmh.SizeBottomRight ||
+                    dir == ewmh.SizeBottom || dir == ewmh.SizeBottomLeft
 
     // call for side-effect; makes sure parent window has a valid geometry
     f.parent.window.geometry()
@@ -107,60 +123,62 @@ func (f *frameNada) resizeBegin(direction uint32,
     return true, cursor
 }
 
-func (f *frameNada) resizeStep(rx, ry, ex, ey int16) {
-    dir := f.resizing.direction
+func (f *frameAbst) resizeStep(rx, ry, ex, ey int16) {
     var diffx, diffy int16 = rx - f.resizing.rootX, ry - f.resizing.rootY
     var newx, newy int16 = 0, 0
     var neww, newh uint16 = 0, 0
+    var validw, validh uint16 = 0, 0
     var flags uint16 = 0
 
-    // Our geometry calculations depend upon which direction we're resizing.
-    // Namely, the direction determines which parts of the geometry need to
-    // be modified. Pre-compute those parts (i.e., x, y, width and/or height)
-    xs := dir == ewmh.SizeLeft || dir == ewmh.SizeTopLeft ||
-          dir == ewmh.SizeBottomLeft
-    ys := dir == ewmh.SizeTop || dir == ewmh.SizeTopLeft ||
-          dir == ewmh.SizeTopRight
-    ws := dir == ewmh.SizeTopLeft || dir == ewmh.SizeTopRight ||
-          dir == ewmh.SizeRight || dir == ewmh.SizeBottomRight ||
-          dir == ewmh.SizeBottomLeft || dir == ewmh.SizeLeft
-    hs := dir == ewmh.SizeTopLeft || dir == ewmh.SizeTop ||
-          dir == ewmh.SizeTopRight || dir == ewmh.SizeBottomRight ||
-          dir == ewmh.SizeBottom || dir == ewmh.SizeBottomLeft
-
-    if xs {
-        newx = f.resizing.x + diffx
+    if f.resizing.xs {
         flags |= DoX
+        newx = f.resizing.x + diffx
     }
-    if ys {
-        newy = f.resizing.y + diffy
+    if f.resizing.ys {
         flags |= DoY
+        newy = f.resizing.y + diffy
     }
-    if ws {
+    if f.resizing.ws {
         flags |= DoW
-        if xs {
+        if f.resizing.xs {
             neww = f.resizing.width - uint16(diffx)
         } else {
             neww = f.resizing.width + uint16(diffx)
         }
+        validw = f.ValidateWidth(neww)
+
+        // If validation changed our width, we need to make sure
+        // our x-value is appropriately changed
+        if f.resizing.xs && validw != neww {
+            newx = f.resizing.x + int16(f.resizing.width - validw)
+        }
     }
-    if hs {
+    if f.resizing.hs {
         flags |= DoH
-        if ys {
+        if f.resizing.ys {
             newh = f.resizing.height - uint16(diffy)
         } else {
             newh = f.resizing.height + uint16(diffy)
         }
+        validh = f.ValidateHeight(newh)
+
+        // If validation changed our height, we need to make sure
+        // our y-value is appropriately changed
+        if f.resizing.ys && validh != newh {
+            newy = f.resizing.y + int16(f.resizing.height - validh)
+        }
     }
 
-    f.configureFrame(flags, newx, newy, neww, newh, 0, 0)
+    f.ConfigureFrame(flags, newx, newy, validw, validh, 0, 0, true)
 }
 
-func (f *frameNada) resizeEnd(rx, ry, ex, ey int16) {
+func (f *frameAbst) resizeEnd(rx, ry, ex, ey int16) {
     // just zero out the resizing state
+    f.resizing.resizing = false
     f.resizing.rootX, f.resizing.rootY = 0, 0
     f.resizing.x, f.resizing.y = 0, 0
     f.resizing.width, f.resizing.height = 0, 0
-    f.resizing.direction = 0
+    f.resizing.xs, f.resizing.ys = false, false
+    f.resizing.ws, f.resizing.hs = false, false
 }
 
