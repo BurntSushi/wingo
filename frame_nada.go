@@ -1,7 +1,7 @@
 package main
 
 type frameNada struct {
-    *frameAbst
+    *abstFrame
 }
 
 func newFrameNada(c Client) (*frameNada, error) {

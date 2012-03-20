@@ -1,7 +1,7 @@
 package main
 
 type frameSlim struct {
-    *frameAbst
+    *abstFrame
 }
 
 func newFrameSlim(c Client) (*frameSlim, error) {

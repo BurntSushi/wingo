@@ -8,7 +8,7 @@ import (
 
 var newx, newy int16 // prevent memory allocation in 'step' functions
 
-func (f *frameAbst) moveBegin(rx, ry, ex, ey int16) {
+func (f *abstFrame) moveBegin(rx, ry, ex, ey int16) {
     f.moving.moving = true
     f.moving.lastRootX, f.moving.lastRootY = rx, ry
 
@@ -16,7 +16,7 @@ func (f *frameAbst) moveBegin(rx, ry, ex, ey int16) {
     f.parent.window.geometry()
 }
 
-func (f *frameAbst) moveStep(rx, ry, ex, ey int16) {
+func (f *abstFrame) moveStep(rx, ry, ex, ey int16) {
     newx = f.Geom().X() + rx - f.moving.lastRootX
     newy = f.Geom().Y() + ry - f.moving.lastRootY
     f.moving.lastRootX, f.moving.lastRootY = rx, ry
@@ -24,12 +24,12 @@ func (f *frameAbst) moveStep(rx, ry, ex, ey int16) {
     f.ConfigureFrame(DoX | DoY, newx, newy, 0, 0, 0, 0, false)
 }
 
-func (f *frameAbst) moveEnd(rx, ry, ex, ey int16) {
+func (f *abstFrame) moveEnd(rx, ry, ex, ey int16) {
     f.moving.moving = false
     f.moving.lastRootX, f.moving.lastRootY = 0, 0
 }
 
-func (f *frameAbst) resizeBegin(direction uint32,
+func (f *abstFrame) resizeBegin(direction uint32,
                                 rx, ry, ex, ey int16) (bool, xgb.Id) {
     dir := direction
     w, h := f.Geom().Width(), f.Geom().Height()
@@ -123,7 +123,7 @@ func (f *frameAbst) resizeBegin(direction uint32,
     return true, cursor
 }
 
-func (f *frameAbst) resizeStep(rx, ry, ex, ey int16) {
+func (f *abstFrame) resizeStep(rx, ry, ex, ey int16) {
     var diffx, diffy int16 = rx - f.resizing.rootX, ry - f.resizing.rootY
     var newx, newy int16 = 0, 0
     var neww, newh uint16 = 0, 0
@@ -172,7 +172,7 @@ func (f *frameAbst) resizeStep(rx, ry, ex, ey int16) {
     f.ConfigureFrame(flags, newx, newy, validw, validh, 0, 0, true)
 }
 
-func (f *frameAbst) resizeEnd(rx, ry, ex, ey int16) {
+func (f *abstFrame) resizeEnd(rx, ry, ex, ey int16) {
     // just zero out the resizing state
     f.resizing.resizing = false
     f.resizing.rootX, f.resizing.rootY = 0, 0

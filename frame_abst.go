@@ -7,20 +7,20 @@ import (
     "github.com/BurntSushi/xgbutil/xrect"
 )
 
-type frameAbst struct {
+type abstFrame struct {
     parent *frameParent
     clientPos clientPos
     moving moveState
     resizing resizeState
 }
 
-func newFrameAbst(c Client, cp clientPos) (*frameAbst, error) {
+func newFrameAbst(c Client, cp clientPos) (*abstFrame, error) {
     geom, err := c.Win().geometry()
     if err != nil {
         return nil, err
     }
 
-    f := &frameAbst {
+    f := &abstFrame {
         parent: newParent(c),
         clientPos: cp,
         moving: moveState{},
@@ -32,28 +32,28 @@ func newFrameAbst(c Client, cp clientPos) (*frameAbst, error) {
     return f, nil
 }
 
-func (f *frameAbst) Destroy() {
+func (f *abstFrame) Destroy() {
     f.parent.window.destroy()
 }
 
-func (f *frameAbst) Map() {
+func (f *abstFrame) Map() {
     f.parent.window.map_()
 }
 
-func (f *frameAbst) Unmap() {
+func (f *abstFrame) Unmap() {
     f.parent.window.unmap()
 }
 
-func (f *frameAbst) Client() Client {
+func (f *abstFrame) Client() Client {
     return f.parent.client
 }
 
-func (f *frameAbst) Moveresize(flags uint16, x, y int16, w, h uint16,
+func (f *abstFrame) Moveresize(flags uint16, x, y int16, w, h uint16,
                                ignoreHints bool) {
     f.Configure(flags, x, y, w, h, xgb.Id(0), 0, ignoreHints)
 }
 
-func (f *frameAbst) Configure(flags uint16, x, y int16, w, h uint16,
+func (f *abstFrame) Configure(flags uint16, x, y int16, w, h uint16,
                               sibling xgb.Id, stackMode byte,
                               ignoreHints bool) {
     // This will change with other frames
@@ -67,7 +67,7 @@ func (f *frameAbst) Configure(flags uint16, x, y int16, w, h uint16,
     f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints)
 }
 
-func (f *frameAbst) ConfigureFrame(flags uint16, fx, fy int16, fw, fh uint16,
+func (f *abstFrame) ConfigureFrame(flags uint16, fx, fy int16, fw, fh uint16,
                                    sibling xgb.Id, stackMode byte,
                                    ignoreHints bool) {
     cw, ch := fw, fh
@@ -108,35 +108,35 @@ func (f *frameAbst) ConfigureFrame(flags uint16, fx, fy int16, fw, fh uint16,
     f.Parent().Win().configure(flags, fx, fy, fw, fh, sibling, stackMode)
 }
 
-func (f *frameAbst) Geom() xrect.Rect {
+func (f *abstFrame) Geom() xrect.Rect {
     return f.parent.window.geom
 }
 
-func (f *frameAbst) Moving() bool {
+func (f *abstFrame) Moving() bool {
     return f.moving.moving
 }
 
-func (f *frameAbst) Parent() *frameParent {
+func (f *abstFrame) Parent() *frameParent {
     return f.parent
 }
 
-func (f *frameAbst) ParentId() xgb.Id {
+func (f *abstFrame) ParentId() xgb.Id {
     return f.parent.window.id
 }
 
-func (f *frameAbst) Resizing() bool {
+func (f *abstFrame) Resizing() bool {
     return f.resizing.resizing
 }
 
 // ValidateHeight validates a height of a *frame*, which is equivalent
 // to validating the height of a client.
-func (f *frameAbst) ValidateHeight(height uint16) uint16 {
+func (f *abstFrame) ValidateHeight(height uint16) uint16 {
     return f.Client().ValidateHeight(height - f.clientPos.h) + f.clientPos.h
 }
 
 // ValidateWidth validates a width of a *frame*, which is equivalent
 // to validating the width of a client.
-func (f *frameAbst) ValidateWidth(width uint16) uint16 {
+func (f *abstFrame) ValidateWidth(width uint16) uint16 {
     return f.Client().ValidateWidth(width - f.clientPos.w) + f.clientPos.w
 }
 
