@@ -71,9 +71,9 @@ func (wm *state) stackRaise(c Client, configure bool) {
 
         if c2.Layer() <= c.Layer() {
             if configure {
-                c.Frame().Configure(DoSibling | DoStack, 0, 0, 0, 0,
-                                    c2.Frame().ParentId(),
-                                    xgb.StackModeAbove, false)
+                c.Frame().ConfigureClient(DoSibling | DoStack, 0, 0, 0, 0,
+                                          c2.Frame().ParentId(),
+                                          xgb.StackModeAbove, false)
             }
             wm.stack = append(wm.stack[:i],
                               append([]Client{c}, wm.stack[i:]...)...)
@@ -86,7 +86,7 @@ func (wm *state) stackRaise(c Client, configure bool) {
     // Thus, it must be the lowest client and it gets added to the end.
     // We also must stack it below the lowest window in the list.
     if configure {
-        c.Frame().Configure(
+        c.Frame().ConfigureClient(
             DoSibling | DoStack, 0, 0, 0, 0,
             wm.stack[len(wm.stack) - 1].Frame().ParentId(),
             xgb.StackModeBelow, false)
