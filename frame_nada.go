@@ -4,12 +4,30 @@ type frameNada struct {
     *abstFrame
 }
 
-func newFrameNada(c Client) (*frameNada, error) {
-    abst, err := newFrameAbst(c, clientPos{})
-    if err != nil {
-        return nil, err
-    }
+func newFrameNada(p *frameParent, c Client) *frameNada {
+    return &frameNada{newFrameAbst(p, c, clientPos{})}
+}
 
-    return &frameNada{abst}, nil
+func (f *frameNada) Off() {
+}
+
+func (f *frameNada) On() {
+    f.Reset()
+}
+
+func (f *frameNada) Top() int16 {
+    return 0
+}
+
+func (f *frameNada) Bottom() int16 {
+    return 0
+}
+
+func (f *frameNada) Left() int16 {
+    return 0
+}
+
+func (f *frameNada) Right() int16 {
+    return 0
 }
 

@@ -14,22 +14,15 @@ type abstFrame struct {
     resizing resizeState
 }
 
-func newFrameAbst(c Client, cp clientPos) (*abstFrame, error) {
-    geom, err := c.Win().geometry()
-    if err != nil {
-        return nil, err
-    }
-
+func newFrameAbst(p *frameParent, c Client, cp clientPos) *abstFrame {
     f := &abstFrame {
-        parent: newParent(c),
+        parent: p,
         clientPos: cp,
         moving: moveState{},
         resizing: resizeState{},
     }
 
-    f.Moveresize(DoW | DoH, 0, 0, geom.Width(), geom.Height(), false)
-
-    return f, nil
+    return f
 }
 
 func (f *abstFrame) Destroy() {
@@ -46,6 +39,11 @@ func (f *abstFrame) Unmap() {
 
 func (f *abstFrame) Client() Client {
     return f.parent.client
+}
+
+func (f *abstFrame) Reset() {
+    geom := f.Client().Geom()
+    f.Moveresize(DoW | DoH, 0, 0, geom.Width(), geom.Height(), false)
 }
 
 func (f *abstFrame) Moveresize(flags uint16, x, y int16, w, h uint16,
@@ -141,6 +139,10 @@ func (f *abstFrame) Parent() *frameParent {
 
 func (f *abstFrame) ParentId() xgb.Id {
     return f.parent.window.id
+}
+
+func (f *abstFrame) ParentWin() *window {
+    return f.parent.window
 }
 
 func (f *abstFrame) Resizing() bool {

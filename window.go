@@ -54,6 +54,10 @@ func (w *window) unmap() {
     X.Conn().UnmapWindow(w.id)
 }
 
+func (w *window) clear() {
+    X.Conn().ClearArea(false, w.id, 0, 0, 0, 0)
+}
+
 func (w *window) geometry() (xrect.Rect, error) {
     var err error
     w.geom, err = xwindow.RawGeometry(X, w.id)

@@ -1,18 +1,26 @@
 package main
 
+import "code.google.com/p/jamslam-x-go-binding/xgb"
+
 type frameSlim struct {
     *abstFrame
 }
 
-func newFrameSlim(c Client) (*frameSlim, error) {
-    cp := clientPos{
-        x: 20, y: 20, w: 40, h: 40}
-    abst, err := newFrameAbst(c, cp)
-    if err != nil {
-        return nil, err
-    }
+func newFrameSlim(p *frameParent, c Client) *frameSlim {
+    cp := clientPos{x: 20, y: 20, w: 40, h: 40}
+    return &frameSlim{newFrameAbst(p, c, cp)}
+}
 
-    return &frameSlim{abst}, nil
+func (f *frameSlim) Off() {
+}
+
+func (f *frameSlim) On() {
+    f.Reset()
+
+    mask := uint32(xgb.CWBackPixel)
+    vals := []uint32{0xff7f00}
+    X.Conn().ChangeWindowAttributes(f.ParentId(), mask, vals)
+    f.ParentWin().clear()
 }
 
 func (f *frameSlim) Top() int16 {

@@ -89,6 +89,23 @@ func main() {
             cmd_close_active()
     }).Connect(X, X.RootWin(), "Mod4-c")
 
+    keybind.KeyPressFun(
+        func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+            cmd_active_frame_nada()
+    }).Connect(X, X.RootWin(), "Mod1-1")
+    keybind.KeyPressFun(
+        func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+            cmd_active_frame_slim()
+    }).Connect(X, X.RootWin(), "Mod1-2")
+    keybind.KeyPressFun(
+        func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+            cmd_active_frame_borders()
+    }).Connect(X, X.RootWin(), "Mod1-3")
+    keybind.KeyPressFun(
+        func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+            cmd_active_frame_full()
+    }).Connect(X, X.RootWin(), "Mod1-4")
+
     xevent.Main(X)
 }
 

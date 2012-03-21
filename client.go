@@ -13,6 +13,10 @@ type Client interface {
     Close()
     Focus()
     Frame() Frame
+    FrameNada()
+    FrameSlim()
+    FrameBorders()
+    FrameFull()
     Geom() xrect.Rect
     GravitizeX(x int16) int16
     GravitizeY(y int16) int16

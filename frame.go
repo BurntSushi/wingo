@@ -17,8 +17,12 @@ type Frame interface {
     Map()
     Moveresize(flags uint16, x, y int16, w, h uint16, ignoreHints bool)
     Moving() bool
+    Off()
+    On()
     Parent() *frameParent
     ParentId() xgb.Id
+    ParentWin() *window
+    Reset()
     Resizing() bool
     Unmap()
     ValidateHeight(height uint16) uint16
@@ -71,9 +75,8 @@ type frameParent struct {
 }
 
 func newParent(c Client) *frameParent {
-    mask := uint32(xgb.CWBackPixel | xgb.CWEventMask)
-    val := []uint32{0xff7f00,
-                    xgb.EventMaskSubstructureRedirect |
+    mask := uint32(xgb.CWEventMask)
+    val := []uint32{xgb.EventMaskSubstructureRedirect |
                     xgb.EventMaskButtonPress |
                     xgb.EventMaskButtonRelease}
     parent := createWindow(X.RootWin(), mask, val)

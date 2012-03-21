@@ -22,7 +22,6 @@ import (
 // to all clients. Some of its methods may be "overridden".
 type abstClient struct {
     window *window
-    frame Frame
     layer int
     name string
     vname string
@@ -33,6 +32,12 @@ type abstClient struct {
     hints *icccm.Hints
     nhints *icccm.NormalHints
     protocols []string
+
+    frame Frame
+    frameNada *frameNada
+    frameSlim *frameSlim
+    frameBorders *frameBorders
+    frameFull *frameFull
 }
 
 func newAbstractClient(id xgb.Id) (*abstClient, error) {
@@ -87,7 +92,6 @@ func newAbstractClient(id xgb.Id) (*abstClient, error) {
 
     return &abstClient{
         window: newWindow(id),
-        frame: nil,
         layer: layer,
         name: name,
         vname: vname,
@@ -98,21 +102,26 @@ func newAbstractClient(id xgb.Id) (*abstClient, error) {
         hints: &hints,
         nhints: &nhints,
         protocols: protocols,
+
+        frame: nil,
+        frameNada: nil,
+        frameSlim: nil,
     }, nil
 }
 
 // manage sets everything up to bring a client window into window management.
 // It is still possible for us to bail.
 func (c *abstClient) manage() {
-    // time for reparenting
-    var err error
-    c.frame, err = newFrameSlim(c)
+    _, err := c.Win().geometry()
     if err != nil {
-        logWarning.Printf("Could not manage window %X because we could not " +
-                          "get its geometry. The reason given: %s",
+        logWarning.Printf("Could not manage window %X because: %s",
                           c.window.id, err)
         return
     }
+
+    // time for reparenting/decorating
+    c.frameInit()
+    c.FrameSlim()
 
     // We're committed now...
 
@@ -172,6 +181,28 @@ func (c *abstClient) manage() {
        c.hints.InitialState != icccm.StateIconic {
         c.Map()
     }
+}
+
+func (c *abstClient) frameInit() {
+    // We want one parent window for all frames.
+    parent := newParent(c)
+
+    c.frameNada = newFrameNada(parent, c)
+    c.frameSlim = newFrameSlim(parent, c)
+    c.frameBorders = newFrameBorders(parent, c)
+    c.frameFull = newFrameFull(parent, c)
+}
+
+func (c *abstClient) frameSet(f Frame) {
+    if f == c.Frame() { // no need to change...
+        return
+    }
+    if c.Frame() != nil {
+        c.Frame().Off()
+    }
+    c.frame = f
+    c.Frame().On()
+    c.Frame().Reset()
 }
 
 // setupMoveDrag does the boiler plate for registering this client's
@@ -459,6 +490,22 @@ func (c *abstClient) validateSize(size uint16, inc, base,
 
 func (c *abstClient) Frame() Frame {
     return c.frame
+}
+
+func (c *abstClient) FrameNada() {
+    c.frameSet(c.frameNada)
+}
+
+func (c *abstClient) FrameSlim() {
+    c.frameSet(c.frameSlim)
+}
+
+func (c *abstClient) FrameBorders() {
+    c.frameSet(c.frameBorders)
+}
+
+func (c *abstClient) FrameFull() {
+    c.frameSet(c.frameFull)
 }
 
 func (c *abstClient) Geom() xrect.Rect {

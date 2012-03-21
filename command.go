@@ -8,3 +8,31 @@ func cmd_close_active() {
     }
 }
 
+func cmd_active_frame_nada() {
+    focused := WM.focused()
+    if focused != nil {
+        focused.FrameNada()
+    }
+}
+
+func cmd_active_frame_slim() {
+    focused := WM.focused()
+    if focused != nil {
+        focused.FrameSlim()
+    }
+}
+
+func cmd_active_frame_borders() {
+    focused := WM.focused()
+    if focused != nil {
+        focused.FrameBorders()
+    }
+}
+
+func cmd_active_frame_full() {
+    focused := WM.focused()
+    if focused != nil {
+        focused.FrameFull()
+    }
+}
+
