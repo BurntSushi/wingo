@@ -54,6 +54,10 @@ func (w *window) unmap() {
     X.Conn().UnmapWindow(w.id)
 }
 
+func (w *window) change(masks int, vals... uint32) {
+    X.Conn().ChangeWindowAttributes(w.id, uint32(masks), vals)
+}
+
 func (w *window) clear() {
     X.Conn().ClearArea(false, w.id, 0, 0, 0, 0)
 }

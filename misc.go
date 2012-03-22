@@ -33,3 +33,11 @@ func round(f float64) int {
     return i + 1
 }
 
+// Grrrr.
+func absInt16(i int16) int16 {
+    if i < 0 {
+        return -i
+    }
+    return i
+}
+

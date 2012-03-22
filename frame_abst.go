@@ -9,17 +9,18 @@ import (
 
 type abstFrame struct {
     parent *frameParent
+    state int
     clientPos clientPos
-    moving moveState
-    resizing resizeState
+    moving *moveState
+    resizing *resizeState
 }
 
 func newFrameAbst(p *frameParent, c Client, cp clientPos) *abstFrame {
     f := &abstFrame {
         parent: p,
         clientPos: cp,
-        moving: moveState{},
-        resizing: resizeState{},
+        moving: &moveState{},
+        resizing: &resizeState{},
     }
 
     return f
@@ -27,6 +28,10 @@ func newFrameAbst(p *frameParent, c Client, cp clientPos) *abstFrame {
 
 func (f *abstFrame) Destroy() {
     f.parent.window.destroy()
+}
+
+func (f *abstFrame) State() int {
+    return f.state
 }
 
 func (f *abstFrame) Map() {
@@ -41,31 +46,21 @@ func (f *abstFrame) Client() Client {
     return f.parent.client
 }
 
-func (f *abstFrame) Reset() {
-    geom := f.Client().Geom()
-    f.Moveresize(DoW | DoH, 0, 0, geom.Width(), geom.Height(), false)
-}
-
-func (f *abstFrame) Moveresize(flags uint16, x, y int16, w, h uint16,
-                               ignoreHints bool) {
-    f.ConfigureClient(flags, x, y, w, h, xgb.Id(0), 0, ignoreHints)
-}
-
 // Configure is from the perspective of the client.
 // Namely, the width and height specified here will be precisely the width
 // and height that the client itself ends up with, assuming it passes
 // validation. (Therefore, the actual window itself will be bigger, because
 // of decorations.)
 // Moreover, the x and y coordinates are gravitized. Yuck.
-func (f *abstFrame) ConfigureClient(flags uint16, x, y int16, w, h uint16,
-                                    sibling xgb.Id, stackMode byte,
-                                    ignoreHints bool) {
+func (f *abstFrame) configureClient(flags uint16, x, y int16,
+                                    w, h uint16) (int16, int16,
+                                                  uint16, uint16) {
     // Defy gravity!
     if DoX & flags > 0 {
-        x = f.Client().GravitizeX(x)
+        x = f.Client().GravitizeX(x, -1)
     }
     if DoY & flags > 0 {
-        y = f.Client().GravitizeY(y)
+        y = f.Client().GravitizeY(y, -1)
     }
 
     // This will change with other frames
@@ -76,7 +71,7 @@ func (f *abstFrame) ConfigureClient(flags uint16, x, y int16, w, h uint16,
         h += f.clientPos.h
     }
 
-    f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints)
+    return x, y, w, h
 }
 
 // ConfigureFrame is from the perspective of the frame.
@@ -84,7 +79,7 @@ func (f *abstFrame) ConfigureClient(flags uint16, x, y int16, w, h uint16,
 // will end up slightly smaller than the width/height specified here.
 // Also, the fx and fy coordinates are interpreted plainly as root window
 // coordinates. (No gravitization.)
-func (f *abstFrame) ConfigureFrame(flags uint16, fx, fy int16, fw, fh uint16,
+func (f *abstFrame) configureFrame(flags uint16, fx, fy int16, fw, fh uint16,
                                    sibling xgb.Id, stackMode byte,
                                    ignoreHints bool) {
     cw, ch := fw, fh
@@ -133,6 +128,10 @@ func (f *abstFrame) Moving() bool {
     return f.moving.moving
 }
 
+func (f *abstFrame) MovingState() *moveState {
+    return f.moving
+}
+
 func (f *abstFrame) Parent() *frameParent {
     return f.parent
 }
@@ -148,6 +147,11 @@ func (f *abstFrame) ParentWin() *window {
 func (f *abstFrame) Resizing() bool {
     return f.resizing.resizing
 }
+
+func (f *abstFrame) ResizingState() *resizeState {
+    return f.resizing
+}
+
 
 // ValidateHeight validates a height of a *frame*, which is equivalent
 // to validating the height of a client.

@@ -6,6 +6,11 @@ import (
     "github.com/BurntSushi/xgbutil/xrect"
 )
 
+const (
+    StateActive = iota
+    StateInactive
+)
+
 type Frame interface {
     Client() Client
     ConfigureClient(flags uint16, x, y int16, w, h uint16,
@@ -15,15 +20,14 @@ type Frame interface {
     Destroy()
     Geom() xrect.Rect // the geometry of the parent window
     Map()
-    Moveresize(flags uint16, x, y int16, w, h uint16, ignoreHints bool)
-    Moving() bool
     Off()
     On()
     Parent() *frameParent
     ParentId() xgb.Id
     ParentWin() *window
-    Reset()
-    Resizing() bool
+    State() int
+    StateActive()
+    StateInactive()
     Unmap()
     ValidateHeight(height uint16) uint16
     ValidateWidth(width uint16) uint16
@@ -35,12 +39,17 @@ type Frame interface {
     Right() int16
 
     // These are temporary. I think they will move to 'layout'
-    moveBegin(rx, ry, ex, ey int16)
-    moveStep(rx, ry, ex, ey int16)
-    moveEnd(rx, ry, ex, ey int16)
-    resizeBegin(direction uint32, rx, ry, ex, ey int16) (bool, xgb.Id)
-    resizeStep(rx, ry, ex, ey int16)
-    resizeEnd(rx, ry, ex, ey int16)
+    Moving() bool
+    MovingState() *moveState
+    // moveBegin(rx, ry, ex, ey int16) 
+    // moveStep(rx, ry, ex, ey int16) 
+    // moveEnd(rx, ry, ex, ey int16) 
+
+    Resizing() bool
+    ResizingState() *resizeState
+    // resizeBegin(direction uint32, rx, ry, ex, ey int16) (bool, xgb.Id) 
+    // resizeStep(rx, ry, ex, ey int16) 
+    // resizeEnd(rx, ry, ex, ey int16) 
 }
 
 // The relative geometry of the client window in the frame parent window.
@@ -92,5 +101,17 @@ func newParent(c Client) *frameParent {
 
 func (p *frameParent) Win() *window {
     return p.window
+}
+
+// Frame related functions that can be defined using only the Frame interface.
+
+func FrameReset(f Frame) {
+    geom := f.Client().Geom()
+    FrameMR(f, DoW | DoH, 0, 0, geom.Width(), geom.Height(), false)
+}
+
+// FrameMR is short for FrameMoveresize.
+func FrameMR(f Frame, flags uint16, x, y int16, w, h uint16, ignoreHints bool) {
+    f.ConfigureClient(flags, x, y, w, h, xgb.Id(0), 0, ignoreHints)
 }
 

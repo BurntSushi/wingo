@@ -202,7 +202,7 @@ func (c *abstClient) frameSet(f Frame) {
     }
     c.frame = f
     c.Frame().On()
-    c.Frame().Reset()
+    FrameReset(c.Frame())
 }
 
 // setupMoveDrag does the boiler plate for registering this client's
@@ -210,16 +210,16 @@ func (c *abstClient) frameSet(f Frame) {
 func (c *abstClient) setupMoveDrag(dragWin xgb.Id, buttonStr string) {
     dStart := xgbutil.MouseDragBeginFun(
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) (bool, xgb.Id) {
-            c.frame.moveBegin(rx, ry, ex, ey)
+            frameMoveBegin(c.Frame(), rx, ry, ex, ey)
             return true, cursorFleur
     })
     dStep := xgbutil.MouseDragFun(
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
-            c.frame.moveStep(rx, ry, ex, ey)
+            frameMoveStep(c.Frame(), rx, ry, ex, ey)
     })
     dEnd := xgbutil.MouseDragFun(
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
-            c.frame.moveEnd(rx, ry, ex, ey)
+            frameMoveEnd(c.Frame(), rx, ry, ex, ey)
     })
     mousebind.Drag(X, dragWin, buttonStr, dStart, dStep, dEnd)
 }
@@ -230,15 +230,15 @@ func (c *abstClient) setupResizeDrag(dragWin xgb.Id, buttonStr string,
                                          direction uint32) {
     dStart := xgbutil.MouseDragBeginFun(
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) (bool, xgb.Id) {
-            return c.frame.resizeBegin(direction, rx, ry, ex, ey)
+            return frameResizeBegin(c.Frame(), direction, rx, ry, ex, ey)
     })
     dStep := xgbutil.MouseDragFun(
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
-            c.frame.resizeStep(rx, ry, ex, ey)
+            frameResizeStep(c.Frame(), rx, ry, ex, ey)
     })
     dEnd := xgbutil.MouseDragFun(
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
-            c.frame.resizeEnd(rx, ry, ex, ey)
+            frameResizeEnd(c.Frame(), rx, ry, ex, ey)
     })
     mousebind.Drag(X, dragWin, buttonStr, dStart, dStep, dEnd)
 }
@@ -363,7 +363,7 @@ func (c *abstClient) TrulyAlive() bool {
 func (c *abstClient) Focus() {
     if c.hints.Flags & icccm.HintInput > 0 && c.hints.Input == 1 {
         c.window.focus()
-        c.focused()
+        c.Focused()
     } else if strIndex("WM_TAKE_FOCUS", c.protocols) > -1 {
         wm_protocols, err := xprop.Atm(X, "WM_PROTOCOLS")
         if err != nil {
@@ -388,12 +388,20 @@ func (c *abstClient) Focus() {
 
         X.Conn().SendEvent(false, c.window.id, 0, cm.Bytes())
 
-        c.focused()
+        c.Focused()
     }
 }
 
-func (c *abstClient) focused() {
+func (c *abstClient) Focused() {
     WM.focusAdd(c)
+    c.Frame().StateActive()
+
+    // Forcefully unfocus all other clients
+    WM.unfocusExcept(c.Id())
+}
+
+func (c *abstClient) Unfocused() {
+    c.Frame().StateInactive()
 }
 
 func (c *abstClient) updateProperty(ev xevent.PropertyNotifyEvent) {
@@ -434,11 +442,67 @@ func (c *abstClient) updateProperty(ev xevent.PropertyNotifyEvent) {
     }
 }
 
-func (c *abstClient) GravitizeX(x int16) int16 {
+func (c *abstClient) GravitizeX(x int16, gravity int) int16 {
+    // Don't do anything if there's no gravity options set and we're
+    // trying to infer gravity.
+    // This is equivalent to setting NorthWest gravity
+    if gravity > -1 && c.nhints.Flags & icccm.SizeHintPWinGravity == 0 {
+        return x
+    }
+
+    // Otherwise, we're either inferring gravity (from normal hints), or
+    // using some forced notion of gravity (probably from EWMH stuff)
+    var g int
+    if gravity > -1 {
+        g = gravity
+    } else {
+        g = int(c.nhints.WinGravity)
+    }
+
+    f := c.Frame()
+    switch {
+    case g == xgb.GravityStatic || g == xgb.GravityBitForget:
+        x -= f.Left()
+    case g == xgb.GravityNorth || g == xgb.GravitySouth ||
+         g == xgb.GravityCenter:
+        x -= absInt16(f.Left() - f.Right()) / 2
+    case g == xgb.GravityNorthEast || g == xgb.GravityEast ||
+         g == xgb.GravitySouthEast:
+        x -= f.Left() + f.Right()
+    }
+
     return x
 }
 
-func (c *abstClient) GravitizeY(y int16) int16 {
+func (c *abstClient) GravitizeY(y int16, gravity int) int16 {
+    // Don't do anything if there's no gravity options set and we're
+    // trying to infer gravity.
+    // This is equivalent to setting NorthWest gravity
+    if gravity > -1 && c.nhints.Flags & icccm.SizeHintPWinGravity == 0 {
+        return y
+    }
+
+    // Otherwise, we're either inferring gravity (from normal hints), or
+    // using some forced notion of gravity (probably from EWMH stuff)
+    var g int
+    if gravity > -1 {
+        g = gravity
+    } else {
+        g = int(c.nhints.WinGravity)
+    }
+
+    f := c.Frame()
+    switch {
+    case g == xgb.GravityStatic || g == xgb.GravityBitForget:
+        y -= f.Top()
+    case g == xgb.GravityEast || g == xgb.GravityWest ||
+         g == xgb.GravityCenter:
+        y -= absInt16(f.Top() - f.Bottom()) / 2
+    case g == xgb.GravitySouthEast || g == xgb.GravitySouth ||
+         g == xgb.GravitySouthWest:
+        y -= f.Top() + f.Bottom()
+    }
+
     return y
 }
 

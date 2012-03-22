@@ -12,19 +12,22 @@ type Client interface {
     Alive() bool
     Close()
     Focus()
+    Focused()
     Frame() Frame
     FrameNada()
     FrameSlim()
     FrameBorders()
     FrameFull()
     Geom() xrect.Rect
-    GravitizeX(x int16) int16
-    GravitizeY(y int16) int16
+    GravitizeX(x int16, gravity int) int16
+    GravitizeY(y int16, gravity int) int16
     Id() xgb.Id
     Layer() int
     Map()
     Mapped() bool
     String() string
+    TrulyAlive() bool
+    Unfocused()
     ValidateHeight(height uint16) uint16
     ValidateWidth(width uint16) uint16
     Win() *window

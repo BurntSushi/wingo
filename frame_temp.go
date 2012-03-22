@@ -8,29 +8,33 @@ import (
 
 var newx, newy int16 // prevent memory allocation in 'step' functions
 
-func (f *abstFrame) moveBegin(rx, ry, ex, ey int16) {
-    f.moving.moving = true
-    f.moving.lastRootX, f.moving.lastRootY = rx, ry
+func frameMoveBegin(f Frame, rx, ry, ex, ey int16) {
+    moving := f.MovingState()
+    moving.moving = true
+    moving.lastRootX, moving.lastRootY = rx, ry
 
     // call for side-effect; makes sure parent window has a valid geometry
-    f.parent.window.geometry()
+    f.ParentWin().geometry()
 }
 
-func (f *abstFrame) moveStep(rx, ry, ex, ey int16) {
-    newx = f.Geom().X() + rx - f.moving.lastRootX
-    newy = f.Geom().Y() + ry - f.moving.lastRootY
-    f.moving.lastRootX, f.moving.lastRootY = rx, ry
+func frameMoveStep(f Frame, rx, ry, ex, ey int16) {
+    moving := f.MovingState()
+    newx = f.Geom().X() + rx - moving.lastRootX
+    newy = f.Geom().Y() + ry - moving.lastRootY
+    moving.lastRootX, moving.lastRootY = rx, ry
 
     f.ConfigureFrame(DoX | DoY, newx, newy, 0, 0, 0, 0, false)
 }
 
-func (f *abstFrame) moveEnd(rx, ry, ex, ey int16) {
-    f.moving.moving = false
-    f.moving.lastRootX, f.moving.lastRootY = 0, 0
+func frameMoveEnd(f Frame, rx, ry, ex, ey int16) {
+    moving := f.MovingState()
+    moving.moving = false
+    moving.lastRootX, moving.lastRootY = 0, 0
 }
 
-func (f *abstFrame) resizeBegin(direction uint32,
-                                rx, ry, ex, ey int16) (bool, xgb.Id) {
+func frameResizeBegin(f Frame, direction uint32,
+                      rx, ry, ex, ey int16) (bool, xgb.Id) {
+    resizing := f.ResizingState()
     dir := direction
     w, h := f.Geom().Width(), f.Geom().Height()
     uex, uey := uint16(ex), uint16(ey)
@@ -98,87 +102,97 @@ func (f *abstFrame) resizeBegin(direction uint32,
     }
 
     // Save some state that we'll need when computing a window's new geometry
-    f.resizing.resizing = true
-    f.resizing.rootX, f.resizing.rootY = rx, ry
-    f.resizing.x, f.resizing.y = f.Geom().X(), f.Geom().Y()
-    f.resizing.width, f.resizing.height = f.Geom().Width(), f.Geom().Height()
+    resizing.resizing = true
+    resizing.rootX, resizing.rootY = rx, ry
+    resizing.x, resizing.y = f.Geom().X(), f.Geom().Y()
+    resizing.width, resizing.height = f.Geom().Width(), f.Geom().Height()
 
     // Our geometry calculations depend upon which direction we're resizing.
     // Namely, the direction determines which parts of the geometry need to
     // be modified. Pre-compute those parts (i.e., x, y, width and/or height)
-    f.resizing.xs = dir == ewmh.SizeLeft || dir == ewmh.SizeTopLeft ||
-                    dir == ewmh.SizeBottomLeft
-    f.resizing.ys = dir == ewmh.SizeTop || dir == ewmh.SizeTopLeft ||
-                    dir == ewmh.SizeTopRight
-    f.resizing.ws = dir == ewmh.SizeTopLeft || dir == ewmh.SizeTopRight ||
-                    dir == ewmh.SizeRight || dir == ewmh.SizeBottomRight ||
-                    dir == ewmh.SizeBottomLeft || dir == ewmh.SizeLeft
-    f.resizing.hs = dir == ewmh.SizeTopLeft || dir == ewmh.SizeTop ||
-                    dir == ewmh.SizeTopRight || dir == ewmh.SizeBottomRight ||
-                    dir == ewmh.SizeBottom || dir == ewmh.SizeBottomLeft
+    resizing.xs = dir == ewmh.SizeLeft || dir == ewmh.SizeTopLeft ||
+                  dir == ewmh.SizeBottomLeft
+    resizing.ys = dir == ewmh.SizeTop || dir == ewmh.SizeTopLeft ||
+                  dir == ewmh.SizeTopRight
+    resizing.ws = dir == ewmh.SizeTopLeft || dir == ewmh.SizeTopRight ||
+                  dir == ewmh.SizeRight || dir == ewmh.SizeBottomRight ||
+                  dir == ewmh.SizeBottomLeft || dir == ewmh.SizeLeft
+    resizing.hs = dir == ewmh.SizeTopLeft || dir == ewmh.SizeTop ||
+                  dir == ewmh.SizeTopRight || dir == ewmh.SizeBottomRight ||
+                  dir == ewmh.SizeBottom || dir == ewmh.SizeBottomLeft
 
     // call for side-effect; makes sure parent window has a valid geometry
-    f.parent.window.geometry()
+    f.ParentWin().geometry()
 
     return true, cursor
 }
 
-func (f *abstFrame) resizeStep(rx, ry, ex, ey int16) {
-    var diffx, diffy int16 = rx - f.resizing.rootX, ry - f.resizing.rootY
+func frameResizeStep(f Frame, rx, ry, ex, ey int16) {
+    resizing := f.ResizingState()
+
+    var diffx, diffy int16 = rx - resizing.rootX, ry - resizing.rootY
     var newx, newy int16 = 0, 0
     var neww, newh uint16 = 0, 0
     var validw, validh uint16 = 0, 0
     var flags uint16 = 0
 
-    if f.resizing.xs {
+    if resizing.xs {
         flags |= DoX
-        newx = f.resizing.x + diffx
+        newx = resizing.x + diffx
     }
-    if f.resizing.ys {
+    if resizing.ys {
         flags |= DoY
-        newy = f.resizing.y + diffy
+        newy = resizing.y + diffy
     }
-    if f.resizing.ws {
+    if resizing.ws {
         flags |= DoW
-        if f.resizing.xs {
-            neww = f.resizing.width - uint16(diffx)
+        if resizing.xs {
+            neww = resizing.width - uint16(diffx)
         } else {
-            neww = f.resizing.width + uint16(diffx)
+            neww = resizing.width + uint16(diffx)
         }
         validw = f.ValidateWidth(neww)
 
         // If validation changed our width, we need to make sure
         // our x-value is appropriately changed
-        if f.resizing.xs && validw != neww {
-            newx = f.resizing.x + int16(f.resizing.width - validw)
+        if resizing.xs && validw != neww {
+            newx = resizing.x + int16(resizing.width - validw)
         }
     }
-    if f.resizing.hs {
+    if resizing.hs {
         flags |= DoH
-        if f.resizing.ys {
-            newh = f.resizing.height - uint16(diffy)
+        if resizing.ys {
+            newh = resizing.height - uint16(diffy)
         } else {
-            newh = f.resizing.height + uint16(diffy)
+            newh = resizing.height + uint16(diffy)
         }
         validh = f.ValidateHeight(newh)
 
         // If validation changed our height, we need to make sure
         // our y-value is appropriately changed
-        if f.resizing.ys && validh != newh {
-            newy = f.resizing.y + int16(f.resizing.height - validh)
+        if resizing.ys && validh != newh {
+            newy = resizing.y + int16(resizing.height - validh)
         }
     }
 
     f.ConfigureFrame(flags, newx, newy, validw, validh, 0, 0, true)
 }
 
-func (f *abstFrame) resizeEnd(rx, ry, ex, ey int16) {
+func frameResizeEnd(f Frame, rx, ry, ex, ey int16) {
     // just zero out the resizing state
-    f.resizing.resizing = false
-    f.resizing.rootX, f.resizing.rootY = 0, 0
-    f.resizing.x, f.resizing.y = 0, 0
-    f.resizing.width, f.resizing.height = 0, 0
-    f.resizing.xs, f.resizing.ys = false, false
-    f.resizing.ws, f.resizing.hs = false, false
+    resizing := f.ResizingState()
+    resizing.resizing = false
+    resizing.rootX, resizing.rootY = 0, 0
+    resizing.x, resizing.y = 0, 0
+    resizing.width, resizing.height = 0, 0
+    resizing.xs, resizing.ys = false, false
+    resizing.ws, resizing.hs = false, false
+
+    // If windows are really slow to respond/resize, this may be necessary.
+    // If we don't, it's possible for the client to be out of whack inside
+    // the decorations.
+    // Example: Libreoffice in Xephyr. Try resizing it with the mouse and
+    // releasing the mouse button really quickly.
+    FrameReset(f)
 }
 

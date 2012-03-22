@@ -66,6 +66,14 @@ func (wm *state) focused() Client {
     return nil
 }
 
+func (wm *state) unfocusExcept(id xgb.Id) {
+    for _, c := range wm.focus {
+        if c.Id() != id {
+            c.Unfocused()
+        }
+    }
+}
+
 func (wm *state) focusAdd(c Client) {
     wm.focusRemove(c)
     wm.focus = append(wm.focus, c)
@@ -91,6 +99,7 @@ func (wm *state) fallback() {
     // No windows to fall back on... root focus
     // this is IMPORTANT. if we fail here, we risk a lock-up
     logMessage.Printf("Focus falling back to ROOT")
+    ROOT.focus()
     X.Conn().SetInputFocus(xgb.InputFocusPointerRoot, X.RootWin(), 0)
 }
 
