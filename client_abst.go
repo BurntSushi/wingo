@@ -23,8 +23,7 @@ import (
 type abstClient struct {
     window *window
     layer int
-    name string
-    vname string
+    name, vname, wmname string
     isMapped bool
     initialMap bool
     lastTime uint32
@@ -68,15 +67,17 @@ func newAbstractClient(id xgb.Id) (*abstClient, error) {
 
     name, err := ewmh.WmNameGet(X, id)
     if err != nil {
-        name = "N/A"
-        logWarning.Printf("Could not find name for window %X, using 'N/A'.", id)
+        name = ""
+        logWarning.Printf("Could not find name for window %X.", id)
     }
 
     vname, err := ewmh.WmVisibleNameGet(X, id)
     if err != nil {
         vname = ""
-        logWarning.Printf("Could not find visible name for window %X, " +
-                          "using 'N/A'.", id)
+    }
+    wmname, err := icccm.WmNameGet(X, id)
+    if err != nil {
+        wmname = ""
     }
 
     wintypes, err := ewmh.WmWindowTypeGet(X, id)
@@ -95,6 +96,7 @@ func newAbstractClient(id xgb.Id) (*abstClient, error) {
         layer: layer,
         name: name,
         vname: vname,
+        wmname: wmname,
         isMapped: false,
         initialMap: false,
         lastTime: 0,
@@ -592,7 +594,13 @@ func (c *abstClient) Name() string {
     if len(c.vname) > 0 {
         return c.vname
     }
-    return c.name
+    if len(c.name) > 0 {
+        return c.name
+    }
+    if len(c.wmname) > 0 {
+        return c.wmname
+    }
+    return "N/A"
 }
 
 func (c *abstClient) Win() *window {
