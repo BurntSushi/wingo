@@ -70,7 +70,11 @@ func (wm *state) stackRaise(c Client, configure bool) {
         }
 
         if c2.Layer() <= c.Layer() {
+            // When configuring, we either stack it below the client that
+            // came before this one, or stack it above everything else if
+            // it's c2 is the top client.
             if configure {
+                logMessage.Printf("Stacking %s above %s", c, c2)
                 c.Frame().ConfigureClient(DoSibling | DoStack, 0, 0, 0, 0,
                                           c2.Frame().ParentId(),
                                           xgb.StackModeAbove, false)
