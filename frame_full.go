@@ -7,7 +7,7 @@ type frameFull struct {
 }
 
 func newFrameFull(p *frameParent, c Client) *frameFull {
-    cp := clientPos{x: 20, y: 20, w: 40, h: 40}
+    cp := clientOffset{x: 20, y: 20, w: 40, h: 40}
     return &frameFull{newFrameAbst(p, c, cp)}
 }
 

@@ -52,6 +52,31 @@ type Frame interface {
     // resizeEnd(rx, ry, ex, ey int16) 
 }
 
+type frameParent struct {
+    window *window
+    client Client
+}
+
+// framePiece is similar to clientOffset in concept, but it represents
+// any other piece of the decorations. As such, it requires a bit more state.
+type framePiece struct {
+    w *window
+    imgActive xgb.Id
+    imgInactive xgb.Id
+    xoff, yoff int16
+    woff, hoff uint16
+}
+
+func (p *framePiece) StateActive() {
+    p.w.change(xgb.CWBackPixmap, uint32(p.imgActive))
+    p.w.clear()
+}
+
+func (p *framePiece) StateInactive() {
+    p.w.change(xgb.CWBackPixmap, uint32(p.imgInactive))
+    p.w.clear()
+}
+
 // The relative geometry of the client window in the frame parent window.
 // x and y are relative to the top-left corner of the parent window.
 // w and h are values that satisfy these properties:
@@ -59,7 +84,7 @@ type Frame interface {
 // parent_height - h = client_height
 // Where client_width and client_height is the width and height of the client
 // window inside the frame.
-type clientPos struct {
+type clientOffset struct {
     x, y int16
     w, h uint16
 }
@@ -76,11 +101,6 @@ type resizeState struct {
     x, y int16
     width, height uint16
     xs, ys, ws, hs bool
-}
-
-type frameParent struct {
-    window *window
-    client Client
 }
 
 func newParent(c Client) *frameParent {

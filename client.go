@@ -17,6 +17,16 @@ import (
     "github.com/BurntSushi/xgbutil/xwindow"
 )
 
+// I originally had this Client interface because my plan was to have
+// several different kinds of clients that implement this interface.
+// i.e., a normal client, a dock client, a desktop client, etc.
+// However, I think the similarity between each client is far too great to
+// be worth paying for code duplication. (Code gets duplicated when a function
+// has to add the receiver as an implementation of Client.)
+// We'll have to settle for things like
+// "if window type is weird { do weird stuff } else { do normal stuff }"
+// for now. I may change this at some point, or I may trash the interface
+// idea completely. I just don't quite know my requirements yet.
 type Client interface {
     Alive() bool
     Close()
@@ -56,9 +66,6 @@ func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
     client.manage()
 }
 
-// An "client" is a type that is never directly used. (i.e., abstract)
-// It is only embedded. It provides a common set of methods and attributes
-// to all clients. Some of its methods may be "overridden".
 type client struct {
     window *window
     layer int
@@ -162,14 +169,14 @@ func (c *client) manage() {
 
     // time for reparenting/decorating
     c.frameInit()
-    c.FrameSlim()
+    c.FrameBorders()
 
     // We're committed now...
 
     // time to add the client to the WM state
     WM.clientAdd(c)
     WM.focusAdd(c)
-    WM.stackRaise(c, false)
+    WM.stackRaise(c, true)
 
     c.window.listen(xgb.EventMaskPropertyChange |
                     xgb.EventMaskStructureNotify)
@@ -268,7 +275,7 @@ func (c *client) setupMoveDrag(dragWin xgb.Id, buttonStr string) {
 // setupResizeDrag does the boiler plate for registering this client's
 // "resize" drag.
 func (c *client) setupResizeDrag(dragWin xgb.Id, buttonStr string,
-                                         direction uint32) {
+                                 direction uint32) {
     dStart := xgbutil.MouseDragBeginFun(
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) (bool, xgb.Id) {
             return frameResizeBegin(c.Frame(), direction, rx, ry, ex, ey)

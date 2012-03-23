@@ -10,15 +10,15 @@ import (
 type abstFrame struct {
     parent *frameParent
     state int
-    clientPos clientPos
+    clientOffset clientOffset
     moving *moveState
     resizing *resizeState
 }
 
-func newFrameAbst(p *frameParent, c Client, cp clientPos) *abstFrame {
+func newFrameAbst(p *frameParent, c Client, cp clientOffset) *abstFrame {
     f := &abstFrame {
         parent: p,
-        clientPos: cp,
+        clientOffset: cp,
         moving: &moveState{},
         resizing: &resizeState{},
     }
@@ -65,10 +65,10 @@ func (f *abstFrame) configureClient(flags uint16, x, y int16,
 
     // This will change with other frames
     if DoW & flags > 0 {
-        w += f.clientPos.w
+        w += f.clientOffset.w
     }
     if DoH & flags > 0 {
-        h += f.clientPos.h
+        h += f.clientOffset.h
     }
 
     return x, y, w, h
@@ -93,18 +93,18 @@ func (f *abstFrame) configureFrame(flags uint16, fx, fy int16, fw, fh uint16,
         framey = fy
     }
     if DoW & flags > 0 {
-        cw -= f.clientPos.w
+        cw -= f.clientOffset.w
         if !ignoreHints {
             cw = f.Client().ValidateWidth(cw)
-            fw = cw + f.clientPos.w
+            fw = cw + f.clientOffset.w
         }
         clientw = cw
     }
     if DoH & flags > 0 {
-        ch -= f.clientPos.h
+        ch -= f.clientOffset.h
         if !ignoreHints {
             ch = f.Client().ValidateHeight(ch)
-            fh = ch + f.clientPos.h
+            fh = ch + f.clientOffset.h
         }
         clienth = ch
     }
@@ -116,7 +116,7 @@ func (f *abstFrame) configureFrame(flags uint16, fx, fy int16, fw, fh uint16,
                        configNotify.Bytes())
 
     f.Client().Win().moveresize(flags | DoX | DoY,
-                                f.clientPos.x, f.clientPos.y, cw, ch)
+                                f.clientOffset.x, f.clientOffset.y, cw, ch)
     f.Parent().Win().configure(flags, fx, fy, fw, fh, sibling, stackMode)
 }
 
@@ -156,12 +156,14 @@ func (f *abstFrame) ResizingState() *resizeState {
 // ValidateHeight validates a height of a *frame*, which is equivalent
 // to validating the height of a client.
 func (f *abstFrame) ValidateHeight(height uint16) uint16 {
-    return f.Client().ValidateHeight(height - f.clientPos.h) + f.clientPos.h
+    return f.Client().ValidateHeight(height - f.clientOffset.h) +
+           f.clientOffset.h
 }
 
 // ValidateWidth validates a width of a *frame*, which is equivalent
 // to validating the width of a client.
 func (f *abstFrame) ValidateWidth(width uint16) uint16 {
-    return f.Client().ValidateWidth(width - f.clientPos.w) + f.clientPos.w
+    return f.Client().ValidateWidth(width - f.clientOffset.w) +
+           f.clientOffset.w
 }
 

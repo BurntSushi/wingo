@@ -7,7 +7,7 @@ type frameNada struct {
 }
 
 func newFrameNada(p *frameParent, c Client) *frameNada {
-    return &frameNada{newFrameAbst(p, c, clientPos{})}
+    return &frameNada{newFrameAbst(p, c, clientOffset{})}
 }
 
 func (f *frameNada) Off() {
