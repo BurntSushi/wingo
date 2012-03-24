@@ -1,0 +1,10 @@
+$THIN_COLOR := 0x000000
+
+[Borders]
+border_width := 25
+corner_size := 24
+a_thin_color := $THIN_COLOR
+i_thin_color := $THIN_COLOR
+a_border_color := 0x3366ff
+i_border_color := 0xff0000
+

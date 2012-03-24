@@ -1,7 +1,11 @@
-[SectionA]
-yikes := hello
-whoa := nice
+[MouseClient]
+1 := FocusRaise
 
-[SectionB]
-whoa := groovy
+[MouseFrame]
+Mod4-1 := Move
+Mod4-3 := Resize
+
+[MouseBordersTopSide]
+1 := Resize Top
+1 up := FocusRaise
 

@@ -16,7 +16,8 @@ func (f *frameBorders) newPieceWindow(ident string, cursor xgb.Id,
                                       direction uint32) *window {
     mask := uint32(xgb.CWBackPixmap | xgb.CWEventMask | xgb.CWCursor)
     vals := []uint32{xgb.BackPixmapParentRelative,
-                     xgb.EventMaskButtonPress | xgb.EventMaskButtonRelease,
+                     xgb.EventMaskButtonPress | xgb.EventMaskButtonRelease |
+                     xgb.EventMaskButtonMotion | xgb.EventMaskPointerMotion,
                      uint32(cursor)}
     win := createWindow(f.ParentId(), mask, vals)
 

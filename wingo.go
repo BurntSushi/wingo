@@ -21,6 +21,7 @@ var X *xgbutil.XUtil
 var WM *state
 var ROOT *window
 var CONF *conf
+var THEME *theme
 
 func quit() {
     logMessage.Println("The User has told us to quit.")
@@ -49,11 +50,19 @@ func main() {
     }
     defer X.Conn().Close()
 
-    // Load configuration and theme info
+    // Load configuration
     err = loadConfig()
     if err != nil {
         logError.Println(err)
         logError.Println("No configuration found. Quitting...")
+        return
+    }
+
+    // Load theme
+    err = loadTheme()
+    if err != nil {
+        logError.Println(err)
+        logError.Println("No theme configuration found. Quitting...")
         return
     }
 
