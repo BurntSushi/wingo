@@ -15,7 +15,7 @@ type abstFrame struct {
     resizing *resizeState
 }
 
-func newFrameAbst(p *frameParent, c Client, cp clientOffset) *abstFrame {
+func newFrameAbst(p *frameParent, c *client, cp clientOffset) *abstFrame {
     f := &abstFrame {
         parent: p,
         clientOffset: cp,
@@ -42,7 +42,7 @@ func (f *abstFrame) Unmap() {
     f.parent.window.unmap()
 }
 
-func (f *abstFrame) Client() Client {
+func (f *abstFrame) Client() *client {
     return f.parent.client
 }
 

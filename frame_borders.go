@@ -12,20 +12,33 @@ type frameBorders struct {
     rightSide, rightTop, rightBottom framePiece
 }
 
-func newFrameBorders(p *frameParent, c Client) *frameBorders {
+func newFrameBorders(p *frameParent, c *client) *frameBorders {
     cp := clientOffset{x: 20, y: 20, w: 40, h: 40}
     f := &frameBorders{abstFrame: newFrameAbst(p, c, cp)}
 
     f.topSide = f.newTopSide()
-    f.topSide.w.moveresize(DoX | DoY | DoH,
-                           f.topSide.xoff, f.topSide.yoff,
-                           0, f.topSide.hoff)
+    f.topLeft = f.newTopLeft()
+    f.topRight = f.newTopRight()
+
+    f.topSide.initialGeom(DoX | DoY | DoH)
+    f.topLeft.initialGeom(DoX | DoY | DoW | DoH)
+    f.topRight.initialGeom(DoY | DoW | DoH)
 
     return f
 }
 
+func (f *frameBorders) Destroy() {
+    f.topSide.destroy()
+    f.topLeft.destroy()
+    f.topRight.destroy()
+
+    f.abstFrame.Destroy()
+}
+
 func (f *frameBorders) Off() {
-    f.topSide.w.unmap()
+    f.topSide.win.unmap()
+    f.topLeft.win.unmap()
+    f.topRight.win.unmap()
 }
 
 func (f *frameBorders) On() {
@@ -38,13 +51,17 @@ func (f *frameBorders) On() {
         f.StateInactive()
     }
 
-    f.topSide.w.map_()
+    f.topSide.win.map_()
+    f.topLeft.win.map_()
+    f.topRight.win.map_()
 }
 
 func (f *frameBorders) StateActive() {
     f.state = StateActive
 
-    f.topSide.StateActive()
+    f.topSide.active()
+    f.topLeft.active()
+    f.topRight.active()
 
     f.ParentWin().change(xgb.CWBackPixel, uint32(0xff0000))
     f.ParentWin().clear()
@@ -53,7 +70,9 @@ func (f *frameBorders) StateActive() {
 func (f *frameBorders) StateInactive() {
     f.state = StateInactive
 
-    f.topSide.StateInactive()
+    f.topSide.inactive()
+    f.topLeft.inactive()
+    f.topRight.inactive()
 
     f.ParentWin().change(xgb.CWBackPixel, uint32(0xff0000))
     f.ParentWin().clear()
@@ -88,6 +107,8 @@ func (f *frameBorders) ConfigureFrame(flags uint16, fx, fy int16, fw, fh uint16,
     f.configureFrame(flags, fx, fy, fw, fh, sibling, stackMode, ignoreHints)
     fg, _ := f.Geom(), f.Client().Geom()
 
-    f.topSide.w.moveresize(DoW, 0, 0, fg.Width() - f.topSide.woff, 0)
+    f.topSide.win.moveresize(DoW, 0, 0, fg.Width() - f.topSide.woff, 0)
+    f.topRight.win.moveresize(DoX, f.topSide.x() + int16(f.topSide.w()),
+                              0, 0, 0)
 }
 

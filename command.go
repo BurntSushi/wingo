@@ -5,7 +5,7 @@ import "time"
 
 // Shortcut for executing Client interface functions that have no parameters
 // and no return values on the currently focused window.
-func withFocused(f func(c Client)) {
+func withFocused(f func(c *client)) {
     focused := WM.focused()
     if focused != nil {
         f(focused)
@@ -13,37 +13,37 @@ func withFocused(f func(c Client)) {
 }
 
 func cmd_active_test1() {
-    withFocused(func(c Client) {
+    withFocused(func(c *client) {
         FrameMR(c.Frame(), DoX | DoY, 0, 0, 0, 0, false)
     })
 }
 
 func cmd_active_close() {
-    withFocused(func(c Client) {
+    withFocused(func(c *client) {
         c.Close()
     })
 }
 
 func cmd_active_frame_nada() {
-    withFocused(func(c Client) {
+    withFocused(func(c *client) {
         c.FrameNada()
     })
 }
 
 func cmd_active_frame_slim() {
-    withFocused(func(c Client) {
+    withFocused(func(c *client) {
         c.FrameSlim()
     })
 }
 
 func cmd_active_frame_borders() {
-    withFocused(func(c Client) {
+    withFocused(func(c *client) {
         c.FrameBorders()
     })
 }
 
 func cmd_active_frame_full() {
-    withFocused(func(c Client) {
+    withFocused(func(c *client) {
         c.FrameFull()
     })
 }
@@ -58,7 +58,7 @@ func cmd_active_flash() {
     focused := WM.focused()
 
     if focused != nil {
-        go func(c Client) {
+        go func(c *client) {
             for i := 0; i < 10; i++ {
                 if c.Frame().State() == StateActive {
                     c.Frame().StateInactive()

@@ -6,7 +6,7 @@ type frameSlim struct {
     *abstFrame
 }
 
-func newFrameSlim(p *frameParent, c Client) *frameSlim {
+func newFrameSlim(p *frameParent, c *client) *frameSlim {
     cp := clientOffset{x: 20, y: 20, w: 40, h: 40}
     return &frameSlim{newFrameAbst(p, c, cp)}
 }

@@ -20,6 +20,7 @@ import (
 var X *xgbutil.XUtil
 var WM *state
 var ROOT *window
+var CONF *conf
 
 func quit() {
     logMessage.Println("The User has told us to quit.")
@@ -47,6 +48,14 @@ func main() {
         return
     }
     defer X.Conn().Close()
+
+    // Load configuration and theme info
+    err = loadConfig()
+    if err != nil {
+        logError.Println(err)
+        logError.Println("No configuration found. Quitting...")
+        return
+    }
 
     // Create WM state
     WM = newState()

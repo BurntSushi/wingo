@@ -6,7 +6,7 @@ type frameFull struct {
     *abstFrame
 }
 
-func newFrameFull(p *frameParent, c Client) *frameFull {
+func newFrameFull(p *frameParent, c *client) *frameFull {
     cp := clientOffset{x: 20, y: 20, w: 40, h: 40}
     return &frameFull{newFrameAbst(p, c, cp)}
 }

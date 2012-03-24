@@ -12,28 +12,61 @@ const (
     CRNR = BW + 24
 )
 
-func (f *frameBorders) newPieceWindow(cursor xgb.Id, direction uint32) *window {
+func (f *frameBorders) newPieceWindow(ident string, cursor xgb.Id,
+                                      direction uint32) *window {
     mask := uint32(xgb.CWBackPixmap | xgb.CWEventMask | xgb.CWCursor)
     vals := []uint32{xgb.BackPixmapParentRelative,
                      xgb.EventMaskButtonPress | xgb.EventMaskButtonRelease,
                      uint32(cursor)}
-    wid := createWindow(f.ParentId(), mask, vals)
+    win := createWindow(f.ParentId(), mask, vals)
 
-    // don't forget to attach some event handlers
+    f.Client().framePieceMouseConfig("borders_" + ident, win.id)
 
-    return wid
+    return win
 }
 
 func (f *frameBorders) newTopSide() framePiece {
-    imgA := xgraphics.Border(xgraphics.BorderTop, 0x00ff00, 0x3366ff, 1, BW)
-    imgIa := xgraphics.Border(xgraphics.BorderTop, 0, 0, 1, BW)
+    imgA := xgraphics.Border(xgraphics.BorderTop, 0x0, 0x3366ff, 1, BW)
+    imgI := xgraphics.Border(xgraphics.BorderTop, 0, 0, 1, BW)
+
     return framePiece{
-        w: f.newPieceWindow(cursorTopSide, ewmh.SizeTop),
+        win: f.newPieceWindow("topside", cursorTopSide, ewmh.SizeTop),
         imgActive: xgraphics.CreatePixmap(X, imgA),
-        imgInactive: xgraphics.CreatePixmap(X, imgIa),
+        imgInactive: xgraphics.CreatePixmap(X, imgI),
         xoff: CRNR,
         yoff: 0,
         woff: CRNR * 2,
+        hoff: BW,
+    }
+}
+
+func (f *frameBorders) newTopLeft() framePiece {
+    imgA := xgraphics.Border(xgraphics.BorderTop | xgraphics.BorderLeft,
+                             0x0, 0x3366ff, CRNR, BW)
+    imgI := xgraphics.Border(xgraphics.BorderTop, 0, 0, CRNR, BW)
+    return framePiece{
+        win: f.newPieceWindow("topleft", cursorTopLeftCorner, ewmh.SizeTopLeft),
+        imgActive: xgraphics.CreatePixmap(X, imgA),
+        imgInactive: xgraphics.CreatePixmap(X, imgI),
+        xoff: 0,
+        yoff: 0,
+        woff: CRNR,
+        hoff: BW,
+    }
+}
+
+func (f *frameBorders) newTopRight() framePiece {
+    imgA := xgraphics.Border(xgraphics.BorderTop | xgraphics.BorderRight,
+                             0x0, 0x3366ff, CRNR, BW)
+    imgI := xgraphics.Border(xgraphics.BorderTop, 0, 0, CRNR, BW)
+    return framePiece{
+        win: f.newPieceWindow("topright", cursorTopRightCorner,
+                              ewmh.SizeTopRight),
+        imgActive: xgraphics.CreatePixmap(X, imgA),
+        imgInactive: xgraphics.CreatePixmap(X, imgI),
+        xoff: CRNR,
+        yoff: 0,
+        woff: CRNR,
         hoff: BW,
     }
 }

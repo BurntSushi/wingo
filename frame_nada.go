@@ -6,7 +6,7 @@ type frameNada struct {
     *abstFrame
 }
 
-func newFrameNada(p *frameParent, c Client) *frameNada {
+func newFrameNada(p *frameParent, c *client) *frameNada {
     return &frameNada{newFrameAbst(p, c, clientOffset{})}
 }
 

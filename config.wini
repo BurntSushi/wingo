@@ -1,0 +1,7 @@
+[SectionA]
+yikes := hello
+whoa := nice
+
+[SectionB]
+whoa := groovy
+

@@ -44,6 +44,11 @@ type Client interface {
     Layer() int
     Map()
     Mapped() bool
+    Raise()
+    SetupFocus(win xgb.Id, buttonStr string, grab bool)
+    SetupMoveDrag(parent xgb.Id, buttonStr string, grab bool)
+    SetupResizeDrag(parent xgb.Id, buttonStr string, grab bool,
+                    direction uint32)
     String() string
     TrulyAlive() bool
     Unfocused()
@@ -176,7 +181,7 @@ func (c *client) manage() {
     // time to add the client to the WM state
     WM.clientAdd(c)
     WM.focusAdd(c)
-    WM.stackRaise(c, true)
+    c.Raise()
 
     c.window.listen(xgb.EventMaskPropertyChange |
                     xgb.EventMaskStructureNotify)
@@ -214,15 +219,12 @@ func (c *client) manage() {
         func(X *xgbutil.XUtil, ev xevent.DestroyNotifyEvent) {
             c.unmanage()
     }).Connect(X, c.window.id)
-    mousebind.ButtonPressFun(
-        func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
-            c.Focus()
-            WM.stackRaise(c, true)
-            xevent.ReplayPointer(X)
-    }).Connect(X, c.window.id, "1", true, true)
 
-    c.setupMoveDrag(c.frame.ParentId(), "Mod4-1")
-    c.setupResizeDrag(c.frame.ParentId(), "Mod4-3", ewmh.Infer)
+    c.clientMouseConfig()
+    c.frameMouseConfig()
+
+    // c.SetupMoveDrag(c.frame.ParentId(), "Mod4-1", true) 
+    // c.SetupResizeDrag(c.frame.ParentId(), "Mod4-3", true, ewmh.Infer) 
 
     // If the initial state isn't iconic or is absent, then we can map
     if c.hints.Flags & icccm.HintState == 0 ||
@@ -253,9 +255,22 @@ func (c *client) frameSet(f Frame) {
     FrameReset(c.Frame())
 }
 
+// SetupFocus is a useful function to setup a callback when you want a
+// client to have focus. Particularly if, in the future, we want to allow
+// a new focus model (like follows-mouse).
+// This is not used in the 'Manage' method because we have to do some special
+// stuff when attaching a button press to an actual client window.
+func (c *client) SetupFocus(win xgb.Id, buttonStr string, grab bool) {
+    mousebind.ButtonPressFun(
+        func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
+            c.Focus()
+            c.Raise()
+    }).Connect(X, win, buttonStr, false, grab)
+}
+
 // setupMoveDrag does the boiler plate for registering this client's
 // "move" drag.
-func (c *client) setupMoveDrag(dragWin xgb.Id, buttonStr string) {
+func (c *client) SetupMoveDrag(dragWin xgb.Id, buttonStr string, grab bool) {
     dStart := xgbutil.MouseDragBeginFun(
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) (bool, xgb.Id) {
             frameMoveBegin(c.Frame(), rx, ry, ex, ey)
@@ -269,12 +284,12 @@ func (c *client) setupMoveDrag(dragWin xgb.Id, buttonStr string) {
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
             frameMoveEnd(c.Frame(), rx, ry, ex, ey)
     })
-    mousebind.Drag(X, dragWin, buttonStr, dStart, dStep, dEnd)
+    mousebind.Drag(X, dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
 
 // setupResizeDrag does the boiler plate for registering this client's
 // "resize" drag.
-func (c *client) setupResizeDrag(dragWin xgb.Id, buttonStr string,
+func (c *client) SetupResizeDrag(dragWin xgb.Id, buttonStr string, grab bool,
                                  direction uint32) {
     dStart := xgbutil.MouseDragBeginFun(
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) (bool, xgb.Id) {
@@ -288,7 +303,7 @@ func (c *client) setupResizeDrag(dragWin xgb.Id, buttonStr string,
         func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
             frameResizeEnd(c.Frame(), rx, ry, ex, ey)
     })
-    mousebind.Drag(X, dragWin, buttonStr, dStart, dStep, dEnd)
+    mousebind.Drag(X, dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
 
 func (c *client) unmanage() {
@@ -647,6 +662,10 @@ func (c *client) Name() string {
         return c.wmname
     }
     return "N/A"
+}
+
+func (c *client) Raise() {
+    WM.stackRaise(c, true)
 }
 
 func (c *client) Win() *window {

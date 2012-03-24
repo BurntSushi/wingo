@@ -43,7 +43,7 @@ func (wm *state) updateEwmhStacking() {
 // If configure is false, this becomes a state-modifying function only.
 // Which is used when first managing a window, or when complying with
 // a user request to restack.
-func (wm *state) stackRaise(c Client, configure bool) {
+func (wm *state) stackRaise(c *client, configure bool) {
     // make sure we update the EWMH stacking list when we're done
     defer wm.updateEwmhStacking()
 
@@ -76,7 +76,7 @@ func (wm *state) stackRaise(c Client, configure bool) {
                                           xgb.StackModeAbove, false)
             }
             wm.stack = append(wm.stack[:i],
-                              append([]Client{c}, wm.stack[i:]...)...)
+                              append([]*client{c}, wm.stack[i:]...)...)
             return
         }
     }
@@ -98,7 +98,7 @@ func (wm *state) stackRaise(c Client, configure bool) {
 // This is only done when we raise a client (in which case, the client is
 // subsequently re-added to the stacking list) or when a client is unmanaged.
 // We maintain a client's stacking position even when it is unmapped.
-func (wm *state) stackRemove(c Client) {
+func (wm *state) stackRemove(c *client) {
     if i := cliIndex(c, wm.stack); i > -1 {
         wm.stack = append(wm.stack[:i], wm.stack[i+1:]...)
     }
