@@ -54,7 +54,7 @@ func loadMouseConfig(cdata *wini.Data, section string) {
     case len(unmouse) > 7 && unmouse[:7] == "borders":
         ident = "borders_" + unmouse[7:]
     case len(unmouse) > 4 && unmouse[:4] == "full":
-        ident = "full_" + unmouse[5:]
+        ident = "full_" + unmouse[4:]
     default:
         ident = unmouse
     }
@@ -111,13 +111,13 @@ func loadConfigFile() (*wini.Data, error) {
 func strToDirection(s string) uint32 {
     switch strings.ToLower(s) {
     case "top": return ewmh.SizeTop
-    case "topleft": return ewmh.SizeTopLeft
-    case "topright": return ewmh.SizeTopRight
     case "bottom": return ewmh.SizeBottom
-    case "bottomleft": return ewmh.SizeBottomLeft
-    case "bottomright": return ewmh.SizeBottomRight
     case "left": return ewmh.SizeLeft
     case "right": return ewmh.SizeRight
+    case "topleft": return ewmh.SizeTopLeft
+    case "topright": return ewmh.SizeTopRight
+    case "bottomleft": return ewmh.SizeBottomLeft
+    case "bottomright": return ewmh.SizeBottomRight
     }
 
     return ewmh.Infer

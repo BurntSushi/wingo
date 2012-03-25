@@ -174,7 +174,7 @@ func (c *client) manage() {
 
     // time for reparenting/decorating
     c.frameInit()
-    c.FrameBorders()
+    c.FrameFull()
 
     // We're committed now...
 

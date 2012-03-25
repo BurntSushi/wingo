@@ -87,6 +87,10 @@ type framePiece struct {
     imgInactive xgb.Id
 }
 
+func newFramePiece(win *window, imgA, imgI xgb.Id) framePiece {
+    return framePiece{win: win, imgActive: imgA, imgInactive: imgI}
+}
+
 func (p *framePiece) destroy() {
     p.win.destroy() // also detaches all event handlers
     xgraphics.FreePixmap(X, p.imgActive)

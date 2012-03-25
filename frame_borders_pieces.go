@@ -6,10 +6,6 @@ import (
     "github.com/BurntSushi/xgbutil/xgraphics"
 )
 
-func newFramePiece(win *window, imgA, imgI xgb.Id) framePiece {
-    return framePiece{win: win, imgActive: imgA, imgInactive: imgI}
-}
-
 func (f *frameBorders) newPieceWindow(ident string, cursor xgb.Id) *window {
     mask := uint32(xgb.CWBackPixmap | xgb.CWEventMask | xgb.CWCursor)
     vals := []uint32{xgb.BackPixmapParentRelative,
@@ -51,7 +47,7 @@ func (f *frameBorders) newTopSide() framePiece {
     pixA, pixI := f.pieceImages(renderBorderTop,
                                 renderGradientVert, renderGradientRegular,
                                 1, THEME.borders.borderSize)
-    win := f.newPieceWindow("topside", cursorTopSide)
+    win := f.newPieceWindow("top", cursorTopSide)
     win.moveresize(DoX | DoY | DoH,
                    THEME.borders.borderSize, 0,
                    0, THEME.borders.borderSize)
@@ -62,10 +58,9 @@ func (f *frameBorders) newBottomSide() framePiece {
     pixA, pixI := f.pieceImages(renderBorderBottom,
                                 renderGradientVert, renderGradientReverse,
                                 1, THEME.borders.borderSize)
-    win := f.newPieceWindow("bottomside", cursorBottomSide)
+    win := f.newPieceWindow("bottom", cursorBottomSide)
     win.moveresize(DoX | DoH,
-                   THEME.borders.borderSize, 0,
-                   0, THEME.borders.borderSize)
+                   THEME.borders.borderSize, 0, 0, THEME.borders.borderSize)
     return newFramePiece(win, pixA, pixI)
 }
 

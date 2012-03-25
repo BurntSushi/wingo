@@ -5,8 +5,52 @@
 Mod4-1 := Move
 Mod4-3 := Resize
 
-[MouseBordersTopSide]
+[MouseFullTop]
 1 := Resize Top
+1 down := FocusRaise
+
+[MouseFullBottom]
+1 := Resize Bottom
+1 down := FocusRaise
+
+[MouseFullLeft]
+1 := Resize Left
+1 down := FocusRaise
+
+[MouseFullRight]
+1 := Resize Right
+1 down := FocusRaise
+
+[MouseFullTopLeft]
+1 := Resize TopLeft
+1 down := FocusRaise
+
+[MouseFullTopRight]
+1 := Resize TopRight
+1 down := FocusRaise
+
+[MouseFullBottomLeft]
+1 := Resize BottomLeft
+1 down := FocusRaise
+
+[MouseFullBottomRight]
+1 := Resize BottomRight
+1 down := FocusRaise
+
+[MouseBordersTop]
+1 := Resize Top
+1 down := FocusRaise
+
+[MouseBordersBottom]
+1 := Resize Bottom
+1 down := FocusRaise
+
+[MouseBordersLeft]
+1 := Resize Left
+1 down := FocusRaise
+
+[MouseBordersRight]
+1 := Resize Right
 1 down := FocusRaise
 
 [MouseBordersTopLeft]
@@ -17,39 +61,11 @@ Mod4-3 := Resize
 1 := Resize TopRight
 1 down := FocusRaise
 
-[MouseBordersLeft]
-1 := Resize Left
-1 down := FocusRaise
-
-[MouseBordersLeftTop]
-1 := Resize TopLeft
-1 down := FocusRaise
-
-[MouseBordersLeftBottom]
-1 := Resize BottomLeft
-1 down := FocusRaise
-
-[MouseBordersBottomSide]
-1 := Resize Bottom
-1 down := FocusRaise
-
 [MouseBordersBottomLeft]
 1 := Resize BottomLeft
 1 down := FocusRaise
 
 [MouseBordersBottomRight]
-1 := Resize BottomRight
-1 down := FocusRaise
-
-[MouseBordersRight]
-1 := Resize Right
-1 down := FocusRaise
-
-[MouseBordersRightTop]
-1 := Resize TopRight
-1 down := FocusRaise
-
-[MouseBordersRightBottom]
 1 := Resize BottomRight
 1 down := FocusRaise
 

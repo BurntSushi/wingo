@@ -9,8 +9,14 @@ import (
 import "github.com/BurntSushi/wingo/wini"
 
 type theme struct {
+    full themeFull
     borders themeBorders
     slim themeSlim
+}
+
+type themeFull struct {
+    borderSize int
+    aBorderColor, iBorderColor int
 }
 
 type themeBorders struct {
@@ -26,6 +32,11 @@ type themeSlim struct {
 
 func defaultTheme() *theme {
     return &theme{
+        full: themeFull{
+            borderSize: 10,
+            aBorderColor: 0x3366ff,
+            iBorderColor: 0xdfdcdf,
+        },
         borders: themeBorders{
             borderSize: 10,
             aThinColor: 0x0,
@@ -51,6 +62,10 @@ func loadTheme() error {
 
     for _, section := range tdata.Sections() {
         switch {
+        case section == "full":
+            for _, key := range tdata.Keys(section) {
+                loadFullOption(key)
+            }
         case section == "borders":
             for _, key := range tdata.Keys(section) {
                 loadBorderOption(key)
@@ -67,6 +82,14 @@ func loadTheme() error {
 
 func loadThemeFile() (*wini.Data, error) {
     return wini.Parse("theme.wini")
+}
+
+func loadFullOption(k wini.Key) {
+    switch k.Name() {
+    case "border_size": setInt(k, &THEME.full.borderSize)
+    case "a_border_color": setInt(k, &THEME.full.aBorderColor)
+    case "i_border_color": setInt(k, &THEME.full.iBorderColor)
+    }
 }
 
 func loadBorderOption(k wini.Key) {

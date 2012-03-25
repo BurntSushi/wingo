@@ -6,10 +6,8 @@ type frameBorders struct {
     *abstFrame
 
     // pieces
-    topSide, topLeft, topRight framePiece
-    bottomSide, bottomLeft, bottomRight framePiece
-    leftSide, leftTop, leftBottom framePiece
-    rightSide, rightTop, rightBottom framePiece
+    topSide, bottomSide, leftSide, rightSide framePiece
+    topLeft, topRight, bottomLeft, bottomRight framePiece
 }
 
 func newFrameBorders(p *frameParent, c *client) *frameBorders {
@@ -145,20 +143,20 @@ func (f *frameBorders) ConfigureFrame(flags, fx, fy, fw, fh int,
 
     f.topSide.win.moveresize(DoW, 0, 0,
                              fg.Width() - f.topLeft.w() - f.topRight.w(), 0)
-    f.bottomSide.win.moveresize(DoY | DoW, 0,
-                                fg.Height() - f.bottomSide.h(),
+    f.bottomSide.win.moveresize(DoY | DoW,
+                                0, fg.Height() - f.bottomSide.h(),
                                 f.topSide.w(), 0)
-    f.leftSide.win.moveresize(DoH, 0, 0, 0,
-                              fg.Height() - f.topLeft.h() - f.bottomLeft.h())
+    f.leftSide.win.moveresize(DoH, 0, 0,
+                              0, fg.Height() - f.topLeft.h() - f.bottomLeft.h())
     f.rightSide.win.moveresize(DoX | DoH,
-                               fg.Width() - f.rightSide.w(), 0, 0,
-                               f.leftSide.h())
+                               fg.Width() - f.rightSide.w(), 0,
+                               0, f.leftSide.h())
 
-    f.topRight.win.moveresize(DoX, f.topLeft.w() + f.topSide.w(),
-                              0, 0, 0)
+    f.topRight.win.moveresize(DoX, f.topLeft.w() + f.topSide.w(), 0, 0, 0)
     f.bottomLeft.win.moveresize(DoY, 0, f.bottomSide.y(), 0, 0)
     f.bottomRight.win.moveresize(DoX | DoY,
                                  f.bottomLeft.w() + f.bottomSide.w(),
-                                 f.bottomSide.y(), 0, 0)
+                                 f.bottomSide.y(),
+                                 0, 0)
 }
 

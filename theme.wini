@@ -2,6 +2,12 @@ $THIN_COLOR := 0x585a5d
 $BLUE := 0x3366ff
 $ORANGE := 0xff7f00
 $GREY := 0xdfdcdf
+$PURPLE := 0xff00ff
+
+[Full]
+border_size := 20
+a_border_color := $PURPLE
+i_border_color := $GREY
 
 [Borders]
 border_size := 5
