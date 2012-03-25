@@ -78,15 +78,13 @@ func (p *frameParent) Win() *window {
     return p.window
 }
 
-// framePiece is similar to clientOffset in concept, but it represents
-// any other piece of the decorations. As such, it requires a bit more state.
-// The corresponding "new" functions for this type can be found in *pieces.go
+// framePiece contains the information required to show *any* piece of the
+// decorations. Basically, it contains the raw X window and pixmaps for each
+// of the available states for quick switching.
 type framePiece struct {
     win *window
     imgActive xgb.Id
     imgInactive xgb.Id
-    xoff, yoff int
-    woff, hoff int
 }
 
 func (p *framePiece) destroy() {
@@ -103,10 +101,6 @@ func (p *framePiece) active() {
 func (p *framePiece) inactive() {
     p.win.change(xgb.CWBackPixmap, uint32(p.imgInactive))
     p.win.clear()
-}
-
-func (p *framePiece) initialGeom(flags int) {
-    p.win.moveresize(flags, p.xoff, p.yoff, p.woff, p.hoff)
 }
 
 func (p *framePiece) x() int {

@@ -39,10 +39,10 @@ func (mcmd mouseCommand) setup(c *client, wid xgb.Id) {
         }
     }
 
-    // If we're putting this on the client window, we need to propagate
+    // If we're putting this on the client or frame window, we need to propagate
     // the events (i.e., grab synchronously).
     // Otherwise, we don't need to grab at all!
-    if wid == c.window.id {
+    if wid == c.Id() || (c.Frame() != nil && wid == c.Frame().ParentId()) {
         mcmd.down = true // X dies otherwise, WEIRD!
         mcmd.attach(wid, func() { run(c) }, true, true)
     } else {

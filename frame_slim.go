@@ -7,7 +7,12 @@ type frameSlim struct {
 }
 
 func newFrameSlim(p *frameParent, c *client) *frameSlim {
-    cp := clientOffset{x: 20, y: 20, w: 40, h: 40}
+    cp := clientOffset{
+        x: THEME.slim.borderSize,
+        y: THEME.slim.borderSize,
+        w: THEME.slim.borderSize * 2,
+        h: THEME.slim.borderSize * 2,
+    }
     return &frameSlim{newFrameAbst(p, c, cp)}
 }
 
@@ -28,31 +33,31 @@ func (f *frameSlim) On() {
 func (f *frameSlim) StateActive() {
     f.state = StateActive
 
-    f.ParentWin().change(xgb.CWBackPixel, uint32(0xff7f00))
+    f.ParentWin().change(xgb.CWBackPixel, uint32(THEME.slim.aBorderColor))
     f.ParentWin().clear()
 }
 
 func (f *frameSlim) StateInactive() {
     f.state = StateInactive
 
-    f.ParentWin().change(xgb.CWBackPixel, uint32(0xdfdcdf))
+    f.ParentWin().change(xgb.CWBackPixel, uint32(THEME.slim.iBorderColor))
     f.ParentWin().clear()
 }
 
 func (f *frameSlim) Top() int {
-    return 20
+    return THEME.slim.borderSize
 }
 
 func (f *frameSlim) Bottom() int {
-    return 20
+    return THEME.slim.borderSize
 }
 
 func (f *frameSlim) Left() int {
-    return 20
+    return THEME.slim.borderSize
 }
 
 func (f *frameSlim) Right() int {
-    return 20
+    return THEME.slim.borderSize
 }
 
 func (f *frameSlim) ConfigureClient(flags, x, y, w, h int,

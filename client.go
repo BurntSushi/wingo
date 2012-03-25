@@ -528,7 +528,7 @@ func (c *client) GravitizeX(x int, gravity int) int {
         x -= f.Left()
     case g == xgb.GravityNorth || g == xgb.GravitySouth ||
          g == xgb.GravityCenter:
-        x -= absInt(f.Left() - f.Right()) / 2
+        x -= abs(f.Left() - f.Right()) / 2
     case g == xgb.GravityNorthEast || g == xgb.GravityEast ||
          g == xgb.GravitySouthEast:
         x -= f.Left() + f.Right()
@@ -560,7 +560,7 @@ func (c *client) GravitizeY(y int, gravity int) int {
         y -= f.Top()
     case g == xgb.GravityEast || g == xgb.GravityWest ||
          g == xgb.GravityCenter:
-        y -= absInt(f.Top() - f.Bottom()) / 2
+        y -= abs(f.Top() - f.Bottom()) / 2
     case g == xgb.GravitySouthEast || g == xgb.GravitySouth ||
          g == xgb.GravitySouthWest:
         y -= f.Top() + f.Bottom()

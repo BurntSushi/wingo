@@ -34,7 +34,7 @@ func round(f float64) int {
 }
 
 // Grrrr.
-func absInt(i int) int {
+func abs(i int) int {
     if i < 0 {
         return -i
     }
@@ -43,6 +43,13 @@ func absInt(i int) int {
 
 func min(a, b int) int {
     if a < b {
+        return a
+    }
+    return b
+}
+
+func max(a, b int) int {
+    if a > b {
         return a
     }
     return b

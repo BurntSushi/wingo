@@ -1,10 +1,17 @@
-$THIN_COLOR := 0x00ff00
+$THIN_COLOR := 0x585a5d
+$BLUE := 0x3366ff
+$ORANGE := 0xff7f00
+$GREY := 0xdfdcdf
 
 [Borders]
-border_width := 25
-corner_size := 25
+border_size := 5
 a_thin_color := $THIN_COLOR
 i_thin_color := $THIN_COLOR
-a_border_color := 0x3366ff
-i_border_color := 0xdfdcdf
+a_border_color := $ORANGE
+i_border_color := $GREY
+
+[Slim]
+border_size := 10
+a_border_color := $BLUE
+i_border_color := $GREY
 

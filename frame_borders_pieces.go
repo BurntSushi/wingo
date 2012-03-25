@@ -3,12 +3,14 @@ package main
 import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 import (
-    "github.com/BurntSushi/xgbutil/ewmh"
     "github.com/BurntSushi/xgbutil/xgraphics"
 )
 
-func (f *frameBorders) newPieceWindow(ident string, cursor xgb.Id,
-                                      direction uint32) *window {
+func newFramePiece(win *window, imgA, imgI xgb.Id) framePiece {
+    return framePiece{win: win, imgActive: imgA, imgInactive: imgI}
+}
+
+func (f *frameBorders) newPieceWindow(ident string, cursor xgb.Id) *window {
     mask := uint32(xgb.CWBackPixmap | xgb.CWEventMask | xgb.CWCursor)
     vals := []uint32{xgb.BackPixmapParentRelative,
                      xgb.EventMaskButtonPress | xgb.EventMaskButtonRelease |
@@ -21,200 +23,111 @@ func (f *frameBorders) newPieceWindow(ident string, cursor xgb.Id,
     return win
 }
 
-func (f *frameBorders) pieceImages(borderTypes int,
+func (f *frameBorders) pieceImages(borderTypes, gradientType, gradientDir,
                                    width, height int) (xgb.Id, xgb.Id) {
-    imgA := xgraphics.Border(borderTypes,
-                             THEME.borders.aThinColor,
-                             THEME.borders.aBorderColor,
-                             width, height)
-    imgI := xgraphics.Border(borderTypes,
-                             THEME.borders.iThinColor,
-                             THEME.borders.iBorderColor,
-                             width, height)
+    imgA := renderBorder(borderTypes,
+                         THEME.borders.aThinColor, THEME.borders.aBorderColor,
+                         width, height, gradientType, gradientDir)
+    imgI := renderBorder(borderTypes,
+                         THEME.borders.iThinColor, THEME.borders.iBorderColor,
+                         width, height, gradientType, gradientDir)
+    return xgraphics.CreatePixmap(X, imgA), xgraphics.CreatePixmap(X, imgI)
+}
+
+func (f *frameBorders) cornerImages(borderTypes,
+                                    diagonal int) (xgb.Id, xgb.Id) {
+    imgA := renderCorner(borderTypes,
+                         THEME.borders.aThinColor, THEME.borders.aBorderColor,
+                         THEME.borders.borderSize, THEME.borders.borderSize,
+                         diagonal)
+    imgI := renderCorner(borderTypes,
+                         THEME.borders.iThinColor, THEME.borders.iBorderColor,
+                         THEME.borders.borderSize, THEME.borders.borderSize,
+                         diagonal)
     return xgraphics.CreatePixmap(X, imgA), xgraphics.CreatePixmap(X, imgI)
 }
 
 func (f *frameBorders) newTopSide() framePiece {
-    pixA, pixI := f.pieceImages(xgraphics.BorderTop,
+    pixA, pixI := f.pieceImages(renderBorderTop,
+                                renderGradientVert, renderGradientRegular,
                                 1, THEME.borders.borderSize)
-    return framePiece{
-        win: f.newPieceWindow("topside", cursorTopSide, ewmh.SizeTop),
-        imgActive: pixA,
-        imgInactive: pixI,
-        xoff: THEME.borders.cornerSize,
-        yoff: 0,
-        woff: THEME.borders.cornerSize * 2,
-        hoff: THEME.borders.borderSize,
-    }
-}
-
-func (f *frameBorders) newTopLeft() framePiece {
-    pixA, pixI := f.pieceImages(xgraphics.BorderTop | xgraphics.BorderLeft,
-                                THEME.borders.cornerSize,
-                                THEME.borders.borderSize)
-    return framePiece{
-        win: f.newPieceWindow("topleft", cursorTopLeftCorner, ewmh.SizeTopLeft),
-        imgActive: pixA,
-        imgInactive: pixI,
-        xoff: 0,
-        yoff: 0,
-        woff: THEME.borders.cornerSize,
-        hoff: THEME.borders.borderSize,
-    }
-}
-
-func (f *frameBorders) newTopRight() framePiece {
-    pixA, pixI := f.pieceImages(xgraphics.BorderTop | xgraphics.BorderRight,
-                                THEME.borders.cornerSize,
-                                THEME.borders.borderSize)
-    return framePiece{
-        win: f.newPieceWindow("topright", cursorTopRightCorner,
-                              ewmh.SizeTopRight),
-        imgActive: pixA,
-        imgInactive: pixI,
-        xoff: THEME.borders.cornerSize,
-        yoff: 0,
-        woff: THEME.borders.cornerSize,
-        hoff: THEME.borders.borderSize,
-    }
-}
-
-func (f *frameBorders) newLeftSide() framePiece {
-    pixA, pixI := f.pieceImages(xgraphics.BorderLeft,
-                                THEME.borders.borderSize,
-                                1)
-    return framePiece{
-        win: f.newPieceWindow("left", cursorLeftSide, ewmh.SizeLeft),
-        imgActive: pixA,
-        imgInactive: pixI,
-        xoff: 0,
-        yoff: THEME.borders.cornerSize,
-        woff: THEME.borders.borderSize,
-        hoff: THEME.borders.cornerSize * 2,
-    }
-}
-
-func (f *frameBorders) newLeftTop() framePiece {
-    pixA, pixI := f.pieceImages(xgraphics.BorderTop | xgraphics.BorderLeft,
-                                THEME.borders.borderSize,
-                                THEME.borders.cornerSize)
-    return framePiece{
-        win: f.newPieceWindow("lefttop", cursorTopLeftCorner, ewmh.SizeTopLeft),
-        imgActive: pixA,
-        imgInactive: pixI,
-        xoff: 0,
-        yoff: 0,
-        woff: THEME.borders.borderSize,
-        hoff: THEME.borders.cornerSize,
-    }
-}
-
-func (f *frameBorders) newLeftBottom() framePiece {
-    pixA, pixI := f.pieceImages(xgraphics.BorderBottom | xgraphics.BorderLeft,
-                                THEME.borders.borderSize,
-                                THEME.borders.cornerSize)
-    return framePiece{
-        win: f.newPieceWindow("leftbottom", cursorBottomLeftCorner,
-                              ewmh.SizeBottomLeft),
-        imgActive: pixA,
-        imgInactive: pixI,
-        xoff: 0,
-        yoff: THEME.borders.cornerSize,
-        woff: THEME.borders.borderSize,
-        hoff: THEME.borders.cornerSize,
-    }
+    win := f.newPieceWindow("topside", cursorTopSide)
+    win.moveresize(DoX | DoY | DoH,
+                   THEME.borders.borderSize, 0,
+                   0, THEME.borders.borderSize)
+    return newFramePiece(win, pixA, pixI)
 }
 
 func (f *frameBorders) newBottomSide() framePiece {
-    pixA, pixI := f.pieceImages(xgraphics.BorderBottom,
+    pixA, pixI := f.pieceImages(renderBorderBottom,
+                                renderGradientVert, renderGradientReverse,
                                 1, THEME.borders.borderSize)
-    return framePiece{
-        win: f.newPieceWindow("bottomside", cursorBottomSide, ewmh.SizeBottom),
-        imgActive: pixA,
-        imgInactive: pixI,
-        xoff: THEME.borders.cornerSize,
-        yoff: THEME.borders.borderSize,
-        woff: THEME.borders.cornerSize * 2,
-        hoff: THEME.borders.borderSize,
-    }
+    win := f.newPieceWindow("bottomside", cursorBottomSide)
+    win.moveresize(DoX | DoH,
+                   THEME.borders.borderSize, 0,
+                   0, THEME.borders.borderSize)
+    return newFramePiece(win, pixA, pixI)
 }
 
-func (f *frameBorders) newBottomLeft() framePiece {
-    pixA, pixI := f.pieceImages(xgraphics.BorderBottom | xgraphics.BorderLeft,
-                                THEME.borders.cornerSize,
-                                THEME.borders.borderSize)
-    return framePiece{
-        win: f.newPieceWindow("bottomleft", cursorBottomLeftCorner,
-                              ewmh.SizeBottomLeft),
-        imgActive: pixA,
-        imgInactive: pixI,
-        xoff: 0,
-        yoff: THEME.borders.cornerSize,
-        woff: THEME.borders.cornerSize,
-        hoff: THEME.borders.borderSize,
-    }
-}
-
-func (f *frameBorders) newBottomRight() framePiece {
-    pixA, pixI := f.pieceImages(xgraphics.BorderBottom | xgraphics.BorderRight,
-                                THEME.borders.cornerSize,
-                                THEME.borders.borderSize)
-    return framePiece{
-        win: f.newPieceWindow("bottomright", cursorBottomRightCorner,
-                              ewmh.SizeBottomRight),
-        imgActive: pixA,
-        imgInactive: pixI,
-        xoff: THEME.borders.cornerSize,
-        yoff: THEME.borders.cornerSize,
-        woff: THEME.borders.cornerSize,
-        hoff: THEME.borders.borderSize,
-    }
+func (f *frameBorders) newLeftSide() framePiece {
+    pixA, pixI := f.pieceImages(renderBorderLeft,
+                                renderGradientHorz, renderGradientRegular,
+                                THEME.borders.borderSize, 1)
+    win := f.newPieceWindow("left", cursorLeftSide)
+    win.moveresize(DoX | DoY | DoW,
+                   0, THEME.borders.borderSize,
+                   THEME.borders.borderSize, 0)
+    return newFramePiece(win, pixA, pixI)
 }
 
 func (f *frameBorders) newRightSide() framePiece {
-    pixA, pixI := f.pieceImages(xgraphics.BorderRight,
-                                THEME.borders.borderSize,
-                                1)
-    return framePiece{
-        win: f.newPieceWindow("right", cursorRightSide, ewmh.SizeRight),
-        imgActive: pixA,
-        imgInactive: pixI,
-        xoff: THEME.borders.borderSize,
-        yoff: THEME.borders.cornerSize,
-        woff: THEME.borders.borderSize,
-        hoff: THEME.borders.cornerSize * 2,
-    }
+    pixA, pixI := f.pieceImages(renderBorderRight,
+                                renderGradientHorz, renderGradientReverse,
+                                THEME.borders.borderSize, 1)
+    win := f.newPieceWindow("right", cursorRightSide)
+    win.moveresize(DoY | DoW,
+                   0, THEME.borders.borderSize,
+                   THEME.borders.borderSize, 0)
+    return newFramePiece(win, pixA, pixI)
 }
 
-func (f *frameBorders) newRightTop() framePiece {
-    pixA, pixI := f.pieceImages(xgraphics.BorderTop | xgraphics.BorderRight,
-                                THEME.borders.borderSize,
-                                THEME.borders.cornerSize)
-    return framePiece{
-        win: f.newPieceWindow("righttop", cursorTopRightCorner,
-                              ewmh.SizeTopRight),
-        imgActive: pixA,
-        imgInactive: pixI,
-        xoff: 0,
-        yoff: 0,
-        woff: THEME.borders.borderSize,
-        hoff: THEME.borders.cornerSize,
-    }
+func (f *frameBorders) newTopLeft() framePiece {
+    pixA, pixI := f.cornerImages(renderBorderTop | renderBorderLeft,
+                                 renderDiagTopLeft)
+    win := f.newPieceWindow("topleft", cursorTopLeftCorner)
+    win.moveresize(DoX | DoY | DoW | DoH,
+                   0, 0,
+                   THEME.borders.borderSize, THEME.borders.borderSize)
+    return newFramePiece(win, pixA, pixI)
 }
 
-func (f *frameBorders) newRightBottom() framePiece {
-    pixA, pixI := f.pieceImages(xgraphics.BorderBottom | xgraphics.BorderRight,
-                                THEME.borders.borderSize,
-                                THEME.borders.cornerSize)
-    return framePiece{
-        win: f.newPieceWindow("rightbottom", cursorBottomRightCorner,
-                              ewmh.SizeBottomRight),
-        imgActive: pixA,
-        imgInactive: pixI,
-        xoff: 0,
-        yoff: THEME.borders.cornerSize,
-        woff: THEME.borders.borderSize,
-        hoff: THEME.borders.cornerSize,
-    }
+func (f *frameBorders) newTopRight() framePiece {
+    pixA, pixI := f.cornerImages(renderBorderTop | renderBorderRight,
+                                 renderDiagTopRight)
+    win := f.newPieceWindow("topright", cursorTopRightCorner)
+    win.moveresize(DoY | DoW | DoH,
+                   0, 0,
+                   THEME.borders.borderSize, THEME.borders.borderSize)
+    return newFramePiece(win, pixA, pixI)
+}
+
+func (f *frameBorders) newBottomLeft() framePiece {
+    pixA, pixI := f.cornerImages(renderBorderBottom | renderBorderLeft,
+                                 renderDiagBottomLeft)
+    win := f.newPieceWindow("bottomleft", cursorBottomLeftCorner)
+    win.moveresize(DoX | DoW | DoH,
+                   0, 0,
+                   THEME.borders.borderSize, THEME.borders.borderSize)
+    return newFramePiece(win, pixA, pixI)
+}
+
+func (f *frameBorders) newBottomRight() framePiece {
+    pixA, pixI := f.cornerImages(renderBorderBottom | renderBorderRight,
+                                 renderDiagBottomRight)
+    win := f.newPieceWindow("bottomright", cursorBottomRightCorner)
+    win.moveresize(DoW | DoH,
+                   0, 0,
+                   THEME.borders.borderSize, THEME.borders.borderSize)
+    return newFramePiece(win, pixA, pixI)
 }
 
