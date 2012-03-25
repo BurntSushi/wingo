@@ -19,6 +19,12 @@ func (f *frameFull) newPieceWindow(ident string, cursor xgb.Id) *window {
     return win
 }
 
+//
+// What follows is a simplified version of 'frame_borders_pieces.go'.
+// The major simplifying difference is that we don't support gradients
+// on the borders of a 'full' frame.
+//
+
 func (f *frameFull) borderImages(width, height int) (xgb.Id, xgb.Id) {
     imgA := renderBorder(0, 0, newThemeColor(THEME.full.aBorderColor),
                          width, height, 0, 0)
