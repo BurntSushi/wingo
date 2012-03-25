@@ -6,9 +6,9 @@ import (
     "github.com/BurntSushi/xgbutil/ewmh"
 )
 
-var newx, newy int16 // prevent memory allocation in 'step' functions
+var newx, newy int // prevent memory allocation in 'step' functions
 
-func frameMoveBegin(f Frame, rx, ry, ex, ey int16) {
+func frameMoveBegin(f Frame, rx, ry, ex, ey int) {
     moving := f.MovingState()
     moving.moving = true
     moving.lastRootX, moving.lastRootY = rx, ry
@@ -17,7 +17,7 @@ func frameMoveBegin(f Frame, rx, ry, ex, ey int16) {
     f.ParentWin().geometry()
 }
 
-func frameMoveStep(f Frame, rx, ry, ex, ey int16) {
+func frameMoveStep(f Frame, rx, ry, ex, ey int) {
     moving := f.MovingState()
     newx = f.Geom().X() + rx - moving.lastRootX
     newy = f.Geom().Y() + ry - moving.lastRootY
@@ -26,22 +26,21 @@ func frameMoveStep(f Frame, rx, ry, ex, ey int16) {
     f.ConfigureFrame(DoX | DoY, newx, newy, 0, 0, 0, 0, false)
 }
 
-func frameMoveEnd(f Frame, rx, ry, ex, ey int16) {
+func frameMoveEnd(f Frame, rx, ry, ex, ey int) {
     moving := f.MovingState()
     moving.moving = false
     moving.lastRootX, moving.lastRootY = 0, 0
 }
 
 func frameResizeBegin(f Frame, direction uint32,
-                      rx, ry, ex, ey int16) (bool, xgb.Id) {
+                      rx, ry, ex, ey int) (bool, xgb.Id) {
     resizing := f.ResizingState()
     dir := direction
     w, h := f.Geom().Width(), f.Geom().Height()
-    uex, uey := uint16(ex), uint16(ey)
 
     // If we aren't forcing a direction, we need to infer it based on
     // where the mouse is in the window.
-    // (uex, uey) is the position of the mouse.
+    // (ex, ey) is the position of the mouse.
     // We basically split the window into something like a tic-tac-toe board:
     // -------------------------
     // |       |       |       |
@@ -56,9 +55,9 @@ func frameResizeBegin(f Frame, direction uint32,
     // |   C   |       |   H   |
     // |       |       |       |
     // -------------------------
-    // Where A, B, C correspond to 'uex < w / 3'
-    // and F, G, H correspond to 'uex > w * 2 / 3'
-    // and D and E correspond to 'uex >= w / 3 && uex <= w * 2 / 3'
+    // Where A, B, C correspond to 'ex < w / 3'
+    // and F, G, H correspond to 'ex > w * 2 / 3'
+    // and D and E correspond to 'ex >= w / 3 && ex <= w * 2 / 3'
     // The direction is not only important for assigning which cursor to display
     // (where each of the above blocks gets its own cursor), but it is also
     // important for choosing which parts of the geometry to change.
@@ -68,22 +67,22 @@ func frameResizeBegin(f Frame, direction uint32,
     // As one last example, if the mouse is in 'D', only y and height of the
     // window can change.
     if dir == ewmh.Infer {
-        if uex < w / 3 {
+        if ex < w / 3 {
             switch {
-            case uey < h / 3: dir = ewmh.SizeTopLeft
-            case uey > h * 2 / 3: dir = ewmh.SizeBottomLeft
-            default: dir = ewmh.SizeLeft // uey >= h / 3 && uey <= h * 2 / 3
+            case ey < h / 3: dir = ewmh.SizeTopLeft
+            case ey > h * 2 / 3: dir = ewmh.SizeBottomLeft
+            default: dir = ewmh.SizeLeft // ey >= h / 3 && ey <= h * 2 / 3
             }
-        } else if uex > w * 2 / 3 {
+        } else if ex > w * 2 / 3 {
             switch {
-            case uey < h / 3: dir = ewmh.SizeTopRight
-            case uey > h * 2 / 3: dir = ewmh.SizeBottomRight
-            default: dir = ewmh.SizeRight // uey >= h / 3 && uey <= h * 2 / 3
+            case ey < h / 3: dir = ewmh.SizeTopRight
+            case ey > h * 2 / 3: dir = ewmh.SizeBottomRight
+            default: dir = ewmh.SizeRight // ey >= h / 3 && ey <= h * 2 / 3
             }
-        } else { // uex >= w / 3 && uex <= w * 2 / 3
+        } else { // ex >= w / 3 && ex <= w * 2 / 3
             switch {
-            case uey < h / 2: dir = ewmh.SizeTop
-            default: dir = ewmh.SizeBottom // uey >= h / 2
+            case ey < h / 2: dir = ewmh.SizeTop
+            default: dir = ewmh.SizeBottom // ey >= h / 2
             }
         }
     }
@@ -127,14 +126,13 @@ func frameResizeBegin(f Frame, direction uint32,
     return true, cursor
 }
 
-func frameResizeStep(f Frame, rx, ry, ex, ey int16) {
+func frameResizeStep(f Frame, rx, ry, ex, ey int) {
     resizing := f.ResizingState()
 
-    var diffx, diffy int16 = rx - resizing.rootX, ry - resizing.rootY
-    var newx, newy int16 = 0, 0
-    var neww, newh uint16 = 0, 0
-    var validw, validh uint16 = 0, 0
-    var flags uint16 = 0
+    diffx, diffy := rx - resizing.rootX, ry - resizing.rootY
+    newx, newy, neww, newh := 0, 0, 0, 0
+    validw, validh := 0, 0
+    flags := 0
 
     if resizing.xs {
         flags |= DoX
@@ -147,38 +145,38 @@ func frameResizeStep(f Frame, rx, ry, ex, ey int16) {
     if resizing.ws {
         flags |= DoW
         if resizing.xs {
-            neww = resizing.width - uint16(diffx)
+            neww = resizing.width - diffx
         } else {
-            neww = resizing.width + uint16(diffx)
+            neww = resizing.width + diffx
         }
         validw = f.ValidateWidth(neww)
 
         // If validation changed our width, we need to make sure
         // our x-value is appropriately changed
         if resizing.xs && validw != neww {
-            newx = resizing.x + int16(resizing.width - validw)
+            newx = resizing.x + resizing.width - validw
         }
     }
     if resizing.hs {
         flags |= DoH
         if resizing.ys {
-            newh = resizing.height - uint16(diffy)
+            newh = resizing.height - diffy
         } else {
-            newh = resizing.height + uint16(diffy)
+            newh = resizing.height + diffy
         }
         validh = f.ValidateHeight(newh)
 
         // If validation changed our height, we need to make sure
         // our y-value is appropriately changed
         if resizing.ys && validh != newh {
-            newy = resizing.y + int16(resizing.height - validh)
+            newy = resizing.y + resizing.height - validh
         }
     }
 
     f.ConfigureFrame(flags, newx, newy, validw, validh, 0, 0, true)
 }
 
-func frameResizeEnd(f Frame, rx, ry, ex, ey int16) {
+func frameResizeEnd(f Frame, rx, ry, ex, ey int) {
     // just zero out the resizing state
     resizing := f.ResizingState()
     resizing.resizing = false

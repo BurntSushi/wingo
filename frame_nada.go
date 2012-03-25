@@ -33,30 +33,30 @@ func (f *frameNada) StateInactive() {
     f.state = StateInactive
 }
 
-func (f *frameNada) Top() int16 {
+func (f *frameNada) Top() int {
     return 0
 }
 
-func (f *frameNada) Bottom() int16 {
+func (f *frameNada) Bottom() int {
     return 0
 }
 
-func (f *frameNada) Left() int16 {
+func (f *frameNada) Left() int {
     return 0
 }
 
-func (f *frameNada) Right() int16 {
+func (f *frameNada) Right() int {
     return 0
 }
 
-func (f *frameNada) ConfigureClient(flags uint16, x, y int16, w, h uint16,
+func (f *frameNada) ConfigureClient(flags, x, y, w, h int,
                                     sibling xgb.Id, stackMode byte,
                                     ignoreHints bool) {
     x, y, w, h = f.configureClient(flags, x, y, w, h)
     f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints)
 }
 
-func (f *frameNada) ConfigureFrame(flags uint16, fx, fy int16, fw, fh uint16,
+func (f *frameNada) ConfigureFrame(flags, fx, fy, fw, fh int,
                                    sibling xgb.Id, stackMode byte,
                                    ignoreHints bool) {
     f.configureFrame(flags, fx, fy, fw, fh, sibling, stackMode, ignoreHints)

@@ -14,9 +14,9 @@ const (
 
 type Frame interface {
     Client() *client
-    ConfigureClient(flags uint16, x, y int16, w, h uint16,
+    ConfigureClient(flags, x, y, w, h int,
                     sibling xgb.Id, stackMode byte, ignoreHints bool)
-    ConfigureFrame(flags uint16, x, y int16, w, h uint16,
+    ConfigureFrame(flags, x, y, w, h int,
                    sibling xgb.Id, stackMode byte, ignoreHints bool)
     Destroy()
     Geom() xrect.Rect // the geometry of the parent window
@@ -30,14 +30,14 @@ type Frame interface {
     StateActive()
     StateInactive()
     Unmap()
-    ValidateHeight(height uint16) uint16
-    ValidateWidth(width uint16) uint16
+    ValidateHeight(height int) int
+    ValidateWidth(width int) int
 
     // The margins of this frame's decorations.
-    Top() int16
-    Bottom() int16
-    Left() int16
-    Right() int16
+    Top() int
+    Bottom() int
+    Left() int
+    Right() int
 
     // These are temporary. I think they will move to 'layout'
     Moving() bool
@@ -85,8 +85,8 @@ type framePiece struct {
     win *window
     imgActive xgb.Id
     imgInactive xgb.Id
-    xoff, yoff int16
-    woff, hoff uint16
+    xoff, yoff int
+    woff, hoff int
 }
 
 func (p *framePiece) destroy() {
@@ -105,23 +105,23 @@ func (p *framePiece) inactive() {
     p.win.clear()
 }
 
-func (p *framePiece) initialGeom(flags uint16) {
+func (p *framePiece) initialGeom(flags int) {
     p.win.moveresize(flags, p.xoff, p.yoff, p.woff, p.hoff)
 }
 
-func (p *framePiece) x() int16 {
+func (p *framePiece) x() int {
     return p.win.geom.X()
 }
 
-func (p *framePiece) y() int16 {
+func (p *framePiece) y() int {
     return p.win.geom.Y()
 }
 
-func (p *framePiece) w() uint16 {
+func (p *framePiece) w() int {
     return p.win.geom.Width()
 }
 
-func (p *framePiece) h() uint16 {
+func (p *framePiece) h() int {
     return p.win.geom.Height()
 }
 
@@ -133,21 +133,21 @@ func (p *framePiece) h() uint16 {
 // Where client_width and client_height is the width and height of the client
 // window inside the frame.
 type clientOffset struct {
-    x, y int16
-    w, h uint16
+    x, y int
+    w, h int
 }
 
 type moveState struct {
     moving bool
-    lastRootX int16
-    lastRootY int16
+    lastRootX int
+    lastRootY int
 }
 
 type resizeState struct {
     resizing bool
-    rootX, rootY int16
-    x, y int16
-    width, height uint16
+    rootX, rootY int
+    x, y int
+    width, height int
     xs, ys, ws, hs bool
 }
 
@@ -159,7 +159,7 @@ func FrameReset(f Frame) {
 }
 
 // FrameMR is short for FrameMoveresize.
-func FrameMR(f Frame, flags uint16, x, y int16, w, h uint16, ignoreHints bool) {
+func FrameMR(f Frame, flags int, x, y int, w, h int, ignoreHints bool) {
     f.ConfigureClient(flags, x, y, w, h, xgb.Id(0), 0, ignoreHints)
 }
 

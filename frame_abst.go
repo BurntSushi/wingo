@@ -52,9 +52,8 @@ func (f *abstFrame) Client() *client {
 // validation. (Therefore, the actual window itself will be bigger, because
 // of decorations.)
 // Moreover, the x and y coordinates are gravitized. Yuck.
-func (f *abstFrame) configureClient(flags uint16, x, y int16,
-                                    w, h uint16) (int16, int16,
-                                                  uint16, uint16) {
+func (f *abstFrame) configureClient(flags, x, y, w, h int) (int, int,
+                                                            int, int) {
     // Defy gravity!
     if DoX & flags > 0 {
         x = f.Client().GravitizeX(x, -1)
@@ -79,7 +78,7 @@ func (f *abstFrame) configureClient(flags uint16, x, y int16,
 // will end up slightly smaller than the width/height specified here.
 // Also, the fx and fy coordinates are interpreted plainly as root window
 // coordinates. (No gravitization.)
-func (f *abstFrame) configureFrame(flags uint16, fx, fy int16, fw, fh uint16,
+func (f *abstFrame) configureFrame(flags, fx, fy, fw, fh int,
                                    sibling xgb.Id, stackMode byte,
                                    ignoreHints bool) {
     cw, ch := fw, fh
@@ -155,14 +154,14 @@ func (f *abstFrame) ResizingState() *resizeState {
 
 // ValidateHeight validates a height of a *frame*, which is equivalent
 // to validating the height of a client.
-func (f *abstFrame) ValidateHeight(height uint16) uint16 {
+func (f *abstFrame) ValidateHeight(height int) int {
     return f.Client().ValidateHeight(height - f.clientOffset.h) +
            f.clientOffset.h
 }
 
 // ValidateWidth validates a width of a *frame*, which is equivalent
 // to validating the width of a client.
-func (f *abstFrame) ValidateWidth(width uint16) uint16 {
+func (f *abstFrame) ValidateWidth(width int) int {
     return f.Client().ValidateWidth(width - f.clientOffset.w) +
            f.clientOffset.w
 }

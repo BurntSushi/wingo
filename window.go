@@ -86,9 +86,9 @@ func (w *window) focus() {
 
 // moveresize is a wrapper around configure that only accepts parameters
 // related to size and position.
-func (win *window) moveresize(flags uint16, x, y int16, w, h uint16) {
+func (win *window) moveresize(flags, x, y, w, h int) {
     // Kill any hopes of stacking
-    flags = uint16((int16(flags) & ^DoSibling) & ^DoStack)
+    flags = (flags & ^DoSibling) & ^DoStack
     win.configure(flags, x, y, w, h, xgb.Id(0), 0)
 }
 
@@ -96,7 +96,7 @@ func (win *window) moveresize(flags uint16, x, y int16, w, h uint16) {
 // It is duplicated because we need to update our idea of the window's
 // geometry. (We don't want another set of 'if' statements because it
 // needs to be as efficient as possible.)
-func (win *window) configure(flags uint16, x, y int16, w, h uint16,
+func (win *window) configure(flags, x, y, w, h int,
                              sibling xgb.Id, stackMode byte) {
     vals := []uint32{}
 
@@ -134,13 +134,13 @@ func (win *window) configure(flags uint16, x, y int16, w, h uint16,
         return
     }
 
-    X.Conn().ConfigureWindow(win.id, flags, vals)
+    X.Conn().ConfigureWindow(win.id, uint16(flags), vals)
 }
 
 // configure is a nice wrapper around ConfigureWindow.
 // We purposefully omit 'BorderWidth' because I don't think it's ever used
 // any more.
-func configure(window xgb.Id, flags uint16, x, y int16, w, h uint16,
+func configure(window xgb.Id, flags, x, y, w, h int,
                sibling xgb.Id, stackMode byte) {
     vals := []uint32{}
 
@@ -169,13 +169,14 @@ func configure(window xgb.Id, flags uint16, x, y int16, w, h uint16,
         vals = append(vals, uint32(stackMode))
     }
 
-    X.Conn().ConfigureWindow(window, flags, vals)
+    X.Conn().ConfigureWindow(window, uint16(flags), vals)
 }
 
 // configureRequest responds to generic configure requests from windows that
 // we don't manage.
 func configureRequest(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
-    configure(ev.Window, ev.ValueMask, ev.X, ev.Y, ev.Width, ev.Height,
+    configure(ev.Window, int(ev.ValueMask),
+              int(ev.X), int(ev.Y), int(ev.Width), int(ev.Height),
               ev.Sibling, ev.StackMode)
 }
 

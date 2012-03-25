@@ -34,10 +34,17 @@ func round(f float64) int {
 }
 
 // Grrrr.
-func absInt16(i int16) int16 {
+func absInt(i int) int {
     if i < 0 {
         return -i
     }
     return i
+}
+
+func min(a, b int) int {
+    if a < b {
+        return a
+    }
+    return b
 }
 

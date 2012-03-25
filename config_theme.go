@@ -7,8 +7,8 @@ type theme struct {
 }
 
 type themeBorders struct {
-    borderWidth uint16
-    cornerSize uint16
+    borderSize int
+    cornerSize int
     aThinColor, iThinColor int
     aBorderColor, iBorderColor int
 }
@@ -16,7 +16,7 @@ type themeBorders struct {
 func defaultTheme() *theme {
     return &theme{
         borders: themeBorders{
-            borderWidth: 10,
+            borderSize: 10,
             cornerSize: 24,
             aThinColor: 0x0,
             iThinColor: 0x0,
@@ -56,8 +56,8 @@ func loadBorderTheme(tdata *wini.Data, section string) {
 
 func loadBorderOption(k wini.Key) {
     switch k.Name() {
-    case "border_width": setFirstUint16(k, &THEME.borders.borderWidth)
-    case "corner_size": setFirstUint16(k, &THEME.borders.cornerSize)
+    case "border_width": setFirstInt(k, &THEME.borders.borderSize)
+    case "corner_size": setFirstInt(k, &THEME.borders.cornerSize)
     case "a_thin_color": setFirstInt(k, &THEME.borders.aThinColor)
     case "i_thin_color": setFirstInt(k, &THEME.borders.iThinColor)
     case "a_border_color": setFirstInt(k, &THEME.borders.aBorderColor)
@@ -68,12 +68,6 @@ func loadBorderOption(k wini.Key) {
 func setFirstInt(k wini.Key, place *int) {
     if v, ok := getFirstInt(k); ok {
         *place = int(v)
-    }
-}
-
-func setFirstUint16(k wini.Key, place *uint16) {
-    if v, ok := getFirstInt(k); ok {
-        *place = uint16(v)
     }
 }
 

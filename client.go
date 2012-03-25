@@ -38,8 +38,8 @@ type Client interface {
     FrameBorders()
     FrameFull()
     Geom() xrect.Rect
-    GravitizeX(x int16, gravity int) int16
-    GravitizeY(y int16, gravity int) int16
+    GravitizeX(x int, gravity int) int
+    GravitizeY(y int, gravity int) int
     Id() xgb.Id
     Layer() int
     Map()
@@ -52,8 +52,8 @@ type Client interface {
     String() string
     TrulyAlive() bool
     Unfocused()
-    ValidateHeight(height uint16) uint16
-    ValidateWidth(width uint16) uint16
+    ValidateHeight(height int) int
+    ValidateWidth(width int) int
     Win() *window
 }
 
@@ -77,7 +77,7 @@ type client struct {
     name, vname, wmname string
     isMapped bool
     initialMap bool
-    lastTime uint32
+    lastTime int
     unmapIgnore int
     hints *icccm.Hints
     nhints *icccm.NormalHints
@@ -197,8 +197,8 @@ func (c *client) manage() {
             if c.frame.Moving() || c.frame.Resizing() {
                 return
             }
-            c.frame.ConfigureClient(ev.ValueMask, ev.X, ev.Y,
-                                    ev.Width, ev.Height,
+            c.frame.ConfigureClient(int(ev.ValueMask), int(ev.X), int(ev.Y),
+                                    int(ev.Width), int(ev.Height),
                                     ev.Sibling, ev.StackMode, false)
     }).Connect(X, c.window.id)
     xevent.UnmapNotifyFun(
@@ -272,16 +272,16 @@ func (c *client) SetupFocus(win xgb.Id, buttonStr string, grab bool) {
 // "move" drag.
 func (c *client) SetupMoveDrag(dragWin xgb.Id, buttonStr string, grab bool) {
     dStart := xgbutil.MouseDragBeginFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int16) (bool, xgb.Id) {
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xgb.Id) {
             frameMoveBegin(c.Frame(), rx, ry, ex, ey)
             return true, cursorFleur
     })
     dStep := xgbutil.MouseDragFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
             frameMoveStep(c.Frame(), rx, ry, ex, ey)
     })
     dEnd := xgbutil.MouseDragFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
             frameMoveEnd(c.Frame(), rx, ry, ex, ey)
     })
     mousebind.Drag(X, dragWin, buttonStr, grab, dStart, dStep, dEnd)
@@ -292,15 +292,15 @@ func (c *client) SetupMoveDrag(dragWin xgb.Id, buttonStr string, grab bool) {
 func (c *client) SetupResizeDrag(dragWin xgb.Id, buttonStr string, grab bool,
                                  direction uint32) {
     dStart := xgbutil.MouseDragBeginFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int16) (bool, xgb.Id) {
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xgb.Id) {
             return frameResizeBegin(c.Frame(), direction, rx, ry, ex, ey)
     })
     dStep := xgbutil.MouseDragFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
             frameResizeStep(c.Frame(), rx, ry, ex, ey)
     })
     dEnd := xgbutil.MouseDragFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int16) {
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
             frameResizeEnd(c.Frame(), rx, ry, ex, ey)
     })
     mousebind.Drag(X, dragWin, buttonStr, grab, dStart, dStep, dEnd)
@@ -340,7 +340,7 @@ func (c *client) unmapped() {
     }
 }
 
-func (c *client) setWmState(state uint32) {
+func (c *client) setWmState(state int) {
     if !c.TrulyAlive() {
         return
     }
@@ -374,7 +374,7 @@ func (c *client) Close() {
         }
 
         cm, err := xevent.NewClientMessage(32, c.window.id, wm_protocols,
-                                           uint32(wm_del_win))
+                                           int(wm_del_win))
         if err != nil {
             logWarning.Println(err)
             return
@@ -442,8 +442,8 @@ func (c *client) Focus() {
 
         cm, err := xevent.NewClientMessage(32, c.window.id,
                                            wm_protocols,
-                                           uint32(wm_take_focus),
-                                           uint32(X.GetTime()))
+                                           int(wm_take_focus),
+                                           int(X.GetTime()))
         if err != nil {
             logWarning.Println(err)
             return
@@ -505,7 +505,7 @@ func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
     }
 }
 
-func (c *client) GravitizeX(x int16, gravity int) int16 {
+func (c *client) GravitizeX(x int, gravity int) int {
     // Don't do anything if there's no gravity options set and we're
     // trying to infer gravity.
     // This is equivalent to setting NorthWest gravity
@@ -528,7 +528,7 @@ func (c *client) GravitizeX(x int16, gravity int) int16 {
         x -= f.Left()
     case g == xgb.GravityNorth || g == xgb.GravitySouth ||
          g == xgb.GravityCenter:
-        x -= absInt16(f.Left() - f.Right()) / 2
+        x -= absInt(f.Left() - f.Right()) / 2
     case g == xgb.GravityNorthEast || g == xgb.GravityEast ||
          g == xgb.GravitySouthEast:
         x -= f.Left() + f.Right()
@@ -537,7 +537,7 @@ func (c *client) GravitizeX(x int16, gravity int) int16 {
     return x
 }
 
-func (c *client) GravitizeY(y int16, gravity int) int16 {
+func (c *client) GravitizeY(y int, gravity int) int {
     // Don't do anything if there's no gravity options set and we're
     // trying to infer gravity.
     // This is equivalent to setting NorthWest gravity
@@ -560,7 +560,7 @@ func (c *client) GravitizeY(y int16, gravity int) int16 {
         y -= f.Top()
     case g == xgb.GravityEast || g == xgb.GravityWest ||
          g == xgb.GravityCenter:
-        y -= absInt16(f.Top() - f.Bottom()) / 2
+        y -= absInt(f.Top() - f.Bottom()) / 2
     case g == xgb.GravitySouthEast || g == xgb.GravitySouth ||
          g == xgb.GravitySouthWest:
         y -= f.Top() + f.Bottom()
@@ -569,42 +569,35 @@ func (c *client) GravitizeY(y int16, gravity int) int16 {
     return y
 }
 
-func (c *client) ValidateHeight(height uint16) uint16 {
-    return c.validateSize(height,
-                          uint16(c.nhints.HeightInc),
-                          uint16(c.nhints.BaseHeight),
-                          uint16(c.nhints.MinHeight),
-                          uint16(c.nhints.MaxHeight))
+func (c *client) ValidateHeight(height int) int {
+    return c.validateSize(height, c.nhints.HeightInc, c.nhints.BaseHeight,
+                          c.nhints.MinHeight, c.nhints.MaxHeight)
 }
 
-func (c *client) ValidateWidth(width uint16) uint16 {
-    return c.validateSize(width,
-                          uint16(c.nhints.WidthInc),
-                          uint16(c.nhints.BaseWidth),
-                          uint16(c.nhints.MinWidth),
-                          uint16(c.nhints.MaxWidth))
+func (c *client) ValidateWidth(width int) int {
+    return c.validateSize(width, c.nhints.WidthInc, c.nhints.BaseWidth,
+                          c.nhints.MinWidth, c.nhints.MaxWidth)
 }
 
-func (c *client) validateSize(size uint16, inc, base,
-                                  min, max uint16) uint16 {
-    if int16(size) < int16(min) && c.nhints.Flags & icccm.SizeHintPMinSize > 0 {
+func (c *client) validateSize(size, inc, base, min, max int) int {
+    if size < min && c.nhints.Flags & icccm.SizeHintPMinSize > 0 {
         return min
     }
-    if int16(size) < 1 {
+    if size < 1 {
         return 1
     }
     if size > max && c.nhints.Flags & icccm.SizeHintPMaxSize > 0 {
         return max
     }
     if inc > 1 && c.nhints.Flags & icccm.SizeHintPResizeInc > 0 {
-        var whichb uint16
+        var whichb int
         if base > 0 {
             whichb = base
         } else {
             whichb = min
         }
         size = whichb +
-               (uint16(round(float64(size - whichb) / float64(inc))) * inc)
+               (int(round(float64(size - whichb) / float64(inc))) * inc)
     }
 
     return size

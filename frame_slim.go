@@ -39,30 +39,30 @@ func (f *frameSlim) StateInactive() {
     f.ParentWin().clear()
 }
 
-func (f *frameSlim) Top() int16 {
+func (f *frameSlim) Top() int {
     return 20
 }
 
-func (f *frameSlim) Bottom() int16 {
+func (f *frameSlim) Bottom() int {
     return 20
 }
 
-func (f *frameSlim) Left() int16 {
+func (f *frameSlim) Left() int {
     return 20
 }
 
-func (f *frameSlim) Right() int16 {
+func (f *frameSlim) Right() int {
     return 20
 }
 
-func (f *frameSlim) ConfigureClient(flags uint16, x, y int16, w, h uint16,
+func (f *frameSlim) ConfigureClient(flags, x, y, w, h int,
                                     sibling xgb.Id, stackMode byte,
                                     ignoreHints bool) {
     x, y, w, h = f.configureClient(flags, x, y, w, h)
     f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints)
 }
 
-func (f *frameSlim) ConfigureFrame(flags uint16, fx, fy int16, fw, fh uint16,
+func (f *frameSlim) ConfigureFrame(flags, fx, fy, fw, fh int,
                                    sibling xgb.Id, stackMode byte,
                                    ignoreHints bool) {
     f.configureFrame(flags, fx, fy, fw, fh, sibling, stackMode, ignoreHints)
