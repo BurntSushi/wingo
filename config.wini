@@ -5,6 +5,21 @@
 Mod4-1 := Move
 Mod4-3 := Resize
 
+[MouseFullIcon]
+1 := Move
+1 := FocusRaise
+3 := Resize
+
+[MouseFullTitleText]
+1 := Move
+1 := FocusRaise
+3 := Resize
+
+[MouseFullTitleBar]
+1 := Move
+1 := FocusRaise
+3 := Resize
+
 [MouseFullTop]
 1 := Resize Top
 1 down := FocusRaise

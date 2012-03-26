@@ -4,7 +4,18 @@ $ORANGE := 0xff7f00
 $GREY := 0xdfdcdf
 $PURPLE := 0xff00ff
 
+[Misc]
+default_icon := ./data/wingo.png
+
 [Full]
+font := /usr/share/fonts/TTF/DejaVuSans-Bold.ttf
+font_size := 15
+font_color := 0x000000
+
+title_size := 30
+a_title_color := 0xffff00 0x00ffff
+i_title_color := 0xffffff
+
 border_size := 20
 a_border_color := $PURPLE
 i_border_color := $GREY

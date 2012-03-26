@@ -19,6 +19,96 @@ func (f *frameFull) newPieceWindow(ident string, cursor xgb.Id) *window {
     return win
 }
 
+func (f *frameFull) newTitleBar() framePiece {
+    imgA := renderBorder(0, 0, THEME.full.aTitleColor,
+                         1, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+    imgI := renderBorder(0, 0, THEME.full.iTitleColor,
+                         1, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+
+    win := f.newPieceWindow("titlebar", 0)
+    win.moveresize(DoX | DoY | DoH,
+                   THEME.full.borderSize,
+                   THEME.full.borderSize,
+                   0, THEME.full.titleSize)
+    return newFramePiece(win, xgraphics.CreatePixmap(X, imgA),
+                         xgraphics.CreatePixmap(X, imgI))
+}
+
+func (f *frameFull) newTitleText() framePiece {
+    title := f.Client().Name()
+    font := THEME.full.font
+    fontSize := THEME.full.fontSize
+    fontColor := ColorFromInt(THEME.full.fontColor)
+
+    ew, eh, err := xgraphics.TextExtents(font, fontSize, title)
+    if err != nil {
+        logWarning.Printf("Could not get text extents for name '%s' on " +
+                          "window %s. Resorting to default width of 300.",
+                          title, f.Client())
+        ew = 300
+    }
+
+    // XXX: We still can't send images with more pixels than 256x256.
+    // This is a point where that limitation is very easy to surpass if
+    // we have long window titles. Do a sanity check here and bail on the
+    // window title if X is going to stomp on us.
+    if ew * THEME.full.titleSize > 255 * 255 {
+        logWarning.Printf("The image containing the window title is just too " +
+                          "big for XGB to handle. I really hope to fix this " +
+                          "soon. Falling back to 'N/A' for now...")
+        title = "N/A"
+        ew, eh, err = xgraphics.TextExtents(font, fontSize, title)
+        if err != nil {
+            logWarning.Printf("Could not get text extents for name '%s' on " +
+                              "window %s. Resorting to default width of 100.",
+                              title, f.Client())
+            ew = 100
+        }
+    }
+
+    imgA := renderBorder(0, 0, THEME.full.aTitleColor,
+                         ew, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+    imgI := renderBorder(0, 0, THEME.full.iTitleColor,
+                         ew, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+
+    y := (THEME.full.titleSize - eh) / 2 - 1
+    xgraphics.DrawText(imgA, 0, y, fontColor, fontSize, font, title)
+    xgraphics.DrawText(imgI, 0, y, fontColor, fontSize, font, title)
+
+    win := f.newPieceWindow("titletext", 0)
+    win.moveresize(DoX | DoY | DoW | DoH,
+                   THEME.full.borderSize + THEME.full.titleSize,
+                   THEME.full.borderSize,
+                   ew, THEME.full.titleSize)
+    return newFramePiece(win, xgraphics.CreatePixmap(X, imgA),
+                         xgraphics.CreatePixmap(X, imgI))
+}
+
+func (f *frameFull) newIcon() framePiece {
+    imgA := renderBorder(0, 0, THEME.full.aTitleColor,
+                         THEME.full.titleSize, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+    imgI := renderBorder(0, 0, THEME.full.iTitleColor,
+                         THEME.full.titleSize, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+
+    img, msk := f.Client().iconImage(THEME.full.titleSize - 4,
+                                     THEME.full.titleSize - 4)
+    xgraphics.Blend(imgA, img, msk, 100, 2, 2)
+    xgraphics.Blend(imgI, img, msk, 100, 2, 2)
+
+    win := f.newPieceWindow("icon", 0)
+    win.moveresize(DoX | DoY | DoW | DoH,
+                   THEME.full.borderSize, THEME.full.borderSize,
+                   THEME.full.titleSize, THEME.full.titleSize)
+    return newFramePiece(win, xgraphics.CreatePixmap(X, imgA),
+                         xgraphics.CreatePixmap(X, imgI))
+}
+
 //
 // What follows is a simplified version of 'frame_borders_pieces.go'.
 // The major simplifying difference is that we don't support gradients

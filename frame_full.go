@@ -6,6 +6,7 @@ type frameFull struct {
     *abstFrame
 
     // pieces
+    titleBar, titleText, icon framePiece
     topSide, bottomSide, leftSide, rightSide framePiece
     topLeft, topRight, bottomLeft, bottomRight framePiece
 }
@@ -17,6 +18,10 @@ func newFrameFull(p *frameParent, c *client) *frameFull {
     f.clientOffset.y = f.Top()
     f.clientOffset.w = f.Left() + f.Right()
     f.clientOffset.h = f.Top() + f.Bottom()
+
+    f.titleBar = f.newTitleBar()
+    f.titleText = f.newTitleText()
+    f.icon = f.newIcon()
 
     f.topSide = f.newTopSide()
     f.bottomSide = f.newBottomSide()
@@ -42,6 +47,10 @@ func (f *frameFull) Destroy() {
     f.bottomLeft.destroy()
     f.bottomRight.destroy()
 
+    f.titleBar.destroy()
+    f.titleText.destroy()
+    f.icon.destroy()
+
     f.abstFrame.Destroy()
 }
 
@@ -55,6 +64,10 @@ func (f *frameFull) Off() {
     f.topRight.win.unmap()
     f.bottomLeft.win.unmap()
     f.bottomRight.win.unmap()
+
+    f.titleBar.win.unmap()
+    f.titleText.win.unmap()
+    f.icon.win.unmap()
 }
 
 func (f *frameFull) On() {
@@ -76,6 +89,10 @@ func (f *frameFull) On() {
     f.topRight.win.map_()
     f.bottomLeft.win.map_()
     f.bottomRight.win.map_()
+
+    f.titleBar.win.map_()
+    f.titleText.win.map_()
+    f.icon.win.map_()
 }
 
 func (f *frameFull) StateActive() {
@@ -90,6 +107,10 @@ func (f *frameFull) StateActive() {
     f.topRight.active()
     f.bottomLeft.active()
     f.bottomRight.active()
+
+    f.titleBar.active()
+    f.titleText.active()
+    f.icon.active()
 
     f.ParentWin().change(xgb.CWBackPixel, uint32(0xff0000))
     f.ParentWin().clear()
@@ -108,12 +129,16 @@ func (f *frameFull) StateInactive() {
     f.bottomLeft.inactive()
     f.bottomRight.inactive()
 
+    f.titleBar.inactive()
+    f.titleText.inactive()
+    f.icon.inactive()
+
     f.ParentWin().change(xgb.CWBackPixel, uint32(0xff0000))
     f.ParentWin().clear()
 }
 
 func (f *frameFull) Top() int {
-    return THEME.full.borderSize
+    return THEME.full.borderSize + THEME.full.titleSize
 }
 
 func (f *frameFull) Bottom() int {
@@ -158,5 +183,8 @@ func (f *frameFull) ConfigureFrame(flags, fx, fy, fw, fh int,
                                  f.bottomLeft.w() + f.bottomSide.w(),
                                  f.bottomSide.y(),
                                  0, 0)
+
+    f.titleBar.win.moveresize(DoW, 0, 0,
+                              fg.Width() - f.leftSide.w() - f.rightSide.w(), 0)
 }
 
