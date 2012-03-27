@@ -17,7 +17,7 @@ type Frame interface {
     ConfigureClient(flags, x, y, w, h int,
                     sibling xgb.Id, stackMode byte, ignoreHints bool)
     ConfigureFrame(flags, x, y, w, h int,
-                   sibling xgb.Id, stackMode byte, ignoreHints bool)
+                   sibling xgb.Id, stackMode byte, ignoreHints, sendNotify bool)
     Destroy()
     Geom() xrect.Rect // the geometry of the parent window
     Map()
@@ -27,8 +27,8 @@ type Frame interface {
     ParentId() xgb.Id
     ParentWin() *window
     State() int
-    StateActive()
-    StateInactive()
+    Active()
+    Inactive()
     Unmap()
     ValidateHeight(height int) int
     ValidateWidth(width int) int

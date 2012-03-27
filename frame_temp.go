@@ -23,13 +23,14 @@ func frameMoveStep(f Frame, rx, ry, ex, ey int) {
     newy = f.Geom().Y() + ry - moving.lastRootY
     moving.lastRootX, moving.lastRootY = rx, ry
 
-    f.ConfigureFrame(DoX | DoY, newx, newy, 0, 0, 0, 0, false)
+    f.ConfigureFrame(DoX | DoY, newx, newy, 0, 0, 0, 0, false, false)
 }
 
 func frameMoveEnd(f Frame, rx, ry, ex, ey int) {
     moving := f.MovingState()
     moving.moving = false
     moving.lastRootX, moving.lastRootY = 0, 0
+    FrameReset(f)
 }
 
 func frameResizeBegin(f Frame, direction uint32,
@@ -173,7 +174,7 @@ func frameResizeStep(f Frame, rx, ry, ex, ey int) {
         }
     }
 
-    f.ConfigureFrame(flags, newx, newy, validw, validh, 0, 0, true)
+    f.ConfigureFrame(flags, newx, newy, validw, validh, 0, 0, true, false)
 }
 
 func frameResizeEnd(f Frame, rx, ry, ex, ey int) {

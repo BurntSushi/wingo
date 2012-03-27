@@ -1,5 +1,11 @@
 package main
 
+// import ( 
+    // "image" 
+    // "image/color" 
+    // "image/draw" 
+// ) 
+
 import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 import (
@@ -17,6 +23,63 @@ func (f *frameFull) newPieceWindow(ident string, cursor xgb.Id) *window {
     f.Client().framePieceMouseConfig("full_" + ident, win.id)
 
     return win
+}
+
+func (f *frameFull) newButtonClose() framePiece {
+    imgA := renderBorder(0, 0, THEME.full.aTitleColor,
+                         THEME.full.titleSize, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+    imgI := renderBorder(0, 0, THEME.full.iTitleColor,
+                         THEME.full.titleSize, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+
+    xgraphics.Blend(imgA, THEME.full.aCloseButton, nil, 100, 0, 0)
+    xgraphics.Blend(imgI, THEME.full.iCloseButton, nil, 100, 0, 0)
+
+    win := f.newPieceWindow("close", 0)
+    win.moveresize(DoY | DoW | DoH,
+                   0, THEME.full.borderSize,
+                   THEME.full.titleSize, THEME.full.titleSize)
+    return newFramePiece(win, xgraphics.CreatePixmap(X, imgA),
+                         xgraphics.CreatePixmap(X, imgI))
+}
+
+func (f *frameFull) newButtonMaximize() framePiece {
+    imgA := renderBorder(0, 0, THEME.full.aTitleColor,
+                         THEME.full.titleSize, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+    imgI := renderBorder(0, 0, THEME.full.iTitleColor,
+                         THEME.full.titleSize, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+
+    xgraphics.Blend(imgA, THEME.full.aMaximizeButton, nil, 100, 0, 0)
+    xgraphics.Blend(imgI, THEME.full.iMaximizeButton, nil, 100, 0, 0)
+
+    win := f.newPieceWindow("maximize", 0)
+    win.moveresize(DoY | DoW | DoH,
+                   0, THEME.full.borderSize,
+                   THEME.full.titleSize, THEME.full.titleSize)
+    return newFramePiece(win, xgraphics.CreatePixmap(X, imgA),
+                         xgraphics.CreatePixmap(X, imgI))
+}
+
+func (f *frameFull) newButtonMinimize() framePiece {
+    imgA := renderBorder(0, 0, THEME.full.aTitleColor,
+                         THEME.full.titleSize, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+    imgI := renderBorder(0, 0, THEME.full.iTitleColor,
+                         THEME.full.titleSize, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+
+    xgraphics.Blend(imgA, THEME.full.aMinimizeButton, nil, 100, 0, 0)
+    xgraphics.Blend(imgI, THEME.full.iMinimizeButton, nil, 100, 0, 0)
+
+    win := f.newPieceWindow("minimize", 0)
+    win.moveresize(DoY | DoW | DoH,
+                   0, THEME.full.borderSize,
+                   THEME.full.titleSize, THEME.full.titleSize)
+    return newFramePiece(win, xgraphics.CreatePixmap(X, imgA),
+                         xgraphics.CreatePixmap(X, imgI))
 }
 
 func (f *frameFull) newTitleBar() framePiece {
@@ -37,76 +100,20 @@ func (f *frameFull) newTitleBar() framePiece {
 }
 
 func (f *frameFull) newTitleText() framePiece {
-    title := f.Client().Name()
-    font := THEME.full.font
-    fontSize := THEME.full.fontSize
-    fontColor := ColorFromInt(THEME.full.fontColor)
-
-    ew, eh, err := xgraphics.TextExtents(font, fontSize, title)
-    if err != nil {
-        logWarning.Printf("Could not get text extents for name '%s' on " +
-                          "window %s. Resorting to default width of 300.",
-                          title, f.Client())
-        ew = 300
-    }
-
-    // XXX: We still can't send images with more pixels than 256x256.
-    // This is a point where that limitation is very easy to surpass if
-    // we have long window titles. Do a sanity check here and bail on the
-    // window title if X is going to stomp on us.
-    if ew * THEME.full.titleSize > 255 * 255 {
-        logWarning.Printf("The image containing the window title is just too " +
-                          "big for XGB to handle. I really hope to fix this " +
-                          "soon. Falling back to 'N/A' for now...")
-        title = "N/A"
-        ew, eh, err = xgraphics.TextExtents(font, fontSize, title)
-        if err != nil {
-            logWarning.Printf("Could not get text extents for name '%s' on " +
-                              "window %s. Resorting to default width of 100.",
-                              title, f.Client())
-            ew = 100
-        }
-    }
-
-    imgA := renderBorder(0, 0, THEME.full.aTitleColor,
-                         ew, THEME.full.titleSize,
-                         renderGradientVert, renderGradientRegular)
-    imgI := renderBorder(0, 0, THEME.full.iTitleColor,
-                         ew, THEME.full.titleSize,
-                         renderGradientVert, renderGradientRegular)
-
-    y := (THEME.full.titleSize - eh) / 2 - 1
-    xgraphics.DrawText(imgA, 0, y, fontColor, fontSize, font, title)
-    xgraphics.DrawText(imgI, 0, y, fontColor, fontSize, font, title)
-
     win := f.newPieceWindow("titletext", 0)
-    win.moveresize(DoX | DoY | DoW | DoH,
+    win.moveresize(DoX | DoY | DoH,
                    THEME.full.borderSize + THEME.full.titleSize,
                    THEME.full.borderSize,
-                   ew, THEME.full.titleSize)
-    return newFramePiece(win, xgraphics.CreatePixmap(X, imgA),
-                         xgraphics.CreatePixmap(X, imgI))
+                   0, THEME.full.titleSize)
+    return newFramePiece(win, 0, 0)
 }
 
 func (f *frameFull) newIcon() framePiece {
-    imgA := renderBorder(0, 0, THEME.full.aTitleColor,
-                         THEME.full.titleSize, THEME.full.titleSize,
-                         renderGradientVert, renderGradientRegular)
-    imgI := renderBorder(0, 0, THEME.full.iTitleColor,
-                         THEME.full.titleSize, THEME.full.titleSize,
-                         renderGradientVert, renderGradientRegular)
-
-    img, msk := f.Client().iconImage(THEME.full.titleSize - 4,
-                                     THEME.full.titleSize - 4)
-    xgraphics.Blend(imgA, img, msk, 100, 2, 2)
-    xgraphics.Blend(imgI, img, msk, 100, 2, 2)
-
     win := f.newPieceWindow("icon", 0)
     win.moveresize(DoX | DoY | DoW | DoH,
                    THEME.full.borderSize, THEME.full.borderSize,
                    THEME.full.titleSize, THEME.full.titleSize)
-    return newFramePiece(win, xgraphics.CreatePixmap(X, imgA),
-                         xgraphics.CreatePixmap(X, imgI))
+    return newFramePiece(win, 0, 0)
 }
 
 //
@@ -152,6 +159,16 @@ func (f *frameFull) newRightSide() framePiece {
     win := f.newPieceWindow("right", cursorRightSide)
     win.moveresize(DoY | DoW,
                    0, THEME.full.borderSize, THEME.full.borderSize, 0)
+    return newFramePiece(win, pixA, pixI)
+}
+
+func (f *frameFull) newTitleBottom() framePiece {
+    pixA, pixI := f.borderImages(1, THEME.full.borderSize)
+    win := f.newPieceWindow("titlebottom", 0)
+    win.moveresize(DoX | DoY | DoH,
+                   THEME.full.borderSize,
+                   THEME.full.borderSize + THEME.full.titleSize,
+                   0, THEME.full.borderSize)
     return newFramePiece(win, pixA, pixI)
 }
 

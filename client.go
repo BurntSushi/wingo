@@ -61,6 +61,15 @@ func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
     X.Grab()
     defer X.Ungrab()
 
+    // whoa whoa... what if we're already managing this window?
+    for _, c := range WM.clients {
+        if ev.Window == c.Id() {
+            logWarning.Printf("Could not manage window %X because we are " +
+                              "already managing %s.", ev.Window, c)
+            return
+        }
+    }
+
     client, err := newClient(ev.Window)
     if err != nil {
         logWarning.Printf("Could not manage window %X because: %v\n",
@@ -76,6 +85,7 @@ type client struct {
     layer int
     name, vname, wmname string
     isMapped bool
+    state int
     initialMap bool
     lastTime int
     unmapIgnore int
@@ -176,7 +186,8 @@ func (c *client) manage() {
     c.frameInit()
     c.FrameFull()
 
-    // We're committed now...
+    // Reparent's sends an unmap, we need to ignore it!
+    c.unmapIgnore++
 
     // time to add the client to the WM state
     WM.clientAdd(c)
@@ -197,7 +208,8 @@ func (c *client) manage() {
             if c.frame.Moving() || c.frame.Resizing() {
                 return
             }
-            c.frame.ConfigureClient(int(ev.ValueMask), int(ev.X), int(ev.Y),
+            flags := int(ev.ValueMask) & ^int(DoStack) & ^int(DoSibling)
+            c.frame.ConfigureClient(flags, int(ev.X), int(ev.Y),
                                     int(ev.Width), int(ev.Height),
                                     ev.Sibling, ev.StackMode, false)
     }).Connect(X, c.window.id)
@@ -222,9 +234,6 @@ func (c *client) manage() {
 
     c.clientMouseConfig()
     c.frameMouseConfig()
-
-    // c.SetupMoveDrag(c.frame.ParentId(), "Mod4-1", true) 
-    // c.SetupResizeDrag(c.frame.ParentId(), "Mod4-3", true, ewmh.Infer) 
 
     // If the initial state isn't iconic or is absent, then we can map
     if c.hints.Flags & icccm.HintState == 0 ||
@@ -329,11 +338,16 @@ func (c *client) Map() {
     c.setWmState(icccm.StateNormal)
 }
 
+func (c *client) Unmap() {
+    c.unmapIgnore++
+    c.unmapped()
+}
+
 func (c *client) unmapped() {
-    c.setWmState(icccm.StateIconic)
     focused := WM.focused()
     c.frame.Unmap()
     c.isMapped = false
+    c.setWmState(icccm.StateIconic)
 
     if focused != nil && focused.Id() == c.Id() {
         WM.fallback()
@@ -384,8 +398,6 @@ func (c *client) Close() {
     } else {
         c.window.kill()
     }
-
-    c.unmanage()
 }
 
 // Alive retrieves all X events up until the point of calling that have been
@@ -457,14 +469,16 @@ func (c *client) Focus() {
 
 func (c *client) Focused() {
     WM.focusAdd(c)
-    c.Frame().StateActive()
+    c.state = StateActive
+    c.Frame().Active()
 
     // Forcefully unfocus all other clients
     WM.unfocusExcept(c.Id())
 }
 
 func (c *client) Unfocused() {
-    c.Frame().StateInactive()
+    c.state = StateInactive
+    c.Frame().Inactive()
 }
 
 func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
@@ -484,17 +498,17 @@ func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
 
     // Start the arduous process of updating properties...
     switch name {
-    case "_NET_WM_NAME":
-        newName, err := ewmh.WmNameGet(X, c.window.id)
-        showVals(c.name, newName)
+    case "_NET_WM_NAME": fallthrough
+    case "_NET_WM_VISIBLE_NAME": fallthrough
+    case "WM_NAME":
+        c.updateName()
+    case "_NET_WM_ICON":
+        c.frameFull.updateIcon()
+    case "WM_HINTS":
+        hints, err := icccm.WmHintsGet(X, c.Id())
         if err == nil {
-            c.name = newName
-        }
-    case "_NET_WM_VISIBLE_NAME":
-        newName, err := ewmh.WmVisibleNameGet(X, c.window.id)
-        showVals(c.vname, newName)
-        if err == nil {
-            c.vname = newName
+            c.hints = &hints
+            c.frameFull.updateIcon()
         }
     case "_NET_WM_USER_TIME":
         newTime, err := ewmh.WmUserTimeGet(X, c.window.id)
@@ -503,6 +517,39 @@ func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
             c.lastTime = newTime
         }
     }
+}
+
+func (c *client) updateName() {
+    // helper function to log property vals
+    showVals := func(o, n interface{}) {
+        logLots.Printf("\tOld value: '%s', new value: '%s'", o, n)
+    }
+
+    var name string
+    var err error
+
+    name, err = ewmh.WmVisibleNameGet(X, c.Id())
+    showVals(c.vname, name)
+    if err == nil {
+        c.vname = name
+    }
+
+    name, err = ewmh.WmNameGet(X, c.Id())
+    showVals(c.name, name)
+    if err == nil {
+        c.name = name
+    }
+
+    // Only look for the old style name if we don't have one
+    if name == "" {
+        name, err = icccm.WmNameGet(X, c.Id())
+        showVals(c.name, name)
+        if err == nil {
+            c.name = name
+        }
+    }
+
+    c.frameFull.updateTitle()
 }
 
 func (c *client) GravitizeX(x int, gravity int) int {

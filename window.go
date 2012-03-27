@@ -175,7 +175,7 @@ func configure(window xgb.Id, flags, x, y, w, h int,
 // configureRequest responds to generic configure requests from windows that
 // we don't manage.
 func configureRequest(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
-    configure(ev.Window, int(ev.ValueMask),
+    configure(ev.Window, int(ev.ValueMask) & ^int(DoStack) & ^int(DoSibling),
               int(ev.X), int(ev.Y), int(ev.Width), int(ev.Height),
               ev.Sibling, ev.StackMode)
 }

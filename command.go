@@ -61,9 +61,9 @@ func cmd_active_flash() {
         go func(c *client) {
             for i := 0; i < 10; i++ {
                 if c.Frame().State() == StateActive {
-                    c.Frame().StateInactive()
+                    c.Frame().Inactive()
                 } else {
-                    c.Frame().StateActive()
+                    c.Frame().Active()
                 }
 
                 time.Sleep(time.Second)

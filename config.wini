@@ -20,8 +20,20 @@ Mod4-3 := Resize
 1 := FocusRaise
 3 := Resize
 
+[MouseFullClose]
+1 up := Close
+
+[MouseFullMaximize]
+1 up := Maximize
+
+[MouseFullMinimize]
+1 up := Minimize
+
 [MouseFullTop]
 1 := Resize Top
+1 down := FocusRaise
+
+[MouseFullTitleBottom]
 1 down := FocusRaise
 
 [MouseFullBottom]

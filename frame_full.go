@@ -2,13 +2,17 @@ package main
 
 import "code.google.com/p/jamslam-x-go-binding/xgb"
 
+import "github.com/BurntSushi/xgbutil/xgraphics"
+
 type frameFull struct {
     *abstFrame
 
     // pieces
     titleBar, titleText, icon framePiece
+    buttonMinimize, buttonMaximize, buttonClose framePiece
     topSide, bottomSide, leftSide, rightSide framePiece
     topLeft, topRight, bottomLeft, bottomRight framePiece
+    titleBottom framePiece
 }
 
 func newFrameFull(p *frameParent, c *client) *frameFull {
@@ -21,17 +25,24 @@ func newFrameFull(p *frameParent, c *client) *frameFull {
 
     f.titleBar = f.newTitleBar()
     f.titleText = f.newTitleText()
+    f.buttonClose = f.newButtonClose()
+    f.buttonMaximize = f.newButtonMaximize()
+    f.buttonMinimize = f.newButtonMinimize()
     f.icon = f.newIcon()
 
     f.topSide = f.newTopSide()
     f.bottomSide = f.newBottomSide()
     f.leftSide = f.newLeftSide()
     f.rightSide = f.newRightSide()
+    f.titleBottom = f.newTitleBottom()
 
     f.topLeft = f.newTopLeft()
     f.topRight = f.newTopRight()
     f.bottomLeft = f.newBottomLeft()
     f.bottomRight = f.newBottomRight()
+
+    f.updateTitle()
+    f.updateIcon()
 
     return f
 }
@@ -41,6 +52,7 @@ func (f *frameFull) Destroy() {
     f.bottomSide.destroy()
     f.leftSide.destroy()
     f.rightSide.destroy()
+    f.titleBottom.destroy()
 
     f.topLeft.destroy()
     f.topRight.destroy()
@@ -50,6 +62,9 @@ func (f *frameFull) Destroy() {
     f.titleBar.destroy()
     f.titleText.destroy()
     f.icon.destroy()
+    f.buttonClose.destroy()
+    f.buttonMaximize.destroy()
+    f.buttonMinimize.destroy()
 
     f.abstFrame.Destroy()
 }
@@ -59,6 +74,7 @@ func (f *frameFull) Off() {
     f.bottomSide.win.unmap()
     f.leftSide.win.unmap()
     f.rightSide.win.unmap()
+    f.titleBottom.win.unmap()
 
     f.topLeft.win.unmap()
     f.topRight.win.unmap()
@@ -68,22 +84,26 @@ func (f *frameFull) Off() {
     f.titleBar.win.unmap()
     f.titleText.win.unmap()
     f.icon.win.unmap()
+    f.buttonClose.win.unmap()
+    f.buttonMaximize.win.unmap()
+    f.buttonMinimize.win.unmap()
 }
 
 func (f *frameFull) On() {
     FrameReset(f)
 
     // Make sure the current state is properly shown
-    if f.state == StateActive {
-        f.StateActive()
+    if f.State() == StateActive {
+        f.Active()
     } else {
-        f.StateInactive()
+        f.Inactive()
     }
 
     f.topSide.win.map_()
     f.bottomSide.win.map_()
     f.leftSide.win.map_()
     f.rightSide.win.map_()
+    f.titleBottom.win.map_()
 
     f.topLeft.win.map_()
     f.topRight.win.map_()
@@ -93,15 +113,17 @@ func (f *frameFull) On() {
     f.titleBar.win.map_()
     f.titleText.win.map_()
     f.icon.win.map_()
+    f.buttonClose.win.map_()
+    f.buttonMaximize.win.map_()
+    f.buttonMinimize.win.map_()
 }
 
-func (f *frameFull) StateActive() {
-    f.state = StateActive
-
+func (f *frameFull) Active() {
     f.topSide.active()
     f.bottomSide.active()
     f.leftSide.active()
     f.rightSide.active()
+    f.titleBottom.active()
 
     f.topLeft.active()
     f.topRight.active()
@@ -111,18 +133,20 @@ func (f *frameFull) StateActive() {
     f.titleBar.active()
     f.titleText.active()
     f.icon.active()
+    f.buttonClose.active()
+    f.buttonMaximize.active()
+    f.buttonMinimize.active()
 
-    f.ParentWin().change(xgb.CWBackPixel, uint32(0xff0000))
+    f.ParentWin().change(xgb.CWBackPixel, uint32(0xffffff))
     f.ParentWin().clear()
 }
 
-func (f *frameFull) StateInactive() {
-    f.state = StateInactive
-
+func (f *frameFull) Inactive() {
     f.topSide.inactive()
     f.bottomSide.inactive()
     f.leftSide.inactive()
     f.rightSide.inactive()
+    f.titleBottom.inactive()
 
     f.topLeft.inactive()
     f.topRight.inactive()
@@ -132,13 +156,16 @@ func (f *frameFull) StateInactive() {
     f.titleBar.inactive()
     f.titleText.inactive()
     f.icon.inactive()
+    f.buttonClose.inactive()
+    f.buttonMaximize.inactive()
+    f.buttonMinimize.inactive()
 
-    f.ParentWin().change(xgb.CWBackPixel, uint32(0xff0000))
+    f.ParentWin().change(xgb.CWBackPixel, uint32(0xffffff))
     f.ParentWin().clear()
 }
 
 func (f *frameFull) Top() int {
-    return THEME.full.borderSize + THEME.full.titleSize
+    return (THEME.full.borderSize * 2) + THEME.full.titleSize
 }
 
 func (f *frameFull) Bottom() int {
@@ -157,13 +184,15 @@ func (f *frameFull) ConfigureClient(flags, x, y, w, h int,
                                     sibling xgb.Id, stackMode byte,
                                     ignoreHints bool) {
     x, y, w, h = f.configureClient(flags, x, y, w, h)
-    f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints)
+    f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints,
+                     true)
 }
 
 func (f *frameFull) ConfigureFrame(flags, fx, fy, fw, fh int,
                                    sibling xgb.Id, stackMode byte,
-                                   ignoreHints bool) {
-    f.configureFrame(flags, fx, fy, fw, fh, sibling, stackMode, ignoreHints)
+                                   ignoreHints bool, sendNotify bool) {
+    f.configureFrame(flags, fx, fy, fw, fh, sibling, stackMode, ignoreHints,
+                     sendNotify)
     fg := f.Geom()
 
     f.topSide.win.moveresize(DoW, 0, 0,
@@ -176,6 +205,7 @@ func (f *frameFull) ConfigureFrame(flags, fx, fy, fw, fh int,
     f.rightSide.win.moveresize(DoX | DoH,
                                fg.Width() - f.rightSide.w(), 0,
                                0, f.leftSide.h())
+    f.titleBottom.win.moveresize(DoW, 0, 0, f.topSide.w(), 0)
 
     f.topRight.win.moveresize(DoX, f.topLeft.w() + f.topSide.w(), 0, 0, 0)
     f.bottomLeft.win.moveresize(DoY, 0, f.bottomSide.y(), 0, 0)
@@ -186,5 +216,119 @@ func (f *frameFull) ConfigureFrame(flags, fx, fy, fw, fh int,
 
     f.titleBar.win.moveresize(DoW, 0, 0,
                               fg.Width() - f.leftSide.w() - f.rightSide.w(), 0)
+    f.buttonClose.win.moveresize(DoX,
+                                 fg.Width() -
+                                  f.rightSide.w() - f.buttonClose.w(),
+                                 0, 0, 0)
+    f.buttonMaximize.win.moveresize(DoX,
+                                    f.buttonClose.x() - f.buttonMinimize.w(),
+                                    0, 0, 0)
+    f.buttonMinimize.win.moveresize(DoX,
+                                    f.buttonMaximize.x() - f.buttonMinimize.w(),
+                                    0, 0, 0)
+}
+
+func (f *frameFull) updateIcon() {
+    imgA := renderBorder(0, 0, THEME.full.aTitleColor,
+                         THEME.full.titleSize, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+    imgI := renderBorder(0, 0, THEME.full.iTitleColor,
+                         THEME.full.titleSize, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+
+    img, msk := f.Client().iconImage(THEME.full.titleSize - 4,
+                                     THEME.full.titleSize - 4)
+    xgraphics.Blend(imgA, img, msk, 100, 2, 2)
+    xgraphics.Blend(imgI, img, msk, 100, 2, 2)
+
+    if f.icon.imgActive > 0 {
+        xgraphics.FreePixmap(X, f.icon.imgActive)
+    }
+    if f.icon.imgInactive > 0 {
+        xgraphics.FreePixmap(X, f.icon.imgInactive)
+    }
+
+    f.icon.imgActive = xgraphics.CreatePixmap(X, imgA)
+    f.icon.imgInactive = xgraphics.CreatePixmap(X, imgI)
+
+    if f.State() == StateActive {
+        f.icon.active()
+    } else {
+        f.icon.inactive()
+    }
+}
+
+func (f *frameFull) updateTitle() {
+    title := f.Client().Name()
+    font := THEME.full.font
+    fontSize := THEME.full.fontSize
+    aFontColor := ColorFromInt(THEME.full.aFontColor)
+    iFontColor := ColorFromInt(THEME.full.iFontColor)
+
+    ew, eh, err := xgraphics.TextExtents(font, fontSize, title)
+    if err != nil {
+        logWarning.Printf("Could not get text extents for name '%s' on " +
+                          "window %s because: %v",
+                          title, f.Client(), err)
+        logWarning.Printf("Resorting to default with of 300.")
+        ew = 300
+    }
+
+    // XXX: We still can't send images with more pixels than 256x256.
+    // This is a point where that limitation is very easy to surpass if
+    // we have long window titles. Do a sanity check here and bail on the
+    // window title if X is going to stomp on us.
+    if ew * THEME.full.titleSize > 255 * 255 {
+        logWarning.Printf("The image containing the window title is just too " +
+                          "big for XGB to handle. I really hope to fix this " +
+                          "soon. Falling back to 'N/A' for now...")
+        title = "N/A"
+        ew, eh, err = xgraphics.TextExtents(font, fontSize, title)
+        if err != nil {
+            logWarning.Printf("Could not get text extents for name '%s' on " +
+                              "window %s because: %v",
+                              title, f.Client(), err)
+            logWarning.Printf("Resorting to default with of 100.")
+            ew = 100
+        }
+    }
+
+    imgA := renderBorder(0, 0, THEME.full.aTitleColor,
+                         ew, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+    imgI := renderBorder(0, 0, THEME.full.iTitleColor,
+                         ew, THEME.full.titleSize,
+                         renderGradientVert, renderGradientRegular)
+
+    y := (THEME.full.titleSize - eh) / 2 - 1
+
+    err = xgraphics.DrawText(imgA, 0, y, aFontColor, fontSize, font, title)
+    if err != nil {
+        logWarning.Printf("Could not draw window title for window %s " +
+                          "because: %v", f.Client(), err)
+    }
+
+    err = xgraphics.DrawText(imgI, 0, y, iFontColor, fontSize, font, title)
+    if err != nil {
+        logWarning.Printf("Could not draw window title for window %s " +
+                          "because: %v", f.Client(), err)
+    }
+
+    if f.titleText.imgActive > 0 {
+        xgraphics.FreePixmap(X, f.titleText.imgActive)
+    }
+    if f.titleText.imgInactive > 0 {
+        xgraphics.FreePixmap(X, f.titleText.imgInactive)
+    }
+
+    f.titleText.imgActive = xgraphics.CreatePixmap(X, imgA)
+    f.titleText.imgInactive = xgraphics.CreatePixmap(X, imgI)
+
+    f.titleText.win.moveresize(DoW, 0, 0, ew, 0)
+    if f.State() == StateActive {
+        f.titleText.active()
+    } else {
+        f.titleText.inactive()
+    }
 }
 

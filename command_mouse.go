@@ -104,6 +104,10 @@ func getMouseCommand(cmd string) func(c *client) {
         return func(c *client) {
             c.Close()
         }
+    case "Minimize":
+        return func(c *client) {
+            c.Unmap()
+        }
     }
 
     return nil

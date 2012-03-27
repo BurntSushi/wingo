@@ -57,10 +57,11 @@ func (wm *state) updateEwmhClients() {
     }
 }
 
+// There can only ever be one focused client, so just find it
 func (wm *state) focused() *client {
-    for i := len(wm.focus) - 1; i >= 0; i-- {
-        if wm.focus[i].Mapped() {
-            return wm.focus[i]
+    for _, client := range wm.clients {
+        if client.state == StateActive {
+            return client
         }
     }
     return nil

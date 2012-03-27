@@ -23,23 +23,19 @@ func (f *frameSlim) On() {
     FrameReset(f)
 
     // Make sure the current state is properly shown
-    if f.state == StateActive {
-        f.StateActive()
+    if f.State() == StateActive {
+        f.Active()
     } else {
-        f.StateInactive()
+        f.Inactive()
     }
 }
 
-func (f *frameSlim) StateActive() {
-    f.state = StateActive
-
+func (f *frameSlim) Active() {
     f.ParentWin().change(xgb.CWBackPixel, uint32(THEME.slim.aBorderColor))
     f.ParentWin().clear()
 }
 
-func (f *frameSlim) StateInactive() {
-    f.state = StateInactive
-
+func (f *frameSlim) Inactive() {
     f.ParentWin().change(xgb.CWBackPixel, uint32(THEME.slim.iBorderColor))
     f.ParentWin().clear()
 }
@@ -64,12 +60,13 @@ func (f *frameSlim) ConfigureClient(flags, x, y, w, h int,
                                     sibling xgb.Id, stackMode byte,
                                     ignoreHints bool) {
     x, y, w, h = f.configureClient(flags, x, y, w, h)
-    f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints)
+    f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints, true)
 }
 
 func (f *frameSlim) ConfigureFrame(flags, fx, fy, fw, fh int,
                                    sibling xgb.Id, stackMode byte,
-                                   ignoreHints bool) {
-    f.configureFrame(flags, fx, fy, fw, fh, sibling, stackMode, ignoreHints)
+                                   ignoreHints bool, sendNotify bool) {
+    f.configureFrame(flags, fx, fy, fw, fh, sibling, stackMode, ignoreHints,
+                     sendNotify)
 }
 

@@ -61,10 +61,10 @@ func (f *frameBorders) On() {
     FrameReset(f)
 
     // Make sure the current state is properly shown
-    if f.state == StateActive {
-        f.StateActive()
+    if f.State() == StateActive {
+        f.Active()
     } else {
-        f.StateInactive()
+        f.Inactive()
     }
 
     f.topSide.win.map_()
@@ -78,9 +78,7 @@ func (f *frameBorders) On() {
     f.bottomRight.win.map_()
 }
 
-func (f *frameBorders) StateActive() {
-    f.state = StateActive
-
+func (f *frameBorders) Active() {
     f.topSide.active()
     f.bottomSide.active()
     f.leftSide.active()
@@ -95,9 +93,7 @@ func (f *frameBorders) StateActive() {
     f.ParentWin().clear()
 }
 
-func (f *frameBorders) StateInactive() {
-    f.state = StateInactive
-
+func (f *frameBorders) Inactive() {
     f.topSide.inactive()
     f.bottomSide.inactive()
     f.leftSide.inactive()
@@ -132,13 +128,14 @@ func (f *frameBorders) ConfigureClient(flags, x, y, w, h int,
                                        sibling xgb.Id, stackMode byte,
                                        ignoreHints bool) {
     x, y, w, h = f.configureClient(flags, x, y, w, h)
-    f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints)
+    f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints, true)
 }
 
 func (f *frameBorders) ConfigureFrame(flags, fx, fy, fw, fh int,
                                       sibling xgb.Id, stackMode byte,
-                                      ignoreHints bool) {
-    f.configureFrame(flags, fx, fy, fw, fh, sibling, stackMode, ignoreHints)
+                                      ignoreHints bool, sendNotify bool) {
+    f.configureFrame(flags, fx, fy, fw, fh, sibling, stackMode, ignoreHints,
+                     sendNotify)
     fg := f.Geom()
 
     f.topSide.win.moveresize(DoW, 0, 0,

@@ -9,7 +9,6 @@ import (
 
 type abstFrame struct {
     parent *frameParent
-    state int
     clientOffset clientOffset
     moving *moveState
     resizing *resizeState
@@ -27,11 +26,14 @@ func newFrameAbst(p *frameParent, c *client, cp clientOffset) *abstFrame {
 }
 
 func (f *abstFrame) Destroy() {
+    if f.Client().TrulyAlive() {
+        X.Conn().ReparentWindow(f.Client().Id(), ROOT.id, 0, 0)
+    }
     f.parent.window.destroy()
 }
 
 func (f *abstFrame) State() int {
-    return f.state
+    return f.Client().state
 }
 
 func (f *abstFrame) Map() {
@@ -80,7 +82,7 @@ func (f *abstFrame) configureClient(flags, x, y, w, h int) (int, int,
 // coordinates. (No gravitization.)
 func (f *abstFrame) configureFrame(flags, fx, fy, fw, fh int,
                                    sibling xgb.Id, stackMode byte,
-                                   ignoreHints bool) {
+                                   ignoreHints bool, sendNotify bool) {
     cw, ch := fw, fh
     framex, framey, _, _ := xrect.RectPieces(f.Geom())
     _, _, clientw, clienth := xrect.RectPieces(f.Client().Geom())
@@ -108,11 +110,14 @@ func (f *abstFrame) configureFrame(flags, fx, fy, fw, fh int,
         clienth = ch
     }
 
-    configNotify := xevent.NewConfigureNotify(f.Client().Id(), f.Client().Id(),
-                                              0, framex, framey,
-                                              clientw, clienth, 0, false)
-    X.Conn().SendEvent(false, f.Client().Id(), xgb.EventMaskStructureNotify,
-                       configNotify.Bytes())
+    if sendNotify {
+        configNotify := xevent.NewConfigureNotify(f.Client().Id(),
+                                                  f.Client().Id(),
+                                                  0, framex, framey,
+                                                  clientw, clienth, 0, false)
+        X.Conn().SendEvent(false, f.Client().Id(), xgb.EventMaskStructureNotify,
+                           configNotify.Bytes())
+    }
 
     f.Client().Win().moveresize(flags | DoX | DoY,
                                 f.clientOffset.x, f.clientOffset.y, cw, ch)

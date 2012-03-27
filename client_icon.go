@@ -12,6 +12,8 @@ import (
     "github.com/BurntSushi/xgbutil/xgraphics"
 )
 
+import "github.com/BurntSushi/wingo/bindata"
+
 func (c *client) iconImage(width, height int) (draw.Image, draw.Image) {
     var img, mask draw.Image
     var err error
@@ -27,14 +29,39 @@ func (c *client) iconImage(width, height int) (draw.Image, draw.Image) {
         goto DONE
     }
 
+    iok, mok = false, false
     img, err = xgraphics.LoadPngFromFile(THEME.defaultIcon)
-    iok, mok = true, false
     if err == nil {
+        iok = true
         goto DONE
+    } else {
+        logWarning.Printf("Could not load default PNG icon '%s' because: %v",
+                          THEME.defaultIcon, err)
+    }
+
+    img, err = xgraphics.LoadPngFromBytes(bindata.WingoPng())
+    if err == nil {
+        iok = true
+        goto DONE
+    } else {
+        logWarning.Printf("Could not load default PNG icon from binary data " +
+                          "because: %v", err)
     }
 
 DONE:
-    img = xgraphics.Scale(img, width, height)
+    // If we've got an image, great! If not, just create a completely
+    // transparent image. It will take up space, but it won't look
+    // horrendous and we won't crash.
+    if iok {
+        img = xgraphics.Scale(img, width, height)
+    } else {
+        uni := image.NewUniform(color.RGBA{0, 0, 0, 0})
+        img = image.NewRGBA(image.Rect(0, 0, width, height))
+        draw.Draw(img, img.Bounds(), uni, image.ZP, draw.Src)
+    }
+
+    // Just as we did for img above, if we don't have a mask, create a benign
+    // mask in its stead.
     if mok {
         mask = xgraphics.Scale(mask, width, height)
     } else {
