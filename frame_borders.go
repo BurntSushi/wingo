@@ -108,6 +108,12 @@ func (f *frameBorders) Inactive() {
     f.ParentWin().clear()
 }
 
+func (f *frameBorders) Maximize() {
+}
+
+func (f *frameBorders) Unmaximize() {
+}
+
 func (f *frameBorders) Top() int {
     return THEME.borders.borderSize
 }

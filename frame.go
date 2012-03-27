@@ -42,15 +42,10 @@ type Frame interface {
     // These are temporary. I think they will move to 'layout'
     Moving() bool
     MovingState() *moveState
-    // moveBegin(rx, ry, ex, ey int16) 
-    // moveStep(rx, ry, ex, ey int16) 
-    // moveEnd(rx, ry, ex, ey int16) 
-
     Resizing() bool
     ResizingState() *resizeState
-    // resizeBegin(direction uint32, rx, ry, ex, ey int16) (bool, xgb.Id) 
-    // resizeStep(rx, ry, ex, ey int16) 
-    // resizeEnd(rx, ry, ex, ey int16) 
+    Maximize()
+    Unmaximize()
 }
 
 type frameParent struct {

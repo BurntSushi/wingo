@@ -44,6 +44,7 @@ type Client interface {
     Layer() int
     Map()
     Mapped() bool
+    Maximize()
     Raise()
     SetupFocus(win xgb.Id, buttonStr string, grab bool)
     SetupMoveDrag(parent xgb.Id, buttonStr string, grab bool)
@@ -86,12 +87,15 @@ type client struct {
     name, vname, wmname string
     isMapped bool
     state int
+    maximized bool
     initialMap bool
     lastTime int
     unmapIgnore int
     hints *icccm.Hints
     nhints *icccm.NormalHints
     protocols []string
+
+    geomStore map[string]xrect.Rect
 
     frame Frame
     frameNada *frameNada
@@ -159,12 +163,16 @@ func newClient(id xgb.Id) (*client, error) {
         vname: vname,
         wmname: wmname,
         isMapped: false,
+        state: StateInactive,
+        maximized: false,
         initialMap: false,
         lastTime: 0,
         unmapIgnore: 0,
         hints: &hints,
         nhints: &nhints,
         protocols: protocols,
+
+        geomStore: make(map[string]xrect.Rect),
 
         frame: nil,
         frameNada: nil,
@@ -344,10 +352,10 @@ func (c *client) Unmap() {
 }
 
 func (c *client) unmapped() {
+    c.setWmState(icccm.StateIconic)
     focused := WM.focused()
     c.frame.Unmap()
     c.isMapped = false
-    c.setWmState(icccm.StateIconic)
 
     if focused != nil && focused.Id() == c.Id() {
         WM.fallback()
@@ -702,6 +710,31 @@ func (c *client) Name() string {
         return c.wmname
     }
     return "N/A"
+}
+
+func (c *client) MaximizeToggle() {
+    if c.maximized {
+        c.Frame().Unmaximize()
+        c.LoadGeom("unmaximized")
+        c.maximized = false
+    } else {
+        c.SaveGeom("unmaximized")
+        c.Frame().Maximize()
+        c.maximized = true
+    }
+}
+
+func (c *client) SaveGeom(key string) {
+    c.geomStore[key] = xrect.Make(xrect.Pieces(c.Frame().Geom()))
+}
+
+func (c *client) LoadGeom(key string) {
+    if geom, ok := c.geomStore[key]; ok {
+        c.Frame().ConfigureFrame(
+            DoX | DoY | DoW | DoH,
+            geom.X(), geom.Y(), geom.Width(), geom.Height(),
+            0, 0, false, true)
+    }
 }
 
 func (c *client) Raise() {

@@ -31,6 +31,12 @@ func (f *frameNada) Active() {
 func (f *frameNada) Inactive() {
 }
 
+func (f *frameNada) Maximize() {
+}
+
+func (f *frameNada) Unmaximize() {
+}
+
 func (f *frameNada) Top() int {
     return 0
 }

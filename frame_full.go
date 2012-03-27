@@ -30,16 +30,18 @@ func newFrameFull(p *frameParent, c *client) *frameFull {
     f.buttonMinimize = f.newButtonMinimize()
     f.icon = f.newIcon()
 
-    f.topSide = f.newTopSide()
-    f.bottomSide = f.newBottomSide()
-    f.leftSide = f.newLeftSide()
-    f.rightSide = f.newRightSide()
-    f.titleBottom = f.newTitleBottom()
+    if THEME.full.borderSize > 0 {
+        f.topSide = f.newTopSide()
+        f.bottomSide = f.newBottomSide()
+        f.leftSide = f.newLeftSide()
+        f.rightSide = f.newRightSide()
+        f.titleBottom = f.newTitleBottom()
 
-    f.topLeft = f.newTopLeft()
-    f.topRight = f.newTopRight()
-    f.bottomLeft = f.newBottomLeft()
-    f.bottomRight = f.newBottomRight()
+        f.topLeft = f.newTopLeft()
+        f.topRight = f.newTopRight()
+        f.bottomLeft = f.newBottomLeft()
+        f.bottomRight = f.newBottomRight()
+    }
 
     f.updateTitle()
     f.updateIcon()
@@ -48,16 +50,18 @@ func newFrameFull(p *frameParent, c *client) *frameFull {
 }
 
 func (f *frameFull) Destroy() {
-    f.topSide.destroy()
-    f.bottomSide.destroy()
-    f.leftSide.destroy()
-    f.rightSide.destroy()
-    f.titleBottom.destroy()
+    if THEME.full.borderSize > 0 {
+        f.topSide.destroy()
+        f.bottomSide.destroy()
+        f.leftSide.destroy()
+        f.rightSide.destroy()
+        f.titleBottom.destroy()
 
-    f.topLeft.destroy()
-    f.topRight.destroy()
-    f.bottomLeft.destroy()
-    f.bottomRight.destroy()
+        f.topLeft.destroy()
+        f.topRight.destroy()
+        f.bottomLeft.destroy()
+        f.bottomRight.destroy()
+    }
 
     f.titleBar.destroy()
     f.titleText.destroy()
@@ -70,16 +74,18 @@ func (f *frameFull) Destroy() {
 }
 
 func (f *frameFull) Off() {
-    f.topSide.win.unmap()
-    f.bottomSide.win.unmap()
-    f.leftSide.win.unmap()
-    f.rightSide.win.unmap()
-    f.titleBottom.win.unmap()
+    if THEME.full.borderSize > 0 {
+        f.topSide.win.unmap()
+        f.bottomSide.win.unmap()
+        f.leftSide.win.unmap()
+        f.rightSide.win.unmap()
+        f.titleBottom.win.unmap()
 
-    f.topLeft.win.unmap()
-    f.topRight.win.unmap()
-    f.bottomLeft.win.unmap()
-    f.bottomRight.win.unmap()
+        f.topLeft.win.unmap()
+        f.topRight.win.unmap()
+        f.bottomLeft.win.unmap()
+        f.bottomRight.win.unmap()
+    }
 
     f.titleBar.win.unmap()
     f.titleText.win.unmap()
@@ -99,16 +105,18 @@ func (f *frameFull) On() {
         f.Inactive()
     }
 
-    f.topSide.win.map_()
-    f.bottomSide.win.map_()
-    f.leftSide.win.map_()
-    f.rightSide.win.map_()
-    f.titleBottom.win.map_()
+    if THEME.full.borderSize > 0 {
+        f.topSide.win.map_()
+        f.bottomSide.win.map_()
+        f.leftSide.win.map_()
+        f.rightSide.win.map_()
+        f.titleBottom.win.map_()
 
-    f.topLeft.win.map_()
-    f.topRight.win.map_()
-    f.bottomLeft.win.map_()
-    f.bottomRight.win.map_()
+        f.topLeft.win.map_()
+        f.topRight.win.map_()
+        f.bottomLeft.win.map_()
+        f.bottomRight.win.map_()
+    }
 
     f.titleBar.win.map_()
     f.titleText.win.map_()
@@ -119,16 +127,18 @@ func (f *frameFull) On() {
 }
 
 func (f *frameFull) Active() {
-    f.topSide.active()
-    f.bottomSide.active()
-    f.leftSide.active()
-    f.rightSide.active()
-    f.titleBottom.active()
+    if THEME.full.borderSize > 0 {
+        f.topSide.active()
+        f.bottomSide.active()
+        f.leftSide.active()
+        f.rightSide.active()
+        f.titleBottom.active()
 
-    f.topLeft.active()
-    f.topRight.active()
-    f.bottomLeft.active()
-    f.bottomRight.active()
+        f.topLeft.active()
+        f.topRight.active()
+        f.bottomLeft.active()
+        f.bottomRight.active()
+    }
 
     f.titleBar.active()
     f.titleText.active()
@@ -142,16 +152,18 @@ func (f *frameFull) Active() {
 }
 
 func (f *frameFull) Inactive() {
-    f.topSide.inactive()
-    f.bottomSide.inactive()
-    f.leftSide.inactive()
-    f.rightSide.inactive()
-    f.titleBottom.inactive()
+    if THEME.full.borderSize > 0 {
+        f.topSide.inactive()
+        f.bottomSide.inactive()
+        f.leftSide.inactive()
+        f.rightSide.inactive()
+        f.titleBottom.inactive()
 
-    f.topLeft.inactive()
-    f.topRight.inactive()
-    f.bottomLeft.inactive()
-    f.bottomRight.inactive()
+        f.topLeft.inactive()
+        f.topRight.inactive()
+        f.bottomLeft.inactive()
+        f.bottomRight.inactive()
+    }
 
     f.titleBar.inactive()
     f.titleText.inactive()
@@ -162,6 +174,12 @@ func (f *frameFull) Inactive() {
 
     f.ParentWin().change(xgb.CWBackPixel, uint32(0xffffff))
     f.ParentWin().clear()
+}
+
+func (f *frameFull) Maximize() {
+}
+
+func (f *frameFull) Unmaximize() {
 }
 
 func (f *frameFull) Top() int {
@@ -195,37 +213,33 @@ func (f *frameFull) ConfigureFrame(flags, fx, fy, fw, fh int,
                      sendNotify)
     fg := f.Geom()
 
-    f.topSide.win.moveresize(DoW, 0, 0,
-                             fg.Width() - f.topLeft.w() - f.topRight.w(), 0)
-    f.bottomSide.win.moveresize(DoY | DoW,
-                                0, fg.Height() - f.bottomSide.h(),
-                                f.topSide.w(), 0)
-    f.leftSide.win.moveresize(DoH, 0, 0,
-                              0, fg.Height() - f.topLeft.h() - f.bottomLeft.h())
-    f.rightSide.win.moveresize(DoX | DoH,
-                               fg.Width() - f.rightSide.w(), 0,
-                               0, f.leftSide.h())
-    f.titleBottom.win.moveresize(DoW, 0, 0, f.topSide.w(), 0)
+    if THEME.full.borderSize > 0 {
+        f.topSide.win.moveresize(
+            DoW, 0, 0, fg.Width() - f.topLeft.w() - f.topRight.w(), 0)
+        f.bottomSide.win.moveresize(
+            DoY | DoW, 0, fg.Height() - f.bottomSide.h(), f.topSide.w(), 0)
+        f.leftSide.win.moveresize(
+            DoH, 0, 0, 0, fg.Height() - f.topLeft.h() - f.bottomLeft.h())
+        f.rightSide.win.moveresize(
+            DoX | DoH, fg.Width() - f.rightSide.w(), 0, 0, f.leftSide.h())
+        f.titleBottom.win.moveresize(DoW, 0, 0, f.topSide.w(), 0)
 
-    f.topRight.win.moveresize(DoX, f.topLeft.w() + f.topSide.w(), 0, 0, 0)
-    f.bottomLeft.win.moveresize(DoY, 0, f.bottomSide.y(), 0, 0)
-    f.bottomRight.win.moveresize(DoX | DoY,
-                                 f.bottomLeft.w() + f.bottomSide.w(),
-                                 f.bottomSide.y(),
-                                 0, 0)
+        f.topRight.win.moveresize(DoX, f.topLeft.w() + f.topSide.w(), 0, 0, 0)
+        f.bottomLeft.win.moveresize(DoY, 0, f.bottomSide.y(), 0, 0)
+        f.bottomRight.win.moveresize(
+            DoX | DoY,
+            f.bottomLeft.w() + f.bottomSide.w(), f.bottomSide.y(),
+            0, 0)
+    }
 
-    f.titleBar.win.moveresize(DoW, 0, 0,
-                              fg.Width() - f.leftSide.w() - f.rightSide.w(), 0)
-    f.buttonClose.win.moveresize(DoX,
-                                 fg.Width() -
-                                  f.rightSide.w() - f.buttonClose.w(),
-                                 0, 0, 0)
-    f.buttonMaximize.win.moveresize(DoX,
-                                    f.buttonClose.x() - f.buttonMinimize.w(),
-                                    0, 0, 0)
-    f.buttonMinimize.win.moveresize(DoX,
-                                    f.buttonMaximize.x() - f.buttonMinimize.w(),
-                                    0, 0, 0)
+    f.titleBar.win.moveresize(
+        DoW, 0, 0, fg.Width() - THEME.full.borderSize * 2, 0)
+    f.buttonClose.win.moveresize(
+        DoX, fg.Width() - THEME.full.borderSize - f.buttonClose.w(), 0, 0, 0)
+    f.buttonMaximize.win.moveresize(
+        DoX, f.buttonClose.x() - f.buttonMinimize.w(), 0, 0, 0)
+    f.buttonMinimize.win.moveresize(
+        DoX, f.buttonMaximize.x() - f.buttonMinimize.w(), 0, 0, 0)
 }
 
 func (f *frameFull) updateIcon() {

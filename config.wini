@@ -24,7 +24,7 @@ Mod4-3 := Resize
 1 up := Close
 
 [MouseFullMaximize]
-1 up := Maximize
+1 up := MaximizeToggle
 
 [MouseFullMinimize]
 1 up := Minimize

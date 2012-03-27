@@ -40,6 +40,12 @@ func (f *frameSlim) Inactive() {
     f.ParentWin().clear()
 }
 
+func (f *frameSlim) Maximize() {
+}
+
+func (f *frameSlim) Unmaximize() {
+}
+
 func (f *frameSlim) Top() int {
     return THEME.slim.borderSize
 }
