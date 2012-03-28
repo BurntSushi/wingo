@@ -327,9 +327,9 @@ func (c *client) unmanage() {
     if c.isMapped {
         c.unmapped()
     }
-
     c.frame.Destroy()
     c.setWmState(icccm.StateWithdrawn)
+
     xevent.Detach(X, c.window.id)
     WM.stackRemove(c)
     WM.focusRemove(c)
@@ -352,9 +352,9 @@ func (c *client) Unmap() {
 }
 
 func (c *client) unmapped() {
+    c.frame.Unmap()
     c.setWmState(icccm.StateIconic)
     focused := WM.focused()
-    c.frame.Unmap()
     c.isMapped = false
 
     if focused != nil && focused.Id() == c.Id() {

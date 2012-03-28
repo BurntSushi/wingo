@@ -101,7 +101,6 @@ func (wm *state) fallback() {
     // this is IMPORTANT. if we fail here, we risk a lock-up
     logMessage.Printf("Focus falling back to ROOT")
     ROOT.focus()
-    X.Conn().SetInputFocus(xgb.InputFocusPointerRoot, X.RootWin(), 0)
 }
 
 func (wm *state) logClientList() {

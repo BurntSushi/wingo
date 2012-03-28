@@ -288,25 +288,6 @@ func (f *frameFull) updateTitle() {
         ew = 300
     }
 
-    // XXX: We still can't send images with more pixels than 256x256.
-    // This is a point where that limitation is very easy to surpass if
-    // we have long window titles. Do a sanity check here and bail on the
-    // window title if X is going to stomp on us.
-    if ew * THEME.full.titleSize > 255 * 255 {
-        logWarning.Printf("The image containing the window title is just too " +
-                          "big for XGB to handle. I really hope to fix this " +
-                          "soon. Falling back to 'N/A' for now...")
-        title = "N/A"
-        ew, eh, err = xgraphics.TextExtents(font, fontSize, title)
-        if err != nil {
-            logWarning.Printf("Could not get text extents for name '%s' on " +
-                              "window %s because: %v",
-                              title, f.Client(), err)
-            logWarning.Printf("Resorting to default with of 100.")
-            ew = 100
-        }
-    }
-
     imgA := renderBorder(0, 0, THEME.full.aTitleColor,
                          ew, THEME.full.titleSize,
                          renderGradientVert, renderGradientRegular)
