@@ -125,6 +125,11 @@ func main() {
 
     keybind.KeyPressFun(
         func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+            cmd_active_maximize_toggle()
+    }).Connect(X, X.RootWin(), "Mod4-x")
+
+    keybind.KeyPressFun(
+        func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
             cmd_active_frame_nada()
     }).Connect(X, X.RootWin(), "Mod1-1")
     keybind.KeyPressFun(

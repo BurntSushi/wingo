@@ -16,6 +16,10 @@ func newFrameSlim(p *frameParent, c *client) *frameSlim {
     return &frameSlim{newFrameAbst(p, c, cp)}
 }
 
+func (f *frameSlim) Current() bool {
+    return f.Client().Frame() == f
+}
+
 func (f *frameSlim) Off() {
 }
 
@@ -41,24 +45,44 @@ func (f *frameSlim) Inactive() {
 }
 
 func (f *frameSlim) Maximize() {
+    f.clientOffset.x = f.Left()
+    f.clientOffset.y = f.Top()
+    f.clientOffset.w = f.Left() + f.Right()
+    f.clientOffset.h = f.Top() + f.Bottom()
 }
 
 func (f *frameSlim) Unmaximize() {
+    f.clientOffset.x = f.Left()
+    f.clientOffset.y = f.Top()
+    f.clientOffset.w = f.Left() + f.Right()
+    f.clientOffset.h = f.Top() + f.Bottom()
 }
 
 func (f *frameSlim) Top() int {
+    if f.Client().maximized {
+        return 0
+    }
     return THEME.slim.borderSize
 }
 
 func (f *frameSlim) Bottom() int {
+    if f.Client().maximized {
+        return 0
+    }
     return THEME.slim.borderSize
 }
 
 func (f *frameSlim) Left() int {
+    if f.Client().maximized {
+        return 0
+    }
     return THEME.slim.borderSize
 }
 
 func (f *frameSlim) Right() int {
+    if f.Client().maximized {
+        return 0
+    }
     return THEME.slim.borderSize
 }
 

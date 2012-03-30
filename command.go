@@ -24,6 +24,12 @@ func cmd_active_close() {
     })
 }
 
+func cmd_active_maximize_toggle() {
+    withFocused(func(c *client) {
+        c.MaximizeToggle()
+    })
+}
+
 func cmd_active_frame_nada() {
     withFocused(func(c *client) {
         c.FrameNada()

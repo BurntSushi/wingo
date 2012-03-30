@@ -31,6 +31,10 @@ func newFrameBorders(p *frameParent, c *client) *frameBorders {
     return f
 }
 
+func (f *frameBorders) Current() bool {
+    return f.Client().Frame() == f
+}
+
 func (f *frameBorders) Destroy() {
     f.topSide.destroy()
     f.bottomSide.destroy()
@@ -67,15 +71,17 @@ func (f *frameBorders) On() {
         f.Inactive()
     }
 
-    f.topSide.win.map_()
-    f.bottomSide.win.map_()
-    f.leftSide.win.map_()
-    f.rightSide.win.map_()
+    if !f.Client().maximized {
+        f.topSide.win.map_()
+        f.bottomSide.win.map_()
+        f.leftSide.win.map_()
+        f.rightSide.win.map_()
 
-    f.topLeft.win.map_()
-    f.topRight.win.map_()
-    f.bottomLeft.win.map_()
-    f.bottomRight.win.map_()
+        f.topLeft.win.map_()
+        f.topRight.win.map_()
+        f.bottomLeft.win.map_()
+        f.bottomRight.win.map_()
+    }
 }
 
 func (f *frameBorders) Active() {
@@ -109,24 +115,72 @@ func (f *frameBorders) Inactive() {
 }
 
 func (f *frameBorders) Maximize() {
+    f.clientOffset.x = f.Left()
+    f.clientOffset.y = f.Top()
+    f.clientOffset.w = f.Left() + f.Right()
+    f.clientOffset.h = f.Top() + f.Bottom()
+
+    if THEME.full.borderSize > 0 && f.Current() {
+        f.topSide.win.unmap()
+        f.bottomSide.win.unmap()
+        f.leftSide.win.unmap()
+        f.rightSide.win.unmap()
+
+        f.topLeft.win.unmap()
+        f.topRight.win.unmap()
+        f.bottomLeft.win.unmap()
+        f.bottomRight.win.unmap()
+
+        FrameReset(f)
+    }
 }
 
 func (f *frameBorders) Unmaximize() {
+    f.clientOffset.x = f.Left()
+    f.clientOffset.y = f.Top()
+    f.clientOffset.w = f.Left() + f.Right()
+    f.clientOffset.h = f.Top() + f.Bottom()
+
+    if THEME.full.borderSize > 0 && f.Current() {
+        f.topSide.win.map_()
+        f.bottomSide.win.map_()
+        f.leftSide.win.map_()
+        f.rightSide.win.map_()
+
+        f.topLeft.win.map_()
+        f.topRight.win.map_()
+        f.bottomLeft.win.map_()
+        f.bottomRight.win.map_()
+
+        FrameReset(f)
+    }
 }
 
 func (f *frameBorders) Top() int {
+    if f.Client().maximized {
+        return 0
+    }
     return THEME.borders.borderSize
 }
 
 func (f *frameBorders) Bottom() int {
+    if f.Client().maximized {
+        return 0
+    }
     return THEME.borders.borderSize
 }
 
 func (f *frameBorders) Left() int {
+    if f.Client().maximized {
+        return 0
+    }
     return THEME.borders.borderSize
 }
 
 func (f *frameBorders) Right() int {
+    if f.Client().maximized {
+        return 0
+    }
     return THEME.borders.borderSize
 }
 

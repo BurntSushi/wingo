@@ -10,6 +10,10 @@ func newFrameNada(p *frameParent, c *client) *frameNada {
     return &frameNada{newFrameAbst(p, c, clientOffset{})}
 }
 
+func (f *frameNada) Current() bool {
+    return f.Client().Frame() == f
+}
+
 func (f *frameNada) Off() {
 }
 

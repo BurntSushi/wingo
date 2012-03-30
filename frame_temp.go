@@ -6,7 +6,10 @@ import (
     "github.com/BurntSushi/xgbutil/ewmh"
 )
 
-var newx, newy int // prevent memory allocation in 'step' functions
+func frameMaximize(f Frame) {
+    f.ConfigureFrame(DoX | DoY | DoW | DoH, ROOT.geom.X(), ROOT.geom.Y(),
+                     ROOT.geom.Width(), ROOT.geom.Height(), 0, 0, false, true)
+}
 
 func frameMoveBegin(f Frame, rx, ry, ex, ey int) {
     moving := f.MovingState()
@@ -15,12 +18,15 @@ func frameMoveBegin(f Frame, rx, ry, ex, ey int) {
 
     // call for side-effect; makes sure parent window has a valid geometry
     f.ParentWin().geometry()
+
+    // unmax!
+    f.Client().EnsureUnmax()
 }
 
 func frameMoveStep(f Frame, rx, ry, ex, ey int) {
     moving := f.MovingState()
-    newx = f.Geom().X() + rx - moving.lastRootX
-    newy = f.Geom().Y() + ry - moving.lastRootY
+    newx := f.Geom().X() + rx - moving.lastRootX
+    newy := f.Geom().Y() + ry - moving.lastRootY
     moving.lastRootX, moving.lastRootY = rx, ry
 
     f.ConfigureFrame(DoX | DoY, newx, newy, 0, 0, 0, 0, false, false)
@@ -123,6 +129,9 @@ func frameResizeBegin(f Frame, direction uint32,
 
     // call for side-effect; makes sure parent window has a valid geometry
     f.ParentWin().geometry()
+
+    // unmax!
+    f.Client().EnsureUnmax()
 
     return true, cursor
 }

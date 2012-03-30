@@ -17,47 +17,6 @@ import (
     "github.com/BurntSushi/xgbutil/xwindow"
 )
 
-// I originally had this Client interface because my plan was to have
-// several different kinds of clients that implement this interface.
-// i.e., a normal client, a dock client, a desktop client, etc.
-// However, I think the similarity between each client is far too great to
-// be worth paying for code duplication. (Code gets duplicated when a function
-// has to add the receiver as an implementation of Client.)
-// We'll have to settle for things like
-// "if window type is weird { do weird stuff } else { do normal stuff }"
-// for now. I may change this at some point, or I may trash the interface
-// idea completely. I just don't quite know my requirements yet.
-type Client interface {
-    Alive() bool
-    Close()
-    Focus()
-    Focused()
-    Frame() Frame
-    FrameNada()
-    FrameSlim()
-    FrameBorders()
-    FrameFull()
-    Geom() xrect.Rect
-    GravitizeX(x int, gravity int) int
-    GravitizeY(y int, gravity int) int
-    Id() xgb.Id
-    Layer() int
-    Map()
-    Mapped() bool
-    Maximize()
-    Raise()
-    SetupFocus(win xgb.Id, buttonStr string, grab bool)
-    SetupMoveDrag(parent xgb.Id, buttonStr string, grab bool)
-    SetupResizeDrag(parent xgb.Id, buttonStr string, grab bool,
-                    direction uint32)
-    String() string
-    TrulyAlive() bool
-    Unfocused()
-    ValidateHeight(height int) int
-    ValidateWidth(width int) int
-    Win() *window
-}
-
 func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
     X.Grab()
     defer X.Ungrab()
@@ -192,7 +151,9 @@ func (c *client) manage() {
 
     // time for reparenting/decorating
     c.frameInit()
-    c.FrameFull()
+    c.frame = c.frameFull
+    FrameClientReset(c.Frame())
+    c.Frame().On()
 
     // Reparent's sends an unmap, we need to ignore it!
     c.unmapIgnore++
@@ -216,6 +177,10 @@ func (c *client) manage() {
             if c.frame.Moving() || c.frame.Resizing() {
                 return
             }
+
+            // Make sure we unmaximize the frame
+            c.EnsureUnmax()
+
             flags := int(ev.ValueMask) & ^int(DoStack) & ^int(DoSibling)
             c.frame.ConfigureClient(flags, int(ev.X), int(ev.Y),
                                     int(ev.Width), int(ev.Height),
@@ -714,13 +679,30 @@ func (c *client) Name() string {
 
 func (c *client) MaximizeToggle() {
     if c.maximized {
-        c.Frame().Unmaximize()
-        c.LoadGeom("unmaximized")
         c.maximized = false
+        c.frameNada.Unmaximize()
+        c.frameSlim.Unmaximize()
+        c.frameBorders.Unmaximize()
+        c.frameFull.Unmaximize()
+        c.LoadGeom("unmaximized")
     } else {
-        c.SaveGeom("unmaximized")
-        c.Frame().Maximize()
         c.maximized = true
+        c.SaveGeom("unmaximized")
+        c.frameNada.Maximize()
+        c.frameSlim.Maximize()
+        c.frameBorders.Maximize()
+        c.frameFull.Maximize()
+        frameMaximize(c.Frame())
+    }
+}
+
+func (c *client) EnsureUnmax() {
+    if c.maximized {
+        c.maximized = false
+        c.frameNada.Unmaximize()
+        c.frameSlim.Unmaximize()
+        c.frameBorders.Unmaximize()
+        c.frameFull.Unmaximize()
     }
 }
 

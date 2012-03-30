@@ -119,9 +119,9 @@ func (f *abstFrame) configureFrame(flags, fx, fy, fw, fh int,
                            configNotify.Bytes())
     }
 
+    f.Parent().Win().configure(flags, fx, fy, fw, fh, sibling, stackMode)
     f.Client().Win().moveresize(flags | DoX | DoY,
                                 f.clientOffset.x, f.clientOffset.y, cw, ch)
-    f.Parent().Win().configure(flags, fx, fy, fw, fh, sibling, stackMode)
 }
 
 func (f *abstFrame) Geom() xrect.Rect {
