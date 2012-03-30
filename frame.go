@@ -18,6 +18,7 @@ type Frame interface {
                     sibling xgb.Id, stackMode byte, ignoreHints bool)
     ConfigureFrame(flags, x, y, w, h int,
                    sibling xgb.Id, stackMode byte, ignoreHints, sendNotify bool)
+    Current() bool
     Destroy()
     Geom() xrect.Rect // the geometry of the parent window
     Map()
@@ -146,9 +147,15 @@ type resizeState struct {
 
 // Frame related functions that can be defined using only the Frame interface.
 
-func FrameReset(f Frame) {
+func FrameClientReset(f Frame) {
     geom := f.Client().Geom()
     FrameMR(f, DoW | DoH, 0, 0, geom.Width(), geom.Height(), false)
+}
+
+func FrameReset(f Frame) {
+    geom := f.Geom()
+    f.ConfigureFrame(DoW | DoH, 0, 0, geom.Width(), geom.Height(), 0, 0,
+                     false, false)
 }
 
 // FrameMR is short for FrameMoveresize.

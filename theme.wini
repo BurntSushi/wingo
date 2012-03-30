@@ -8,14 +8,13 @@ $PURPLE := 0xff00ff
 default_icon := ./data/wingo.png
 
 [Full]
-font := /usr/share/fonts/TTF/DejaVuSansMono-Bold.ttf
-font_size := 15
+# font := /usr/share/fonts/TTF/DejaVuSansMono-Bold.ttf 
+# font := /home/andrew/tmp/roboto/Roboto-Black.ttf 
+font_size := 17
 a_font_color := 0xffffff
 i_font_color := 0x000000
 
-title_size := 28
-# a_title_color := 0xffff00 0x00ffff 
-# a_title_color := 0x4e4e4e 0x3c3c3c 
+title_size := 30
 a_title_color := 0xd66b00 0xff9123
 i_title_color := 0xffffff
 
@@ -31,12 +30,12 @@ minimize := ./data/minimize.png
 a_minimize_color := 0xffffff
 i_minimize_color := 0x000000
 
-border_size := 3
+border_size := 4
 a_border_color := $THIN_COLOR
 i_border_color := $THIN_COLOR
 
 [Borders]
-border_size := 5
+border_size := 8
 a_thin_color := $THIN_COLOR
 i_thin_color := $THIN_COLOR
 a_border_color := $ORANGE

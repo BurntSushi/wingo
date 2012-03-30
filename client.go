@@ -678,6 +678,11 @@ func (c *client) Name() string {
 }
 
 func (c *client) MaximizeToggle() {
+    // Don't do anything if a max size is specified.
+    if c.nhints.Flags & icccm.SizeHintPMaxSize > 0 {
+        return
+    }
+
     if c.maximized {
         c.maximized = false
         c.frameNada.Unmaximize()
