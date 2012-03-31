@@ -16,12 +16,12 @@ import (
 // Namely, a window in layer X can *never* be above a window in layer X + 1
 // and can *never* be below a window in layer X - 1.
 const (
-    layerDesktop = iota
-    layerBelow
-    layerDefault
-    layerDock
-    layerAbove
-    layerFullscreen
+    StackDesktop = iota
+    StackBelow
+    StackDefault
+    StackDock
+    StackAbove
+    StackFullscreen
 )
 
 // updateEwmhStacking refreshes the _NET_CLIENT_LIST_STACKING property on the
@@ -36,6 +36,24 @@ func (wm *state) updateEwmhStacking() {
     if err != nil {
         logWarning.Printf("Could not update _NET_CLIENT_LIST_STACKING " +
                           "because %v", err)
+    }
+}
+
+// stackRefresh forces the current state of the stack to be reality.
+// This is useful when we want to make multiple modifications to the stack,
+// and apply them all at once. This prevents window flashing when the stack
+// is unchanged.
+func (wm *state) stackRefresh() {
+    if len(wm.stack) <= 1 {
+        return
+    }
+
+    var next *client
+    for i := 0; i < len(wm.stack) - 1; i++ {
+        next = wm.stack[i + 1]
+        next.Frame().ConfigureClient(DoSibling | DoStack, 0, 0, 0, 0,
+                                     wm.stack[i].Frame().ParentId(),
+                                     xgb.StackModeBelow, false)
     }
 }
 

@@ -17,28 +17,6 @@ import (
     "github.com/BurntSushi/xgbutil/xwindow"
 )
 
-func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
-    X.Grab()
-    defer X.Ungrab()
-
-    // whoa whoa... what if we're already managing this window?
-    for _, c := range WM.clients {
-        if ev.Window == c.Id() {
-            logWarning.Printf("Could not manage window %X because we are " +
-                              "already managing %s.", ev.Window, c)
-            return
-        }
-    }
-
-    client, err := newClient(ev.Window)
-    if err != nil {
-        logWarning.Printf("Could not manage window %X because: %v\n",
-                          ev.Window, err)
-        return
-    }
-
-    client.manage()
-}
 
 type client struct {
     window *window
@@ -52,9 +30,12 @@ type client struct {
     initialMap bool
     lastTime int
     unmapIgnore int
+
+    types []string
     hints *icccm.Hints
     nhints *icccm.NormalHints
     protocols []string
+    transientFor xgb.Id
 
     geomStore map[string]xrect.Rect
 
@@ -65,65 +46,14 @@ type client struct {
     frameFull *frameFull
 }
 
-func newClient(id xgb.Id) (*client, error) {
-    hints, err := icccm.WmHintsGet(X, id)
-    if err != nil {
-        logWarning.Println(err)
-        logMessage.Printf("Using reasonable defaults for WM_HINTS for %X", id)
-        hints = icccm.Hints{
-            Flags: icccm.HintInput | icccm.HintState,
-            Input: 1,
-            InitialState: icccm.StateNormal,
-        }
-    }
-
-    nhints, err := icccm.WmNormalHintsGet(X, id)
-    if err != nil {
-        logWarning.Println(err)
-        logMessage.Printf("Using reasonable defaults for WM_NORMAL_HINTS " +
-                          "for %X", id)
-        nhints = icccm.NormalHints{}
-    }
-
-    protocols, err := icccm.WmProtocolsGet(X, id)
-    if err != nil {
-        logWarning.Printf("Window %X does not have WM_PROTOCOLS set.", id)
-        protocols = []string{}
-    }
-
-    name, err := ewmh.WmNameGet(X, id)
-    if err != nil {
-        name = ""
-        logWarning.Printf("Could not find name for window %X.", id)
-    }
-
-    vname, err := ewmh.WmVisibleNameGet(X, id)
-    if err != nil {
-        vname = ""
-    }
-    wmname, err := icccm.WmNameGet(X, id)
-    if err != nil {
-        wmname = ""
-    }
-
-    wintypes, err := ewmh.WmWindowTypeGet(X, id)
-    layer := layerDefault
-    if err != nil {
-        logWarning.Printf("Could not find window type for window %X, " +
-                          "using 'normal'.", id)
-    } else {
-        if strIndex("_NET_WM_WINDOW_TYPE_DIALOG", wintypes) > -1 {
-            layer = layerAbove
-        }
-    }
-
+func newClient(id xgb.Id) *client {
     return &client{
         window: newWindow(id),
         workspace: -1,
-        layer: layer,
-        name: name,
-        vname: vname,
-        wmname: wmname,
+        layer: StackDefault,
+        name: "",
+        vname: "",
+        wmname: "",
         isMapped: false,
         initMap: false,
         state: StateInactive,
@@ -131,108 +61,17 @@ func newClient(id xgb.Id) (*client, error) {
         initialMap: false,
         lastTime: 0,
         unmapIgnore: 0,
-        hints: &hints,
-        nhints: &nhints,
-        protocols: protocols,
-
+        hints: nil,
+        nhints: nil,
+        protocols: nil,
+        transientFor: 0,
         geomStore: make(map[string]xrect.Rect),
-
         frame: nil,
         frameNada: nil,
         frameSlim: nil,
         frameBorders: nil,
         frameFull: nil,
-    }, nil
-}
-
-// manage sets everything up to bring a client window into window management.
-// It is still possible for us to bail.
-func (c *client) manage() {
-    _, err := c.Win().geometry()
-    if err != nil {
-        logWarning.Printf("Could not manage window %X because: %s",
-                          c.window.id, err)
-        return
     }
-
-    // time for reparenting/decorating
-    c.frameInit()
-    c.frame = c.frameFull
-    FrameClientReset(c.Frame())
-    c.Frame().On()
-
-    // Reparent's sends an unmap, we need to ignore it!
-    c.unmapIgnore++
-
-    // time to add the client to the WM state
-    WM.clientAdd(c)
-    WM.focusAdd(c)
-    c.Raise()
-
-    c.window.listen(xgb.EventMaskPropertyChange |
-                    xgb.EventMaskStructureNotify)
-
-    // attach some event handlers
-    xevent.PropertyNotifyFun(
-        func(X *xgbutil.XUtil, ev xevent.PropertyNotifyEvent) {
-            c.updateProperty(ev)
-    }).Connect(X, c.window.id)
-    xevent.ConfigureRequestFun(
-        func(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
-            // Don't honor configure requests when we're moving or resizing
-            if c.frame.Moving() || c.frame.Resizing() {
-                return
-            }
-
-            // Make sure we unmaximize the frame
-            c.EnsureUnmax()
-
-            flags := int(ev.ValueMask) & ^int(DoStack) & ^int(DoSibling)
-            c.frame.ConfigureClient(flags, int(ev.X), int(ev.Y),
-                                    int(ev.Width), int(ev.Height),
-                                    ev.Sibling, ev.StackMode, false)
-    }).Connect(X, c.window.id)
-    xevent.UnmapNotifyFun(
-        func(X *xgbutil.XUtil, ev xevent.UnmapNotifyEvent) {
-            if !c.Mapped() {
-                return
-            }
-
-            if c.unmapIgnore > 0 {
-                c.unmapIgnore -= 1
-                return
-            }
-
-            c.unmappedFallback()
-            c.unmanage()
-    }).Connect(X, c.window.id)
-    xevent.DestroyNotifyFun(
-        func(X *xgbutil.XUtil, ev xevent.DestroyNotifyEvent) {
-            c.unmanage()
-    }).Connect(X, c.window.id)
-
-    c.clientMouseConfig()
-    c.frameMouseConfig()
-
-    // Find the current workspace and attach this client
-    WM.WrkActive().Add(c, false)
-
-    // If the initial state isn't iconic or is absent, then we can map
-    if c.hints.Flags & icccm.HintState == 0 ||
-       c.hints.InitialState != icccm.StateIconic {
-        c.Map()
-        c.Focus()
-    }
-}
-
-func (c *client) frameInit() {
-    // We want one parent window for all frames.
-    parent := newParent(c)
-
-    c.frameNada = newFrameNada(parent, c)
-    c.frameSlim = newFrameSlim(parent, c)
-    c.frameBorders = newFrameBorders(parent, c)
-    c.frameFull = newFrameFull(parent, c)
 }
 
 func (c *client) frameSet(f Frame) {
@@ -245,38 +84,6 @@ func (c *client) frameSet(f Frame) {
     c.frame = f
     c.Frame().On()
     FrameReset(c.Frame())
-}
-
-// SetupFocus is a useful function to setup a callback when you want a
-// client to have focus. Particularly if, in the future, we want to allow
-// a new focus model (like follows-mouse).
-// This is not used in the 'Manage' method because we have to do some special
-// stuff when attaching a button press to an actual client window.
-func (c *client) SetupFocus(win xgb.Id, buttonStr string, grab bool) {
-    mousebind.ButtonPressFun(
-        func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
-            c.Focus()
-            c.Raise()
-    }).Connect(X, win, buttonStr, false, grab)
-}
-
-// setupMoveDrag does the boiler plate for registering this client's
-// "move" drag.
-func (c *client) SetupMoveDrag(dragWin xgb.Id, buttonStr string, grab bool) {
-    dStart := xgbutil.MouseDragBeginFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xgb.Id) {
-            frameMoveBegin(c.Frame(), rx, ry, ex, ey)
-            return true, cursorFleur
-    })
-    dStep := xgbutil.MouseDragFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-            frameMoveStep(c.Frame(), rx, ry, ex, ey)
-    })
-    dEnd := xgbutil.MouseDragFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-            frameMoveEnd(c.Frame(), rx, ry, ex, ey)
-    })
-    mousebind.Drag(X, dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
 
 // setupResizeDrag does the boiler plate for registering this client's
@@ -356,7 +163,7 @@ func (c *client) setWmState(state int) {
         return
     }
 
-    err := icccm.WmStateSet(X, c.window.id, icccm.WmState{State: state})
+    err := icccm.WmStateSet(X, c.window.id, &icccm.WmState{State: state})
     if err != nil {
         var stateStr string
         switch state {
@@ -478,6 +285,70 @@ func (c *client) Unfocused() {
     c.Frame().Inactive()
 }
 
+func (c *client) MaximizeToggle() {
+    // Don't do anything if a max size is specified.
+    if c.nhints.Flags & icccm.SizeHintPMaxSize > 0 {
+        return
+    }
+
+    if c.maximized {
+        c.maximized = false
+        c.frameNada.Unmaximize()
+        c.frameSlim.Unmaximize()
+        c.frameBorders.Unmaximize()
+        c.frameFull.Unmaximize()
+        c.LoadGeom("unmaximized")
+    } else {
+        c.maximized = true
+        c.SaveGeom("unmaximized")
+        c.frameNada.Maximize()
+        c.frameSlim.Maximize()
+        c.frameBorders.Maximize()
+        c.frameFull.Maximize()
+        frameMaximize(c.Frame())
+    }
+}
+
+func (c *client) EnsureUnmax() {
+    if c.maximized {
+        c.maximized = false
+        c.frameNada.Unmaximize()
+        c.frameSlim.Unmaximize()
+        c.frameBorders.Unmaximize()
+        c.frameFull.Unmaximize()
+    }
+}
+
+func (c *client) SaveGeom(key string) {
+    c.geomStore[key] = xrect.Make(xrect.Pieces(c.Frame().Geom()))
+}
+
+func (c *client) LoadGeom(key string) {
+    if geom, ok := c.geomStore[key]; ok {
+        c.Frame().ConfigureFrame(
+            DoX | DoY | DoW | DoH,
+            geom.X(), geom.Y(), geom.Width(), geom.Height(),
+            0, 0, false, true)
+    }
+}
+
+func (c *client) Raise() {
+    WM.stackRaise(c, false)
+
+    // Also raise its transients...
+    toRaise := make([]*client, 0, 2)
+    for i := len(WM.stack) - 1; i >= 0; i-- {
+        if c.transient(WM.stack[i]) {
+            toRaise = append(toRaise, WM.stack[i])
+        }
+    }
+
+    for _, c2 := range toRaise {
+        WM.stackRaise(c2, false)
+    }
+    WM.stackRefresh()
+}
+
 func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
     name, err := xprop.AtomName(X, ev.Atom)
     if err != nil {
@@ -504,13 +375,13 @@ func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
     case "WM_HINTS":
         hints, err := icccm.WmHintsGet(X, c.Id())
         if err == nil {
-            c.hints = &hints
+            c.hints = hints
             c.frameFull.updateIcon()
         }
     case "WM_NORMAL_HINTS":
         nhints, err := icccm.WmNormalHintsGet(X, c.Id())
         if err == nil {
-            c.nhints = &nhints
+            c.nhints = nhints
         }
     case "_NET_WM_USER_TIME":
         newTime, err := ewmh.WmUserTimeGet(X, c.window.id)
@@ -652,11 +523,6 @@ func (c *client) validateSize(size, inc, base, min, max int) int {
     return size
 }
 
-
-//
-// Accessors to satisfy the Client interface
-//
-
 func (c *client) Frame() Frame {
     return c.frame
 }
@@ -704,57 +570,6 @@ func (c *client) Name() string {
         return c.wmname
     }
     return "N/A"
-}
-
-func (c *client) MaximizeToggle() {
-    // Don't do anything if a max size is specified.
-    if c.nhints.Flags & icccm.SizeHintPMaxSize > 0 {
-        return
-    }
-
-    if c.maximized {
-        c.maximized = false
-        c.frameNada.Unmaximize()
-        c.frameSlim.Unmaximize()
-        c.frameBorders.Unmaximize()
-        c.frameFull.Unmaximize()
-        c.LoadGeom("unmaximized")
-    } else {
-        c.maximized = true
-        c.SaveGeom("unmaximized")
-        c.frameNada.Maximize()
-        c.frameSlim.Maximize()
-        c.frameBorders.Maximize()
-        c.frameFull.Maximize()
-        frameMaximize(c.Frame())
-    }
-}
-
-func (c *client) EnsureUnmax() {
-    if c.maximized {
-        c.maximized = false
-        c.frameNada.Unmaximize()
-        c.frameSlim.Unmaximize()
-        c.frameBorders.Unmaximize()
-        c.frameFull.Unmaximize()
-    }
-}
-
-func (c *client) SaveGeom(key string) {
-    c.geomStore[key] = xrect.Make(xrect.Pieces(c.Frame().Geom()))
-}
-
-func (c *client) LoadGeom(key string) {
-    if geom, ok := c.geomStore[key]; ok {
-        c.Frame().ConfigureFrame(
-            DoX | DoY | DoW | DoH,
-            geom.X(), geom.Y(), geom.Width(), geom.Height(),
-            0, 0, false, true)
-    }
-}
-
-func (c *client) Raise() {
-    WM.stackRaise(c, true)
 }
 
 func (c *client) Win() *window {

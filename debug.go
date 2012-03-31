@@ -18,13 +18,17 @@ const (
     DebugWarning // warnings are bad things that don't stop us from chugging
     DebugMessage // casual; typically describing state changes
     DebugLots // more output than you could possibly need
+    DebugDebug // random debug output formatted differently
 )
 
-var DebugFlags int = DebugMessage | DebugWarning | DebugError
+var DebugFlags int = DebugDebug | DebugMessage | DebugWarning | DebugError
 
-var logLots, logMessage, logWarning, logError *WingoLogger
+var logDebug, logLots, logMessage, logWarning, logError *WingoLogger
 
 func init() {
+    logDebug = newWingoLogger(DebugDebug,
+                              log.New(os.Stderr, "*** WINGO DEBUG: ",
+                                      log.Ldate | log.Ltime))
     logLots = newWingoLogger(DebugLots,
                              log.New(os.Stderr, "WINGO LOTS: ",
                                      log.Ldate | log.Ltime))

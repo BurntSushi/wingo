@@ -11,6 +11,7 @@ import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 import (
     "github.com/BurntSushi/xgbutil"
+    "github.com/BurntSushi/xgbutil/ewmh"
     "github.com/BurntSushi/xgbutil/keybind"
     "github.com/BurntSushi/xgbutil/mousebind"
     "github.com/BurntSushi/xgbutil/xevent"
@@ -77,6 +78,9 @@ func main() {
         logError.Println("Cannot continue. Quitting...")
         return
     }
+
+    // Set supported atoms
+    ewmh.SupportedSet(X, []string{"_NET_WM_ICON"})
 
     // Allow key and mouse bindings to do their thang
     keybind.Initialize(X)

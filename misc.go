@@ -33,8 +33,14 @@ func round(f float64) int {
     return i + 1
 }
 
+// This exists because '%' isn't really modulus; it's *remainder*.
+// e.g., (-1) % 2 = -1 but (-1) mod 2 = 1.
 func mod(x, m int) int {
-    return abs(x) % m
+    r := x % m
+    if r < 0 {
+        r += m
+    }
+    return r
 }
 
 func abs(i int) int {

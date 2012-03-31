@@ -50,6 +50,18 @@ func (wm *state) WrkSet(wrk int) {
 }
 
 func (wrk *workspace) Add(c *client, checkVisible bool) {
+    cwork := c.workspace
+    wrk.add(c, checkVisible)
+
+    // Don't forget to add transients
+    for _, c2 := range WM.clients {
+        if c.transient(c2) && c2.workspace == cwork {
+            wrk.add(c2, checkVisible)
+        }
+    }
+}
+
+func (wrk *workspace) add(c *client, checkVisible bool) {
     // Resist change if we don't need it.
     if c.workspace == wrk.id {
         return

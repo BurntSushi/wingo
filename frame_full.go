@@ -1,5 +1,7 @@
 package main
 
+import "exp/norm"
+
 import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 import "github.com/BurntSushi/xgbutil/xgraphics"
@@ -357,6 +359,9 @@ func (f *frameFull) updateTitle() {
     fontSize := THEME.full.fontSize
     aFontColor := ColorFromInt(THEME.full.aFontColor)
     iFontColor := ColorFromInt(THEME.full.iFontColor)
+
+    // Try to normalize the window name so freetype can handle it.
+    title = norm.NFD.String(title)
 
     ew, eh, err := xgraphics.TextExtents(font, fontSize, title)
     if err != nil {
