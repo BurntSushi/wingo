@@ -42,9 +42,11 @@ func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
 
 type client struct {
     window *window
+    workspace int
     layer int
     name, vname, wmname string
     isMapped bool
+    initMap bool
     state int
     maximized bool
     initialMap bool
@@ -117,11 +119,13 @@ func newClient(id xgb.Id) (*client, error) {
 
     return &client{
         window: newWindow(id),
+        workspace: -1,
         layer: layer,
         name: name,
         vname: vname,
         wmname: wmname,
         isMapped: false,
+        initMap: false,
         state: StateInactive,
         maximized: false,
         initialMap: false,
@@ -136,6 +140,8 @@ func newClient(id xgb.Id) (*client, error) {
         frame: nil,
         frameNada: nil,
         frameSlim: nil,
+        frameBorders: nil,
+        frameFull: nil,
     }, nil
 }
 
@@ -188,7 +194,7 @@ func (c *client) manage() {
     }).Connect(X, c.window.id)
     xevent.UnmapNotifyFun(
         func(X *xgbutil.XUtil, ev xevent.UnmapNotifyEvent) {
-            if !c.isMapped {
+            if !c.Mapped() {
                 return
             }
 
@@ -197,7 +203,7 @@ func (c *client) manage() {
                 return
             }
 
-            c.unmapped()
+            c.unmappedFallback()
             c.unmanage()
     }).Connect(X, c.window.id)
     xevent.DestroyNotifyFun(
@@ -208,10 +214,14 @@ func (c *client) manage() {
     c.clientMouseConfig()
     c.frameMouseConfig()
 
+    // Find the current workspace and attach this client
+    WM.WrkActive().Add(c, false)
+
     // If the initial state isn't iconic or is absent, then we can map
     if c.hints.Flags & icccm.HintState == 0 ||
        c.hints.InitialState != icccm.StateIconic {
         c.Map()
+        c.Focus()
     }
 }
 
@@ -289,8 +299,8 @@ func (c *client) SetupResizeDrag(dragWin xgb.Id, buttonStr string, grab bool,
 }
 
 func (c *client) unmanage() {
-    if c.isMapped {
-        c.unmapped()
+    if c.Mapped() {
+        c.unmappedFallback()
     }
     c.frame.Destroy()
     c.setWmState(icccm.StateWithdrawn)
@@ -304,24 +314,38 @@ func (c *client) unmanage() {
 }
 
 func (c *client) Map() {
+    if c.Mapped() {
+        return
+    }
     c.window.map_()
     c.frame.Map()
-    c.Focus()
     c.isMapped = true
+    c.initMap = true
     c.setWmState(icccm.StateNormal)
 }
 
 func (c *client) Unmap() {
+    if !c.Mapped() {
+        return
+    }
     c.unmapIgnore++
     c.unmapped()
+}
+
+func (c *client) UnmapFallback() {
+    c.unmapIgnore++
+    c.unmappedFallback()
 }
 
 func (c *client) unmapped() {
     c.frame.Unmap()
     c.setWmState(icccm.StateIconic)
-    focused := WM.focused()
     c.isMapped = false
+}
 
+func (c *client) unmappedFallback() {
+    focused := WM.focused()
+    c.unmapped()
     if focused != nil && focused.Id() == c.Id() {
         WM.fallback()
     }
@@ -482,6 +506,11 @@ func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
         if err == nil {
             c.hints = &hints
             c.frameFull.updateIcon()
+        }
+    case "WM_NORMAL_HINTS":
+        nhints, err := icccm.WmNormalHintsGet(X, c.Id())
+        if err == nil {
+            c.nhints = &nhints
         }
     case "_NET_WM_USER_TIME":
         newTime, err := ewmh.WmUserTimeGet(X, c.window.id)

@@ -110,7 +110,7 @@ func getMouseCommand(cmd string) func(c *client) {
         }
     case "Minimize":
         return func(c *client) {
-            c.Unmap()
+            c.UnmapFallback()
         }
     }
 

@@ -33,7 +33,10 @@ func round(f float64) int {
     return i + 1
 }
 
-// Grrrr.
+func mod(x, m int) int {
+    return abs(x) % m
+}
+
 func abs(i int) int {
     if i < 0 {
         return -i

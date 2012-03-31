@@ -12,6 +12,38 @@ func withFocused(f func(c *client)) {
     }
 }
 
+func cmd_workspace_prev() {
+    wrkAct := WM.WrkActive()
+    WM.WrkSet(mod(wrkAct.id - 1, len(WM.workspaces)))
+}
+
+func cmd_workspace_next() {
+    wrkAct := WM.WrkActive()
+    WM.WrkSet(mod(wrkAct.id + 1, len(WM.workspaces)))
+}
+
+func cmd_active_workspace_prev() {
+    withFocused(func(c *client) {
+        wrkAct := WM.WrkActive()
+        wrkPrev := WM.workspaces[mod(wrkAct.id - 1, len(WM.workspaces))]
+        wrkPrev.Add(c, false)
+        WM.WrkSet(wrkPrev.id)
+
+        c.Raise()
+    })
+}
+
+func cmd_active_workspace_next() {
+    withFocused(func(c *client) {
+        wrkAct := WM.WrkActive()
+        wrkNext := WM.workspaces[mod(wrkAct.id + 1, len(WM.workspaces))]
+        wrkNext.Add(c, false)
+        WM.WrkSet(wrkNext.id)
+
+        c.Raise()
+    })
+}
+
 func cmd_active_test1() {
     withFocused(func(c *client) {
         FrameMR(c.Frame(), DoX | DoY, 0, 0, 0, 0, false)

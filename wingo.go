@@ -155,6 +155,26 @@ func main() {
             cmd_active_test1()
     }).Connect(X, X.RootWin(), "Mod4-1")
 
+    keybind.KeyPressFun(
+        func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+            cmd_workspace_prev()
+    }).Connect(X, X.RootWin(), "Mod4-left")
+
+    keybind.KeyPressFun(
+        func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+            cmd_workspace_next()
+    }).Connect(X, X.RootWin(), "Mod4-right")
+
+    keybind.KeyPressFun(
+        func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+            cmd_active_workspace_prev()
+    }).Connect(X, X.RootWin(), "Mod4-Shift-left")
+
+    keybind.KeyPressFun(
+        func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+            cmd_active_workspace_next()
+    }).Connect(X, X.RootWin(), "Mod4-Shift-right")
+
     xevent.Main(X)
 }
 

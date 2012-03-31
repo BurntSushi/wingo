@@ -16,13 +16,20 @@ type state struct {
     clients []*client // a list of clients in order of being added
     stack []*client // clients ordered by visual stack
     focus []*client // focus ordering of clients; may be smaller than 'clients'
+    workspaces workspaces
 }
 
 func newState() *state {
+    wrks := make(workspaces, 2)
+
+    wrks[0] = &workspace{0, "Workspace 0", 0, true, true}
+    wrks[1] = &workspace{1, "Workspace 1", 0, false, false}
+
     return &state{
         clients: make([]*client, 0),
         stack: make([]*client, 0),
         focus: make([]*client, 0),
+        workspaces: wrks,
     }
 }
 
@@ -90,7 +97,7 @@ func (wm *state) fallback() {
     var c *client
     for i := len(wm.focus) - 1; i >= 0; i-- {
         c = wm.focus[i]
-        if c.Mapped() && c.Alive() {
+        if c.Mapped() && c.Alive() && c.workspace == WM.WrkActiveInd() {
             logMessage.Printf("Focus falling back to %s", c)
             c.Focus()
             return
