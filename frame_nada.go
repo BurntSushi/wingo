@@ -7,7 +7,7 @@ type frameNada struct {
 }
 
 func newFrameNada(p *frameParent, c *client) *frameNada {
-    return &frameNada{newFrameAbst(p, c, clientOffset{})}
+    return &frameNada{newFrameAbst(p, c)}
 }
 
 func (f *frameNada) Current() bool {
@@ -60,14 +60,14 @@ func (f *frameNada) Right() int {
 func (f *frameNada) ConfigureClient(flags, x, y, w, h int,
                                     sibling xgb.Id, stackMode byte,
                                     ignoreHints bool) {
-    x, y, w, h = f.configureClient(flags, x, y, w, h)
+    x, y, w, h = FrameConfigureClient(f, flags, x, y, w, h)
     f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints, true)
 }
 
 func (f *frameNada) ConfigureFrame(flags, fx, fy, fw, fh int,
                                    sibling xgb.Id, stackMode byte,
                                    ignoreHints bool, sendNotify bool) {
-    f.configureFrame(flags, fx, fy, fw, fh, sibling, stackMode, ignoreHints,
-                     sendNotify)
+    FrameConfigureFrame(f, flags, fx, fy, fw, fh, sibling, stackMode,
+                        ignoreHints, sendNotify)
 }
 

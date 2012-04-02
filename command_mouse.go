@@ -18,11 +18,11 @@ type mouseCommand struct {
 func (mcmd mouseCommand) setup(c *client, wid xgb.Id) {
     // Check if this command is a drag... If it is, it needs special attention.
     if mcmd.cmd == "Move" {
-        c.SetupMoveDrag(wid, mcmd.buttonStr, true)
+        c.setupMoveDrag(wid, mcmd.buttonStr, true)
         return
     }
     if mcmd.cmd == "Resize" {
-        c.SetupResizeDrag(wid, mcmd.buttonStr, true, mcmd.direction)
+        c.setupResizeDrag(wid, mcmd.buttonStr, true, mcmd.direction)
         return
     }
 
@@ -39,6 +39,44 @@ func (mcmd mouseCommand) setup(c *client, wid xgb.Id) {
     } else {
         mcmd.attach(wid, func() { run(c) }, false, false)
     }
+}
+
+// setupMoveDrag does the boiler plate for registering this client's
+// "move" drag.
+func (c *client) setupMoveDrag(dragWin xgb.Id, buttonStr string, grab bool) {
+    dStart := xgbutil.MouseDragBeginFun(
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xgb.Id) {
+            frameMoveBegin(c.Frame(), rx, ry, ex, ey)
+            return true, cursorFleur
+    })
+    dStep := xgbutil.MouseDragFun(
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
+            frameMoveStep(c.Frame(), rx, ry, ex, ey)
+    })
+    dEnd := xgbutil.MouseDragFun(
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
+            frameMoveEnd(c.Frame(), rx, ry, ex, ey)
+    })
+    mousebind.Drag(X, dragWin, buttonStr, grab, dStart, dStep, dEnd)
+}
+
+// setupResizeDrag does the boiler plate for registering this client's
+// "resize" drag.
+func (c *client) setupResizeDrag(dragWin xgb.Id, buttonStr string, grab bool,
+                                 direction uint32) {
+    dStart := xgbutil.MouseDragBeginFun(
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xgb.Id) {
+            return frameResizeBegin(c.Frame(), direction, rx, ry, ex, ey)
+    })
+    dStep := xgbutil.MouseDragFun(
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
+            frameResizeStep(c.Frame(), rx, ry, ex, ey)
+    })
+    dEnd := xgbutil.MouseDragFun(
+        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
+            frameResizeEnd(c.Frame(), rx, ry, ex, ey)
+    })
+    mousebind.Drag(X, dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
 
 func (mcmd mouseCommand) attachClick(wid xgb.Id, run func()) {

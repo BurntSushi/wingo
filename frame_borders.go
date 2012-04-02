@@ -11,12 +11,7 @@ type frameBorders struct {
 }
 
 func newFrameBorders(p *frameParent, c *client) *frameBorders {
-    cp := clientOffset{}
-    f := &frameBorders{abstFrame: newFrameAbst(p, c, cp)}
-    f.clientOffset.x = f.Left()
-    f.clientOffset.y = f.Top()
-    f.clientOffset.w = f.Left() + f.Right()
-    f.clientOffset.h = f.Top() + f.Bottom()
+    f := &frameBorders{abstFrame: newFrameAbst(p, c)}
 
     f.topSide = f.newTopSide()
     f.bottomSide = f.newBottomSide()
@@ -115,11 +110,6 @@ func (f *frameBorders) Inactive() {
 }
 
 func (f *frameBorders) Maximize() {
-    f.clientOffset.x = f.Left()
-    f.clientOffset.y = f.Top()
-    f.clientOffset.w = f.Left() + f.Right()
-    f.clientOffset.h = f.Top() + f.Bottom()
-
     if THEME.full.borderSize > 0 && f.Current() {
         f.topSide.win.unmap()
         f.bottomSide.win.unmap()
@@ -136,11 +126,6 @@ func (f *frameBorders) Maximize() {
 }
 
 func (f *frameBorders) Unmaximize() {
-    f.clientOffset.x = f.Left()
-    f.clientOffset.y = f.Top()
-    f.clientOffset.w = f.Left() + f.Right()
-    f.clientOffset.h = f.Top() + f.Bottom()
-
     if THEME.full.borderSize > 0 && f.Current() {
         f.topSide.win.map_()
         f.bottomSide.win.map_()
@@ -187,15 +172,15 @@ func (f *frameBorders) Right() int {
 func (f *frameBorders) ConfigureClient(flags, x, y, w, h int,
                                        sibling xgb.Id, stackMode byte,
                                        ignoreHints bool) {
-    x, y, w, h = f.configureClient(flags, x, y, w, h)
+    x, y, w, h = FrameConfigureClient(f, flags, x, y, w, h)
     f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints, true)
 }
 
 func (f *frameBorders) ConfigureFrame(flags, fx, fy, fw, fh int,
                                       sibling xgb.Id, stackMode byte,
                                       ignoreHints bool, sendNotify bool) {
-    f.configureFrame(flags, fx, fy, fw, fh, sibling, stackMode, ignoreHints,
-                     sendNotify)
+    FrameConfigureFrame(f, flags, fx, fy, fw, fh, sibling, stackMode,
+                        ignoreHints, sendNotify)
     fg := f.Geom()
 
     f.topSide.win.moveresize(DoW, 0, 0,

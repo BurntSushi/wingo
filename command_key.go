@@ -193,7 +193,7 @@ func cmdHeadFocus(args...string) func() {
         if len(args) > 1 && args[1] == "greedy" {
             greedy = true
         }
-        WM.WrkSet(wrk.id, greedy)
+        WM.WrkSet(wrk.id, true, greedy)
     }
 }
 
@@ -231,7 +231,7 @@ func cmdWorkspace(args...string) func() {
         if len(args) > 1 && args[1] == "greedy" {
             greedy = true
         }
-        WM.WrkSet(wrk.id, greedy)
+        WM.WrkSet(wrk.id, true, greedy)
     }
 }
 
@@ -269,7 +269,7 @@ func cmdWorkspacePrefix(args...string) func() {
             if !pastActive {
                 continue
             }
-            if wrk2.head > -1 {
+            if wrk2.visible() {
                 continue
             }
             if strings.HasPrefix(strings.ToLower(wrk2.name), prefix) {
@@ -282,7 +282,7 @@ func cmdWorkspacePrefix(args...string) func() {
         // with a matching prefix.
         if wrk == nil {
             for _, wrk2 := range WM.workspaces {
-                if wrk2.head <= -1 &&
+                if !wrk2.visible() &&
                    strings.HasPrefix(strings.ToLower(wrk2.name), prefix) {
                     wrk = wrk2
                     break
@@ -301,14 +301,14 @@ func cmdWorkspacePrefix(args...string) func() {
         if len(args) > 1 && args[1] == "greedy" {
             greedy = true
         }
-        WM.WrkSet(wrk.id, greedy)
+        WM.WrkSet(wrk.id, true, greedy)
     }
 }
 
 func cmdWorkspaceLeft() func() {
     return func() {
         wrkAct := WM.WrkActive()
-        WM.WrkSet(mod(wrkAct.id - 1, len(WM.workspaces)), false)
+        WM.WrkSet(mod(wrkAct.id - 1, len(WM.workspaces)), true, false)
     }
 }
 
@@ -319,7 +319,7 @@ func cmdWorkspaceLeftWithClient() func () {
             wrkAct := WM.WrkActive()
             wrkPrev := WM.workspaces[mod(wrkAct.id - 1, len(WM.workspaces))]
             wrkPrev.Add(c, false)
-            WM.WrkSet(wrkPrev.id, false)
+            WM.WrkSet(wrkPrev.id, true, false)
         })
     }
 }
@@ -327,7 +327,7 @@ func cmdWorkspaceLeftWithClient() func () {
 func cmdWorkspaceRight() func() {
     return func() {
         wrkAct := WM.WrkActive()
-        WM.WrkSet(mod(wrkAct.id + 1, len(WM.workspaces)), false)
+        WM.WrkSet(mod(wrkAct.id + 1, len(WM.workspaces)), true, false)
     }
 }
 
@@ -338,7 +338,7 @@ func cmdWorkspaceRightWithClient() func() {
             wrkAct := WM.WrkActive()
             wrkNext := WM.workspaces[mod(wrkAct.id + 1, len(WM.workspaces))]
             wrkNext.Add(c, false)
-            WM.WrkSet(wrkNext.id, false)
+            WM.WrkSet(wrkNext.id, true, false)
         })
     }
 }

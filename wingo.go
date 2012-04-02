@@ -68,6 +68,7 @@ func main() {
 
     // Create WM state
     WM = newState()
+    WM.headsLoad()
 
     // Set supported atoms
     ewmh.SupportedSet(X, []string{"_NET_WM_ICON"})
@@ -87,15 +88,19 @@ func main() {
 
     // Listen to Root. It is all-important.
     ROOT.listen(xgb.EventMaskPropertyChange |
+                xgb.EventMaskStructureNotify |
                 xgb.EventMaskSubstructureNotify |
                 xgb.EventMaskSubstructureRedirect |
                 xgb.EventMaskButtonPress)
 
+    // Update state when the root window changes size
+    xevent.ConfigureNotifyFun(rootGeometryChange).Connect(X, ROOT.id)
+
     // Oblige map request events
-    xevent.MapRequestFun(clientMapRequest).Connect(X, X.RootWin())
+    xevent.MapRequestFun(clientMapRequest).Connect(X, ROOT.id)
 
     // Oblige configure requests from windows we don't manage.
-    xevent.ConfigureRequestFun(configureRequest).Connect(X, X.RootWin())
+    xevent.ConfigureRequestFun(configureRequest).Connect(X, ROOT.id)
 
     xevent.Main(X)
 }

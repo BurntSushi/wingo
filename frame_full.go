@@ -18,12 +18,7 @@ type frameFull struct {
 }
 
 func newFrameFull(p *frameParent, c *client) *frameFull {
-    cp := clientOffset{}
-    f := &frameFull{abstFrame: newFrameAbst(p, c, cp)}
-    f.clientOffset.x = f.Left()
-    f.clientOffset.y = f.Top()
-    f.clientOffset.w = f.Left() + f.Right()
-    f.clientOffset.h = f.Top() + f.Bottom()
+    f := &frameFull{abstFrame: newFrameAbst(p, c)}
 
     f.titleBar = f.newTitleBar()
     f.titleText = f.newTitleText()
@@ -186,11 +181,6 @@ func (f *frameFull) Inactive() {
 }
 
 func (f *frameFull) Maximize() {
-    f.clientOffset.x = f.Left()
-    f.clientOffset.y = f.Top()
-    f.clientOffset.w = f.Left() + f.Right()
-    f.clientOffset.h = f.Top() + f.Bottom()
-
     f.buttonClose.win.moveresize(DoY, 0, 0, 0, 0)
     f.buttonMaximize.win.moveresize(DoY, 0, 0, 0, 0)
     f.buttonMinimize.win.moveresize(DoY, 0, 0, 0, 0)
@@ -215,11 +205,6 @@ func (f *frameFull) Maximize() {
 }
 
 func (f *frameFull) Unmaximize() {
-    f.clientOffset.x = f.Left()
-    f.clientOffset.y = f.Top()
-    f.clientOffset.w = f.Left() + f.Right()
-    f.clientOffset.h = f.Top() + f.Bottom()
-
     f.buttonClose.win.moveresize(DoY, 0, THEME.full.borderSize, 0, 0)
     f.buttonMaximize.win.moveresize(DoY, 0, THEME.full.borderSize, 0, 0)
     f.buttonMinimize.win.moveresize(DoY, 0, THEME.full.borderSize, 0, 0)
@@ -281,7 +266,7 @@ func (f *frameFull) Right() int {
 func (f *frameFull) ConfigureClient(flags, x, y, w, h int,
                                     sibling xgb.Id, stackMode byte,
                                     ignoreHints bool) {
-    x, y, w, h = f.configureClient(flags, x, y, w, h)
+    x, y, w, h = FrameConfigureClient(f, flags, x, y, w, h)
     f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints,
                      true)
 }
@@ -289,8 +274,8 @@ func (f *frameFull) ConfigureClient(flags, x, y, w, h int,
 func (f *frameFull) ConfigureFrame(flags, fx, fy, fw, fh int,
                                    sibling xgb.Id, stackMode byte,
                                    ignoreHints bool, sendNotify bool) {
-    f.configureFrame(flags, fx, fy, fw, fh, sibling, stackMode, ignoreHints,
-                     sendNotify)
+    FrameConfigureFrame(f, flags, fx, fy, fw, fh, sibling, stackMode,
+                        ignoreHints, sendNotify)
     fg := f.Geom()
 
     if THEME.full.borderSize > 0 {

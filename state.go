@@ -1,7 +1,6 @@
 package main
 
 import (
-    "fmt"
     "strings"
 )
 
@@ -10,7 +9,6 @@ import "code.google.com/p/jamslam-x-go-binding/xgb"
 import (
     "github.com/BurntSushi/xgbutil/ewmh"
     "github.com/BurntSushi/xgbutil/xinerama"
-    "github.com/BurntSushi/xgbutil/xrect"
 )
 
 // state is the master singleton the carries all window manager related state
@@ -22,67 +20,17 @@ type state struct {
     workspaces workspaces
 }
 
-func headsLoad() xinerama.Heads {
-    heads, err := xinerama.PhysicalHeads(X)
-    if err != nil || len(heads) == 0 {
-        if err == nil {
-            logWarning.Printf("Could not find any physical heads with the " +
-                              "Xinerama extension.")
-        } else {
-            logWarning.Printf("Could not load physical heads via Xinerama: %s",
-                              err)
-        }
-        logWarning.Printf("Assuming one head with size equivalent to the " +
-                          "root window.")
-
-        heads = xinerama.Heads{
-            xrect.Make(ROOT.geom.X(), ROOT.geom.Y(),
-                       ROOT.geom.Width(), ROOT.geom.Height()),
-        }
-    }
-
-    return heads
-}
-
 func newState() *state {
-    heads := headsLoad()
-
-    // If for whatever reason there are no workspaces in the config,
-    // make ONE and emit a warning.
-    var wrks workspaces
-    if len(CONF.workspaces) < len(heads) {
-        logWarning.Println("There were not enough workspaces found in the " +
-                           "configuration. Namely, there must be at least " +
-                           "as many workspaces as there are phyiscal heads. " +
-                           "We are forcefully making some and " +
-                           "moving on. Please report this as a bug if you " +
-                           "think you're configuration is correct.")
-
-        for i := 0; i < len(heads); i++ {
-            wrks = workspaces{
-                &workspace{i, fmt.Sprintf("Default Workspace %d", i + 1), -1,
-                           false},
-            }
-        }
-    } else {
-        wrks = make(workspaces, len(CONF.workspaces))
-        for i, wrkName := range CONF.workspaces {
-            wrks[i] = &workspace{i, wrkName, -1, false}
-        }
-    }
-
-    // Make the first one active and the first N workspaces visible,
-    // where N is the number of heads
-    wrks[0].active = true
-    for i := 0; i < len(heads); i++ {
-        wrks[i].head = i
+    wrks := make(workspaces, len(CONF.workspaces))
+    for i, wrkName := range CONF.workspaces {
+        wrks[i] = &workspace{i, wrkName, -1, false}
     }
 
     return &state{
         clients: make([]*client, 0),
         stack: make([]*client, 0),
         focus: make([]*client, 0),
-        heads: heads,
+        heads: nil,
         workspaces: wrks,
     }
 }

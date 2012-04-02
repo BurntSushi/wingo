@@ -159,7 +159,7 @@ func frameResizeStep(f Frame, rx, ry, ex, ey int) {
         } else {
             neww = resizing.width + diffx
         }
-        validw = f.ValidateWidth(neww)
+        validw = FrameValidateWidth(f, neww)
 
         // If validation changed our width, we need to make sure
         // our x-value is appropriately changed
@@ -174,7 +174,7 @@ func frameResizeStep(f Frame, rx, ry, ex, ey int) {
         } else {
             newh = resizing.height + diffy
         }
-        validh = f.ValidateHeight(newh)
+        validh = FrameValidateHeight(f, newh)
 
         // If validation changed our height, we need to make sure
         // our y-value is appropriately changed

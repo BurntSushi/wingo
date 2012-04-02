@@ -3,6 +3,7 @@ package main
 import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 import (
+    "github.com/BurntSushi/xgbutil/xevent"
     "github.com/BurntSushi/xgbutil/xgraphics"
     "github.com/BurntSushi/xgbutil/xrect"
 )
@@ -31,8 +32,6 @@ type Frame interface {
     Active()
     Inactive()
     Unmap()
-    ValidateHeight(height int) int
-    ValidateWidth(width int) int
 
     // The margins of this frame's decorations.
     Top() int
@@ -161,5 +160,94 @@ func FrameReset(f Frame) {
 // FrameMR is short for FrameMoveresize.
 func FrameMR(f Frame, flags int, x, y int, w, h int, ignoreHints bool) {
     f.ConfigureClient(flags, x, y, w, h, xgb.Id(0), 0, ignoreHints)
+}
+
+// FrameValidateHeight validates a height of a *frame*, which is equivalent
+// to validating the height of a client.
+func FrameValidateHeight(f Frame, height int) int {
+    frameTopBot := f.Top() + f.Bottom()
+    return f.Client().ValidateHeight(height - frameTopBot) + frameTopBot
+}
+
+// validateWidth validates a width of a *frame*, which is equivalent
+// to validating the width of a client.
+func FrameValidateWidth(f Frame, width int) int {
+    frameLeftRight := f.Left() + f.Right()
+    return f.Client().ValidateWidth(width - frameLeftRight) + frameLeftRight
+}
+
+// Configure is from the perspective of the client.
+// Namely, the width and height specified here will be precisely the width
+// and height that the client itself ends up with, assuming it passes
+// validation. (Therefore, the actual window itself will be bigger, because
+// of decorations.)
+// Moreover, the x and y coordinates are gravitized. Yuck.
+func FrameConfigureClient(f Frame, flags, x, y, w, h int) (int, int, int, int) {
+    // Defy gravity!
+    if DoX & flags > 0 {
+        x = f.Client().GravitizeX(x, -1)
+    }
+    if DoY & flags > 0 {
+        y = f.Client().GravitizeY(y, -1)
+    }
+
+    // This will change with other frames
+    if DoW & flags > 0 {
+        w += f.Left() + f.Right()
+    }
+    if DoH & flags > 0 {
+        h += f.Top() + f.Bottom()
+    }
+
+    return x, y, w, h
+}
+
+// ConfigureFrame is from the perspective of the frame.
+// The fw and fh specify the width of the entire window, so that the client
+// will end up slightly smaller than the width/height specified here.
+// Also, the fx and fy coordinates are interpreted plainly as root window
+// coordinates. (No gravitization.)
+func FrameConfigureFrame(f Frame, flags, fx, fy, fw, fh int,
+                         sibling xgb.Id, stackMode byte,
+                         ignoreHints bool, sendNotify bool) {
+    cw, ch := fw, fh
+    framex, framey, _, _ := xrect.RectPieces(f.Geom())
+    _, _, clientw, clienth := xrect.RectPieces(f.Client().Geom())
+
+    if DoX & flags > 0 {
+        framex = fx
+    }
+    if DoY & flags > 0 {
+        framey = fy
+    }
+    if DoW & flags > 0 {
+        cw -= f.Left() + f.Right()
+        if !ignoreHints {
+            cw = f.Client().ValidateWidth(cw)
+            fw = cw + f.Left() + f.Right()
+        }
+        clientw = cw
+    }
+    if DoH & flags > 0 {
+        ch -= f.Top() + f.Bottom()
+        if !ignoreHints {
+            ch = f.Client().ValidateHeight(ch)
+            fh = ch + f.Top() + f.Bottom()
+        }
+        clienth = ch
+    }
+
+    if sendNotify {
+        configNotify := xevent.NewConfigureNotify(f.Client().Id(),
+                                                  f.Client().Id(),
+                                                  0, framex, framey,
+                                                  clientw, clienth, 0, false)
+        X.Conn().SendEvent(false, f.Client().Id(), xgb.EventMaskStructureNotify,
+                           configNotify.Bytes())
+    }
+
+    f.Parent().Win().configure(flags, fx, fy, fw, fh, sibling, stackMode)
+    f.Client().Win().moveresize(flags | DoX | DoY,
+                                f.Left(), f.Top(), cw, ch)
 }
 

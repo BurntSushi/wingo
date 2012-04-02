@@ -1,6 +1,9 @@
 package main
 
-import "strings"
+import (
+    "fmt"
+    "strings"
+)
 
 type workspaces []*workspace
 
@@ -9,6 +12,11 @@ type workspace struct {
     name string // note that this does not have to be unique
     head int // the most recent physical head this workspace was on
     active bool
+}
+
+func newDefaultWorkspace(id int) *workspace {
+    return &workspace{id, fmt.Sprintf("Default workspace %d", id + 1),
+                      -1, false}
 }
 
 func (wm *state) WrkActive() *workspace {
@@ -43,7 +51,7 @@ func (wm *state) WrkFind(name string) *workspace {
     return nil
 }
 
-func (wm *state) WrkSet(wrk int, greedy bool) {
+func (wm *state) WrkSet(wrk int, fallback bool, greedy bool) {
     if wrk > len(wm.workspaces) || wm.workspaces[wrk].active {
         return
     }
@@ -51,12 +59,17 @@ func (wm *state) WrkSet(wrk int, greedy bool) {
     wrkActive := wm.WrkActive()
     wrkNew := wm.workspaces[wrk]
 
-    if wrkNew.head <= -1 {
-        wrkActive.head, wrkNew.head = wrkNew.head, wrkActive.head
+    if !wrkNew.visible() {
+        wrkActiveHead := wrkActive.head
+        wrkActive.headSet(wrkNew.head)
+        wrkNew.headSet(wrkActiveHead)
+
         wrkActive.hide()
         wrkNew.show()
     } else if greedy {
-        wrkActive.head, wrkNew.head = wrkNew.head, wrkActive.head
+        wrkActiveHead := wrkActive.head
+        wrkActive.headSet(wrkNew.head)
+        wrkNew.headSet(wrkActiveHead)
 
         wrkActive.hide()
         wrkNew.hide()
@@ -67,7 +80,9 @@ func (wm *state) WrkSet(wrk int, greedy bool) {
     wrkActive.active = false
     wrkNew.active = true
 
-    WM.fallback()
+    if fallback {
+        WM.fallback()
+    }
 }
 
 func (wrk *workspace) Add(c *client, checkVisible bool) {
@@ -99,12 +114,26 @@ func (wrk *workspace) add(c *client, checkVisible bool) {
     // It's okay if the following map/unmap is redundant with the client's
     // current state. They will bail appropriately if so.
     if checkVisible {
-        if wrk.head > -1 {
+        if wrk.visible() {
             c.Map()
         } else {
             c.Unmap()
         }
     }
+}
+
+func (wrk *workspace) visible() bool {
+    return wrk.head > -1
+}
+
+func (wrk *workspace) headSet(headNum int) {
+    wrk.head = headNum
+    if wrk.visible() {
+        wrk.relayout()
+    }
+}
+
+func (wrk *workspace) relayout() {
 }
 
 func (wrk *workspace) hide() {

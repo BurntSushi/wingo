@@ -6,7 +6,6 @@ import (
     "github.com/BurntSushi/xgbutil"
     "github.com/BurntSushi/xgbutil/ewmh"
     "github.com/BurntSushi/xgbutil/icccm"
-    "github.com/BurntSushi/xgbutil/mousebind"
     "github.com/BurntSushi/xgbutil/xevent"
 )
 
@@ -154,38 +153,6 @@ func (c *client) initPopulate() error {
         c.types = []string{"_NET_WM_WINDOW_TYPE_NORMAL"}
     }
     return nil
-}
-
-// SetupFocus is a useful function to setup a callback when you want a
-// client to have focus. Particularly if, in the future, we want to allow
-// a new focus model (like follows-mouse).
-// This is not used in the 'Manage' method because we have to do some special
-// stuff when attaching a button press to an actual client window.
-func (c *client) SetupFocus(win xgb.Id, buttonStr string, grab bool) {
-    mousebind.ButtonPressFun(
-        func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
-            c.Focus()
-            c.Raise()
-    }).Connect(X, win, buttonStr, false, grab)
-}
-
-// setupMoveDrag does the boiler plate for registering this client's
-// "move" drag.
-func (c *client) SetupMoveDrag(dragWin xgb.Id, buttonStr string, grab bool) {
-    dStart := xgbutil.MouseDragBeginFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xgb.Id) {
-            frameMoveBegin(c.Frame(), rx, ry, ex, ey)
-            return true, cursorFleur
-    })
-    dStep := xgbutil.MouseDragFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-            frameMoveStep(c.Frame(), rx, ry, ex, ey)
-    })
-    dEnd := xgbutil.MouseDragFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-            frameMoveEnd(c.Frame(), rx, ry, ex, ey)
-    })
-    mousebind.Drag(X, dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
 
 func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {

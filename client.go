@@ -7,10 +7,8 @@ import (
 import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 import (
-    "github.com/BurntSushi/xgbutil"
     "github.com/BurntSushi/xgbutil/ewmh"
     "github.com/BurntSushi/xgbutil/icccm"
-    "github.com/BurntSushi/xgbutil/mousebind"
     "github.com/BurntSushi/xgbutil/xevent"
     "github.com/BurntSushi/xgbutil/xprop"
     "github.com/BurntSushi/xgbutil/xrect"
@@ -84,25 +82,6 @@ func (c *client) frameSet(f Frame) {
     c.frame = f
     c.Frame().On()
     FrameReset(c.Frame())
-}
-
-// setupResizeDrag does the boiler plate for registering this client's
-// "resize" drag.
-func (c *client) SetupResizeDrag(dragWin xgb.Id, buttonStr string, grab bool,
-                                 direction uint32) {
-    dStart := xgbutil.MouseDragBeginFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xgb.Id) {
-            return frameResizeBegin(c.Frame(), direction, rx, ry, ex, ey)
-    })
-    dStep := xgbutil.MouseDragFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-            frameResizeStep(c.Frame(), rx, ry, ex, ey)
-    })
-    dEnd := xgbutil.MouseDragFun(
-        func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-            frameResizeEnd(c.Frame(), rx, ry, ex, ey)
-    })
-    mousebind.Drag(X, dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
 
 func (c *client) unmanage() {
@@ -278,6 +257,11 @@ func (c *client) Focused() {
 
     // Forcefully unfocus all other clients
     WM.unfocusExcept(c.Id())
+
+    // If this isn't the current workspace, make it the current workspace
+    if WM.WrkActiveInd() != c.workspace {
+        WM.WrkSet(c.workspace, false, false)
+    }
 }
 
 func (c *client) Unfocused() {
