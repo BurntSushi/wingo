@@ -1,98 +1,103 @@
-[MouseClient]
+[Root]
+1 := Focus
+
+[Client]
 1 := FocusRaise
 
-[MouseFrame]
+[Frame]
 Mod4-1 := Move
 Mod4-3 := Resize
+Mod4-4 up := `transset-df -p --max 1.0 --inc 0.05`
+Mod4-5 up := `transset-df -p --min 0.1 --dec 0.05`
 
-[MouseFullIcon]
+[FullIcon]
 1 := Move
 1 := FocusRaise
 3 := Resize
 
-[MouseFullTitleText]
+[FullTitleText]
 1 := Move
 1 := FocusRaise
 3 := Resize
 
-[MouseFullTitleBar]
+[FullTitleBar]
 1 := Move
 1 := FocusRaise
 3 := Resize
 
-[MouseFullClose]
+[FullClose]
 1 up := Close
 
-[MouseFullMaximize]
+[FullMaximize]
 1 up := MaximizeToggle
 
-[MouseFullMinimize]
+[FullMinimize]
 1 up := Minimize
 
-[MouseFullTop]
+[FullTop]
 1 := Resize Top
 1 down := FocusRaise
 
-[MouseFullTitleBottom]
+[FullTitleBottom]
 1 down := FocusRaise
 
-[MouseFullBottom]
+[FullBottom]
 1 := Resize Bottom
 1 down := FocusRaise
 
-[MouseFullLeft]
+[FullLeft]
 1 := Resize Left
 1 down := FocusRaise
 
-[MouseFullRight]
+[FullRight]
 1 := Resize Right
 1 down := FocusRaise
 
-[MouseFullTopLeft]
+[FullTopLeft]
 1 := Resize TopLeft
 1 down := FocusRaise
 
-[MouseFullTopRight]
+[FullTopRight]
 1 := Resize TopRight
 1 down := FocusRaise
 
-[MouseFullBottomLeft]
+[FullBottomLeft]
 1 := Resize BottomLeft
 1 down := FocusRaise
 
-[MouseFullBottomRight]
+[FullBottomRight]
 1 := Resize BottomRight
 1 down := FocusRaise
 
-[MouseBordersTop]
+[BordersTop]
 1 := Resize Top
 1 down := FocusRaise
 
-[MouseBordersBottom]
+[BordersBottom]
 1 := Resize Bottom
 1 down := FocusRaise
 
-[MouseBordersLeft]
+[BordersLeft]
 1 := Resize Left
 1 down := FocusRaise
 
-[MouseBordersRight]
+[BordersRight]
 1 := Resize Right
 1 down := FocusRaise
 
-[MouseBordersTopLeft]
+[BordersTopLeft]
 1 := Resize TopLeft
 1 down := FocusRaise
 
-[MouseBordersTopRight]
+[BordersTopRight]
 1 := Resize TopRight
 1 down := FocusRaise
 
-[MouseBordersBottomLeft]
+[BordersBottomLeft]
 1 := Resize BottomLeft
 1 down := FocusRaise
 
-[MouseBordersBottomRight]
+[BordersBottomRight]
 1 := Resize BottomRight
 1 down := FocusRaise
 

@@ -1,0 +1,28 @@
+[Global]
+Mod4-c := Close
+Mod1-Shift-c := Quit
+Mod4-j := `konsole`
+Mod4-x := MaximizeToggle
+
+Mod1-w := HeadFocus 0
+Mod1-e := HeadFocus 1
+Mod1-r := HeadFocus 2
+
+Mod4-left := WorkspaceLeft
+Mod4-right := WorkspaceRight
+Mod4-Shift-left := WorkspaceLeftWithClient
+Mod4-Shift-right := WorkspaceRightWithClient
+
+Control-Mod1-a := WorkspacePrefix a
+
+Mod4-1 := Workspace Awork
+Mod4-2 := Workspace Bwork
+Mod4-3 := Workspace Cwork
+Mod4-4 := Workspace Dwork
+Mod4-5 := Workspace Ework
+
+Mod1-1 := FrameNada
+Mod1-2 := FrameSlim
+Mod1-3 := FrameBorders
+Mod1-4 := FrameFull
+

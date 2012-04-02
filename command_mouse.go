@@ -26,28 +26,30 @@ func (mcmd mouseCommand) setup(c *client, wid xgb.Id) {
         return
     }
 
-    // Now check if it's a *real* command, like, in the shell
-    var run func(c *client)
-    if mcmd.cmd[0] == '`' && mcmd.cmd[len(mcmd.cmd) - 1] == '`' {
-        // XXX TODO
-        run = func(c *client) { }
-    } else {
-        run = getMouseCommand(mcmd.cmd)
-        if run == nil {
-            logWarning.Printf("Undefined mouse command: '%s'", mcmd.cmd)
-            return
-        }
-    }
-
     // If we're putting this on the client or frame window, we need to propagate
     // the events (i.e., grab synchronously).
     // Otherwise, we don't need to grab at all!
+    run := mcmd.commandFun()
     if wid == c.Id() || (c.Frame() != nil && wid == c.Frame().ParentId()) {
-        mcmd.down = true // X dies otherwise, WEIRD!
-        mcmd.attach(wid, func() { run(c) }, true, true)
+        if mcmd.down {
+            mcmd.attach(wid, func() { run(c) }, true, true)
+        } else { // we have to handle release grabs specially!
+            mcmd.attachClick(wid, func() { run(c) })
+        }
     } else {
         mcmd.attach(wid, func() { run(c) }, false, false)
     }
+}
+
+func (mcmd mouseCommand) attachClick(wid xgb.Id, run func()) {
+    mousebind.ButtonPressFun(
+        func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
+            // empty
+    }).Connect(X, wid, mcmd.buttonStr, false, true)
+    mousebind.ButtonReleaseFun(
+        func(X *xgbutil.XUtil, ev xevent.ButtonReleaseEvent) {
+            run()
+    }).Connect(X, wid, mcmd.buttonStr, false, false)
 }
 
 func (mcmd mouseCommand) attach(wid xgb.Id, run func(), propagate, grab bool) {
@@ -61,6 +63,17 @@ func (mcmd mouseCommand) attach(wid xgb.Id, run func(), propagate, grab bool) {
             func(X *xgbutil.XUtil, ev xevent.ButtonReleaseEvent) {
                 run()
         }).Connect(X, wid, mcmd.buttonStr, propagate, grab)
+    }
+}
+
+func rootMouseConfig() {
+    for _, mcmd := range CONF.mouse["root"] {
+        run := getRootMouseCommand(mcmd.cmd)
+        if run == nil {
+            logWarning.Printf("Undefined root mouse command: '%s'", mcmd.cmd)
+            continue
+        }
+        mcmd.attach(ROOT.id, run, false, false)
     }
 }
 
@@ -82,8 +95,16 @@ func (c *client) framePieceMouseConfig(piece string, pieceid xgb.Id) {
     }
 }
 
-func getMouseCommand(cmd string) func(c *client) {
-    switch cmd {
+func (mcmd mouseCommand) commandFun() func(c *client) {
+    tryShellFun := commandShellFun(mcmd.cmd)
+    if tryShellFun != nil {
+        return func(c *client) {
+            tryShellFun()
+            xevent.ReplayPointer(X)
+        }
+    }
+
+    switch mcmd.cmd {
     case "FocusRaise":
         return func(c *client) {
             c.Focus()
@@ -111,6 +132,20 @@ func getMouseCommand(cmd string) func(c *client) {
     case "Minimize":
         return func(c *client) {
             c.UnmapFallback()
+        }
+    }
+
+    logWarning.Printf("Undefined mouse command: '%s'", mcmd.cmd)
+
+    return nil
+}
+
+func getRootMouseCommand(cmd string) func() {
+    switch cmd {
+    case "Focus":
+        return func() {
+            ROOT.focus()
+            WM.unfocusExcept(0)
         }
     }
 

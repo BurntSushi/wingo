@@ -174,7 +174,7 @@ func loadTheme() error {
 }
 
 func loadThemeFile() (*wini.Data, error) {
-    return wini.Parse("theme.wini")
+    return wini.Parse("config/theme.wini")
 }
 
 func loadMiscOption(k wini.Key) {
@@ -399,59 +399,5 @@ func setFont(k wini.Key, place **truetype.Font) {
 
         *place = font
     }
-}
-
-func setString(k wini.Key, place *string) {
-    if v, ok := getLastString(k); ok {
-        *place = v
-    }
-}
-
-func getLastString(k wini.Key) (string, bool) {
-    vals := k.Strings()
-    if len(vals) == 0 {
-        logWarning.Println(k.Err("No values found."))
-        return "", false
-    }
-
-    return vals[len(vals) - 1], true
-}
-
-func setInt(k wini.Key, place *int) {
-    if v, ok := getLastInt(k); ok {
-        *place = int(v)
-    }
-}
-
-func getLastInt(k wini.Key) (int, bool) {
-    vals, err := k.Ints()
-    if err != nil {
-        logWarning.Println(err)
-        return 0, false
-    } else if len(vals) == 0 {
-        logWarning.Println(k.Err("No values found."))
-        return 0, false
-    }
-
-    return vals[len(vals) - 1], true
-}
-
-func setFloat(k wini.Key, place *float64) {
-    if v, ok := getLastFloat(k); ok {
-        *place = float64(v)
-    }
-}
-
-func getLastFloat(k wini.Key) (float64, bool) {
-    vals, err := k.Floats()
-    if err != nil {
-        logWarning.Println(err)
-        return 0.0, false
-    } else if len(vals) == 0 {
-        logWarning.Println(k.Err("No values found."))
-        return 0.0, false
-    }
-
-    return vals[len(vals) - 1], true
 }
 

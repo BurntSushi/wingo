@@ -1,90 +1,76 @@
 // A set of functions that are key-bindable
 package main
 
-import "time"
+import (
+    "bytes"
+    "os/exec"
+    "strings"
+    "time"
+    "unicode"
+)
 
-// Shortcut for executing Client interface functions that have no parameters
-// and no return values on the currently focused window.
-func withFocused(f func(c *client)) {
-    focused := WM.focused()
-    if focused != nil {
-        f(focused)
+// commandShellFun takes a command specified in a configuration file and
+// tries to parse it as an executable command. The command must be wrapped
+// in "`" and "`" (back-quotes). If it's not, we return nil. Otherwise, we
+// return a function that will execute the command.
+// This provides rudimentary support for quoted values in the command.
+func commandShellFun(cmd string) func() {
+    if cmd[0] != '`' || cmd[len(cmd) - 1] != '`' {
+        return nil
+    }
+
+    return func() {
+        var stderr bytes.Buffer
+
+        allCmd := cmd[1:len(cmd) - 1]
+
+        splitCmdName := strings.SplitN(allCmd, " ", 2)
+        cmdName := splitCmdName[0]
+        args := make([]string, 0)
+        addArg := func(start, end int) {
+            args = append(args, strings.TrimSpace(splitCmdName[1][start:end]))
+        }
+
+        if len(splitCmdName) > 1 {
+            startArgPos := 0
+            inQuote := false
+            for i, char := range splitCmdName[1] {
+                // Add arguments enclosed in quotes
+                // Yes, this mixes up quotes.
+                if char == '"' || char == '\'' {
+                    inQuote = !inQuote
+
+                    if !inQuote {
+                        addArg(startArgPos, i)
+                    }
+                    startArgPos = i + 1 // skip the end quote character
+                }
+
+                // Add arguments separated by spaces without quotes
+                if !inQuote && unicode.IsSpace(char) {
+                    addArg(startArgPos, i)
+                    startArgPos = i
+                }
+            }
+
+            // add anything that's left over
+            addArg(startArgPos, len(splitCmdName[1]))
+        }
+
+        cmd := exec.Command(cmdName, args...)
+        cmd.Stderr = &stderr
+
+        err := cmd.Run()
+        if err != nil {
+            logWarning.Printf("Error running '%s': %s", allCmd, err)
+            if stderr.Len() > 0 {
+                logWarning.Printf("Error running '%s': %s",
+                                  allCmd, stderr.String())
+            }
+        }
     }
 }
 
-func cmd_workspace_prev() {
-    wrkAct := WM.WrkActive()
-    WM.WrkSet(mod(wrkAct.id - 1, len(WM.workspaces)))
-}
-
-func cmd_workspace_next() {
-    wrkAct := WM.WrkActive()
-    WM.WrkSet(mod(wrkAct.id + 1, len(WM.workspaces)))
-}
-
-func cmd_active_workspace_prev() {
-    withFocused(func(c *client) {
-        wrkAct := WM.WrkActive()
-        wrkPrev := WM.workspaces[mod(wrkAct.id - 1, len(WM.workspaces))]
-        wrkPrev.Add(c, false)
-        WM.WrkSet(wrkPrev.id)
-
-        c.Raise()
-    })
-}
-
-func cmd_active_workspace_next() {
-    withFocused(func(c *client) {
-        wrkAct := WM.WrkActive()
-        wrkNext := WM.workspaces[mod(wrkAct.id + 1, len(WM.workspaces))]
-        wrkNext.Add(c, false)
-        WM.WrkSet(wrkNext.id)
-
-        c.Raise()
-    })
-}
-
-func cmd_active_test1() {
-    withFocused(func(c *client) {
-        FrameMR(c.Frame(), DoX | DoY, 0, 0, 0, 0, false)
-    })
-}
-
-func cmd_active_close() {
-    withFocused(func(c *client) {
-        c.Close()
-    })
-}
-
-func cmd_active_maximize_toggle() {
-    withFocused(func(c *client) {
-        c.MaximizeToggle()
-    })
-}
-
-func cmd_active_frame_nada() {
-    withFocused(func(c *client) {
-        c.FrameNada()
-    })
-}
-
-func cmd_active_frame_slim() {
-    withFocused(func(c *client) {
-        c.FrameSlim()
-    })
-}
-
-func cmd_active_frame_borders() {
-    withFocused(func(c *client) {
-        c.FrameBorders()
-    })
-}
-
-func cmd_active_frame_full() {
-    withFocused(func(c *client) {
-        c.FrameFull()
-    })
-}
 
 // This is a start, but it is not quite ready for prime-time yet.
 // 1. If the window is destroyed while the go routine is still running,

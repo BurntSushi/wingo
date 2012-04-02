@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 type workspaces []*workspace
 
 type workspace struct {
@@ -7,7 +9,6 @@ type workspace struct {
     name string // note that this does not have to be unique
     head int // the most recent physical head this workspace was on
     active bool
-    visible bool
 }
 
 func (wm *state) WrkActive() *workspace {
@@ -33,18 +34,38 @@ func (wm *state) WrkActiveInd() int {
     panic("Wingo *must* have an active workspace at all times. This is a bug!")
 }
 
-func (wm *state) WrkSet(wrk int) {
+func (wm *state) WrkFind(name string) *workspace {
+    for _, wrk := range wm.workspaces {
+        if strings.ToLower(name) == strings.ToLower(wrk.name) {
+            return wrk
+        }
+    }
+    return nil
+}
+
+func (wm *state) WrkSet(wrk int, greedy bool) {
     if wrk > len(wm.workspaces) || wm.workspaces[wrk].active {
         return
     }
 
     wrkActive := wm.WrkActive()
+    wrkNew := wm.workspaces[wrk]
 
-    wrkActive.Hide()
-    wm.workspaces[wrk].Show()
+    if wrkNew.head <= -1 {
+        wrkActive.head, wrkNew.head = wrkNew.head, wrkActive.head
+        wrkActive.hide()
+        wrkNew.show()
+    } else if greedy {
+        wrkActive.head, wrkNew.head = wrkNew.head, wrkActive.head
+
+        wrkActive.hide()
+        wrkNew.hide()
+        wrkActive.show()
+        wrkNew.show()
+    }
 
     wrkActive.active = false
-    wm.workspaces[wrk].active = true
+    wrkNew.active = true
 
     WM.fallback()
 }
@@ -78,7 +99,7 @@ func (wrk *workspace) add(c *client, checkVisible bool) {
     // It's okay if the following map/unmap is redundant with the client's
     // current state. They will bail appropriately if so.
     if checkVisible {
-        if wrk.visible {
+        if wrk.head > -1 {
             c.Map()
         } else {
             c.Unmap()
@@ -86,24 +107,20 @@ func (wrk *workspace) add(c *client, checkVisible bool) {
     }
 }
 
-func (wrk *workspace) Hide() {
+func (wrk *workspace) hide() {
     for _, c := range WM.clients {
         if c.workspace == wrk.id {
             c.Unmap()
         }
     }
-
-    wrk.visible = false
 }
 
-func (wrk *workspace) Show() {
+func (wrk *workspace) show() {
     for _, c := range WM.clients {
         if c.workspace == wrk.id {
             c.Map()
         }
     }
-
-    wrk.visible = true
 }
 
 func (wrk *workspace) Activate() {
