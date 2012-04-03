@@ -26,3 +26,6 @@ Mod1-2 := FrameSlim
 Mod1-3 := FrameBorders
 Mod1-4 := FrameFull
 
+Mod1-Tab := PromptCycleNext
+Mod1-Shift-Tab := PromptCyclePrev
+

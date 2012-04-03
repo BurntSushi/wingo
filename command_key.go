@@ -46,16 +46,38 @@ func (kcmd keyCommand) attach(run func()) {
         return
     }
 
-    if kcmd.down {
+    if kcmd.cmd == "PromptCyclePrev" || kcmd.cmd == "PromptCycleNext" {
+        // We've got to parse the key string first and make sure
+        // there are some modifiers; otherwise this utterly fails!
+        mods, _ := keybind.ParseString(X, kcmd.keyStr)
+        if mods == 0 {
+            logWarning.Printf("Sorry but the key binding '%s' for the %s " +
+                              "command is invalid. It must have a modifier " +
+                              "to work properly. i.e., Mod1-tab where 'Mod1' " +
+                              "is the modifier.", kcmd.keyStr, kcmd.cmd)
+            return
+        }
+
         keybind.KeyPressFun(
             func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
                 run()
         }).Connect(X, ROOT.id, kcmd.keyStr)
-    } else {
-        keybind.KeyReleaseFun(
-            func(X *xgbutil.XUtil, ev xevent.KeyReleaseEvent) {
+        keybind.KeyPressFun(
+            func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
                 run()
-        }).Connect(X, ROOT.id, kcmd.keyStr)
+        }).Connect(X, X.Dummy(), kcmd.keyStr)
+    } else {
+        if kcmd.down {
+            keybind.KeyPressFun(
+                func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+                    run()
+            }).Connect(X, ROOT.id, kcmd.keyStr)
+        } else {
+            keybind.KeyReleaseFun(
+                func(X *xgbutil.XUtil, ev xevent.KeyReleaseEvent) {
+                    run()
+            }).Connect(X, ROOT.id, kcmd.keyStr)
+        }
     }
 }
 
@@ -87,6 +109,10 @@ func (kcmd keyCommand) commandFun() func() {
         return cmdHeadFocus(kcmd.args...)
     case "MaximizeToggle":
         return cmdMaximizeToggle()
+    case "PromptCycleNext":
+        return cmdPromptCycleNext(kcmd.keyStr, kcmd.args...)
+    case "PromptCyclePrev":
+        return cmdPromptCyclePrev(kcmd.keyStr, kcmd.args...)
     case "Quit":
         return cmdQuit()
     case "Workspace":
@@ -202,6 +228,18 @@ func cmdMaximizeToggle() func() {
         withFocused(func(c *client) {
             c.MaximizeToggle()
         })
+    }
+}
+
+func cmdPromptCycleNext(keyStr string, args...string) func() {
+    return func() {
+        PROMPTS.cycle.next(keyStr)
+    }
+}
+
+func cmdPromptCyclePrev(keyStr string, args...string) func() {
+    return func() {
+        PROMPTS.cycle.prev(keyStr)
     }
 }
 

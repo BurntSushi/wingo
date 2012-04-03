@@ -40,6 +40,11 @@ func (c *client) manage() error {
     WM.focusAdd(c)
     c.Raise()
 
+    // Some prompts need to do some heavy-lifting ONE time for each client.
+    // (i.e., creating images.)
+    // These images are added to the "prompt" map in each client.
+    c.promptAdd()
+
     // Listen to the client for property and structure changes.
     c.window.listen(xgb.EventMaskPropertyChange |
                     xgb.EventMaskStructureNotify)

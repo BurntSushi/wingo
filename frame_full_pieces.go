@@ -13,12 +13,12 @@ import (
 )
 
 func (f *frameFull) newPieceWindow(ident string, cursor xgb.Id) *window {
-    mask := uint32(xgb.CWBackPixmap | xgb.CWEventMask | xgb.CWCursor)
+    mask := xgb.CWBackPixmap | xgb.CWEventMask | xgb.CWCursor
     vals := []uint32{xgb.BackPixmapParentRelative,
                      xgb.EventMaskButtonPress | xgb.EventMaskButtonRelease |
                      xgb.EventMaskButtonMotion | xgb.EventMaskPointerMotion,
                      uint32(cursor)}
-    win := createWindow(f.ParentId(), mask, vals)
+    win := createWindow(f.ParentId(), mask, vals...)
 
     f.Client().framePieceMouseConfig("full_" + ident, win.id)
 

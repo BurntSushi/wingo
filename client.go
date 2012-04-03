@@ -36,6 +36,7 @@ type client struct {
     transientFor xgb.Id
 
     geomStore map[string]xrect.Rect
+    promptStore map[string]*window
 
     frame Frame
     frameNada *frameNada
@@ -64,6 +65,7 @@ func newClient(id xgb.Id) *client {
         protocols: nil,
         transientFor: 0,
         geomStore: make(map[string]xrect.Rect),
+        promptStore: make(map[string]*window),
         frame: nil,
         frameNada: nil,
         frameSlim: nil,

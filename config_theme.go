@@ -1,7 +1,6 @@
 package main
 
 import (
-    "image/color"
     "image/draw"
     "io/ioutil"
     "strconv"
@@ -23,10 +22,11 @@ import (
 )
 
 type theme struct {
-    defaultIcon string
+    defaultIcon draw.Image
     full themeFull
     borders themeBorders
     slim themeSlim
+    prompt themePrompt
 }
 
 type themeFull struct {
@@ -61,10 +61,25 @@ type themeSlim struct {
     aBorderColor, iBorderColor int
 }
 
+type themePrompt struct {
+    bgColor int
+    borderColor int
+    borderSize int
+
+    font *truetype.Font
+    fontSize float64
+    fontColor int
+
+    cycleIconSize int
+    cycleIconBorderSize int
+    cycleIconTransparency int
+}
+
 func defaultTheme() *theme {
     return &theme{
+        defaultIcon: builtInIcon(),
         full: themeFull{
-            font: getBuiltInFont(),
+            font: builtInFont(),
             fontSize: 15,
             aFontColor: 0xffffff,
             iFontColor: 0x000000,
@@ -73,18 +88,18 @@ func defaultTheme() *theme {
             aTitleColor: newThemeColor(0x3366ff),
             iTitleColor: newThemeColor(0xdfdcdf),
 
-            aCloseButton: getBuiltInButton(bindata.ClosePng),
-            iCloseButton: getBuiltInButton(bindata.ClosePng),
+            aCloseButton: builtInButton(bindata.ClosePng),
+            iCloseButton: builtInButton(bindata.ClosePng),
             aCloseColor: 0xffffff,
             iCloseColor: 0x000000,
 
-            aMaximizeButton: getBuiltInButton(bindata.MaximizePng),
-            iMaximizeButton: getBuiltInButton(bindata.MaximizePng),
+            aMaximizeButton: builtInButton(bindata.MaximizePng),
+            iMaximizeButton: builtInButton(bindata.MaximizePng),
             aMaximizeColor: 0xffffff,
             iMaximizeColor: 0x000000,
 
-            aMinimizeButton: getBuiltInButton(bindata.MinimizePng),
-            iMinimizeButton: getBuiltInButton(bindata.MinimizePng),
+            aMinimizeButton: builtInButton(bindata.MinimizePng),
+            iMinimizeButton: builtInButton(bindata.MinimizePng),
             aMinimizeColor: 0xffffff,
             iMinimizeColor: 0x000000,
 
@@ -103,6 +118,17 @@ func defaultTheme() *theme {
             borderSize: 10,
             aBorderColor: 0x3366ff,
             iBorderColor: 0xdfdcdf,
+        },
+        prompt: themePrompt{
+            bgColor: 0xffffff,
+            borderColor: 0x585a5d,
+            borderSize: 10,
+            font: builtInFont(),
+            fontSize: 15,
+            fontColor: 0x000000,
+            cycleIconSize: 32,
+            cycleIconBorderSize: 3,
+            cycleIconTransparency: 50,
         },
     }
 }
@@ -132,6 +158,10 @@ func loadTheme() error {
         case "slim":
             for _, key := range tdata.Keys(section) {
                 loadSlimOption(key)
+            }
+        case "prompt":
+            for _, key := range tdata.Keys(section) {
+                loadPromptOption(key)
             }
         }
     }
@@ -178,11 +208,8 @@ func loadThemeFile() (*wini.Data, error) {
 }
 
 func loadMiscOption(k wini.Key) {
-    strs := k.Strings()
-
     switch k.Name() {
-    case "default_icon":
-        THEME.defaultIcon = strs[len(strs) - 1]
+    case "default_icon": setImage(k, &THEME.defaultIcon)
     }
 }
 
@@ -234,63 +261,33 @@ func loadSlimOption(k wini.Key) {
     }
 }
 
-type themeColor struct {
-    start, end int
-}
+func loadPromptOption(k wini.Key) {
+    switch k.Name() {
+    case "bg_color": setInt(k, &THEME.prompt.bgColor)
+    case "border_color": setInt(k, &THEME.prompt.borderColor)
+    case "border_size": setInt(k, &THEME.prompt.borderSize)
+    case "font": setFont(k, &THEME.prompt.font)
+    case "font_size": setFloat(k, &THEME.prompt.fontSize)
+    case "font_color": setInt(k, &THEME.prompt.fontColor)
+    case "cycle_icon_size": setInt(k, &THEME.prompt.cycleIconSize)
+    case "cycle_icon_border_size": setInt(k, &THEME.prompt.cycleIconBorderSize)
+    case "cycle_icon_transparency":
+        setInt(k, &THEME.prompt.cycleIconTransparency)
 
-func (tc themeColor) isGradient() bool {
-    return tc.start >= 0 && tc.start <= 0xffffff &&
-           tc.end >= 0 && tc.end <= 0xffffff
-}
-
-// steps returns a slice of colors corresponding to the gradient
-// of colors from start to end. The size is determined by the 'size' parameter.
-// The first and last colors in the slice are guaranteed to be
-// tc.start and tc.end. (Unless the size is 1, in which case, the first and
-// only color in the slice is tc.start.)
-func (tc themeColor) steps(size int) []color.RGBA {
-    // naughty
-    if !tc.isGradient() {
-        stps := make([]color.RGBA, size)
-        for i := 0; i < size; i++ {
-            stps[i] = ColorFromInt(tc.start)
+        // naughty!
+        if THEME.prompt.cycleIconTransparency < 0 ||
+           THEME.prompt.cycleIconTransparency > 100 {
+            logWarning.Printf("Illegal value '%s' provided for " +
+                              "'cycle_icon_transparency'. Transparency " +
+                              "values must be in the range [0, 100], " +
+                              "inclusive. Using 100 by default.")
+            THEME.prompt.cycleIconTransparency = 100
         }
     }
+}
 
-    // yikes
-    if size == 0 || size == 1 {
-        return []color.RGBA{ColorFromInt(tc.start)}
-    }
-
-    stps := make([]color.RGBA, size)
-    stps[0], stps[size - 1] = ColorFromInt(tc.start), ColorFromInt(tc.end)
-
-    // no more?
-    if size == 2 {
-        return stps
-    }
-
-    sr, sg, sb := RGBFromInt(tc.start)
-    er, eg, eb := RGBFromInt(tc.end)
-
-    rinc := float64(er - sr) / float64(size)
-    ginc := float64(eg - sg) / float64(size)
-    binc := float64(eb - sb) / float64(size)
-
-    doInc := func(inc float64, start, index int) int {
-        return int(float64(start) + inc * float64(index))
-    }
-
-    var nr, ng, nb int
-    for i := 1; i < size - 1; i++ {
-        nr = doInc(rinc, sr, i)
-        ng = doInc(ginc, sg, i)
-        nb = doInc(binc, sb, i)
-
-        stps[i] = ColorFromInt(IntFromRGB(nr, ng, nb))
-    }
-
-    return stps
+type themeColor struct {
+    start, end int
 }
 
 func newThemeColor(clr int) themeColor {
@@ -349,7 +346,17 @@ func setGradient(k wini.Key, clr *themeColor) {
     clr.start, clr.end = int(start), int(end)
 }
 
-func getBuiltInButton(loadBuiltIn func() []byte) draw.Image {
+func builtInIcon() draw.Image {
+    img, err := xgraphics.LoadPngFromBytes(bindata.WingoPng())
+    if err != nil {
+        logWarning.Printf("Could not get built in icon image because: %v",
+                          err)
+        return nil
+    }
+    return img
+}
+
+func builtInButton(loadBuiltIn func() []byte) draw.Image {
     img, err := xgraphics.LoadPngFromBytes(loadBuiltIn())
     if err != nil {
         logWarning.Printf("Could not get built in button image because: %v",
@@ -371,7 +378,7 @@ func setImage(k wini.Key, place *draw.Image) {
     }
 }
 
-func getBuiltInFont() *truetype.Font {
+func builtInFont() *truetype.Font {
     bs := bindata.RobotoregularTtf()
     font, err := freetype.ParseFont(bs)
     if err != nil {

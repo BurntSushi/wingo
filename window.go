@@ -1,10 +1,13 @@
 package main
 
+import "image"
+
 import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 import (
     "github.com/BurntSushi/xgbutil"
     "github.com/BurntSushi/xgbutil/xevent"
+    "github.com/BurntSushi/xgbutil/xgraphics"
     "github.com/BurntSushi/xgbutil/xrect"
     "github.com/BurntSushi/xgbutil/xwindow"
 )
@@ -31,15 +34,27 @@ func newWindow(id xgb.Id) *window {
     }
 }
 
-func createWindow(parent xgb.Id, mask uint32, vals []uint32) *window {
+func createWindow(parent xgb.Id, masks int, vals... uint32) *window {
     wid := X.Conn().NewId()
     scrn := X.Screen()
 
     X.Conn().CreateWindow(scrn.RootDepth, wid, parent, 0, 0, 1, 1, 0,
                           xgb.WindowClassInputOutput, scrn.RootVisual,
-                          mask, vals)
+                          uint32(masks), vals)
 
     return newWindow(wid)
+}
+
+func createImageWindow(parent xgb.Id, img image.Image,
+                       masks int, vals... uint32) *window {
+    newWin := createWindow(parent, masks, vals...)
+
+    width, height := xgraphics.GetDim(img)
+    newWin.moveresize(DoW | DoH, 0, 0, width, height)
+
+    xgraphics.PaintImg(X, newWin.id, img)
+
+    return newWin
 }
 
 func (w *window) listen(masks int) {

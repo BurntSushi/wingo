@@ -12,11 +12,8 @@ import (
     "github.com/BurntSushi/xgbutil/xgraphics"
 )
 
-import "github.com/BurntSushi/wingo/bindata"
-
 func (c *client) iconImage(width, height int) (draw.Image, draw.Image) {
     var img, mask draw.Image
-    var err error
     var iok, mok bool
 
     img, mask, iok, mok = c.iconTryEwmh(width, height)
@@ -30,22 +27,10 @@ func (c *client) iconImage(width, height int) (draw.Image, draw.Image) {
     }
 
     iok, mok = false, false
-    img, err = xgraphics.LoadPngFromFile(THEME.defaultIcon)
-    if err == nil {
+    img = THEME.defaultIcon
+    if img != nil {
         iok = true
         goto DONE
-    } else {
-        logWarning.Printf("Could not load default PNG icon '%s' because: %v",
-                          THEME.defaultIcon, err)
-    }
-
-    img, err = xgraphics.LoadPngFromBytes(bindata.WingoPng())
-    if err == nil {
-        iok = true
-        goto DONE
-    } else {
-        logWarning.Printf("Could not load default PNG icon from binary data " +
-                          "because: %v", err)
     }
 
 DONE:

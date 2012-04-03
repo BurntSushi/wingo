@@ -54,10 +54,10 @@ type frameParent struct {
 }
 
 func newParent(c *client) *frameParent {
-    mask := uint32(xgb.CWEventMask)
-    val := []uint32{xgb.EventMaskSubstructureRedirect |
-                    xgb.EventMaskButtonPress |
-                    xgb.EventMaskButtonRelease}
+    mask := xgb.CWEventMask
+    val := uint32(xgb.EventMaskSubstructureRedirect |
+                  xgb.EventMaskButtonPress |
+                  xgb.EventMaskButtonRelease)
     parent := createWindow(X.RootWin(), mask, val)
     p := &frameParent{
         window: parent,

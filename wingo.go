@@ -22,6 +22,7 @@ var WM *state
 var ROOT *window
 var CONF *conf
 var THEME *theme
+var PROMPTS prompts
 
 func main() {
     var err error
@@ -86,12 +87,15 @@ func main() {
     // Setup some cursors we use
     setupCursors()
 
+    // Initialize prompts
+    promptsInitialize()
+
     // Listen to Root. It is all-important.
     ROOT.listen(xgb.EventMaskPropertyChange |
                 xgb.EventMaskStructureNotify |
                 xgb.EventMaskSubstructureNotify |
                 xgb.EventMaskSubstructureRedirect |
-                xgb.EventMaskButtonPress)
+                xgb.EventMaskKeyRelease)
 
     // Update state when the root window changes size
     xevent.ConfigureNotifyFun(rootGeometryChange).Connect(X, ROOT.id)
