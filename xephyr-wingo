@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export PWD="/home/andrew/src/go/me/src/github.com/BurntSushi/wingo"
+export PWD="/home/andrew/data/projects/wingo"
 
 # Build first. if we fail, stop everything.
 cd $PWD
@@ -21,6 +21,7 @@ sleep 0.5
 export DISPLAY=:10
 
 DISPLAY=:10 ./zzz &
+# DISPLAY=:10 wingo & 
 # DISPLAY=:10 openbox & 
 # go run $PWD/wingo.go & 
 wingo=$!

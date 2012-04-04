@@ -21,9 +21,9 @@ import (
 )
 
 import (
-    "github.com/BurntSushi/xgbutil"
-    "github.com/BurntSushi/xgbutil/keybind"
-    "github.com/BurntSushi/xgbutil/xevent"
+    "burntsushi.net/go/xgbutil"
+    "burntsushi.net/go/xgbutil/keybind"
+    "burntsushi.net/go/xgbutil/xevent"
 )
 
 type keyCommand struct {

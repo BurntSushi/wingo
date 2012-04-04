@@ -4,11 +4,11 @@ import (
     "strings"
 )
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
+import "burntsushi.net/go/x-go-binding/xgb"
 
 import (
-    "github.com/BurntSushi/xgbutil/ewmh"
-    "github.com/BurntSushi/xgbutil/xinerama"
+    "burntsushi.net/go/xgbutil/ewmh"
+    "burntsushi.net/go/xgbutil/xinerama"
 )
 
 // state is the master singleton the carries all window manager related state

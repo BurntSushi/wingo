@@ -6,7 +6,7 @@ import (
 )
 
 import (
-    "github.com/BurntSushi/xgbutil/xgraphics"
+    "burntsushi.net/go/xgbutil/xgraphics"
 )
 
 const (

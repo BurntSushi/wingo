@@ -4,10 +4,10 @@ import (
     "strings"
 )
 
-import "github.com/BurntSushi/wingo/wini"
+import "burntsushi.net/go/wingo/wini"
 
 import (
-    "github.com/BurntSushi/xgbutil/ewmh"
+    "burntsushi.net/go/xgbutil/ewmh"
 )
 
 type conf struct {

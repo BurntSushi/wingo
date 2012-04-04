@@ -7,9 +7,9 @@ import (
 )
 
 import (
-    "github.com/BurntSushi/xgbutil/ewmh"
-    "github.com/BurntSushi/xgbutil/icccm"
-    "github.com/BurntSushi/xgbutil/xgraphics"
+    "burntsushi.net/go/xgbutil/ewmh"
+    "burntsushi.net/go/xgbutil/icccm"
+    "burntsushi.net/go/xgbutil/xgraphics"
 )
 
 func (c *client) iconImage(width, height int) (draw.Image, draw.Image) {

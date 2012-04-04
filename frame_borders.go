@@ -1,6 +1,6 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
+import "burntsushi.net/go/x-go-binding/xgb"
 
 type frameBorders struct {
     *abstFrame

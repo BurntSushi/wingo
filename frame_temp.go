@@ -1,9 +1,9 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
+import "burntsushi.net/go/x-go-binding/xgb"
 
 import (
-    "github.com/BurntSushi/xgbutil/ewmh"
+    "burntsushi.net/go/xgbutil/ewmh"
 )
 
 func frameMaximize(f Frame) {

@@ -2,9 +2,9 @@ package main
 
 import "exp/norm"
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
+import "burntsushi.net/go/x-go-binding/xgb"
 
-import "github.com/BurntSushi/xgbutil/xgraphics"
+import "burntsushi.net/go/xgbutil/xgraphics"
 
 type frameFull struct {
     *abstFrame

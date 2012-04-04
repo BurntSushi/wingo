@@ -1,8 +1,8 @@
 package main
 
 import (
-    "github.com/BurntSushi/xgbutil"
-    "github.com/BurntSushi/xgbutil/xevent"
+    "burntsushi.net/go/xgbutil"
+    "burntsushi.net/go/xgbutil/xevent"
 )
 
 type prompts struct {

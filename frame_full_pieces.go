@@ -6,10 +6,10 @@ package main
     // "image/draw" 
 // ) 
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
+import "burntsushi.net/go/x-go-binding/xgb"
 
 import (
-    "github.com/BurntSushi/xgbutil/xgraphics"
+    "burntsushi.net/go/xgbutil/xgraphics"
 )
 
 func (f *frameFull) newPieceWindow(ident string, cursor xgb.Id) *window {
