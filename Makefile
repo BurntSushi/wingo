@@ -1,10 +1,16 @@
 BD=bindata
 D=data
+WINGOPKG=$(HOME)/go/me/pkg/linux_amd64/burntsushi.net/go/wingo
 BINDATA=$(BD)/wingo.png.go \
 				$(BD)/close.png.go $(BD)/maximize.png.go $(BD)/minimize.png.go \
-				$(BD)/RobotoRegular.ttf.go
+				$(BD)/DejaVuSans.ttf.go
 
-all: $(BINDATA)
+bindata: $(BINDATA)
+
+sushi-bindata: $(WINGOPKG)/bindata.a
+
+$(WINGOPKG)/bindata.a: $(BINDATA)
+	(cd $(BD) ; go install)
 
 $(BD)/%.png.go: $(D)/%.png
 	go-bindata -f `python2 -c 'print "$*".title()'`Png \

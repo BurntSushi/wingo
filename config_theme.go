@@ -379,7 +379,7 @@ func setImage(k wini.Key, place *draw.Image) {
 }
 
 func builtInFont() *truetype.Font {
-    bs := bindata.RobotoregularTtf()
+    bs := bindata.DejavusansTtf()
     font, err := freetype.ParseFont(bs)
     if err != nil {
         logWarning.Printf("Could not parse default font because: %v", err)
