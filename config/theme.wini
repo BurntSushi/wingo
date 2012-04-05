@@ -20,7 +20,6 @@ default_icon := ./data/wingo.png
 
 [Full]
 font := /usr/share/fonts/TTF/DejaVuSansMono-Bold.ttf
-# font := /home/andrew/tmp/roboto/Roboto-Black.ttf 
 font_size := 17
 a_font_color := 0xffffff
 i_font_color := 0x000000
