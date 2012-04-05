@@ -4,9 +4,12 @@ export PWD="/home/andrew/data/projects/wingo"
 
 # Build first. if we fail, stop everything.
 cd $PWD
-go build -o zzz
-if [ ! $? = 0 ]; then
-  exit
+
+if [ "$1" != "--no-compile" ]; then
+  go build -o zzz
+  if [ ! $? = 0 ]; then
+    exit
+  fi
 fi
 
 # Before launching Xephyr,
