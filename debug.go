@@ -8,6 +8,10 @@ import (
     "os"
 )
 
+import (
+    . "github.com/str1ngs/go-ansi/color"
+)
+
 type WingoLogger struct {
     logType int
     *log.Logger
@@ -26,21 +30,31 @@ var DebugFlags int = DebugDebug | DebugMessage | DebugWarning | DebugError
 var logDebug, logLots, logMessage, logWarning, logError *WingoLogger
 
 func init() {
-    logDebug = newWingoLogger(DebugDebug,
-                              log.New(os.Stderr, "*** WINGO DEBUG: ",
-                                      log.Ldate | log.Ltime))
-    logLots = newWingoLogger(DebugLots,
-                             log.New(os.Stderr, "WINGO LOTS: ",
-                                     log.Ldate | log.Ltime))
-    logMessage = newWingoLogger(DebugMessage,
-                                log.New(os.Stderr, "WINGO MESSAGE: ",
-                                        log.Ldate | log.Ltime))
-    logWarning = newWingoLogger(DebugWarning,
-                                log.New(os.Stderr, "WINGO WARNING: ",
-                                        log.Ldate | log.Ltime))
-    logError = newWingoLogger(DebugError,
-                              log.New(os.Stderr, "WINGO ERROR: ",
-                                      log.Ldate | log.Ltime | log.Lshortfile))
+    logDebug = newWingoLogger(
+        DebugDebug,
+        log.New(os.Stderr,
+                BgGreen(Blue("WINGO DEBUG:")).String() + " ",
+                log.Ldate | log.Ltime))
+    logLots = newWingoLogger(
+        DebugLots,
+        log.New(os.Stderr,
+                "WINGO LOTS: ",
+                log.Ldate | log.Ltime))
+    logMessage = newWingoLogger(
+        DebugMessage,
+        log.New(os.Stderr,
+                "WINGO MESSAGE: ",
+                log.Ldate | log.Ltime))
+    logWarning = newWingoLogger(
+        DebugWarning,
+        log.New(os.Stderr,
+                Bold(Red("WINGO WARNING:")).String() + " ",
+                log.Ldate | log.Ltime))
+    logError = newWingoLogger(
+        DebugError,
+        log.New(os.Stderr,
+                BgMagenta("WINGO ERROR:").String() + " ",
+                log.Ldate | log.Ltime | log.Lshortfile))
 }
 
 func newWingoLogger(logType int, logger *log.Logger) *WingoLogger {
