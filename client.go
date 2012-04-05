@@ -25,6 +25,7 @@ type client struct {
     initMap bool
     state int
     maximized bool
+    iconified bool
     initialMap bool
     lastTime int
     unmapIgnore int
@@ -57,6 +58,7 @@ func newClient(id xgb.Id) *client {
         initMap: false,
         state: StateInactive,
         maximized: false,
+        iconified: false,
         initialMap: false,
         lastTime: 0,
         unmapIgnore: 0,
@@ -91,6 +93,7 @@ func (c *client) unmanage() {
         c.unmappedFallback()
     }
     c.frame.Destroy()
+    c.promptDestroy()
     c.setWmState(icccm.StateWithdrawn)
 
     xevent.Detach(X, c.window.id)
@@ -137,6 +140,15 @@ func (c *client) unmappedFallback() {
     if focused != nil && focused.Id() == c.Id() {
         WM.fallback()
     }
+}
+
+func (c *client) IconifyToggle() {
+    if c.iconified {
+        c.Map()
+    } else {
+        c.UnmapFallback()
+    }
+    c.iconified = !c.iconified
 }
 
 func (c *client) setWmState(state int) {
@@ -220,11 +232,21 @@ func (c *client) TrulyAlive() bool {
     return true
 }
 
+// ForceWorkspace makes the current workspace this client's workspace.
+func (c *client) ForceWorkspace() {
+    if WM.WrkActiveInd() != c.workspace {
+        WM.WrkSet(c.workspace, false, false)
+    }
+}
+
 func (c *client) Focus() {
     if c.hints.Flags & icccm.HintInput > 0 && c.hints.Input == 1 {
+        c.ForceWorkspace()
         c.window.focus()
         c.Focused()
     } else if strIndex("WM_TAKE_FOCUS", c.protocols) > -1 {
+        c.ForceWorkspace()
+
         wm_protocols, err := xprop.Atm(X, "WM_PROTOCOLS")
         if err != nil {
             logWarning.Println(err)
@@ -259,11 +281,7 @@ func (c *client) Focused() {
 
     // Forcefully unfocus all other clients
     WM.unfocusExcept(c.Id())
-
-    // If this isn't the current workspace, make it the current workspace
-    if WM.WrkActiveInd() != c.workspace {
-        WM.WrkSet(c.workspace, false, false)
-    }
+    c.ForceWorkspace()
 }
 
 func (c *client) Unfocused() {
@@ -358,6 +376,7 @@ func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
         c.updateName()
     case "_NET_WM_ICON":
         c.frameFull.updateIcon()
+        c.promptUpdateIcon()
     case "WM_HINTS":
         hints, err := icccm.WmHintsGet(X, c.Id())
         if err == nil {
@@ -409,6 +428,7 @@ func (c *client) updateName() {
     }
 
     c.frameFull.updateTitle()
+    c.promptUpdateName()
 }
 
 func (c *client) GravitizeX(x int, gravity int) int {

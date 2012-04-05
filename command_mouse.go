@@ -169,7 +169,7 @@ func (mcmd mouseCommand) commandFun() func(c *client) {
         }
     case "Minimize":
         return func(c *client) {
-            c.UnmapFallback()
+            c.IconifyToggle()
         }
     }
 

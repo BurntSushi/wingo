@@ -11,9 +11,9 @@ border_size := 10
 font := /usr/share/fonts/TTF/DejaVuSansMono-Bold.ttf
 font_size := 15
 font_color := 0x000000
-cycle_icon_size := 64
-cycle_icon_border_size := 5
-cycle_icon_transparency := 50
+cycle_icon_size := 128
+cycle_icon_border_size := 10
+cycle_icon_transparency := 30
 
 [Misc]
 default_icon := ./data/wingo.png

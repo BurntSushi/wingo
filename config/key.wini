@@ -15,11 +15,12 @@ Mod4-Shift-right := WorkspaceRightWithClient
 
 Control-Mod1-a := WorkspacePrefix a
 
-Mod4-1 := Workspace Awork
-Mod4-2 := Workspace Bwork
-Mod4-3 := Workspace Cwork
-Mod4-4 := Workspace Dwork
-Mod4-5 := Workspace Ework
+Mod4-1 := Workspace A1
+Mod4-2 := Workspace A2
+Mod4-3 := Workspace A3
+Mod4-4 := Workspace A4
+Mod4-5 := Workspace A5
+Mod4-6 := Workspace A6
 
 Mod1-1 := FrameNada
 Mod1-2 := FrameSlim

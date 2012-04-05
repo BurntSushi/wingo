@@ -1,10 +1,5 @@
 package main
 
-import (
-    "burntsushi.net/go/xgbutil"
-    "burntsushi.net/go/xgbutil/xevent"
-)
-
 type prompts struct {
     cycle *promptCycle
 }
@@ -19,9 +14,15 @@ func (c *client) promptAdd() {
     c.promptCycleAdd()
 }
 
-func rootTryStopGrab(X *xgbutil.XUtil, ev xevent.KeyReleaseEvent) {
-    logDebug.Printf("State: %d", ev.State)
-    logDebug.Printf("Detail: %d", ev.Detail)
-    println("")
+func (c *client) promptDestroy() {
+    c.promptCycleDestroy()
+}
+
+func (c *client) promptUpdateIcon() {
+    c.promptCycleUpdateIcon()
+}
+
+func (c *client) promptUpdateName() {
+    c.promptCycleUpdateName()
 }
 

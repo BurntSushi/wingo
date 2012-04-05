@@ -11,6 +11,17 @@ func rootGeometryChange(X *xgbutil.XUtil, ev xevent.ConfigureNotifyEvent) {
     WM.headsLoad()
 }
 
+func (wm *state) headActive() xrect.Rect {
+    return wm.headGeom(wm.WrkActive().head)
+}
+
+func (wm *state) headGeom(i int) xrect.Rect {
+    if i < 0 || i >= len(wm.heads) {
+        return nil
+    }
+    return wm.heads[i]
+}
+
 func (wm *state) headsLoad() {
     heads := stateHeadsGet()
 
