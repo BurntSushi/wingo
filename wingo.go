@@ -1,10 +1,10 @@
 package main
 
-import (
-    "log"
-    "os"
-    "runtime/pprof"
-)
+// import ( 
+    // "log" 
+    // "os" 
+    // "runtime/pprof" 
+// ) 
 
 import "burntsushi.net/go/x-go-binding/xgb"
 
@@ -27,12 +27,12 @@ var PROMPTS prompts
 func main() {
     var err error
 
-    f, err := os.Create("zzz.prof")
-    if err != nil {
-        log.Fatal(err)
-    }
-    pprof.StartCPUProfile(f)
-    defer pprof.StopCPUProfile()
+    // f, err := os.Create("zzz.prof") 
+    // if err != nil { 
+        // log.Fatal(err) 
+    // } 
+    // pprof.StartCPUProfile(f) 
+    // defer pprof.StopCPUProfile() 
 
     X, err = xgbutil.Dial("")
     if err != nil {
@@ -107,12 +107,12 @@ func main() {
 
     xevent.Main(X)
 
-    println("Writing memory profile...")
-    f, err = os.Create("zzz.mprof")
-    if err != nil {
-        log.Fatal(err)
-    }
-    pprof.WriteHeapProfile(f)
-    f.Close()
+    // println("Writing memory profile...") 
+    // f, err = os.Create("zzz.mprof") 
+    // if err != nil { 
+        // log.Fatal(err) 
+    // } 
+    // pprof.WriteHeapProfile(f) 
+    // f.Close() 
 }
 
