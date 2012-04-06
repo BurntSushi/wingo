@@ -94,8 +94,7 @@ func main() {
     ROOT.listen(xgb.EventMaskPropertyChange |
                 xgb.EventMaskStructureNotify |
                 xgb.EventMaskSubstructureNotify |
-                xgb.EventMaskSubstructureRedirect |
-                xgb.EventMaskKeyRelease)
+                xgb.EventMaskSubstructureRedirect)
 
     // Update state when the root window changes size
     xevent.ConfigureNotifyFun(rootGeometryChange).Connect(X, ROOT.id)
@@ -107,5 +106,13 @@ func main() {
     xevent.ConfigureRequestFun(configureRequest).Connect(X, ROOT.id)
 
     xevent.Main(X)
+
+    println("Writing memory profile...")
+    f, err = os.Create("zzz.mprof")
+    if err != nil {
+        log.Fatal(err)
+    }
+    pprof.WriteHeapProfile(f)
+    f.Close()
 }
 
