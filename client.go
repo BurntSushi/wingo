@@ -350,7 +350,7 @@ func (c *client) Raise() {
     for _, c2 := range toRaise {
         WM.stackRaise(c2, false)
     }
-    WM.stackRefresh()
+    WM.stackRefresh(len(toRaise) + 1)
 }
 
 func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {

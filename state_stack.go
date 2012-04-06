@@ -43,17 +43,26 @@ func (wm *state) updateEwmhStacking() {
 // This is useful when we want to make multiple modifications to the stack,
 // and apply them all at once. This prevents window flashing when the stack
 // is unchanged.
-func (wm *state) stackRefresh() {
+// Also, the 'count' parameter can be specified when N clients are raised
+// with stackRaise(client, false) so that the stack can be made visually up
+// to date in N stacking operations. (Instead of restacking all clients.)
+// If count is 0, then the whole stack is refreshed.
+func (wm *state) stackRefresh(count int) {
     if len(wm.stack) <= 1 {
         return
     }
 
-    var next *client
-    for i := 0; i < len(wm.stack) - 1; i++ {
-        next = wm.stack[i + 1]
-        next.Frame().ConfigureClient(DoSibling | DoStack, 0, 0, 0, 0,
-                                     wm.stack[i].Frame().ParentId(),
-                                     xgb.StackModeBelow, false)
+    // do the whole stack
+    if count == 0 || count >= len(wm.stack) {
+        count = len(wm.stack) - 1
+    }
+
+    var beneath *client
+    for i := count - 1; i >= 0; i-- {
+        beneath = wm.stack[i + 1]
+        wm.stack[i].Frame().ConfigureClient(DoSibling | DoStack, 0, 0, 0, 0,
+                                            beneath.Frame().ParentId(),
+                                            xgb.StackModeAbove, false)
     }
 }
 
