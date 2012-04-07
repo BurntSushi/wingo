@@ -8,19 +8,25 @@ import "burntsushi.net/go/wingo/wini"
 
 import (
     "burntsushi.net/go/xgbutil/ewmh"
+    "burntsushi.net/go/xgbutil/keybind"
 )
 
 type conf struct {
     mouse map[string][]mouseCommand
     key map[string][]keyCommand
     workspaces []string
+    confirmKey, cancelKey byte
 }
 
 func defaultConfig() *conf {
+    _, confirmKey := keybind.ParseString(X, "Return")
+    _, cancelKey := keybind.ParseString(X, "Escape")
     return &conf{
         mouse: map[string][]mouseCommand{},
         key: map[string][]keyCommand{},
         workspaces: []string{"1", "2", "3", "4"},
+        confirmKey: confirmKey,
+        cancelKey: cancelKey,
     }
 }
 
@@ -189,6 +195,8 @@ func loadOptionsConfigSection(cdata *wini.Data, section string) {
             if workspaces, ok := getLastString(key); ok {
                 CONF.workspaces = strings.Split(workspaces, " ")
             }
+        case "cancel": setKeycode(key, &CONF.cancelKey)
+        case "confirm": setKeycode(key, &CONF.confirmKey)
         }
     }
 }
@@ -234,6 +242,13 @@ func getLastString(k wini.Key) (string, bool) {
     }
 
     return vals[len(vals) - 1], true
+}
+
+func setKeycode(k wini.Key, place *byte) {
+    if v, ok := getLastString(k); ok {
+        _, kc := keybind.ParseString(X, v)
+        *place = kc
+    }
 }
 
 func setInt(k wini.Key, place *int) {

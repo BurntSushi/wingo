@@ -71,7 +71,6 @@ func renderSolid(bgColor, width, height int) *wImg {
 
 func renderBorder(borderType, borderColor int, bgColor themeColor,
                   width, height, gradientType, gradientDir int) *wImg {
-
     img := newWImg(image.Rect(0, 0, width, height))
 
     // bgClr could be a gradient!

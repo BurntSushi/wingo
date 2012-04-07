@@ -2,11 +2,13 @@ package main
 
 type prompts struct {
     cycle *promptCycle
+    slct *promptSelect // temporary
 }
 
 func promptsInitialize() {
     PROMPTS = prompts{
         cycle: newPromptCycle(),
+        slct: newPromptSelect(),
     }
 }
 

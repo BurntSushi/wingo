@@ -5,7 +5,7 @@ $GREY := 0xdfdcdf
 $PURPLE := 0xff00ff
 
 [Prompt]
-bg_color := 0xffffff
+bg_color := 0xbb0000
 border_color := 0x585a5d
 border_size := 10
 padding := 15

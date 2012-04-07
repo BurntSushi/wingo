@@ -42,6 +42,10 @@ func main() {
     }
     defer X.Conn().Close()
 
+    // Allow key and mouse bindings to do their thang
+    keybind.Initialize(X)
+    mousebind.Initialize(X)
+
     // Create a root window abstraction and load its geometry
     ROOT = newWindow(X.RootWin())
     _, err = ROOT.geometry()
@@ -73,10 +77,6 @@ func main() {
 
     // Set supported atoms
     ewmh.SupportedSet(X, []string{"_NET_WM_ICON"})
-
-    // Allow key and mouse bindings to do their thang
-    keybind.Initialize(X)
-    mousebind.Initialize(X)
 
     // Attach all global key bindings
     attachAllKeys()

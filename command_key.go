@@ -113,6 +113,8 @@ func (kcmd keyCommand) commandFun() func() {
         return cmdPromptCycleNext(kcmd.keyStr, kcmd.args...)
     case "PromptCyclePrev":
         return cmdPromptCyclePrev(kcmd.keyStr, kcmd.args...)
+    case "PromptSelect":
+        return cmdPromptSelect(kcmd.args...)
     case "Quit":
         return cmdQuit()
     case "Workspace":
@@ -240,6 +242,12 @@ func cmdPromptCycleNext(keyStr string, args...string) func() {
 func cmdPromptCyclePrev(keyStr string, args...string) func() {
     return func() {
         PROMPTS.cycle.prev(keyStr)
+    }
+}
+
+func cmdPromptSelect(args...string) func() {
+    return func() {
+        PROMPTS.slct.show()
     }
 }
 

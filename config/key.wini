@@ -30,3 +30,5 @@ Mod1-4 := FrameFull
 Mod1-Tab := PromptCycleNext
 Mod1-Shift-Tab := PromptCyclePrev
 
+Mod4-return := PromptSelect
+
