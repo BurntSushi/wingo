@@ -93,10 +93,10 @@ func (c *client) unmanage() {
         c.unmappedFallback()
     }
     c.frame.Destroy()
-    c.promptDestroy()
     c.setWmState(icccm.StateWithdrawn)
 
     xevent.Detach(X, c.window.id)
+    c.promptRemove()
     WM.stackRemove(c)
     WM.focusRemove(c)
     WM.clientRemove(c)

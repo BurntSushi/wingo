@@ -14,6 +14,7 @@ type promptCycle struct {
     selected int
     grabbedMods uint16
     clients []*client
+    fontHeight int
     top *window
     inner *window
     iconBorder *window
@@ -118,15 +119,18 @@ func (pc *promptCycle) prev(keyStr string) {
 
 func (pc *promptCycle) highlight() {
     for i, c := range pc.clients {
-        iconPar, ok := c.promptStore["cycle_border"]
-        if !ok {
+        iconPar, iok := c.promptStore["cycle_border"]
+        winTitle, tok := c.promptStore["cycle_title"]
+        if !iok || !tok {
             continue
         }
 
         if i == pc.selected {
             iconPar.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
+            winTitle.map_()
         } else {
             iconPar.change(xgb.CWBackPixel, uint32(THEME.prompt.bgColor))
+            winTitle.unmap()
         }
         iconPar.clear()
     }
@@ -161,6 +165,7 @@ func (pc *promptCycle) show(keyStr string) bool {
     cbs := THEME.prompt.cycleIconBorderSize
     is := THEME.prompt.cycleIconSize
     padding := 10
+    titSize := pc.fontHeight
 
     // To the top!
     if len(WM.stack) > 0 {
@@ -173,8 +178,8 @@ func (pc *promptCycle) show(keyStr string) bool {
     maxWidth := int(float64(headGeom.Width()) * 0.8)
 
     // Now let's map and position all of the icons for each window
-    x, y := bs + padding + cbs, bs + padding + cbs
-    width, height := 2 * x, (2 * y) + is + cbs
+    x, y := bs + padding + cbs, bs + padding + cbs + titSize
+    width, height := 2 * x, (2 * (bs + padding + cbs)) + is + cbs + titSize
     pc.clients = []*client{}
     bail := true // if there's nothing to show, we bail...
     widthStatic := false // when true, we stop increasing width
@@ -184,7 +189,8 @@ func (pc *promptCycle) show(keyStr string) bool {
         winPar, parok := c.promptStore["cycle_border"]
         winAct, actok := c.promptStore["cycle_act"]
         winInact, inactok := c.promptStore["cycle_inact"]
-        if !parok || !actok || !inactok {
+        _, titok := c.promptStore["cycle_title"]
+        if !parok || !actok || !inactok || !titok {
             continue
         }
 
@@ -255,13 +261,18 @@ func (c *client) promptCycleAdd() {
     c.promptStore["cycle_border"].map_()
 
     c.promptCycleUpdateIcon()
+    c.promptCycleUpdateName()
 }
 
-func (c *client) promptCycleDestroy() {
+func (c *client) promptCycleRemove() {
     if PROMPTS.cycle.showing {
         PROMPTS.cycle.hide()
     }
 
+    if w, ok := c.promptStore["cycle_title"]; ok {
+        w.unmap()
+        w.destroy()
+    }
     if w, ok := c.promptStore["cycle_act"]; ok {
         w.unmap()
         w.destroy()
@@ -312,5 +323,43 @@ func (c *client) promptCycleUpdateIcon() {
 }
 
 func (c *client) promptCycleUpdateName() {
+    text := c.Name()
+    font := THEME.prompt.font
+    fontSize := THEME.prompt.fontSize
+    fontColor := THEME.prompt.fontColor
+    breathe := 3
+
+    ew, eh, err := xgraphics.TextExtents(font, fontSize, text)
+    if err != nil {
+        logWarning.Printf("Could not get text extents for name '%s' on " +
+                          "window %s because: %v",
+                          text, c, err)
+        logWarning.Printf("Resorting to default with of 300.")
+        ew = 300
+    }
+
+    textImg := renderSolid(THEME.prompt.bgColor, ew + breathe, eh + breathe)
+    rew, reh, err := xgraphics.DrawText(textImg, 0, 0, ColorFromInt(fontColor),
+                                        fontSize, font, text)
+    if err != nil {
+        logWarning.Printf("Could not draw window title for window %s " +
+                          "because: %v", c, err)
+    }
+
+    if w, ok := c.promptStore["cycle_title"]; ok {
+        xgraphics.PaintImg(X, w.id, textImg)
+    } else {
+        c.promptStore["cycle_title"] = createImageWindow(PROMPTS.cycle.Id(),
+                                                         textImg, 0)
+    }
+
+    bs := THEME.prompt.borderSize
+    c.promptStore["cycle_title"].moveresize(DoX | DoY | DoW | DoH,
+                                            bs + 10, bs + 10,
+                                            rew + breathe, reh + breathe)
+    // c.promptStore["cycle_title"].configure( 
+        // DoSibling | DoStack, 0, 0, 0, 0, 
+        // PROMPTS.cycle.inner.id, xgb.StackModeBelow) 
+    PROMPTS.cycle.fontHeight = reh + breathe
 }
 

@@ -24,5 +24,9 @@ loc:
 	find ./ -name '*.go' -and -not -wholename './tests*' -and -not -wholename './bindata*' -print | sort | xargs wc -l
 
 tags:
-	find ./ \( -name '*.go' -and -not -wholename './tests/*' \) -print0 | xargs -0 gotags > TAGS
+	find ./ \( -name '*.go' \
+					   -and -not -wholename './tests/*' \
+						 -and -not -wholename './bindata/*' \) \
+			 -print0 \
+	| xargs -0 gotags > TAGS
 

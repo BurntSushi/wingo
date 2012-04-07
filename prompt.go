@@ -14,8 +14,8 @@ func (c *client) promptAdd() {
     c.promptCycleAdd()
 }
 
-func (c *client) promptDestroy() {
-    c.promptCycleDestroy()
+func (c *client) promptRemove() {
+    c.promptCycleRemove()
 }
 
 func (c *client) promptUpdateIcon() {

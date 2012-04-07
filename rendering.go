@@ -3,6 +3,7 @@ package main
 import (
     "image"
     "image/color"
+    "image/draw"
 )
 
 import (
@@ -60,6 +61,13 @@ type WImg struct {
 
 func newWImg(r image.Rectangle) WImg {
     return WImg{image.NewRGBA(r)}
+}
+
+func renderSolid(bgColor, width, height int) WImg {
+    img := newWImg(image.Rect(0, 0, width, height))
+    draw.Draw(img, img.Bounds(), image.NewUniform(ColorFromInt(bgColor)),
+              image.ZP, draw.Src)
+    return img
 }
 
 func renderBorder(borderType, borderColor int, bgColor themeColor,

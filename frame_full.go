@@ -1,7 +1,5 @@
 package main
 
-import "exp/norm"
-
 import "burntsushi.net/go/x-go-binding/xgb"
 
 import "burntsushi.net/go/xgbutil/xgraphics"
@@ -345,9 +343,6 @@ func (f *frameFull) updateTitle() {
     aFontColor := ColorFromInt(THEME.full.aFontColor)
     iFontColor := ColorFromInt(THEME.full.iFontColor)
 
-    // Try to normalize the window name so freetype can handle it.
-    title = norm.NFD.String(title)
-
     ew, eh, err := xgraphics.TextExtents(font, fontSize, title)
     if err != nil {
         logWarning.Printf("Could not get text extents for name '%s' on " +
@@ -366,13 +361,15 @@ func (f *frameFull) updateTitle() {
 
     y := (THEME.full.titleSize - eh) / 2 - 1
 
-    err = xgraphics.DrawText(imgA, 0, y, aFontColor, fontSize, font, title)
+    _, _, err = xgraphics.DrawText(imgA, 0, y, aFontColor, fontSize,
+                                   font, title)
     if err != nil {
         logWarning.Printf("Could not draw window title for window %s " +
                           "because: %v", f.Client(), err)
     }
 
-    err = xgraphics.DrawText(imgI, 0, y, iFontColor, fontSize, font, title)
+    _, _, err = xgraphics.DrawText(imgI, 0, y, iFontColor, fontSize,
+                                   font, title)
     if err != nil {
         logWarning.Printf("Could not draw window title for window %s " +
                           "because: %v", f.Client(), err)
