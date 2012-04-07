@@ -6,8 +6,6 @@ import (
     "image/draw"
 )
 
-import "code.google.com/p/freetype-go/freetype/truetype"
-
 import (
     "burntsushi.net/go/xgbutil/xgraphics"
 )

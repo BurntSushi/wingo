@@ -1,5 +1,11 @@
 package main
 
+import "code.google.com/p/freetype-go/freetype/truetype"
+
+import (
+    "burntsushi.net/go/xgbutil/xgraphics"
+)
+
 // renderTextSolid does the plumbing for drawing text on a solid background.
 // It returns the width and height of the TEXT, the image itself may be bigger.
 func renderTextSolid(bgColor int, font *truetype.Font, fontSize float64,
