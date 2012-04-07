@@ -16,7 +16,7 @@ type promptCycle struct {
     clients []*client
     fontHeight int
     top *window
-    inner *window
+    bTop, bBot, bLft, bRht *window
     iconBorder *window
 }
 
@@ -31,18 +31,28 @@ func (pc *promptCycle) Id() xgb.Id {
 // using promptCycleAdd.
 func newPromptCycle() *promptCycle {
     top := createWindow(ROOT.id, 0)
-    inner := createWindow(top.id, 0)
+    bTop, bBot := createWindow(top.id, 0), createWindow(top.id, 0)
+    bLft, bRht := createWindow(top.id, 0), createWindow(top.id, 0)
 
     // Apply as much theme related crud as we can
     // We don't do width/height until we actually show the prompt.
     bs := THEME.prompt.borderSize
-    inner.moveresize(DoX | DoY, bs, bs, 0, 0)
+    bTop.moveresize(DoX | DoY | DoH, 0, 0, 0, bs)
+    bBot.moveresize(DoX | DoH, 0, 0, 0, bs)
+    bLft.moveresize(DoX | DoY | DoW, 0, 0, bs, 0)
+    bRht.moveresize(DoY | DoW, 0, 0, bs, 0)
 
-    top.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
-    inner.change(xgb.CWBackPixel, uint32(THEME.prompt.bgColor))
+    top.change(xgb.CWBackPixel, uint32(THEME.prompt.bgColor))
+    bTop.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
+    bBot.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
+    bLft.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
+    bRht.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
 
     // actual mapping doesn't happen until top is mapped
-    inner.map_()
+    bTop.map_()
+    bBot.map_()
+    bLft.map_()
+    bRht.map_()
 
     pc := &promptCycle{
         showing: false,
@@ -50,7 +60,10 @@ func newPromptCycle() *promptCycle {
         grabbedMods: 0,
         clients: make([]*client, 0),
         top: top,
-        inner: inner,
+        bTop: bTop,
+        bBot: bBot,
+        bLft: bLft,
+        bRht: bRht,
     }
 
     // This bears explanation.
@@ -164,8 +177,7 @@ func (pc *promptCycle) show(keyStr string) bool {
     bs := THEME.prompt.borderSize
     cbs := THEME.prompt.cycleIconBorderSize
     is := THEME.prompt.cycleIconSize
-    padding := 10
-    titSize := pc.fontHeight
+    padding := THEME.prompt.padding
 
     // To the top!
     if len(WM.stack) > 0 {
@@ -177,24 +189,43 @@ func (pc *promptCycle) show(keyStr string) bool {
     headGeom := WM.headActive()
     maxWidth := int(float64(headGeom.Width()) * 0.8)
 
-    // Now let's map and position all of the icons for each window
-    x, y := bs + padding + cbs, bs + padding + cbs + titSize
-    width, height := 2 * x, (2 * (bs + padding + cbs)) + is + cbs + titSize
+    // x,y correspond to the position of the next window icon.
+    // They are updated after mapping each icon to refer to the position
+    // of the next icon.
+    x, y := bs + padding, bs + padding + cbs + pc.fontHeight
+
+    // width and height correspond to the final width and height of the
+    // prompt window. They are updated as each icon is added.
+    // width is initialized to account for border size and padding.
+    width := 2 * (bs + padding)
+    height := (2 * (bs + padding + cbs)) + is + cbs + pc.fontHeight
+
+    // maxFontWidth represents the largest font window.
+    // We can use it to sometimes make the prompt bigger to fit window titles.
+    maxFontWidth := 0
+
+    // Maintain a list of clients that we show in the dialog.
     pc.clients = []*client{}
+
     bail := true // if there's nothing to show, we bail...
     widthStatic := false // when true, we stop increasing width
+
     var c *client
     for i := len(WM.focus) - 1; i >= 0; i-- {
         c = WM.focus[i]
         winPar, parok := c.promptStore["cycle_border"]
         winAct, actok := c.promptStore["cycle_act"]
         winInact, inactok := c.promptStore["cycle_inact"]
-        _, titok := c.promptStore["cycle_title"]
+        winTit, titok := c.promptStore["cycle_title"]
         if !parok || !actok || !inactok || !titok {
             continue
         }
 
+        // We no longer have to bail, since we've found a valid client to show
         bail = false
+
+        // track largest font window
+        maxFontWidth = max(maxFontWidth, winTit.geom.Width())
 
         // Move on to the next row?
         if x + (is + (2 * cbs)) + padding + bs > maxWidth {
@@ -204,6 +235,8 @@ func (pc *promptCycle) show(keyStr string) bool {
             widthStatic = true
         }
 
+        // Position the icon window and map its active version or its
+        // inactive version if it's iconified.
         winPar.moveresize(DoX | DoY, x, y, 0, 0)
         if c.iconified {
             winInact.map_()
@@ -213,6 +246,7 @@ func (pc *promptCycle) show(keyStr string) bool {
             winInact.unmap()
         }
 
+        // Only increase the width if we're still adding icons to the first row.
         if !widthStatic {
             width += is + (2 * cbs)
         }
@@ -225,12 +259,23 @@ func (pc *promptCycle) show(keyStr string) bool {
         return false
     }
 
-    // position the damn window based on its width/height
+    // If the computed width is less than the max font width, then increase
+    // the width of the prompt to fit the longest window title.
+    // Forcefully cap it as the maxWidth, though.
+    if maxFontWidth + 2 * (padding + bs) > width {
+        width = min(maxWidth, maxFontWidth + 2 * (padding + bs))
+    }
+
+    // position the damn window based on its width/height (i.e., center it)
     posx := headGeom.Width() / 2 - width / 2
     posy := headGeom.Height() / 2 - height / 2
 
+    // Issue the configure requests. We also need to adjust the borders.
     pc.top.moveresize(DoX | DoY | DoW | DoH, posx, posy, width, height)
-    pc.inner.moveresize(DoW | DoH, 0, 0, width - 2 * bs, height - 2 * bs)
+    pc.bTop.moveresize(DoW, 0, 0, width, 0)
+    pc.bBot.moveresize(DoY | DoW, 0, height - bs, width, 0)
+    pc.bLft.moveresize(DoH, 0, 0, 0, height)
+    pc.bRht.moveresize(DoX | DoH, width - bs, 0, 0, height)
 
     pc.showing = true
     pc.selected = -1
@@ -239,14 +284,15 @@ func (pc *promptCycle) show(keyStr string) bool {
     return true
 }
 
+// hide stops the grab and hides the prompt.
 func (pc *promptCycle) hide() {
     pc.top.unmap()
     keybind.DummyUngrab(X)
     pc.showing = false
 }
 
-// promptCycleAdd adds two images to the promptStore:
-// the active and inactive images in the dialog.
+// promptCycleAdd adds the client to the prompt cycle dialog.
+// Currently, it loads the window icon and the window name.
 func (c *client) promptCycleAdd() {
     if PROMPTS.cycle.showing {
         PROMPTS.cycle.hide()
@@ -264,6 +310,10 @@ func (c *client) promptCycleAdd() {
     c.promptCycleUpdateName()
 }
 
+// promptCycleRemove removes the client from the cycle prompt.
+// Basically, we have to destroy all the resources we've allocated.
+// (Note that we don't need to free any Pixmaps, since we free those right
+// after we draw them.)
 func (c *client) promptCycleRemove() {
     if PROMPTS.cycle.showing {
         PROMPTS.cycle.hide()
@@ -297,7 +347,7 @@ func (c *client) promptCycleUpdateIcon() {
         return
     }
 
-    bgc := ColorFromInt(THEME.prompt.bgColor)
+    bgc := colorFromInt(THEME.prompt.bgColor)
     iconSize := THEME.prompt.cycleIconSize
     cbs := THEME.prompt.cycleIconBorderSize
     alpha := THEME.prompt.cycleIconTransparency // value checked at startup
@@ -324,26 +374,12 @@ func (c *client) promptCycleUpdateIcon() {
 
 func (c *client) promptCycleUpdateName() {
     text := c.Name()
-    font := THEME.prompt.font
-    fontSize := THEME.prompt.fontSize
-    fontColor := THEME.prompt.fontColor
-    breathe := 3
 
-    ew, eh, err := xgraphics.TextExtents(font, fontSize, text)
+    textImg, ew, eh, err := renderTextSolid(
+        THEME.prompt.bgColor, THEME.prompt.font, THEME.prompt.fontSize,
+        THEME.prompt.fontColor, text)
     if err != nil {
-        logWarning.Printf("Could not get text extents for name '%s' on " +
-                          "window %s because: %v",
-                          text, c, err)
-        logWarning.Printf("Resorting to default with of 300.")
-        ew = 300
-    }
-
-    textImg := renderSolid(THEME.prompt.bgColor, ew + breathe, eh + breathe)
-    rew, reh, err := xgraphics.DrawText(textImg, 0, 0, ColorFromInt(fontColor),
-                                        fontSize, font, text)
-    if err != nil {
-        logWarning.Printf("Could not draw window title for window %s " +
-                          "because: %v", c, err)
+        return
     }
 
     if w, ok := c.promptStore["cycle_title"]; ok {
@@ -354,12 +390,14 @@ func (c *client) promptCycleUpdateName() {
     }
 
     bs := THEME.prompt.borderSize
+    padding := THEME.prompt.padding
     c.promptStore["cycle_title"].moveresize(DoX | DoY | DoW | DoH,
-                                            bs + 10, bs + 10,
-                                            rew + breathe, reh + breathe)
-    // c.promptStore["cycle_title"].configure( 
-        // DoSibling | DoStack, 0, 0, 0, 0, 
-        // PROMPTS.cycle.inner.id, xgb.StackModeBelow) 
-    PROMPTS.cycle.fontHeight = reh + breathe
+                                            bs + padding, bs + padding, ew, eh)
+    c.promptStore["cycle_title"].configure(
+        DoSibling | DoStack, 0, 0, 0, 0,
+        PROMPTS.cycle.bRht.id, xgb.StackModeBelow)
+
+    // Set the largest font size we've seen.
+    PROMPTS.cycle.fontHeight = max(PROMPTS.cycle.fontHeight, eh)
 }
 

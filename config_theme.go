@@ -65,6 +65,7 @@ type themePrompt struct {
     bgColor int
     borderColor int
     borderSize int
+    padding int
 
     font *truetype.Font
     fontSize float64
@@ -123,6 +124,7 @@ func defaultTheme() *theme {
             bgColor: 0xffffff,
             borderColor: 0x585a5d,
             borderSize: 10,
+            padding: 10,
             font: builtInFont(),
             fontSize: 15,
             fontColor: 0x000000,
@@ -168,17 +170,17 @@ func loadTheme() error {
 
     // re-color some images
     xgraphics.ColorImage(THEME.full.aCloseButton,
-                         ColorFromInt(THEME.full.aCloseColor))
+                         colorFromInt(THEME.full.aCloseColor))
     xgraphics.ColorImage(THEME.full.iCloseButton,
-                         ColorFromInt(THEME.full.iCloseColor))
+                         colorFromInt(THEME.full.iCloseColor))
     xgraphics.ColorImage(THEME.full.aMaximizeButton,
-                         ColorFromInt(THEME.full.aMaximizeColor))
+                         colorFromInt(THEME.full.aMaximizeColor))
     xgraphics.ColorImage(THEME.full.iMaximizeButton,
-                         ColorFromInt(THEME.full.iMaximizeColor))
+                         colorFromInt(THEME.full.iMaximizeColor))
     xgraphics.ColorImage(THEME.full.aMinimizeButton,
-                         ColorFromInt(THEME.full.aMinimizeColor))
+                         colorFromInt(THEME.full.aMinimizeColor))
     xgraphics.ColorImage(THEME.full.iMinimizeButton,
-                         ColorFromInt(THEME.full.iMinimizeColor))
+                         colorFromInt(THEME.full.iMinimizeColor))
 
     // Scale some images...
     THEME.full.aCloseButton = xgraphics.Scale(THEME.full.aCloseButton,
@@ -266,6 +268,7 @@ func loadPromptOption(k wini.Key) {
     case "bg_color": setInt(k, &THEME.prompt.bgColor)
     case "border_color": setInt(k, &THEME.prompt.borderColor)
     case "border_size": setInt(k, &THEME.prompt.borderSize)
+    case "padding": setInt(k, &THEME.prompt.padding)
     case "font": setFont(k, &THEME.prompt.font)
     case "font_size": setFloat(k, &THEME.prompt.fontSize)
     case "font_color": setInt(k, &THEME.prompt.fontColor)

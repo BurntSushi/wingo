@@ -1,2 +1,7 @@
 A fully-featured and EWMH compliant window manager written in Go.
 
+Please do not use Wingo yet. It's not ready.
+
+If you need X stuff, please check out xgbutil. It probably isn't ready yet
+either, but is infinitely more so than Wingo.
+

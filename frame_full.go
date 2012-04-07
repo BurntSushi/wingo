@@ -340,10 +340,10 @@ func (f *frameFull) updateTitle() {
     title := f.Client().Name()
     font := THEME.full.font
     fontSize := THEME.full.fontSize
-    aFontColor := ColorFromInt(THEME.full.aFontColor)
-    iFontColor := ColorFromInt(THEME.full.iFontColor)
+    aFontColor := colorFromInt(THEME.full.aFontColor)
+    iFontColor := colorFromInt(THEME.full.iFontColor)
 
-    ew, eh, err := xgraphics.TextExtents(font, fontSize, title)
+    ew, eh, err := xgraphics.TextMaxExtents(font, fontSize, title)
     if err != nil {
         logWarning.Printf("Could not get text extents for name '%s' on " +
                           "window %s because: %v",

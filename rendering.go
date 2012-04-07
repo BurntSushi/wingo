@@ -6,6 +6,8 @@ import (
     "image/draw"
 )
 
+import "code.google.com/p/freetype-go/freetype/truetype"
+
 import (
     "burntsushi.net/go/xgbutil/xgraphics"
 )
@@ -34,44 +36,43 @@ const (
     renderDiagBottomRight
 )
 
-// ColorFromInt takes a hex number in the format of '0xrrggbb' and transforms 
+// colorFromInt takes a hex number in the format of '0xrrggbb' and transforms 
 // it to an RGBA color.
-func ColorFromInt(clr int) color.RGBA {
-    r, g, b := RGBFromInt(clr)
+func colorFromInt(clr int) color.RGBA {
+    r, g, b := rgbFromInt(clr)
     return color.RGBA{uint8(r), uint8(g), uint8(b), uint8(255)}
 }
 
-// RGBFromInt returns the R, G and B portions of an integer.
-func RGBFromInt(clr int) (r int, g int, b int) {
+// rgbFromInt returns the R, G and B portions of an integer.
+func rgbFromInt(clr int) (r int, g int, b int) {
     r = clr >> 16
     g = (clr - (r << 16)) >> 8
     b = clr - ((clr >> 8) << 8)
     return
 }
 
-// IntFromRGB returns an integer given R, G and B integers.
-func IntFromRGB(r, g, b int) int {
+// intFromRGB returns an integer given R, G and B integers.
+func intFromRGB(r, g, b int) int {
     return (r << 16) + (g << 8) + b
 }
 
-// type WImg *image.RGBA 
-type WImg struct {
+type wImg struct {
     *image.RGBA
 }
 
-func newWImg(r image.Rectangle) WImg {
-    return WImg{image.NewRGBA(r)}
+func newWImg(r image.Rectangle) *wImg {
+    return &wImg{image.NewRGBA(r)}
 }
 
-func renderSolid(bgColor, width, height int) WImg {
+func renderSolid(bgColor, width, height int) *wImg {
     img := newWImg(image.Rect(0, 0, width, height))
-    draw.Draw(img, img.Bounds(), image.NewUniform(ColorFromInt(bgColor)),
+    draw.Draw(img, img.Bounds(), image.NewUniform(colorFromInt(bgColor)),
               image.ZP, draw.Src)
     return img
 }
 
 func renderBorder(borderType, borderColor int, bgColor themeColor,
-                  width, height, gradientType, gradientDir int) WImg {
+                  width, height, gradientType, gradientDir int) *wImg {
 
     img := newWImg(image.Rect(0, 0, width, height))
 
@@ -79,7 +80,7 @@ func renderBorder(borderType, borderColor int, bgColor themeColor,
     if bgColor.isGradient() {
         img.gradient(gradientType, gradientDir, bgColor)
     } else {
-        bgClr := ColorFromInt(bgColor.start)
+        bgClr := colorFromInt(bgColor.start)
         for x := 0; x < width; x++ {
             for y := 0; y < height; y++ {
                 img.SetRGBA(x, y, bgClr)
@@ -92,7 +93,7 @@ func renderBorder(borderType, borderColor int, bgColor themeColor,
 }
 
 func renderCorner(borderType, borderColor int, bgColor themeColor,
-                  width, height, diagonal int) WImg {
+                  width, height, diagonal int) *wImg {
     // If bgColor isn't a gradient, then we can cheat
     if !bgColor.isGradient() {
         return renderBorder(borderType, borderColor, bgColor,
@@ -132,8 +133,8 @@ func renderCorner(borderType, borderColor int, bgColor themeColor,
     return img
 }
 
-func (img WImg) thinBorder(borderType, borderColor int) {
-    borderClr := ColorFromInt(borderColor)
+func (img *wImg) thinBorder(borderType, borderColor int) {
+    borderClr := colorFromInt(borderColor)
     width, height := xgraphics.GetDim(img)
 
     // Now go through and add a "thin border."
@@ -156,13 +157,13 @@ func (img WImg) thinBorder(borderType, borderColor int) {
     }
 }
 
-func (img WImg) gradient(gradientType, gradientDir int, clr themeColor) {
+func (img *wImg) gradient(gradientType, gradientDir int, clr themeColor) {
     img.gradientFunc(gradientType, gradientDir, clr,
                      func(x, y int) bool { return true })
 }
 
-func (img WImg) gradientFunc(gradientType, gradientDir int, clr themeColor,
-                             pixel func(x, y int) bool) {
+func (img *wImg) gradientFunc(gradientType, gradientDir int, clr themeColor,
+                              pixel func(x, y int) bool) {
     width, height := xgraphics.GetDim(img)
 
     if gradientType == renderGradientVert {
@@ -212,25 +213,25 @@ func (tc themeColor) steps(size int) []color.RGBA {
     if !tc.isGradient() {
         stps := make([]color.RGBA, size)
         for i := 0; i < size; i++ {
-            stps[i] = ColorFromInt(tc.start)
+            stps[i] = colorFromInt(tc.start)
         }
     }
 
     // yikes
     if size == 0 || size == 1 {
-        return []color.RGBA{ColorFromInt(tc.start)}
+        return []color.RGBA{colorFromInt(tc.start)}
     }
 
     stps := make([]color.RGBA, size)
-    stps[0], stps[size - 1] = ColorFromInt(tc.start), ColorFromInt(tc.end)
+    stps[0], stps[size - 1] = colorFromInt(tc.start), colorFromInt(tc.end)
 
     // no more?
     if size == 2 {
         return stps
     }
 
-    sr, sg, sb := RGBFromInt(tc.start)
-    er, eg, eb := RGBFromInt(tc.end)
+    sr, sg, sb := rgbFromInt(tc.start)
+    er, eg, eb := rgbFromInt(tc.end)
 
     rinc := float64(er - sr) / float64(size)
     ginc := float64(eg - sg) / float64(size)
@@ -246,7 +247,7 @@ func (tc themeColor) steps(size int) []color.RGBA {
         ng = doInc(ginc, sg, i)
         nb = doInc(binc, sb, i)
 
-        stps[i] = ColorFromInt(IntFromRGB(nr, ng, nb))
+        stps[i] = colorFromInt(intFromRGB(nr, ng, nb))
     }
 
     return stps

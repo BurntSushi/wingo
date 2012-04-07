@@ -8,6 +8,7 @@ $PURPLE := 0xff00ff
 bg_color := 0xffffff
 border_color := 0x585a5d
 border_size := 10
+padding := 15
 font := /usr/share/fonts/TTF/DejaVuSansMono-Bold.ttf
 font_size := 20
 font_color := 0x000000
