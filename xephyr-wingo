@@ -1,10 +1,10 @@
 #!/bin/sh
 
-export PWD="/home/andrew/data/projects/wingo"
+# export PWD="/home/andrew/data/projects/wingo" 
 export GOMAXPROCS=6
 
 # Build first. if we fail, stop everything.
-cd $PWD
+# cd $PWD 
 
 if [ "$1" != "--no-compile" ]; then
   go build -o zzz
