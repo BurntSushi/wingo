@@ -26,6 +26,7 @@ func newPromptSelect() *promptSelect {
 		THEME.prompt.fontColor, 500)
 
 	top.change(xgb.CWBackPixel, uint32(THEME.prompt.bgColor))
+	input.win.map_()
 
 	ps := &promptSelect{
 		showing:  false,
@@ -40,16 +41,18 @@ func newPromptSelect() *promptSelect {
 				return
 			}
 
-			_, kc := keybind.DeduceKeyInfo(ev.State, ev.Detail)
-			logDebug.Println(keybind.KeycodeString(X, kc))
+			mods, kc := keybind.DeduceKeyInfo(ev.State, ev.Detail)
 
-			if kc == CONF.cancelKey {
-				println("Hiding selection prompt")
+			s := keybind.LookupString(X, mods, kc)
+			logDebug.Println(string(s))
+			ps.input.add(s)
+
+			switch kc {
+			case CONF.backspaceKey:
+				ps.input.remove()
+			case CONF.cancelKey:
 				ps.hide()
-			}
-
-			if kc == CONF.confirmKey {
-				println("Confirming selection prompt")
+			case CONF.confirmKey:
 				ps.hide()
 			}
 		}).Connect(X, X.Dummy())
@@ -72,6 +75,9 @@ func (ps *promptSelect) show() bool {
 		ps.top.configure(DoSibling|DoStack, 0, 0, 0, 0,
 			WM.stack[0].Frame().ParentId(), xgb.StackModeAbove)
 	}
+
+	// Reset the input box
+	ps.input.reset()
 
 	// get our screen geometry so we can position ourselves
 	headGeom := WM.headActive()

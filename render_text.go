@@ -1,8 +1,11 @@
 package main
 
-import "code.google.com/p/freetype-go/freetype/truetype"
-
 import (
+	"image"
+	"image/draw"
+
+	"code.google.com/p/freetype-go/freetype/truetype"
+
 	"github.com/BurntSushi/xgbutil/xgraphics"
 )
 
@@ -15,7 +18,7 @@ const renderTextBreathe = 5
 type textInput struct {
 	win       *window
 	img       *wImg
-	text      []byte
+	text      []rune
 	bgColor   int
 	font      *truetype.Font
 	fontSize  float64
@@ -31,14 +34,14 @@ func renderTextInputCreate(parent *window, bgColor int,
 		return nil
 	}
 
-	img := renderSolid(bgColor, width, height)
+	img := renderSolid(bgColor, width, height+renderTextBreathe)
 	win := createImageWindow(parent.id, img, 0)
-	win.moveresize(DoW|DoH, 0, 0, width, height)
+	win.moveresize(DoW|DoH, 0, 0, width, height+renderTextBreathe)
 
 	return &textInput{
 		win:       win,
 		img:       img,
-		text:      make([]byte, 0),
+		text:      make([]rune, 0),
 		bgColor:   bgColor,
 		font:      font,
 		fontSize:  fontSize,
@@ -46,22 +49,35 @@ func renderTextInputCreate(parent *window, bgColor int,
 	}
 }
 
+// reset removes all characters from the input box and re-renders.
+func (ti *textInput) reset() {
+	ti.text = ti.text[:0]
+	ti.render()
+}
+
 // Needs to be able to filter the stuff in "text"
 // i.e., a-zA-Z0-9_- special chars, etc.
-func (ti *textInput) add(text string) {
-	for i := 0; i < len(text); i++ {
-		ti.text = append(ti.text, text[i])
+// Essentially, even though text is a string, we're only going to take the
+// first character of that string iff len(text) == 1. Otherwise, we ignore it.
+func (ti *textInput) add(char rune) {
+	if char == 0 {
+		return
 	}
-
+	ti.text = append(ti.text, char)
 	ti.render()
 }
 
 func (ti *textInput) remove() {
-	ti.text = ti.text[:len(ti.text)-1]
+	if len(ti.text) == 0 {
+		return
+	}
+	ti.text = ti.text[:len(ti.text) - 1]
 	ti.render()
 }
 
 func (ti *textInput) render() {
+	draw.Draw(ti.img, ti.img.Bounds(),
+		image.NewUniform(colorFromInt(ti.bgColor)), image.ZP, draw.Src)
 	renderText(ti.img, ti.bgColor, ti.font, ti.fontSize, ti.fontColor,
 		string(ti.text))
 	xgraphics.PaintImg(X, ti.win.id, ti.img)

@@ -16,17 +16,20 @@ type conf struct {
 	key                   map[string][]keyCommand
 	workspaces            []string
 	confirmKey, cancelKey byte
+	backspaceKey          byte
 }
 
 func defaultConfig() *conf {
 	_, confirmKey := keybind.ParseString(X, "Return")
 	_, cancelKey := keybind.ParseString(X, "Escape")
+	_, backspaceKey := keybind.ParseString(X, "BackSpace")
 	return &conf{
-		mouse:      map[string][]mouseCommand{},
-		key:        map[string][]keyCommand{},
-		workspaces: []string{"1", "2", "3", "4"},
-		confirmKey: confirmKey,
-		cancelKey:  cancelKey,
+		mouse:        map[string][]mouseCommand{},
+		key:          map[string][]keyCommand{},
+		workspaces:   []string{"1", "2", "3", "4"},
+		confirmKey:   confirmKey,
+		cancelKey:    cancelKey,
+		backspaceKey: backspaceKey,
 	}
 }
 
