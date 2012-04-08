@@ -71,7 +71,7 @@ func (ti *textInput) remove() {
 	if len(ti.text) == 0 {
 		return
 	}
-	ti.text = ti.text[:len(ti.text) - 1]
+	ti.text = ti.text[:len(ti.text)-1]
 	ti.render()
 }
 
