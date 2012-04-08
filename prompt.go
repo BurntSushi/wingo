@@ -1,30 +1,29 @@
 package main
 
 type prompts struct {
-    cycle *promptCycle
-    slct *promptSelect // temporary
+	cycle *promptCycle
+	slct  *promptSelect // temporary
 }
 
 func promptsInitialize() {
-    PROMPTS = prompts{
-        cycle: newPromptCycle(),
-        slct: newPromptSelect(),
-    }
+	PROMPTS = prompts{
+		cycle: newPromptCycle(),
+		slct:  newPromptSelect(),
+	}
 }
 
 func (c *client) promptAdd() {
-    c.promptCycleAdd()
+	c.promptCycleAdd()
 }
 
 func (c *client) promptRemove() {
-    c.promptCycleRemove()
+	c.promptCycleRemove()
 }
 
 func (c *client) promptUpdateIcon() {
-    c.promptCycleUpdateIcon()
+	c.promptCycleUpdateIcon()
 }
 
 func (c *client) promptUpdateName() {
-    c.promptCycleUpdateName()
+	c.promptCycleUpdateName()
 }
-

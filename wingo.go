@@ -1,19 +1,19 @@
 package main
 
 // import ( 
-    // "log" 
-    // "os" 
-    // "runtime/pprof" 
+// "log" 
+// "os" 
+// "runtime/pprof" 
 // ) 
 
 import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 import (
-    "github.com/BurntSushi/xgbutil"
-    "github.com/BurntSushi/xgbutil/ewmh"
-    "github.com/BurntSushi/xgbutil/keybind"
-    "github.com/BurntSushi/xgbutil/mousebind"
-    "github.com/BurntSushi/xgbutil/xevent"
+	"github.com/BurntSushi/xgbutil"
+	"github.com/BurntSushi/xgbutil/ewmh"
+	"github.com/BurntSushi/xgbutil/keybind"
+	"github.com/BurntSushi/xgbutil/mousebind"
+	"github.com/BurntSushi/xgbutil/xevent"
 )
 
 // global variables!
@@ -25,94 +25,93 @@ var THEME *theme
 var PROMPTS prompts
 
 func main() {
-    var err error
+	var err error
 
-    // f, err := os.Create("zzz.prof") 
-    // if err != nil { 
-        // log.Fatal(err) 
-    // } 
-    // pprof.StartCPUProfile(f) 
-    // defer pprof.StopCPUProfile() 
+	// f, err := os.Create("zzz.prof") 
+	// if err != nil { 
+	// log.Fatal(err) 
+	// } 
+	// pprof.StartCPUProfile(f) 
+	// defer pprof.StopCPUProfile() 
 
-    X, err = xgbutil.Dial("")
-    if err != nil {
-        logError.Println(err)
-        logError.Println("Error connecting to X, quitting...")
-        return
-    }
-    defer X.Conn().Close()
+	X, err = xgbutil.Dial("")
+	if err != nil {
+		logError.Println(err)
+		logError.Println("Error connecting to X, quitting...")
+		return
+	}
+	defer X.Conn().Close()
 
-    // Allow key and mouse bindings to do their thang
-    keybind.Initialize(X)
-    mousebind.Initialize(X)
+	// Allow key and mouse bindings to do their thang
+	keybind.Initialize(X)
+	mousebind.Initialize(X)
 
-    // Create a root window abstraction and load its geometry
-    ROOT = newWindow(X.RootWin())
-    _, err = ROOT.geometry()
-    if err != nil {
-        logError.Println("Could not get ROOT window geometry because: %v", err)
-        logError.Println("Cannot continue. Quitting...")
-        return
-    }
+	// Create a root window abstraction and load its geometry
+	ROOT = newWindow(X.RootWin())
+	_, err = ROOT.geometry()
+	if err != nil {
+		logError.Println("Could not get ROOT window geometry because: %v", err)
+		logError.Println("Cannot continue. Quitting...")
+		return
+	}
 
-    // Load configuration
-    err = loadConfig()
-    if err != nil {
-        logError.Println(err)
-        logError.Println("No configuration found. Quitting...")
-        return
-    }
+	// Load configuration
+	err = loadConfig()
+	if err != nil {
+		logError.Println(err)
+		logError.Println("No configuration found. Quitting...")
+		return
+	}
 
-    // Load theme
-    err = loadTheme()
-    if err != nil {
-        logError.Println(err)
-        logError.Println("No theme configuration found. Quitting...")
-        return
-    }
+	// Load theme
+	err = loadTheme()
+	if err != nil {
+		logError.Println(err)
+		logError.Println("No theme configuration found. Quitting...")
+		return
+	}
 
-    // Create WM state
-    WM = newState()
-    WM.headsLoad()
+	// Create WM state
+	WM = newState()
+	WM.headsLoad()
 
-    // Set supported atoms
-    ewmh.SupportedSet(X, []string{"_NET_WM_ICON"})
+	// Set supported atoms
+	ewmh.SupportedSet(X, []string{"_NET_WM_ICON"})
 
-    // Attach all global key bindings
-    attachAllKeys()
+	// Attach all global key bindings
+	attachAllKeys()
 
-    // Attach all root mouse bindings
-    rootMouseConfig()
+	// Attach all root mouse bindings
+	rootMouseConfig()
 
-    // Setup some cursors we use
-    setupCursors()
+	// Setup some cursors we use
+	setupCursors()
 
-    // Initialize prompts
-    promptsInitialize()
+	// Initialize prompts
+	promptsInitialize()
 
-    // Listen to Root. It is all-important.
-    ROOT.listen(xgb.EventMaskPropertyChange |
-                xgb.EventMaskStructureNotify |
-                xgb.EventMaskSubstructureNotify |
-                xgb.EventMaskSubstructureRedirect)
+	// Listen to Root. It is all-important.
+	ROOT.listen(xgb.EventMaskPropertyChange |
+		xgb.EventMaskStructureNotify |
+		xgb.EventMaskSubstructureNotify |
+		xgb.EventMaskSubstructureRedirect)
 
-    // Update state when the root window changes size
-    xevent.ConfigureNotifyFun(rootGeometryChange).Connect(X, ROOT.id)
+	// Update state when the root window changes size
+	xevent.ConfigureNotifyFun(rootGeometryChange).Connect(X, ROOT.id)
 
-    // Oblige map request events
-    xevent.MapRequestFun(clientMapRequest).Connect(X, ROOT.id)
+	// Oblige map request events
+	xevent.MapRequestFun(clientMapRequest).Connect(X, ROOT.id)
 
-    // Oblige configure requests from windows we don't manage.
-    xevent.ConfigureRequestFun(configureRequest).Connect(X, ROOT.id)
+	// Oblige configure requests from windows we don't manage.
+	xevent.ConfigureRequestFun(configureRequest).Connect(X, ROOT.id)
 
-    xevent.Main(X)
+	xevent.Main(X)
 
-    // println("Writing memory profile...") 
-    // f, err = os.Create("zzz.mprof") 
-    // if err != nil { 
-        // log.Fatal(err) 
-    // } 
-    // pprof.WriteHeapProfile(f) 
-    // f.Close() 
+	// println("Writing memory profile...") 
+	// f, err = os.Create("zzz.mprof") 
+	// if err != nil { 
+	// log.Fatal(err) 
+	// } 
+	// pprof.WriteHeapProfile(f) 
+	// f.Close() 
 }
-

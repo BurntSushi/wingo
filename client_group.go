@@ -1,7 +1,7 @@
 package main
 
 import (
-    "github.com/BurntSushi/xgbutil/icccm"
+	"github.com/BurntSushi/xgbutil/icccm"
 )
 
 // transient determines whether 'test' is a transient window of 'c'.
@@ -19,33 +19,32 @@ import (
 // There is one exception: if c and C are both transients in the same group,
 // then they cannot be transient to each other.
 func (c *client) transient(test *client) bool {
-    if c == test {
-        return false
-    }
+	if c == test {
+		return false
+	}
 
-    if test.transientFor == c.Id() {
-        return true
-    }
+	if test.transientFor == c.Id() {
+		return true
+	}
 
-    // If transientFor exists, then we don't look at window group stuff
-    if test.transientFor > 0 {
-        return false
-    }
+	// If transientFor exists, then we don't look at window group stuff
+	if test.transientFor > 0 {
+		return false
+	}
 
-    if c.hints.Flags & icccm.HintWindowGroup > 0 &&
-       test.hints.Flags & icccm.HintWindowGroup > 0 &&
-       c.hints.WindowGroup == test.hints.WindowGroup {
-        return !c.transientType() && test.transientType()
-    }
+	if c.hints.Flags&icccm.HintWindowGroup > 0 &&
+		test.hints.Flags&icccm.HintWindowGroup > 0 &&
+		c.hints.WindowGroup == test.hints.WindowGroup {
+		return !c.transientType() && test.transientType()
+	}
 
-    return false
+	return false
 }
 
 // transientTypes determines whether there is a transient type in the client.
 func (c *client) transientType() bool {
-    return strIndex("_NET_WM_WINDOW_TYPE_TOOLBAR", c.types) > -1 ||
-           strIndex("_NET_WM_WINDOW_TYPE_MENU", c.types) > -1 ||
-           strIndex("_NET_WM_WINDOW_TYPE_UTILITY", c.types) > -1 ||
-           strIndex("_NET_WM_WINDOW_TYPE_DIALOG", c.types) > -1
+	return strIndex("_NET_WM_WINDOW_TYPE_TOOLBAR", c.types) > -1 ||
+		strIndex("_NET_WM_WINDOW_TYPE_MENU", c.types) > -1 ||
+		strIndex("_NET_WM_WINDOW_TYPE_UTILITY", c.types) > -1 ||
+		strIndex("_NET_WM_WINDOW_TYPE_DIALOG", c.types) > -1
 }
-
