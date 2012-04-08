@@ -11,6 +11,7 @@ sushi-bindata: $(WINGOPKG)/bindata.a
 
 gofmt:
 	gofmt -w *.go wini/*.go
+	colcheck *.go */*.go
 
 $(WINGOPKG)/bindata.a: $(BINDATA)
 	(cd $(BD) ; go install)
