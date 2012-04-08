@@ -1,7 +1,6 @@
 #!/bin/sh
 
 # export PWD="/home/andrew/data/projects/wingo" 
-export GOMAXPROCS=6
 
 # Build first. if we fail, stop everything.
 # cd $PWD 
