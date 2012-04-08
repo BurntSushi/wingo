@@ -1,6 +1,6 @@
 BD=bindata
 D=data
-WINGOPKG=$(HOME)/go/me/pkg/linux_amd64/burntsushi.net/go/wingo
+WINGOPKG=$(HOME)/go/me/pkg/linux_amd64/github.com/BurntSushi/wingo
 BINDATA=$(BD)/wingo.png.go \
 				$(BD)/close.png.go $(BD)/maximize.png.go $(BD)/minimize.png.go \
 				$(BD)/DejaVuSans.ttf.go

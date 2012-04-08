@@ -1,7 +1,7 @@
 package main
 
 import (
-    "burntsushi.net/go/xgbutil/icccm"
+    "github.com/BurntSushi/xgbutil/icccm"
 )
 
 // transient determines whether 'test' is a transient window of 'c'.

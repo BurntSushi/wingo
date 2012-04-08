@@ -1,10 +1,10 @@
 package main
 
 import (
-    "burntsushi.net/go/xgbutil"
-    "burntsushi.net/go/xgbutil/xevent"
-    "burntsushi.net/go/xgbutil/xinerama"
-    "burntsushi.net/go/xgbutil/xrect"
+    "github.com/BurntSushi/xgbutil"
+    "github.com/BurntSushi/xgbutil/xevent"
+    "github.com/BurntSushi/xgbutil/xinerama"
+    "github.com/BurntSushi/xgbutil/xrect"
 )
 
 func rootGeometryChange(X *xgbutil.XUtil, ev xevent.ConfigureNotifyEvent) {

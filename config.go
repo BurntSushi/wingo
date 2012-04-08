@@ -4,11 +4,11 @@ import (
     "strings"
 )
 
-import "burntsushi.net/go/wingo/wini"
+import "github.com/BurntSushi/wingo/wini"
 
 import (
-    "burntsushi.net/go/xgbutil/ewmh"
-    "burntsushi.net/go/xgbutil/keybind"
+    "github.com/BurntSushi/xgbutil/ewmh"
+    "github.com/BurntSushi/xgbutil/keybind"
 )
 
 type conf struct {

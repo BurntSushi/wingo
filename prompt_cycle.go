@@ -1,12 +1,12 @@
 package main
 
-import "burntsushi.net/go/x-go-binding/xgb"
+import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 import (
-    "burntsushi.net/go/xgbutil"
-    "burntsushi.net/go/xgbutil/keybind"
-    "burntsushi.net/go/xgbutil/xevent"
-    "burntsushi.net/go/xgbutil/xgraphics"
+    "github.com/BurntSushi/xgbutil"
+    "github.com/BurntSushi/xgbutil/keybind"
+    "github.com/BurntSushi/xgbutil/xevent"
+    "github.com/BurntSushi/xgbutil/xgraphics"
 )
 
 type promptCycle struct {

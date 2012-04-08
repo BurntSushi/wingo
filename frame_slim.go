@@ -1,6 +1,6 @@
 package main
 
-import "burntsushi.net/go/x-go-binding/xgb"
+import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 type frameSlim struct {
     *abstFrame

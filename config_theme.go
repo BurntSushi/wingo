@@ -12,13 +12,13 @@ import (
     "code.google.com/p/freetype-go/freetype/truetype"
 )
 
-// import "burntsushi.net/go/x-go-binding/xgb" 
+// import "code.google.com/p/jamslam-x-go-binding/xgb" 
 
-import "burntsushi.net/go/xgbutil/xgraphics"
+import "github.com/BurntSushi/xgbutil/xgraphics"
 
 import (
-    "burntsushi.net/go/wingo/bindata"
-    "burntsushi.net/go/wingo/wini"
+    "github.com/BurntSushi/wingo/bindata"
+    "github.com/BurntSushi/wingo/wini"
 )
 
 type theme struct {

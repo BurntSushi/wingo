@@ -3,7 +3,7 @@ package main
 import "code.google.com/p/freetype-go/freetype/truetype"
 
 import (
-    "burntsushi.net/go/xgbutil/xgraphics"
+    "github.com/BurntSushi/xgbutil/xgraphics"
 )
 
 // The extents appear to cut off some of the text.

@@ -4,15 +4,15 @@ import (
     "fmt"
 )
 
-import "burntsushi.net/go/x-go-binding/xgb"
+import "code.google.com/p/jamslam-x-go-binding/xgb"
 
 import (
-    "burntsushi.net/go/xgbutil/ewmh"
-    "burntsushi.net/go/xgbutil/icccm"
-    "burntsushi.net/go/xgbutil/xevent"
-    "burntsushi.net/go/xgbutil/xprop"
-    "burntsushi.net/go/xgbutil/xrect"
-    "burntsushi.net/go/xgbutil/xwindow"
+    "github.com/BurntSushi/xgbutil/ewmh"
+    "github.com/BurntSushi/xgbutil/icccm"
+    "github.com/BurntSushi/xgbutil/xevent"
+    "github.com/BurntSushi/xgbutil/xprop"
+    "github.com/BurntSushi/xgbutil/xrect"
+    "github.com/BurntSushi/xgbutil/xwindow"
 )
 
 

@@ -3,9 +3,9 @@
 */
 package main
 
-import "burntsushi.net/go/x-go-binding/xgb"
+import "code.google.com/p/jamslam-x-go-binding/xgb"
 
-import "burntsushi.net/go/xgbutil/xcursor"
+import "github.com/BurntSushi/xgbutil/xcursor"
 
 var (
     cursorLeftPtr xgb.Id
