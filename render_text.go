@@ -36,7 +36,6 @@ func renderTextInputCreate(parent *window, bgColor int,
 
 	img := renderSolid(bgColor, width, height+renderTextBreathe)
 	win := createImageWindow(parent.id, img, 0)
-	win.moveresize(DoW|DoH, 0, 0, width, height+renderTextBreathe)
 
 	return &textInput{
 		win:       win,
