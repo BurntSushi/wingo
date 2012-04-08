@@ -44,7 +44,6 @@ func newPromptSelect() *promptSelect {
 			mods, kc := keybind.DeduceKeyInfo(ev.State, ev.Detail)
 
 			s := keybind.LookupString(X, mods, kc)
-			logDebug.Println(string(s))
 			ps.input.add(s)
 
 			switch kc {
