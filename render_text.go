@@ -25,6 +25,12 @@ type textInput struct {
 	fontColor int
 }
 
+// renderTextInputCreate does the plumbing for setting up an input window.
+// That is, a box in which one can write text.
+// Support is rudimentary at best. Basic characters work, and it supports
+// backspace to delete characters. There is no support for navigating text
+// with the arrow keys or the "delete" key. I don't plan on adding it either.
+// I have no idea how well this works with other languages.
 func renderTextInputCreate(parent *window, bgColor int,
 	font *truetype.Font, fontSize float64, fontColor int,
 	width int) *textInput {
@@ -54,10 +60,7 @@ func (ti *textInput) reset() {
 	ti.render()
 }
 
-// Needs to be able to filter the stuff in "text"
-// i.e., a-zA-Z0-9_- special chars, etc.
-// Essentially, even though text is a string, we're only going to take the
-// first character of that string iff len(text) == 1. Otherwise, we ignore it.
+// add adds a single rune character to the input box.
 func (ti *textInput) add(char rune) {
 	if char == 0 {
 		return
@@ -66,6 +69,7 @@ func (ti *textInput) add(char rune) {
 	ti.render()
 }
 
+// remove removes the last character added to the input box.
 func (ti *textInput) remove() {
 	if len(ti.text) == 0 {
 		return
@@ -74,6 +78,7 @@ func (ti *textInput) remove() {
 	ti.render()
 }
 
+// render makes sure that the 'text' state is a reality.
 func (ti *textInput) render() {
 	draw.Draw(ti.img, ti.img.Bounds(),
 		image.NewUniform(colorFromInt(ti.bgColor)), image.ZP, draw.Src)
