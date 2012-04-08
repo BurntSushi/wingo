@@ -9,7 +9,7 @@ import (
 )
 
 import (
-    . "github.com/str1ngs/go-ansi/color"
+    . "github.com/str1ngs/ansi/color"
 )
 
 type WingoLogger struct {
