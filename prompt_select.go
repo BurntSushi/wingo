@@ -37,6 +37,8 @@ import (
 const (
 	textPadding  = 4  // spacing between input box borders and input text
 	labelSpacing = 20 // spacing before each label heading
+	labelVisible = "Visible"
+	labelHidden  = "Hidden"
 )
 
 // promptSelectListFun is the type of function required to produce a list
@@ -96,6 +98,8 @@ type promptSelect struct {
 	itemsShowing []*promptSelectItem
 	top          *window
 	input        *textInput
+	labVisible   *window
+	labHidden    *window
 	bInp         *window
 	bTop, bBot   *window
 	bLft, bRht   *window
@@ -157,11 +161,14 @@ func newPromptSelect() *promptSelect {
 		bInp:         bInp,
 		top:          top,
 		input:        input,
+		labVisible:   nil,
+		labHidden:    nil,
 		bTop:         bTop,
 		bBot:         bBot,
 		bLft:         bLft,
 		bRht:         bRht,
 	}
+	ps.createWorkspaceLabels()
 
 	// I love my xgbutil library. It provides a nice key binding interface
 	// via the keybind package, but xevent still lets us handle raw key
@@ -402,22 +409,34 @@ func (ps *promptSelect) hide() {
 	}
 }
 
-// promptSelectListWorkspaces generates a single group of all workspaces.
-// We set the window of the group to nil so that it isn't shown.
-func promptSelectListWorkspaces() []*promptSelectGroup {
-	wrks := make([]*promptSelectItem, 0, len(WM.workspaces))
-	for _, wrk := range WM.workspaces {
-		switchTo := func(wrk *workspace) func() {
-			return func() {
-				WM.WrkSet(wrk.id, true, true)
-			}
-		}(wrk)
-		wrks = append(wrks,
-			newPromptSelectItem(wrk.name, switchTo,
+// promptSelectListWorkspaces generates two groups of all workspaces.
+// The first group contains all visible workspaces.
+// The second group contains the rest (hidden).
+func promptSelectListWorkspaces(
+	action func(*workspace) func()) []*promptSelectGroup {
+
+	vWrks := make([]*promptSelectItem, 0, len(WM.heads))
+	hWrks := make([]*promptSelectItem, 0, len(WM.workspaces)-len(WM.heads))
+
+	for head := range WM.heads {
+		wrk := WM.WrkHead(head)
+		vWrks = append(vWrks,
+			newPromptSelectItem(wrk.name, action(wrk),
 				wrk.promptStore["select_active"],
 				wrk.promptStore["select_inactive"]))
 	}
-	return []*promptSelectGroup{newPromptSelectGroup("", nil, wrks)}
+	for _, wrk := range WM.workspaces {
+		if !wrk.visible() {
+			hWrks = append(hWrks,
+				newPromptSelectItem(wrk.name, action(wrk),
+					wrk.promptStore["select_active"],
+					wrk.promptStore["select_inactive"]))
+		}
+	}
+	return []*promptSelectGroup{
+		newPromptSelectGroup(labelVisible, PROMPTS.slct.labVisible, vWrks),
+		newPromptSelectGroup(labelHidden, PROMPTS.slct.labHidden, hWrks),
+	}
 }
 
 // promptSelectAdd adds a workspace to the current prompt and sets up name
@@ -515,6 +534,41 @@ func (wrk *workspace) promptSelectUpdateName() {
 	wrk.promptStore["select_label"].configure(
 		DoSibling|DoStack, 0, 0, 0, 0,
 		PROMPTS.slct.bRht.id, xgb.StackModeBelow)
+}
+
+// createWorkspaceLabels creates the "Visible" and "Hidden" labels used
+// in the workspace list prompt.
+func (ps *promptSelect) createWorkspaceLabels() {
+	vimg, vew, veh, err := renderTextSolid(
+		THEME.prompt.bgColor, THEME.prompt.font,
+		THEME.prompt.selectLabelFontSize, THEME.prompt.selectLabelColor,
+		labelVisible)
+	if err != nil {
+		return
+	}
+
+	himg, hew, heh, err := renderTextSolid(
+		THEME.prompt.bgColor, THEME.prompt.font,
+		THEME.prompt.selectLabelFontSize, THEME.prompt.selectLabelColor,
+		labelHidden)
+	if err != nil {
+		return
+	}
+
+	ps.labVisible = createImageWindow(ps.Id(), vimg, 0)
+	ps.labHidden = createImageWindow(ps.Id(), himg, 0)
+
+	// fit the text!
+	ps.labVisible.moveresize(DoW|DoH, 0, 0, vew, veh)
+	ps.labHidden.moveresize(DoW|DoH, 0, 0, hew, heh)
+
+	// Don't let text overlap borders.
+	ps.labVisible.configure(
+		DoSibling|DoStack, 0, 0, 0, 0,
+		ps.bRht.id, xgb.StackModeBelow)
+	ps.labHidden.configure(
+		DoSibling|DoStack, 0, 0, 0, 0,
+		ps.bRht.id, xgb.StackModeBelow)
 }
 
 // promptSelectListClients generates a list of clients grouped by workspace.

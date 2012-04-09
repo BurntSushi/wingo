@@ -8,14 +8,20 @@ Mod1-w := HeadFocus 0
 Mod1-e := HeadFocus 1
 Mod1-r := HeadFocus 2
 
+Mod1-Shift-w := HeadFocusWithClient 0
+Mod1-Shift-e := HeadFocusWithClient 1
+Mod1-Shift-r := HeadFocusWithClient 2
+
 Mod4-left := WorkspaceLeft
 Mod4-right := WorkspaceRight
 Mod4-Shift-left := WorkspaceLeftWithClient
 Mod4-Shift-right := WorkspaceRightWithClient
 
 Control-Mod1-a := WorkspacePrefix a
+Control-Mod1-Shift-a := WorkspacePrefixWithClient a
 
 Mod4-1 := Workspace A1
+Mod4-Shift-1 := WorkspaceWithClient A1
 Mod4-2 := Workspace A2
 Mod4-3 := Workspace A3
 Mod4-4 := Workspace A4
@@ -32,4 +38,5 @@ Mod1-Shift-Tab := PromptCyclePrev ClientsWorkspace
 
 Mod4-space := PromptSelect ClientsAll Substring
 Mod4-return := PromptSelect Workspaces Prefix
+Mod4-Shift-return := PromptSelect WorkspacesWithClient Substring
 

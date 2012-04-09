@@ -106,7 +106,9 @@ func (kcmd keyCommand) commandFun() func() {
 	case "FrameSlim":
 		return cmdFrameSlim()
 	case "HeadFocus":
-		return cmdHeadFocus(kcmd.args...)
+		return cmdHeadFocus(false, kcmd.args...)
+	case "HeadFocusWithClient":
+		return cmdHeadFocus(true, kcmd.args...)
 	case "MaximizeToggle":
 		return cmdMaximizeToggle()
 	case "PromptCycleNext":
@@ -118,9 +120,13 @@ func (kcmd keyCommand) commandFun() func() {
 	case "Quit":
 		return cmdQuit()
 	case "Workspace":
-		return cmdWorkspace(kcmd.args...)
+		return cmdWorkspace(false, kcmd.args...)
 	case "WorkspacePrefix":
-		return cmdWorkspacePrefix(kcmd.args...)
+		return cmdWorkspacePrefix(false, kcmd.args...)
+	case "WorkspaceWithClient":
+		return cmdWorkspace(true, kcmd.args...)
+	case "WorkspacePrefixWithClient":
+		return cmdWorkspacePrefix(true, kcmd.args...)
 	case "WorkspaceLeft":
 		return cmdWorkspaceLeft()
 	case "WorkspaceLeftWithClient":
@@ -187,7 +193,7 @@ func cmdFrameSlim() func() {
 	}
 }
 
-func cmdHeadFocus(args ...string) func() {
+func cmdHeadFocus(withClient bool, args ...string) func() {
 	if len(args) < 1 {
 		logWarning.Printf("Improper use of HeadFocus command.")
 		logWarning.Printf("Usage: HeadFocus head_number [Greedy]")
@@ -220,6 +226,13 @@ func cmdHeadFocus(args ...string) func() {
 		greedy := false
 		if len(args) > 1 && args[1] == "greedy" {
 			greedy = true
+		}
+
+		if withClient {
+			withFocused(func(c *client) {
+				c.Raise()
+				wrk.Add(c, false)
+			})
 		}
 		WM.WrkSet(wrk.id, true, greedy)
 	}
@@ -304,7 +317,27 @@ func cmdPromptSelect(args ...string) func() {
 			return promptSelectListClients(false, true, true)
 		}
 	case "workspaces":
-		f = promptSelectListWorkspaces
+		f = func() []*promptSelectGroup {
+			action := func(wrk *workspace) func() {
+				return func() {
+					WM.WrkSet(wrk.id, true, true)
+				}
+			}
+			return promptSelectListWorkspaces(action)
+		}
+	case "workspaceswithclient":
+		f = func() []*promptSelectGroup {
+			action := func(wrk *workspace) func() {
+				return func() {
+					withFocused(func(c *client) {
+						c.Raise()
+						wrk.Add(c, false)
+						WM.WrkSet(wrk.id, true, true)
+					})
+				}
+			}
+			return promptSelectListWorkspaces(action)
+		}
 	default:
 		logWarning.Printf("Unrecognized argument '%s' for PromptSelect "+
 			"command", args[0])
@@ -324,7 +357,7 @@ func cmdQuit() func() {
 	}
 }
 
-func cmdWorkspace(args ...string) func() {
+func cmdWorkspace(withClient bool, args ...string) func() {
 	if len(args) < 1 {
 		logWarning.Printf("Improper use of Workspace command.")
 		logWarning.Printf("Usage: Workspace name [Greedy]")
@@ -343,6 +376,13 @@ func cmdWorkspace(args ...string) func() {
 		if len(args) > 1 && args[1] == "greedy" {
 			greedy = true
 		}
+
+		if withClient {
+			withFocused(func(c *client) {
+				c.Raise()
+				wrk.Add(c, false)
+			})
+		}
 		WM.WrkSet(wrk.id, true, greedy)
 	}
 }
@@ -360,7 +400,7 @@ func cmdWorkspace(args ...string) func() {
 // We don't choose visible workspaces, because the idea is that those can
 // be switched to more explicitly with the 'Workspace' command or with one
 // of the 'HeadFocus' commands.
-func cmdWorkspacePrefix(args ...string) func() {
+func cmdWorkspacePrefix(withClient bool, args ...string) func() {
 	if len(args) < 1 {
 		logWarning.Printf("Improper use of WorkspacePrefix command.")
 		logWarning.Printf("Usage: WorkspacePrefix prefix [Greedy]")
@@ -412,6 +452,13 @@ func cmdWorkspacePrefix(args ...string) func() {
 		greedy := false
 		if len(args) > 1 && args[1] == "greedy" {
 			greedy = true
+		}
+
+		if withClient {
+			withFocused(func(c *client) {
+				c.Raise()
+				wrk.Add(c, false)
+			})
 		}
 		WM.WrkSet(wrk.id, true, greedy)
 	}
