@@ -170,12 +170,7 @@ func loadKeyConfigSection(cdata *wini.Data, section string) {
 			}
 
 			// 'cmd' might have space separated parameters
-			cmdPieces := strings.Split(cmd, " ")
-			cmdName := cmdPieces[0]
-			args := make([]string, len(cmdPieces)-1)
-			for i, arg := range cmdPieces[1:] {
-				args[i] = strings.ToLower(strings.TrimSpace(arg))
-			}
+			cmdName, args := commandParse(cmd)
 
 			kcmd := keyCommand{
 				cmd:    cmdName,

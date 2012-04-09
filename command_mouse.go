@@ -123,7 +123,8 @@ func rootMouseConfig() {
 	for _, mcmd := range CONF.mouse["root"] {
 		run := getRootMouseCommand(mcmd.cmd)
 		if run == nil {
-			logger.Warning.Printf("Undefined root mouse command: '%s'", mcmd.cmd)
+			logger.Warning.Printf(
+				"Undefined root mouse command: '%s'", mcmd.cmd)
 			continue
 		}
 		mcmd.attach(ROOT.id, run, false, false)

@@ -108,6 +108,11 @@ func main() {
 	// Oblige configure requests from windows we don't manage.
 	xevent.ConfigureRequestFun(configureRequest).Connect(X, ROOT.id)
 
+	// Listen to Root client message events.
+	// We satisfy EWMH with these AND it also provides a mechanism
+	// to issue commands using wingo-cmd.
+	xevent.ClientMessageFun(commandHandler).Connect(X, ROOT.id)
+
 	xevent.Main(X)
 
 	// println("Writing memory profile...") 

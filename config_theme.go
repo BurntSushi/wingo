@@ -419,8 +419,8 @@ func setImage(k wini.Key, place *draw.Image) {
 	if v, ok := getLastString(k); ok {
 		img, err := xgraphics.LoadPngFromFile(v)
 		if err != nil {
-			logger.Warning.Printf("Could not load '%s' as a png image because: %v",
-				v, err)
+			logger.Warning.Printf(
+				"Could not load '%s' as a png image because: %v", v, err)
 			return
 		}
 		*place = img
@@ -441,15 +441,15 @@ func setFont(k wini.Key, place **truetype.Font) {
 	if v, ok := getLastString(k); ok {
 		bs, err := ioutil.ReadFile(v)
 		if err != nil {
-			logger.Warning.Printf("Could not get font data from '%s' because: %v",
-				v, err)
+			logger.Warning.Printf(
+				"Could not get font data from '%s' because: %v", v, err)
 			return
 		}
 
 		font, err := freetype.ParseFont(bs)
 		if err != nil {
-			logger.Warning.Printf("Could not parse font data from '%s' because: %v",
-				v, err)
+			logger.Warning.Printf(
+				"Could not parse font data from '%s' because: %v", v, err)
 			return
 		}
 

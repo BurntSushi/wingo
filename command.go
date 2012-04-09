@@ -8,8 +8,12 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/BurntSushi/xgbutil"
+	"github.com/BurntSushi/xgbutil/xevent"
+	"github.com/BurntSushi/xgbutil/xprop"
+
 	"github.com/BurntSushi/wingo/logger"
-	cmdUsage "github.com/BurntSushi/wingo/wingo-cmd"
+	command "github.com/BurntSushi/wingo/wingo-cmd"
 )
 
 func commandFun(keyStr string, cmd string, args ...string) func() {
@@ -19,7 +23,7 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 	}
 
 	usage := func(a func()) func() {
-		return cmdUsage.MaybeUsage(cmd, a)
+		return command.MaybeUsage(cmd, a)
 	}
 
 	switch cmd {
@@ -42,8 +46,14 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 	case "Minimize":
 		return usage(cmdMinimize())
 	case "PromptCycleNext":
+		if len(keyStr) == 0 {
+			return nil
+		}
 		return usage(cmdPromptCycleNext(keyStr, args...))
 	case "PromptCyclePrev":
+		if len(keyStr) == 0 {
+			return nil
+		}
 		return usage(cmdPromptCyclePrev(keyStr, args...))
 	case "PromptSelect":
 		return usage(cmdPromptSelect(args...))
@@ -74,6 +84,51 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 	}
 
 	return nil
+}
+
+// commandHandler responds to client message events that issue commands.
+func commandHandler(X *xgbutil.XUtil, cm xevent.ClientMessageEvent) {
+	typeName, err := xprop.AtomName(X, cm.Type)
+	if err != nil {
+		logger.Warning.Printf(
+			"Could not get type of ClientMessage event: %s", cm)
+		return
+	}
+
+	logger.Debug.Println(typeName)
+	if typeName == "_WINGO_CMD" {
+		cmd, err := command.Get(X)
+		if err != nil {
+			logger.Warning.Printf("Could not get _WINGO_CMD value: %s", err)
+			return
+		}
+
+		// Blank out the command
+		command.Set(X, "")
+
+		// Parse the command
+		cmdName, args := commandParse(cmd)
+		cmdFun := commandFun("", cmdName, args...)
+		if cmdFun != nil {
+			cmdFun()
+			command.StatusSet(X, true)
+		} else {
+			command.StatusSet(X, false)
+		}
+	}
+}
+
+// commandParse takes a single string and parses it into a
+// (CommandName, [Arg1, Arg2, ...]) tuple.
+func commandParse(command string) (cmd string, args []string) {
+	pieces := strings.Split(command, " ")
+	cmd = pieces[0]
+	args = make([]string, len(pieces)-1)
+
+	for i, arg := range pieces[1:] {
+		args[i] = strings.ToLower(strings.TrimSpace(arg))
+	}
+	return
 }
 
 // Shortcut for executing Client interface functions that have no parameters
@@ -377,9 +432,9 @@ func cmdWorkspacePrefix(withClient bool, args ...string) func() {
 		}
 
 		if wrk == nil {
-			logger.Warning.Printf("The 'WorkspacePrefix' command could not find "+
-				"a non-visible workspace with prefix '%s'.",
-				args[0])
+			logger.Warning.Printf(
+				"The 'WorkspacePrefix' command could not find "+
+					"a non-visible workspace with prefix '%s'.", args[0])
 			return
 		}
 

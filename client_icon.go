@@ -62,15 +62,16 @@ func (c *client) iconTryEwmh(width, height int) (
 
 	icons, err := ewmh.WmIconGet(X, c.Id())
 	if err != nil {
-		logger.Warning.Printf("Could not get EWMH icon for window %s because: %v",
-			c, err)
+		logger.Warning.Printf(
+			"Could not get EWMH icon for window %s because: %v", c, err)
 		return nil, nil, false, false
 	}
 
 	icon := xgraphics.FindBestIcon(width, height, icons)
 	if icon == nil {
-		logger.Warning.Printf("Could not find any decent icon for size (%d, %d) "+
-			" on window %s.", width, height, c)
+		logger.Warning.Printf(
+			"Could not find any decent icon for size (%d, %d) "+
+				" on window %s.", width, height, c)
 		return nil, nil, false, false
 	}
 

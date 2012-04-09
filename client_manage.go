@@ -138,7 +138,8 @@ func (c *client) initPopulate() error {
 
 	c.protocols, err = icccm.WmProtocolsGet(X, c.Id())
 	if err != nil {
-		logger.Warning.Printf("Window %X does not have WM_PROTOCOLS set.", c.Id())
+		logger.Warning.Printf(
+			"Window %X does not have WM_PROTOCOLS set.", c.Id())
 		c.protocols = []string{}
 	}
 
