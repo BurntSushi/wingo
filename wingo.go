@@ -71,6 +71,9 @@ func main() {
 		return
 	}
 
+	// Initialize prompts
+	promptsInitialize()
+
 	// Create WM state
 	WM = newState()
 	WM.headsLoad()
@@ -86,9 +89,6 @@ func main() {
 
 	// Setup some cursors we use
 	setupCursors()
-
-	// Initialize prompts
-	promptsInitialize()
 
 	// Listen to Root. It is all-important.
 	ROOT.listen(xgb.EventMaskPropertyChange |

@@ -92,8 +92,8 @@ func newPromptCycle() *promptCycle {
 	return pc
 }
 
-func (pc *promptCycle) next(keyStr string) {
-	if !pc.showing && !pc.show(keyStr) {
+func (pc *promptCycle) next(keyStr string, activeWrk, visible, iconified bool) {
+	if !pc.showing && !pc.show(keyStr, activeWrk, visible, iconified) {
 		return
 	}
 
@@ -113,8 +113,8 @@ func (pc *promptCycle) next(keyStr string) {
 	pc.highlight()
 }
 
-func (pc *promptCycle) prev(keyStr string) {
-	if !pc.showing && !pc.show(keyStr) {
+func (pc *promptCycle) prev(keyStr string, activeWrk, visible, iconified bool) {
+	if !pc.showing && !pc.show(keyStr, activeWrk, visible, iconified) {
 		return
 	}
 
@@ -162,7 +162,9 @@ func (pc *promptCycle) choose() {
 	pc.hide()
 }
 
-func (pc *promptCycle) show(keyStr string) bool {
+func (pc *promptCycle) show(keyStr string, activeWrk, visible,
+	iconified bool) bool {
+
 	// Note that DummyGrab is smart and avoids races. Check it out
 	// in xgbutil/keybind.go if you're interested.
 	// This makes it impossible to press and release alt-tab too quickly
@@ -213,6 +215,17 @@ func (pc *promptCycle) show(keyStr string) bool {
 	var c *client
 	for i := len(WM.focus) - 1; i >= 0; i-- {
 		c = WM.focus[i]
+		wrk := WM.workspaces[c.workspace]
+		if activeWrk && !wrk.active {
+			continue
+		}
+		if visible && !wrk.visible() {
+			continue
+		}
+		if !iconified && c.iconified {
+			continue
+		}
+
 		winPar, parok := c.promptStore["cycle_border"]
 		winAct, actok := c.promptStore["cycle_act"]
 		winInact, inactok := c.promptStore["cycle_inact"]
@@ -229,7 +242,7 @@ func (pc *promptCycle) show(keyStr string) bool {
 
 		// Move on to the next row?
 		if x+(is+(2*cbs))+padding+bs > maxWidth {
-			x = bs + padding + cbs
+			x = bs + padding
 			y += is + (2 * cbs)
 			height += is + (2 * cbs)
 			widthStatic = true
@@ -238,6 +251,7 @@ func (pc *promptCycle) show(keyStr string) bool {
 		// Position the icon window and map its active version or its
 		// inactive version if it's iconified.
 		winPar.moveresize(DoX|DoY, x, y, 0, 0)
+		winPar.map_()
 		if c.iconified {
 			winInact.map_()
 			winAct.unmap()
@@ -267,8 +281,8 @@ func (pc *promptCycle) show(keyStr string) bool {
 	}
 
 	// position the damn window based on its width/height (i.e., center it)
-	posx := headGeom.Width()/2 - width/2
-	posy := headGeom.Height()/2 - height/2
+	posx := headGeom.X() + headGeom.Width()/2 - width/2
+	posy := headGeom.Y() + headGeom.Height()/2 - height/2
 
 	// Issue the configure requests. We also need to adjust the borders.
 	pc.top.moveresize(DoX|DoY|DoW|DoH, posx, posy, width, height)
@@ -289,6 +303,23 @@ func (pc *promptCycle) hide() {
 	pc.top.unmap()
 	keybind.DummyUngrab(X)
 	pc.showing = false
+
+	for i := len(WM.focus) - 1; i >= 0; i-- {
+		c := WM.focus[i]
+
+		winPar, parok := c.promptStore["cycle_border"]
+		winAct, actok := c.promptStore["cycle_act"]
+		winInact, inactok := c.promptStore["cycle_inact"]
+		winTit, titok := c.promptStore["cycle_title"]
+		if !parok || !actok || !inactok || !titok {
+			continue
+		}
+
+		winPar.unmap()
+		winAct.unmap()
+		winInact.unmap()
+		winTit.unmap()
+	}
 }
 
 // promptCycleAdd adds the client to the prompt cycle dialog.
@@ -304,7 +335,6 @@ func (c *client) promptCycleAdd() {
 		DoW|DoH, 0, 0,
 		THEME.prompt.cycleIconSize+2*THEME.prompt.cycleIconBorderSize,
 		THEME.prompt.cycleIconSize+2*THEME.prompt.cycleIconBorderSize)
-	c.promptStore["cycle_border"].map_()
 
 	c.promptCycleUpdateIcon()
 	c.promptCycleUpdateName()

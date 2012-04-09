@@ -8,28 +8,27 @@ import "github.com/BurntSushi/wingo/wini"
 
 import (
 	"github.com/BurntSushi/xgbutil/ewmh"
-	"github.com/BurntSushi/xgbutil/keybind"
 )
 
 type conf struct {
 	mouse                 map[string][]mouseCommand
 	key                   map[string][]keyCommand
 	workspaces            []string
-	confirmKey, cancelKey byte
-	backspaceKey          byte
+	confirmKey, cancelKey string
+	backspaceKey          string
+	tabKey, revTabKey     string
 }
 
 func defaultConfig() *conf {
-	_, confirmKey := keybind.ParseString(X, "Return")
-	_, cancelKey := keybind.ParseString(X, "Escape")
-	_, backspaceKey := keybind.ParseString(X, "BackSpace")
 	return &conf{
 		mouse:        map[string][]mouseCommand{},
 		key:          map[string][]keyCommand{},
 		workspaces:   []string{"1", "2", "3", "4"},
-		confirmKey:   confirmKey,
-		cancelKey:    cancelKey,
-		backspaceKey: backspaceKey,
+		confirmKey:   "Return",
+		cancelKey:    "Escape",
+		backspaceKey: "BackSpace",
+		tabKey:       "Tab",
+		revTabKey:    "ISO_Left_Tab",
 	}
 }
 
@@ -199,9 +198,9 @@ func loadOptionsConfigSection(cdata *wini.Data, section string) {
 				CONF.workspaces = strings.Split(workspaces, " ")
 			}
 		case "cancel":
-			setKeycode(key, &CONF.cancelKey)
+			setString(key, &CONF.cancelKey)
 		case "confirm":
-			setKeycode(key, &CONF.confirmKey)
+			setString(key, &CONF.confirmKey)
 		}
 	}
 }
@@ -255,13 +254,6 @@ func getLastString(k wini.Key) (string, bool) {
 	}
 
 	return vals[len(vals)-1], true
-}
-
-func setKeycode(k wini.Key, place *byte) {
-	if v, ok := getLastString(k); ok {
-		_, kc := keybind.ParseString(X, v)
-		*place = kc
-	}
 }
 
 func setInt(k wini.Key, place *int) {

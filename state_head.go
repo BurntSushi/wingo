@@ -111,7 +111,7 @@ func (wm *state) fillWorkspaces(heads xinerama.Heads) {
 		"think you're configuration is correct.")
 
 	for i := len(wm.workspaces); i < len(heads); i++ {
-		wm.workspaces = append(wm.workspaces, newDefaultWorkspace(i))
+		wm.workspaces = append(wm.workspaces, newWorkspace(i))
 	}
 }
 

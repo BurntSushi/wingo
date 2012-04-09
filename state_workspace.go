@@ -8,15 +8,25 @@ import (
 type workspaces []*workspace
 
 type workspace struct {
-	id     int    // unique across workspaces; must also index into workspaces!
-	name   string // note that this does not have to be unique
-	head   int    // the most recent physical head this workspace was on
-	active bool
+	id          int    // unique across workspaces; must index into workspaces!
+	name        string // note that this does not have to be unique
+	head        int    // the most recent physical head this workspace was on
+	active      bool
+	promptStore map[string]*window
 }
 
-func newDefaultWorkspace(id int) *workspace {
-	return &workspace{id, fmt.Sprintf("Default workspace %d", id+1),
-		-1, false}
+func newWorkspace(id int) *workspace {
+	wrk := &workspace{
+		id:          id,
+		name:        fmt.Sprintf("Default workspace %d", id+1),
+		head:        -1,
+		active:      false,
+		promptStore: make(map[string]*window),
+	}
+
+	wrk.promptAdd()
+
+	return wrk
 }
 
 func (wm *state) WrkActive() *workspace {
@@ -40,6 +50,19 @@ func (wm *state) WrkActiveInd() int {
 	logError.Printf("Could not find an active workspace index in: %v",
 		wm.workspaces)
 	panic("Wingo *must* have an active workspace at all times. This is a bug!")
+}
+
+func (wm *state) WrkHead(head int) *workspace {
+	for _, wrk := range wm.workspaces {
+		if wrk.head == head {
+			return wrk
+		}
+	}
+
+	logError.Printf("Could not find a workspace on head %d in: %v",
+		head, wm.workspaces)
+	panic("Wingo *must* have a workspace on each monitor at all times. " +
+		"This is a bug!")
 }
 
 func (wm *state) WrkFind(name string) *workspace {
@@ -124,6 +147,11 @@ func (wrk *workspace) add(c *client, checkVisible bool) {
 
 func (wrk *workspace) visible() bool {
 	return wrk.head > -1
+}
+
+func (wrk *workspace) nameSet(name string) {
+	wrk.name = name
+	wrk.promptUpdateName()
 }
 
 func (wrk *workspace) headSet(headNum int) {

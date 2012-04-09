@@ -23,7 +23,8 @@ type state struct {
 func newState() *state {
 	wrks := make(workspaces, len(CONF.workspaces))
 	for i, wrkName := range CONF.workspaces {
-		wrks[i] = &workspace{i, wrkName, -1, false}
+		wrks[i] = newWorkspace(i)
+		wrks[i].nameSet(wrkName)
 	}
 
 	return &state{

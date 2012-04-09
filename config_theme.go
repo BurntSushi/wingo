@@ -74,6 +74,11 @@ type themePrompt struct {
 	cycleIconSize         int
 	cycleIconBorderSize   int
 	cycleIconTransparency int
+
+	selectActiveColor   int
+	selectActiveBgColor int
+	selectLabelColor    int
+	selectLabelFontSize float64
 }
 
 func defaultTheme() *theme {
@@ -131,6 +136,10 @@ func defaultTheme() *theme {
 			cycleIconSize:         32,
 			cycleIconBorderSize:   3,
 			cycleIconTransparency: 50,
+			selectActiveColor:     0x000000,
+			selectActiveBgColor:   0xffffff,
+			selectLabelColor:      0xffffff,
+			selectLabelFontSize:   25,
 		},
 	}
 }
@@ -320,6 +329,14 @@ func loadPromptOption(k wini.Key) {
 				"inclusive. Using 100 by default.")
 			THEME.prompt.cycleIconTransparency = 100
 		}
+	case "select_active_color":
+		setInt(k, &THEME.prompt.selectActiveColor)
+	case "select_active_bg_color":
+		setInt(k, &THEME.prompt.selectActiveBgColor)
+	case "select_label_color":
+		setInt(k, &THEME.prompt.selectLabelColor)
+	case "select_label_font_size":
+		setFloat(k, &THEME.prompt.selectLabelFontSize)
 	}
 }
 

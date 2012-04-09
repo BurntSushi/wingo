@@ -234,20 +234,86 @@ func cmdMaximizeToggle() func() {
 }
 
 func cmdPromptCycleNext(keyStr string, args ...string) func() {
+	activeWrk, visible, iconified := false, false, true
+	if len(args) > 0 {
+		switch args[0] {
+		case "clientsworkspace":
+			activeWrk = true
+		case "clientsmonitors":
+			visible = true
+		default:
+			logWarning.Printf("Unrecognized argument '%s' for PromptCycleNext "+
+				"command", args[0])
+			logWarning.Print("Usage: PromptCycleNext ClientListName")
+			return nil
+		}
+	}
 	return func() {
-		PROMPTS.cycle.next(keyStr)
+		PROMPTS.cycle.next(keyStr, activeWrk, visible, iconified)
 	}
 }
 
 func cmdPromptCyclePrev(keyStr string, args ...string) func() {
+	activeWrk, visible, iconified := false, false, true
+	if len(args) > 0 {
+		switch args[0] {
+		case "clientsworkspace":
+			activeWrk = true
+		case "clientsmonitors":
+			visible = true
+		default:
+			logWarning.Printf("Unrecognized argument '%s' for PromptCyclePrev "+
+				"command", args[0])
+			logWarning.Print("Usage: PromptCyclePrev ClientListName")
+			return nil
+		}
+	}
+
 	return func() {
-		PROMPTS.cycle.prev(keyStr)
+		PROMPTS.cycle.prev(keyStr, activeWrk, visible, iconified)
 	}
 }
 
 func cmdPromptSelect(args ...string) func() {
+	usage := "Usage: PromptSelect ListName [Substring | Prefix]"
+
+	if len(args) < 1 {
+		logWarning.Printf("Improper use of PromptSelect command.")
+		logWarning.Print(usage)
+		return nil
+	}
+
+	prefixSearch := true
+	if len(args) > 1 && args[1] == "substring" {
+		prefixSearch = false
+	}
+
+	var f func() []*promptSelectGroup
+
+	switch args[0] {
+	case "clientsall":
+		f = func() []*promptSelectGroup {
+			return promptSelectListClients(false, false, true)
+		}
+	case "clientsworkspace":
+		f = func() []*promptSelectGroup {
+			return promptSelectListClients(true, false, true)
+		}
+	case "clientsmonitors":
+		f = func() []*promptSelectGroup {
+			return promptSelectListClients(false, true, true)
+		}
+	case "workspaces":
+		f = promptSelectListWorkspaces
+	default:
+		logWarning.Printf("Unrecognized argument '%s' for PromptSelect "+
+			"command", args[0])
+		logWarning.Print(usage)
+		return nil
+	}
+
 	return func() {
-		PROMPTS.slct.show()
+		PROMPTS.slct.show(f, prefixSearch)
 	}
 }
 

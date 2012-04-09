@@ -1,6 +1,12 @@
 // A collection of miscellaneous helper functions.
 package main
 
+import (
+	"strings"
+
+	"github.com/BurntSushi/xgbutil/keybind"
+)
+
 // strIndex returns the index of the first occurrence of needle in haystack.
 // Returns -1 if needle is not in haystack.
 func strIndex(needle string, haystack []string) int {
@@ -21,6 +27,13 @@ func cliIndex(needle *client, haystack []*client) int {
 		}
 	}
 	return -1
+}
+
+// keyMatch is a utility function for comparing two keysym strings for equality.
+// It automatically converts a (mods, byte) pair to a string.
+func keyMatch(target string, mods uint16, keycode byte) bool {
+	guess := keybind.LookupString(X, mods, keycode)
+	return strings.ToLower(guess) == strings.ToLower(target)
 }
 
 // Why isn't this in the Go standard library?
