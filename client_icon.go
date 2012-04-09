@@ -4,12 +4,12 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-)
 
-import (
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xgraphics"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 func (c *client) iconImage(width, height int) (draw.Image, draw.Image) {
@@ -62,14 +62,14 @@ func (c *client) iconTryEwmh(width, height int) (
 
 	icons, err := ewmh.WmIconGet(X, c.Id())
 	if err != nil {
-		logWarning.Printf("Could not get EWMH icon for window %s because: %v",
+		logger.Warning.Printf("Could not get EWMH icon for window %s because: %v",
 			c, err)
 		return nil, nil, false, false
 	}
 
 	icon := xgraphics.FindBestIcon(width, height, icons)
 	if icon == nil {
-		logWarning.Printf("Could not find any decent icon for size (%d, %d) "+
+		logger.Warning.Printf("Could not find any decent icon for size (%d, %d) "+
 			" on window %s.", width, height, c)
 		return nil, nil, false, false
 	}
@@ -86,14 +86,14 @@ func (c *client) iconTryIcccm() (*image.RGBA, *image.RGBA, bool, bool) {
 
 	img, err := xgraphics.PixmapToImage(X, c.hints.IconPixmap)
 	if err != nil {
-		logWarning.Printf("Could not get IconPixmap from window %s "+
+		logger.Warning.Printf("Could not get IconPixmap from window %s "+
 			"because: %v", err)
 		return nil, nil, false, false
 	}
 
 	mask, err := xgraphics.BitmapToImage(X, c.hints.IconMask)
 	if err != nil {
-		logWarning.Printf("Could not get IconMask from window %s "+
+		logger.Warning.Printf("Could not get IconMask from window %s "+
 			"because: %v", err)
 		return img, nil, true, false
 	}

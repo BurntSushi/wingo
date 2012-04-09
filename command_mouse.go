@@ -1,11 +1,25 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
+/*
+	I haven't thought of a way to reconcile Mouse commands with the rest
+	of the commands. It may be easier to leave them separate.
+
+	Basically, the problem is that a mouse command operates on a client whereas
+	key (or general) commands always operate on the current state of Wingo.
+	The former requires parameterization over a client whereas the latter
+	can simply rely on the current global state.
+
+	This makes them fundamentally different.
+*/
 
 import (
+	"code.google.com/p/jamslam-x-go-binding/xgb"
+
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/mousebind"
 	"github.com/BurntSushi/xgbutil/xevent"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 type mouseCommand struct {
@@ -109,7 +123,7 @@ func rootMouseConfig() {
 	for _, mcmd := range CONF.mouse["root"] {
 		run := getRootMouseCommand(mcmd.cmd)
 		if run == nil {
-			logWarning.Printf("Undefined root mouse command: '%s'", mcmd.cmd)
+			logger.Warning.Printf("Undefined root mouse command: '%s'", mcmd.cmd)
 			continue
 		}
 		mcmd.attach(ROOT.id, run, false, false)
@@ -174,7 +188,7 @@ func (mcmd mouseCommand) commandFun() func(c *client) {
 		}
 	}
 
-	logWarning.Printf("Undefined mouse command: '%s'", mcmd.cmd)
+	logger.Warning.Printf("Undefined mouse command: '%s'", mcmd.cmd)
 
 	return nil
 }

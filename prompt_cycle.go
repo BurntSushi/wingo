@@ -1,12 +1,14 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
-
 import (
+	"code.google.com/p/jamslam-x-go-binding/xgb"
+
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/keybind"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xgraphics"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 type promptCycle struct {
@@ -176,7 +178,8 @@ func (pc *promptCycle) show(keyStr string, activeWrk, visible,
 	// This makes it impossible to press and release alt-tab too quickly
 	// to have it not register.
 	if err := keybind.DummyGrab(X); err != nil {
-		logWarning.Println("Could not grab keyboard for prompt cycle: %v", err)
+		logger.Warning.Println("Could not grab keyboard for prompt cycle: %v",
+			err)
 		return false
 	}
 
@@ -376,10 +379,11 @@ func (c *client) promptCycleRemove() {
 func (c *client) promptCycleUpdateIcon() {
 	par, ok := c.promptStore["cycle_border"]
 	if !ok {
-		logWarning.Printf("BUG: The 'cycle_border' parent window hasn't been " +
-			"created yet, and we think it should have been. " +
-			"This client: '%s' will probably not show up in " +
-			"the cycle prompt.")
+		logger.Warning.Printf(
+			"BUG: The 'cycle_border' parent window hasn't been " +
+				"created yet, and we think it should have been. " +
+				"This client: '%s' will probably not show up in " +
+				"the cycle prompt.")
 		return
 	}
 

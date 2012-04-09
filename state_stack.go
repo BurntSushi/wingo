@@ -1,9 +1,11 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
-
 import (
+	"code.google.com/p/jamslam-x-go-binding/xgb"
+
 	"github.com/BurntSushi/xgbutil/ewmh"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 // The client stacking list is ordered for highest to lowest.
@@ -34,7 +36,7 @@ func (wm *state) updateEwmhStacking() {
 	}
 	err := ewmh.ClientListStackingSet(X, winList)
 	if err != nil {
-		logWarning.Printf("Could not update _NET_CLIENT_LIST_STACKING "+
+		logger.Warning.Printf("Could not update _NET_CLIENT_LIST_STACKING "+
 			"because %v", err)
 	}
 }

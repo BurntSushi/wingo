@@ -2,17 +2,17 @@ package main
 
 import (
 	"fmt"
-)
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
+	"code.google.com/p/jamslam-x-go-binding/xgb"
 
-import (
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xprop"
 	"github.com/BurntSushi/xgbutil/xrect"
 	"github.com/BurntSushi/xgbutil/xwindow"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 type client struct {
@@ -168,7 +168,7 @@ func (c *client) setWmState(state int) {
 		default:
 			stateStr = "Unknown"
 		}
-		logWarning.Printf("Could not set window state to %s on %s "+
+		logger.Warning.Printf("Could not set window state to %s on %s "+
 			"because: %v", stateStr, c, err)
 	}
 }
@@ -177,20 +177,20 @@ func (c *client) Close() {
 	if strIndex("WM_DELETE_WINDOW", c.protocols) > -1 {
 		wm_protocols, err := xprop.Atm(X, "WM_PROTOCOLS")
 		if err != nil {
-			logWarning.Println(err)
+			logger.Warning.Println(err)
 			return
 		}
 
 		wm_del_win, err := xprop.Atm(X, "WM_DELETE_WINDOW")
 		if err != nil {
-			logWarning.Println(err)
+			logger.Warning.Println(err)
 			return
 		}
 
 		cm, err := xevent.NewClientMessage(32, c.window.id, wm_protocols,
 			int(wm_del_win))
 		if err != nil {
-			logWarning.Println(err)
+			logger.Warning.Println(err)
 			return
 		}
 
@@ -252,13 +252,13 @@ func (c *client) Focus() {
 
 		wm_protocols, err := xprop.Atm(X, "WM_PROTOCOLS")
 		if err != nil {
-			logWarning.Println(err)
+			logger.Warning.Println(err)
 			return
 		}
 
 		wm_take_focus, err := xprop.Atm(X, "WM_TAKE_FOCUS")
 		if err != nil {
-			logWarning.Println(err)
+			logger.Warning.Println(err)
 			return
 		}
 
@@ -267,7 +267,7 @@ func (c *client) Focus() {
 			int(wm_take_focus),
 			int(X.GetTime()))
 		if err != nil {
-			logWarning.Println(err)
+			logger.Warning.Println(err)
 			return
 		}
 
@@ -359,16 +359,16 @@ func (c *client) Raise() {
 func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
 	name, err := xprop.AtomName(X, ev.Atom)
 	if err != nil {
-		logWarning.Println("Could not get property atom name for", ev.Atom)
+		logger.Warning.Println("Could not get property atom name for", ev.Atom)
 		return
 	}
 
-	logLots.Printf("Updating property %s with state %v on window %s",
+	logger.Lots.Printf("Updating property %s with state %v on window %s",
 		name, ev.State, c)
 
 	// helper function to log property vals
 	showVals := func(o, n interface{}) {
-		logLots.Printf("\tOld value: '%s', new value: '%s'", o, n)
+		logger.Lots.Printf("\tOld value: '%s', new value: '%s'", o, n)
 	}
 
 	// Start the arduous process of updating properties...
@@ -405,7 +405,7 @@ func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
 func (c *client) updateName() {
 	// helper function to log property vals
 	showVals := func(o, n interface{}) {
-		logLots.Printf("\tOld value: '%s', new value: '%s'", o, n)
+		logger.Lots.Printf("\tOld value: '%s', new value: '%s'", o, n)
 	}
 
 	var name string

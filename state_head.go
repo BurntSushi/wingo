@@ -5,6 +5,8 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xinerama"
 	"github.com/BurntSushi/xgbutil/xrect"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 func rootGeometryChange(X *xgbutil.XUtil, ev xevent.ConfigureNotifyEvent) {
@@ -103,7 +105,7 @@ func (wm *state) headsLoad() {
 // This may be due to bad configuration OR if a head has been added with
 // too few workspaces already existing.
 func (wm *state) fillWorkspaces(heads xinerama.Heads) {
-	logWarning.Println("There were not enough workspaces found." +
+	logger.Warning.Println("There were not enough workspaces found." +
 		"Namely, there must be at least " +
 		"as many workspaces as there are phyiscal heads. " +
 		"We are forcefully making some and " +
@@ -125,13 +127,13 @@ func stateHeadsGet() xinerama.Heads {
 	heads, err := xinerama.PhysicalHeads(X)
 	if err != nil || len(heads) == 0 {
 		if err == nil {
-			logWarning.Printf("Could not find any physical heads with the " +
-				"Xinerama extension.")
+			logger.Warning.Printf("Could not find any physical heads with " +
+				"the Xinerama extension.")
 		} else {
-			logWarning.Printf("Could not load physical heads via Xinerama: %s",
-				err)
+			logger.Warning.Printf("Could not load physical heads via "+
+				"Xinerama: %s", err)
 		}
-		logWarning.Printf("Assuming one head with size equivalent to the " +
+		logger.Warning.Printf("Assuming one head with size equivalent to the " +
 			"root window.")
 
 		heads = xinerama.Heads{

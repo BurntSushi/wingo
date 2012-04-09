@@ -5,19 +5,14 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
-)
 
-import (
 	"code.google.com/p/freetype-go/freetype"
 	"code.google.com/p/freetype-go/freetype/truetype"
-)
 
-// import "code.google.com/p/jamslam-x-go-binding/xgb" 
+	"github.com/BurntSushi/xgbutil/xgraphics"
 
-import "github.com/BurntSushi/xgbutil/xgraphics"
-
-import (
 	"github.com/BurntSushi/wingo/bindata"
+	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/wini"
 )
 
@@ -323,7 +318,7 @@ func loadPromptOption(k wini.Key) {
 		// naughty!
 		if THEME.prompt.cycleIconTransparency < 0 ||
 			THEME.prompt.cycleIconTransparency > 100 {
-			logWarning.Printf("Illegal value '%s' provided for " +
+			logger.Warning.Printf("Illegal value '%s' provided for " +
 				"'cycle_icon_transparency'. Transparency " +
 				"values must be in the range [0, 100], " +
 				"inclusive. Using 100 by default.")
@@ -356,7 +351,7 @@ func setGradient(k wini.Key, clr *themeColor) {
 	// Check to make sure we have a value for this key
 	vals := k.Strings()
 	if len(vals) == 0 {
-		logWarning.Println(k.Err("No values found."))
+		logger.Warning.Println(k.Err("No values found."))
 		return
 	}
 
@@ -376,7 +371,7 @@ func setGradient(k wini.Key, clr *themeColor) {
 	// each piece as an int.
 	splitted := strings.Split(val, " ")
 	if len(splitted) != 2 {
-		logWarning.Println(k.Err("Expected a gradient value (two colors "+
+		logger.Warning.Println(k.Err("Expected a gradient value (two colors "+
 			"separated by a space), but found '%s' "+
 			"instead.", val))
 		return
@@ -384,14 +379,14 @@ func setGradient(k wini.Key, clr *themeColor) {
 
 	start, err := strconv.ParseInt(strings.TrimSpace(splitted[0]), 0, 0)
 	if err != nil {
-		logWarning.Println(k.Err("'%s' is not an integer. (%s)",
+		logger.Warning.Println(k.Err("'%s' is not an integer. (%s)",
 			splitted[0], err))
 		return
 	}
 
 	end, err := strconv.ParseInt(strings.TrimSpace(splitted[1]), 0, 0)
 	if err != nil {
-		logWarning.Println(k.Err("'%s' is not an integer. (%s)",
+		logger.Warning.Println(k.Err("'%s' is not an integer. (%s)",
 			splitted[1], err))
 		return
 	}
@@ -403,7 +398,7 @@ func setGradient(k wini.Key, clr *themeColor) {
 func builtInIcon() draw.Image {
 	img, err := xgraphics.LoadPngFromBytes(bindata.WingoPng())
 	if err != nil {
-		logWarning.Printf("Could not get built in icon image because: %v",
+		logger.Warning.Printf("Could not get built in icon image because: %v",
 			err)
 		return nil
 	}
@@ -413,7 +408,7 @@ func builtInIcon() draw.Image {
 func builtInButton(loadBuiltIn func() []byte) draw.Image {
 	img, err := xgraphics.LoadPngFromBytes(loadBuiltIn())
 	if err != nil {
-		logWarning.Printf("Could not get built in button image because: %v",
+		logger.Warning.Printf("Could not get built in button image because: %v",
 			err)
 		return nil
 	}
@@ -424,7 +419,7 @@ func setImage(k wini.Key, place *draw.Image) {
 	if v, ok := getLastString(k); ok {
 		img, err := xgraphics.LoadPngFromFile(v)
 		if err != nil {
-			logWarning.Printf("Could not load '%s' as a png image because: %v",
+			logger.Warning.Printf("Could not load '%s' as a png image because: %v",
 				v, err)
 			return
 		}
@@ -436,7 +431,7 @@ func builtInFont() *truetype.Font {
 	bs := bindata.DejavusansTtf()
 	font, err := freetype.ParseFont(bs)
 	if err != nil {
-		logWarning.Printf("Could not parse default font because: %v", err)
+		logger.Warning.Printf("Could not parse default font because: %v", err)
 		return nil
 	}
 	return font
@@ -446,14 +441,14 @@ func setFont(k wini.Key, place **truetype.Font) {
 	if v, ok := getLastString(k); ok {
 		bs, err := ioutil.ReadFile(v)
 		if err != nil {
-			logWarning.Printf("Could not get font data from '%s' because: %v",
+			logger.Warning.Printf("Could not get font data from '%s' because: %v",
 				v, err)
 			return
 		}
 
 		font, err := freetype.ParseFont(bs)
 		if err != nil {
-			logWarning.Printf("Could not parse font data from '%s' because: %v",
+			logger.Warning.Printf("Could not parse font data from '%s' because: %v",
 				v, err)
 			return
 		}

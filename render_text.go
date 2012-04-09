@@ -7,6 +7,8 @@ import (
 	"code.google.com/p/freetype-go/freetype/truetype"
 
 	"github.com/BurntSushi/xgbutil/xgraphics"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 // The extents appear to cut off some of the text.
@@ -99,9 +101,9 @@ func renderTextSolid(bgColor int, font *truetype.Font, fontSize float64,
 	// itself after we get the *real* extents when we draw the text.
 	ew, eh, err := xgraphics.TextMaxExtents(font, fontSize, text)
 	if err != nil {
-		logWarning.Printf("Could not get text extents for text '%s' "+
+		logger.Warning.Printf("Could not get text extents for text '%s' "+
 			"because: %v", text, err)
-		logWarning.Printf("Resorting to default with of 200.")
+		logger.Warning.Printf("Resorting to default with of 200.")
 		ew = 200
 	}
 
@@ -121,7 +123,7 @@ func renderText(src *wImg, bgColor int, font *truetype.Font, fontSize float64,
 	rew, reh, err := xgraphics.DrawText(src, 0, 0, colorFromInt(fontColor),
 		fontSize, font, text)
 	if err != nil {
-		logWarning.Printf("Could not draw text '%s' because: %v", text, err)
+		logger.Warning.Printf("Could not draw text '%s' because: %v", text, err)
 		return nil, 0, 0, err
 	}
 

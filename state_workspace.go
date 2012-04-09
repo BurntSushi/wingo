@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"strings"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 type workspaces []*workspace
@@ -36,7 +38,8 @@ func (wm *state) WrkActive() *workspace {
 		}
 	}
 
-	logError.Printf("Could not find an active workspace in: %v", wm.workspaces)
+	logger.Error.Printf("Could not find an active workspace in: %v",
+		wm.workspaces)
 	panic("Wingo *must* have an active workspace at all times. This is a bug!")
 }
 
@@ -47,7 +50,7 @@ func (wm *state) WrkActiveInd() int {
 		}
 	}
 
-	logError.Printf("Could not find an active workspace index in: %v",
+	logger.Error.Printf("Could not find an active workspace index in: %v",
 		wm.workspaces)
 	panic("Wingo *must* have an active workspace at all times. This is a bug!")
 }
@@ -59,7 +62,7 @@ func (wm *state) WrkHead(head int) *workspace {
 		}
 	}
 
-	logError.Printf("Could not find a workspace on head %d in: %v",
+	logger.Error.Printf("Could not find a workspace on head %d in: %v",
 		head, wm.workspaces)
 	panic("Wingo *must* have a workspace on each monitor at all times. " +
 		"This is a bug!")

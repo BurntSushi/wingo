@@ -1,12 +1,14 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
-
 import (
+	"code.google.com/p/jamslam-x-go-binding/xgb"
+
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xevent"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 // manage sets everything up to bring a client window into window management.
@@ -116,8 +118,8 @@ func (c *client) initPopulate() error {
 
 	c.hints, err = icccm.WmHintsGet(X, c.Id())
 	if err != nil {
-		logWarning.Println(err)
-		logMessage.Printf("Using reasonable defaults for WM_HINTS for %X",
+		logger.Warning.Println(err)
+		logger.Message.Printf("Using reasonable defaults for WM_HINTS for %X",
 			c.Id())
 		c.hints = &icccm.Hints{
 			Flags:        icccm.HintInput | icccm.HintState,
@@ -128,22 +130,22 @@ func (c *client) initPopulate() error {
 
 	c.nhints, err = icccm.WmNormalHintsGet(X, c.Id())
 	if err != nil {
-		logWarning.Println(err)
-		logMessage.Printf("Using reasonable defaults for WM_NORMAL_HINTS "+
+		logger.Warning.Println(err)
+		logger.Message.Printf("Using reasonable defaults for WM_NORMAL_HINTS "+
 			"for %X", c.Id())
 		c.nhints = &icccm.NormalHints{}
 	}
 
 	c.protocols, err = icccm.WmProtocolsGet(X, c.Id())
 	if err != nil {
-		logWarning.Printf("Window %X does not have WM_PROTOCOLS set.", c.Id())
+		logger.Warning.Printf("Window %X does not have WM_PROTOCOLS set.", c.Id())
 		c.protocols = []string{}
 	}
 
 	c.name, err = ewmh.WmNameGet(X, c.Id())
 	if err != nil {
 		c.name = ""
-		logWarning.Printf("Could not find name for window %X.", c.Id())
+		logger.Warning.Printf("Could not find name for window %X.", c.Id())
 	}
 
 	c.vname, _ = ewmh.WmVisibleNameGet(X, c.Id())
@@ -152,7 +154,7 @@ func (c *client) initPopulate() error {
 
 	c.types, err = ewmh.WmWindowTypeGet(X, c.Id())
 	if err != nil {
-		logWarning.Printf("Could not find window type for window %X, "+
+		logger.Warning.Printf("Could not find window type for window %X, "+
 			"using 'normal'.", c.Id())
 		c.types = []string{"_NET_WM_WINDOW_TYPE_NORMAL"}
 	}
@@ -166,7 +168,7 @@ func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
 	// whoa whoa... what if we're already managing this window?
 	for _, c := range WM.clients {
 		if ev.Window == c.Id() {
-			logWarning.Printf("Could not manage window %X because we are "+
+			logger.Warning.Printf("Could not manage window %X because we are "+
 				"already managing %s.", ev.Window, c)
 			return
 		}
@@ -176,7 +178,7 @@ func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
 
 	err := client.manage()
 	if err != nil {
-		logWarning.Printf("Could not manage window %X because: %v\n",
+		logger.Warning.Printf("Could not manage window %X because: %v\n",
 			client, err)
 		return
 	}

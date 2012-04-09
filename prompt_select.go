@@ -32,6 +32,8 @@ import (
 	"github.com/BurntSushi/xgbutil/keybind"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xgraphics"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 const (
@@ -256,7 +258,8 @@ func (ps *promptSelect) show(listFun promptSelectListFun,
 	// This makes it impossible to press and release alt-tab too quickly
 	// to have it not register.
 	if err := keybind.DummyGrab(X); err != nil {
-		logWarning.Println("Could not grab keyboard for prompt select: %v", err)
+		logger.Warning.Println("Could not grab keyboard for prompt select: %v",
+			err)
 		return false
 	}
 

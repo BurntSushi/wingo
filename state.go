@@ -2,13 +2,13 @@ package main
 
 import (
 	"strings"
-)
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
+	"code.google.com/p/jamslam-x-go-binding/xgb"
 
-import (
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xinerama"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 // state is the master singleton the carries all window manager related state
@@ -38,17 +38,17 @@ func newState() *state {
 
 func (wm *state) clientAdd(c *client) {
 	if cliIndex(c, wm.clients) == -1 {
-		logMessage.Println("Managing new client:", c)
+		logger.Message.Println("Managing new client:", c)
 		wm.clients = append(wm.clients, c)
 		wm.updateEwmhClients()
 	} else {
-		logMessage.Println("Already managing client:", c)
+		logger.Message.Println("Already managing client:", c)
 	}
 }
 
 func (wm *state) clientRemove(c *client) {
 	if i := cliIndex(c, wm.clients); i > -1 {
-		logMessage.Println("Unmanaging client:", c)
+		logger.Message.Println("Unmanaging client:", c)
 		wm.clients = append(wm.clients[:i], wm.clients[i+1:]...)
 		wm.updateEwmhClients()
 	}
@@ -62,7 +62,7 @@ func (wm *state) updateEwmhClients() {
 	}
 	err := ewmh.ClientListSet(X, winList)
 	if err != nil {
-		logWarning.Printf("Could not update _NET_CLIENT_LIST "+
+		logger.Warning.Printf("Could not update _NET_CLIENT_LIST "+
 			"because %v", err)
 	}
 }
@@ -101,7 +101,7 @@ func (wm *state) fallback() {
 	for i := len(wm.focus) - 1; i >= 0; i-- {
 		c = wm.focus[i]
 		if c.Mapped() && c.Alive() && c.workspace == WM.WrkActiveInd() {
-			logMessage.Printf("Focus falling back to %s", c)
+			logger.Message.Printf("Focus falling back to %s", c)
 			c.Focus()
 			return
 		}
@@ -109,7 +109,7 @@ func (wm *state) fallback() {
 
 	// No windows to fall back on... root focus
 	// this is IMPORTANT. if we fail here, we risk a lock-up
-	logMessage.Printf("Focus falling back to ROOT")
+	logger.Message.Printf("Focus falling back to ROOT")
 	ROOT.focus()
 	wm.unfocusExcept(0)
 }
@@ -119,5 +119,5 @@ func (wm *state) logClientList() {
 	for i, c := range wm.clients {
 		list[i] = c.String()
 	}
-	logMessage.Println(strings.Join(list, ", "))
+	logger.Message.Println(strings.Join(list, ", "))
 }

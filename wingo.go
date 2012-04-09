@@ -1,28 +1,30 @@
 package main
 
-// import ( 
-// "log" 
-// "os" 
-// "runtime/pprof" 
-// ) 
-
-import "code.google.com/p/jamslam-x-go-binding/xgb"
-
 import (
+	// "log" 
+	// "os" 
+	// "runtime/pprof" 
+
+	"code.google.com/p/jamslam-x-go-binding/xgb"
+
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/keybind"
 	"github.com/BurntSushi/xgbutil/mousebind"
 	"github.com/BurntSushi/xgbutil/xevent"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 // global variables!
-var X *xgbutil.XUtil
-var WM *state
-var ROOT *window
-var CONF *conf
-var THEME *theme
-var PROMPTS prompts
+var (
+	X       *xgbutil.XUtil
+	WM      *state
+	ROOT    *window
+	CONF    *conf
+	THEME   *theme
+	PROMPTS prompts
+)
 
 func main() {
 	var err error
@@ -36,8 +38,8 @@ func main() {
 
 	X, err = xgbutil.Dial("")
 	if err != nil {
-		logError.Println(err)
-		logError.Println("Error connecting to X, quitting...")
+		logger.Error.Println(err)
+		logger.Error.Println("Error connecting to X, quitting...")
 		return
 	}
 	defer X.Conn().Close()
@@ -50,24 +52,25 @@ func main() {
 	ROOT = newWindow(X.RootWin())
 	_, err = ROOT.geometry()
 	if err != nil {
-		logError.Println("Could not get ROOT window geometry because: %v", err)
-		logError.Println("Cannot continue. Quitting...")
+		logger.Error.Println("Could not get ROOT window geometry because: %v",
+			err)
+		logger.Error.Println("Cannot continue. Quitting...")
 		return
 	}
 
 	// Load configuration
 	err = loadConfig()
 	if err != nil {
-		logError.Println(err)
-		logError.Println("No configuration found. Quitting...")
+		logger.Error.Println(err)
+		logger.Error.Println("No configuration found. Quitting...")
 		return
 	}
 
 	// Load theme
 	err = loadTheme()
 	if err != nil {
-		logError.Println(err)
-		logError.Println("No theme configuration found. Quitting...")
+		logger.Error.Println(err)
+		logger.Error.Println("No theme configuration found. Quitting...")
 		return
 	}
 

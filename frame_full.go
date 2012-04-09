@@ -1,8 +1,12 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
+import (
+	"code.google.com/p/jamslam-x-go-binding/xgb"
 
-import "github.com/BurntSushi/xgbutil/xgraphics"
+	"github.com/BurntSushi/xgbutil/xgraphics"
+
+	"github.com/BurntSushi/wingo/logger"
+)
 
 type frameFull struct {
 	*abstFrame
@@ -345,10 +349,10 @@ func (f *frameFull) updateTitle() {
 
 	ew, eh, err := xgraphics.TextMaxExtents(font, fontSize, title)
 	if err != nil {
-		logWarning.Printf("Could not get text extents for name '%s' on "+
+		logger.Warning.Printf("Could not get text extents for name '%s' on "+
 			"window %s because: %v",
 			title, f.Client(), err)
-		logWarning.Printf("Resorting to default with of 300.")
+		logger.Warning.Printf("Resorting to default with of 300.")
 		ew = 300
 	}
 
@@ -364,14 +368,14 @@ func (f *frameFull) updateTitle() {
 	_, _, err = xgraphics.DrawText(imgA, 0, y, aFontColor, fontSize,
 		font, title)
 	if err != nil {
-		logWarning.Printf("Could not draw window title for window %s "+
+		logger.Warning.Printf("Could not draw window title for window %s "+
 			"because: %v", f.Client(), err)
 	}
 
 	_, _, err = xgraphics.DrawText(imgI, 0, y, iFontColor, fontSize,
 		font, title)
 	if err != nil {
-		logWarning.Printf("Could not draw window title for window %s "+
+		logger.Warning.Printf("Could not draw window title for window %s "+
 			"because: %v", f.Client(), err)
 	}
 

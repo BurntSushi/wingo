@@ -2,12 +2,11 @@ package main
 
 import (
 	"strings"
-)
 
-import "github.com/BurntSushi/wingo/wini"
-
-import (
 	"github.com/BurntSushi/xgbutil/ewmh"
+
+	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/wini"
 )
 
 type conf struct {
@@ -249,7 +248,7 @@ func setString(k wini.Key, place *string) {
 func getLastString(k wini.Key) (string, bool) {
 	vals := k.Strings()
 	if len(vals) == 0 {
-		logWarning.Println(k.Err("No values found."))
+		logger.Warning.Println(k.Err("No values found."))
 		return "", false
 	}
 
@@ -265,10 +264,10 @@ func setInt(k wini.Key, place *int) {
 func getLastInt(k wini.Key) (int, bool) {
 	vals, err := k.Ints()
 	if err != nil {
-		logWarning.Println(err)
+		logger.Warning.Println(err)
 		return 0, false
 	} else if len(vals) == 0 {
-		logWarning.Println(k.Err("No values found."))
+		logger.Warning.Println(k.Err("No values found."))
 		return 0, false
 	}
 
@@ -284,10 +283,10 @@ func setFloat(k wini.Key, place *float64) {
 func getLastFloat(k wini.Key) (float64, bool) {
 	vals, err := k.Floats()
 	if err != nil {
-		logWarning.Println(err)
+		logger.Warning.Println(err)
 		return 0.0, false
 	} else if len(vals) == 0 {
-		logWarning.Println(k.Err("No values found."))
+		logger.Warning.Println(k.Err("No values found."))
 		return 0.0, false
 	}
 
