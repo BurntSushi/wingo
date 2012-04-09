@@ -1,4 +1,20 @@
 package main
+/*
+	wingo-cmd is a small program that allows one to issue any command (except
+	for mouse commands) to Wingo.
+
+	It works by using ClientMessage events and the _WINGO_CMD and
+	_WINGO_CMD_STATUS properties on the root window. Note that this approach
+	implies that it is NOT a good idea to run two separate instances of
+	wingo-cmd at the same time.
+
+	The better solution would be some sort of pipe, but that requires digging
+	into the main X event loop.
+
+	Basically, using ClientMessage events is dead simple to implement but easy
+	to break when run concurrently. Using pipes is harder to implement, but
+	also harder to break when run concurrently. I think.
+*/
 
 import (
 	"fmt"

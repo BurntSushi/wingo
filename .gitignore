@@ -3,6 +3,6 @@ zzz
 *.prof
 *.mprof
 TAGS
-wingo-cmd
+wingo-cmd/wingo-cmd
 wingo
 
