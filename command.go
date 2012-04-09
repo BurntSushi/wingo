@@ -8,6 +8,8 @@ import (
 	"time"
 	"unicode"
 
+	"code.google.com/p/jamslam-x-go-binding/xgb"
+
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xprop"
@@ -28,23 +30,23 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 
 	switch cmd {
 	case "Close":
-		return usage(cmdClose())
+		return usage(cmdClose(args...))
 	case "FrameBorders":
-		return usage(cmdFrameBorders())
+		return usage(cmdFrameBorders(args...))
 	case "FrameFull":
-		return usage(cmdFrameFull())
+		return usage(cmdFrameFull(args...))
 	case "FrameNada":
-		return usage(cmdFrameNada())
+		return usage(cmdFrameNada(args...))
 	case "FrameSlim":
-		return usage(cmdFrameSlim())
+		return usage(cmdFrameSlim(args...))
 	case "HeadFocus":
 		return usage(cmdHeadFocus(false, args...))
 	case "HeadFocusWithClient":
 		return usage(cmdHeadFocus(true, args...))
 	case "MaximizeToggle":
-		return usage(cmdMaximizeToggle())
+		return usage(cmdMaximizeToggle(args...))
 	case "Minimize":
-		return usage(cmdMinimize())
+		return usage(cmdMinimize(args...))
 	case "PromptCycleNext":
 		if len(keyStr) == 0 {
 			return nil
@@ -60,11 +62,13 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 	case "Quit":
 		return usage(cmdQuit())
 	case "Workspace":
-		return usage(cmdWorkspace(false, args...))
+		return usage(cmdWorkspace(false, false, args...))
 	case "WorkspacePrefix":
 		return usage(cmdWorkspacePrefix(false, args...))
+	case "WorkspaceSetClient":
+		return usage(cmdWorkspace(false, true, args...))
 	case "WorkspaceWithClient":
-		return usage(cmdWorkspace(true, args...))
+		return usage(cmdWorkspace(true, false, args...))
 	case "WorkspacePrefixWithClient":
 		return usage(cmdWorkspacePrefix(true, args...))
 	case "WorkspaceLeft":
@@ -95,7 +99,6 @@ func commandHandler(X *xgbutil.XUtil, cm xevent.ClientMessageEvent) {
 		return
 	}
 
-	logger.Debug.Println(typeName)
 	if typeName == "_WINGO_CMD" {
 		cmd, err := command.Get(X)
 		if err != nil {
@@ -131,6 +134,43 @@ func commandParse(command string) (cmd string, args []string) {
 	return
 }
 
+// commandArgsClient scans an argument list for a window id.
+// A window id has the form 'win:WINDOW-ID_NUMBER'.
+// Both 'win:0x0001' and 'win:1' are valid thanks to Go's ParseInt.
+// Finally, if the window id corresponds to managed client, return that
+// client. Otherwise, return nil and emit an error if we have an invalid ID.
+// We also return a bool as a second argument which should be interpreted
+// as whether or not to continue the current operation.
+// i.e., not finding anything that looks like a window id is safe to ignore,
+// but if we find something like an ID and error out, we should stop the
+// command entirely.
+func commandArgsClient(args []string) (*client, bool) {
+	for _, arg := range args {
+		if len(arg) < 5 || arg[0:4] != "win:" {
+			continue
+		}
+
+		maybeId64, err := strconv.ParseInt(arg[4:], 0, 0)
+		if err != nil {
+			logger.Warning.Printf("'%s' is not a valid window id.", arg[4:])
+			return nil, false
+		}
+
+		goodId := xgb.Id(maybeId64)
+		for _, c := range WM.clients {
+			if c.Id() == goodId {
+				return c, true
+			}
+		}
+
+		logger.Warning.Printf(
+			"'%s' is a valid window ID, but does not match any managed "+
+				"window ID by Wingo.", arg[4:])
+		return nil, false
+	}
+	return nil, true
+}
+
 // Shortcut for executing Client interface functions that have no parameters
 // and no return values on the currently focused window.
 func withFocused(f func(c *client)) {
@@ -140,41 +180,54 @@ func withFocused(f func(c *client)) {
 	}
 }
 
-func cmdClose() func() {
+func withFocusedOrArg(args []string, f func(c *client)) {
+	client, ok := commandArgsClient(args)
+	if !ok {
+		return
+	}
+
+	if client == nil {
+		withFocused(f)
+	} else {
+		f(client)
+	}
+}
+
+func cmdClose(args ...string) func() {
 	return func() {
-		withFocused(func(c *client) {
+		withFocusedOrArg(args, func(c *client) {
 			c.Close()
 		})
 	}
 }
 
-func cmdFrameBorders() func() {
+func cmdFrameBorders(args ...string) func() {
 	return func() {
-		withFocused(func(c *client) {
+		withFocusedOrArg(args, func(c *client) {
 			c.FrameBorders()
 		})
 	}
 }
 
-func cmdFrameFull() func() {
+func cmdFrameFull(args ...string) func() {
 	return func() {
-		withFocused(func(c *client) {
+		withFocusedOrArg(args, func(c *client) {
 			c.FrameFull()
 		})
 	}
 }
 
-func cmdFrameNada() func() {
+func cmdFrameNada(args ...string) func() {
 	return func() {
-		withFocused(func(c *client) {
+		withFocusedOrArg(args, func(c *client) {
 			c.FrameNada()
 		})
 	}
 }
 
-func cmdFrameSlim() func() {
+func cmdFrameSlim(args ...string) func() {
 	return func() {
-		withFocused(func(c *client) {
+		withFocusedOrArg(args, func(c *client) {
 			c.FrameSlim()
 		})
 	}
@@ -216,7 +269,7 @@ func cmdHeadFocus(withClient bool, args ...string) func() {
 		}
 
 		if withClient {
-			withFocused(func(c *client) {
+			withFocusedOrArg(args, func(c *client) {
 				c.Raise()
 				wrk.Add(c, false)
 			})
@@ -225,17 +278,17 @@ func cmdHeadFocus(withClient bool, args ...string) func() {
 	}
 }
 
-func cmdMaximizeToggle() func() {
+func cmdMaximizeToggle(args ...string) func() {
 	return func() {
-		withFocused(func(c *client) {
+		withFocusedOrArg(args, func(c *client) {
 			c.MaximizeToggle()
 		})
 	}
 }
 
-func cmdMinimize() func() {
+func cmdMinimize(args ...string) func() {
 	return func() {
-		withFocused(func(c *client) {
+		withFocusedOrArg(args, func(c *client) {
 			c.IconifyToggle()
 		})
 	}
@@ -350,7 +403,11 @@ func cmdQuit() func() {
 	}
 }
 
-func cmdWorkspace(withClient bool, args ...string) func() {
+func cmdWorkspace(withClient bool, setClient bool, args ...string) func() {
+	if withClient && setClient {
+		panic("Bug in cmdWorkspace. 'withClient' and 'setClient' cannot " +
+			"both be true.")
+	}
 	if len(args) < 1 {
 		return nil
 	}
@@ -374,7 +431,14 @@ func cmdWorkspace(withClient bool, args ...string) func() {
 				wrk.Add(c, false)
 			})
 		}
-		WM.WrkSet(wrk.id, true, greedy)
+
+		if setClient {
+			withFocusedOrArg(args, func(c *client) {
+				wrk.Add(c, true)
+			})
+		} else {
+			WM.WrkSet(wrk.id, true, greedy)
+		}
 	}
 }
 

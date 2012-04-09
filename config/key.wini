@@ -22,7 +22,7 @@ Control-Mod1-a := WorkspacePrefix a
 Control-Mod1-Shift-a := WorkspacePrefixWithClient a
 
 Mod4-1 := Workspace A1
-Mod4-Shift-1 := WorkspaceWithClient A1
+Mod4-Shift-1 := WorkspaceSetClient A1
 Mod4-2 := Workspace A2
 Mod4-3 := Workspace A3
 Mod4-4 := Workspace A4

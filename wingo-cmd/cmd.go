@@ -17,6 +17,7 @@ package main
 */
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -72,8 +73,15 @@ func main() {
 	defer X.Conn().Close()
 
 	// Get command from arguments
-	cmdName := "PromptSelect"
-	cmdFull := fmt.Sprintf("%s ClientsAll Prefix", cmdName)
+	flag.Parse()
+	if flag.NArg() < 1 {
+		fmt.Fprintln(os.Stderr, "Usage: wingo-cmd CommandName [CommandArgs]")
+		return
+	}
+
+	commandPieces := flag.Args()
+	cmdName := commandPieces[0]
+	cmdFull := strings.Join(commandPieces, " ")
 
 	// make sure we start with failure
 	StatusSet(X, false)
