@@ -47,6 +47,8 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 		return usage(cmdMaximizeToggle(args...))
 	case "Minimize":
 		return usage(cmdMinimize(args...))
+	case "Move":
+		return usage(cmdMove(args...))
 	case "PromptCycleNext":
 		if len(keyStr) == 0 {
 			return nil
@@ -61,6 +63,8 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 		return usage(cmdPromptSelect(args...))
 	case "Quit":
 		return usage(cmdQuit())
+	case "Resize":
+		return usage(cmdResize(args...))
 	case "Workspace":
 		return usage(cmdWorkspace(false, false, args...))
 	case "WorkspacePrefix":
@@ -294,6 +298,24 @@ func cmdMinimize(args ...string) func() {
 	}
 }
 
+func cmdMove(args ...string) func() {
+	if len(args) < 2 {
+		return nil
+	}
+
+	x, xok := parsePos(args[0], false)
+	y, yok := parsePos(args[1], true)
+	if !xok || !yok {
+		return nil
+	}
+
+	return func() {
+		withFocusedOrArg(args, func(c *client) {
+			c.move(x, y)
+		})
+	}
+}
+
 func cmdPromptCycleNext(keyStr string, args ...string) func() {
 	if len(args) < 1 {
 		return nil
@@ -400,6 +422,24 @@ func cmdQuit() func() {
 	return func() {
 		logger.Message.Println("The User has told us to quit.")
 		X.Quit()
+	}
+}
+
+func cmdResize(args ...string) func() {
+	if len(args) < 2 {
+		return nil
+	}
+
+	w, wok := parseDim(args[0], false)
+	h, hok := parseDim(args[1], true)
+	if !wok || !hok {
+		return nil
+	}
+
+	return func() {
+		withFocusedOrArg(args, func(c *client) {
+			c.resize(w, h)
+		})
 	}
 }
 

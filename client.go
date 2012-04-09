@@ -326,6 +326,21 @@ func (c *client) EnsureUnmax() {
 	}
 }
 
+func (c *client) move(x, y int) {
+	c.EnsureUnmax()
+	c.Frame().ConfigureClient(DoX|DoY, x, y, 0, 0, 0, 0, false)
+}
+
+func (c *client) resize(w, h int) {
+	c.EnsureUnmax()
+	c.Frame().ConfigureClient(DoW|DoH, 0, 0, w, h, 0, 0, false)
+}
+
+func (c *client) moveresize(x, y, w, h int) {
+	c.EnsureUnmax()
+	c.Frame().ConfigureClient(DoX|DoY|DoW|DoH, x, y, w, h, 0, 0, false)
+}
+
 func (c *client) SaveGeom(key string) {
 	c.geomStore[key] = xrect.Make(xrect.Pieces(c.Frame().Geom()))
 }

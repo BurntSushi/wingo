@@ -2,9 +2,12 @@
 package main
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/BurntSushi/xgbutil/keybind"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 // strIndex returns the index of the first occurrence of needle in haystack.
@@ -34,6 +37,58 @@ func cliIndex(needle *client, haystack []*client) int {
 func keyMatch(target string, mods uint16, keycode byte) bool {
 	guess := keybind.LookupString(X, mods, keycode)
 	return strings.ToLower(guess) == strings.ToLower(target)
+}
+
+// parsePos takes a string and parses an x or y position from it.
+// The magic here is that while a string could just be a simple integer,
+// it could also be a float greater than 0 but <= 1 in terms of the current
+// head's geometry.
+func parsePos(pos string, y bool) (int, bool) {
+	// First try for an integer
+	pos64, err := strconv.ParseInt(pos, 0, 0)
+	if err == nil {
+		return int(pos64), true
+	}
+
+	// Now try float
+	posf, err := strconv.ParseFloat(pos, 64)
+	if err == nil && posf > 0 && posf <= 1 {
+		headGeom := WM.headActive()
+		if y {
+			return headGeom.Y() + int(float64(headGeom.Height())*posf), true
+		} else {
+			return headGeom.X() + int(float64(headGeom.Width())*posf), true
+		}
+	}
+
+	logger.Warning.Printf("'%s' is not a valid position.", pos)
+	return 0, false
+}
+
+// parseDim takes a string and parses a width or height dimension from it.
+// The magic here is that while a string could just be a simple integer,
+// it could also be a float greater than 0 but <= 1 in terms of the current
+// head's geometry.
+func parseDim(dim string, height bool) (int, bool) {
+	// First try for an integer
+	dim64, err := strconv.ParseInt(dim, 0, 0)
+	if err == nil {
+		return int(dim64), true
+	}
+
+	// Now try float
+	dimf, err := strconv.ParseFloat(dim, 64)
+	if err == nil && dimf > 0 && dimf <= 1 {
+		headGeom := WM.headActive()
+		if height {
+			return int(float64(headGeom.Height()) * dimf), true
+		} else {
+			return int(float64(headGeom.Width()) * dimf), true
+		}
+	}
+
+	logger.Warning.Printf("'%s' is not a valid dimension.", dim)
+	return 0, false
 }
 
 // Why isn't this in the Go standard library?
