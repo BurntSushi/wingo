@@ -111,6 +111,8 @@ func (kcmd keyCommand) commandFun() func() {
 		return cmdHeadFocus(true, kcmd.args...)
 	case "MaximizeToggle":
 		return cmdMaximizeToggle()
+	case "Minimize":
+		return cmdMinimize()
 	case "PromptCycleNext":
 		return cmdPromptCycleNext(kcmd.keyStr, kcmd.args...)
 	case "PromptCyclePrev":
@@ -242,6 +244,14 @@ func cmdMaximizeToggle() func() {
 	return func() {
 		withFocused(func(c *client) {
 			c.MaximizeToggle()
+		})
+	}
+}
+
+func cmdMinimize() func() {
+	return func() {
+		withFocused(func(c *client) {
+			c.IconifyToggle()
 		})
 	}
 }

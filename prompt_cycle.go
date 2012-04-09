@@ -81,9 +81,15 @@ func newPromptCycle() *promptCycle {
 				return
 			}
 
-			mods, _ := keybind.DeduceKeyInfo(ev.State, ev.Detail)
-			mods &= ^keybind.ModGet(X, ev.Detail)
+			mods, kc := keybind.DeduceKeyInfo(ev.State, ev.Detail)
 
+			// Allow user to quit without effect
+			if keyMatch(CONF.cancelKey, mods, kc) {
+				pc.hide()
+				return
+			}
+
+			mods &= ^keybind.ModGet(X, ev.Detail)
 			if pc.grabbedMods > 0 && mods&pc.grabbedMods == 0 {
 				pc.choose()
 			}

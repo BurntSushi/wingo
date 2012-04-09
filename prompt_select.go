@@ -204,6 +204,7 @@ func newPromptSelect() *promptSelect {
 				return
 			case keyMatch(CONF.tabKey, mods, kc) ||
 				keyMatch(CONF.revTabKey, mods, kc):
+
 				if len(ps.itemsShowing) == 0 {
 					break
 				}
@@ -580,7 +581,9 @@ func promptSelectListClients(activeWrk, visible,
 
 	addItems := func(wrk *workspace) *promptSelectGroup {
 		items := make([]*promptSelectItem, 0)
-		for _, c := range WM.stack {
+		for i := len(WM.focus) - 1; i >= 0; i-- {
+			c := WM.focus[i]
+
 			if c.workspace != wrk.id {
 				continue
 			}
@@ -604,6 +607,9 @@ func promptSelectListClients(activeWrk, visible,
 
 			focusRaise := func(c *client) func() {
 				return func() {
+					if c.iconified {
+						c.IconifyToggle()
+					}
 					c.Focus()
 					c.Raise()
 				}

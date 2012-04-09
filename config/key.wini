@@ -3,6 +3,7 @@ Mod4-c := Close
 Mod1-Shift-c := Quit
 Mod4-j := `konsole`
 Mod4-x := MaximizeToggle
+Mod4-i := Minimize
 
 Mod1-w := HeadFocus 0
 Mod1-e := HeadFocus 1
