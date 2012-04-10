@@ -14,8 +14,8 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xprop"
 
-	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/cmdusage"
+	"github.com/BurntSushi/wingo/logger"
 )
 
 func commandFun(keyStr string, cmd string, args ...string) func() {
