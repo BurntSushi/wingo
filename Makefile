@@ -13,6 +13,9 @@ gofmt:
 	gofmt -w *.go wini/*.go
 	colcheck *.go */*.go
 
+cmd:
+	go install github.com/BurntSushi/wingo-cmd
+
 $(WINGOPKG)/bindata.a: $(BINDATA)
 	(cd $(BD) ; go install)
 
