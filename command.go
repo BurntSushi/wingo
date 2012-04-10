@@ -15,7 +15,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xprop"
 
 	"github.com/BurntSushi/wingo/logger"
-	command "github.com/BurntSushi/wingo/wingo-cmd"
+	"github.com/BurntSushi/wingo/cmdusage"
 )
 
 func commandFun(keyStr string, cmd string, args ...string) func() {
@@ -25,12 +25,14 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 	}
 
 	usage := func(a func()) func() {
-		return command.MaybeUsage(cmd, a)
+		return cmdusage.MaybeUsage(cmd, a)
 	}
 
 	switch cmd {
 	case "Close":
 		return usage(cmdClose(args...))
+	case "Focus":
+		return usage(cmdFocus(args...))
 	case "FrameBorders":
 		return usage(cmdFrameBorders(args...))
 	case "FrameFull":
@@ -63,6 +65,8 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 		return usage(cmdPromptSelect(args...))
 	case "Quit":
 		return usage(cmdQuit())
+	case "Raise":
+		return usage(cmdRaise(args...))
 	case "Resize":
 		return usage(cmdResize(args...))
 	case "Workspace":
@@ -104,23 +108,23 @@ func commandHandler(X *xgbutil.XUtil, cm xevent.ClientMessageEvent) {
 	}
 
 	if typeName == "_WINGO_CMD" {
-		cmd, err := command.Get(X)
+		cmd, err := cmdusage.CmdGet(X)
 		if err != nil {
 			logger.Warning.Printf("Could not get _WINGO_CMD value: %s", err)
 			return
 		}
 
 		// Blank out the command
-		command.Set(X, "")
+		cmdusage.CmdSet(X, "")
 
 		// Parse the command
 		cmdName, args := commandParse(cmd)
 		cmdFun := commandFun("", cmdName, args...)
 		if cmdFun != nil {
 			cmdFun()
-			command.StatusSet(X, true)
+			cmdusage.StatusSet(X, true)
 		} else {
-			command.StatusSet(X, false)
+			cmdusage.StatusSet(X, false)
 		}
 	}
 }
@@ -201,6 +205,14 @@ func cmdClose(args ...string) func() {
 	return func() {
 		withFocusedOrArg(args, func(c *client) {
 			c.Close()
+		})
+	}
+}
+
+func cmdFocus(args ...string) func() {
+	return func() {
+		withFocusedOrArg(args, func(c *client) {
+			c.Focus()
 		})
 	}
 }
@@ -422,6 +434,14 @@ func cmdQuit() func() {
 	return func() {
 		logger.Message.Println("The User has told us to quit.")
 		X.Quit()
+	}
+}
+
+func cmdRaise(args ...string) func() {
+	return func() {
+		withFocusedOrArg(args, func(c *client) {
+			c.Raise()
+		})
 	}
 }
 

@@ -1,13 +1,18 @@
-package main
+package cmdusage
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/BurntSushi/xgbutil"
+	"github.com/BurntSushi/xgbutil/xprop"
 
 	"github.com/BurntSushi/wingo/logger"
 )
 
 var usage = map[string]string{
 	"Close": "[win:window-id]",
+	"Focus": "[win:window-id]",
 	"FrameBorders": "[win:window-id]",
 	"FrameFull": "[win:window-id]",
 	"FrameNada": "[win:window-id]",
@@ -21,6 +26,7 @@ var usage = map[string]string{
 	"PromptCyclePrev": "client-list-name",
 	"PromptSelect": "list-name [Prefix | Substring]",
 	"Quit": "",
+	"Raise": "[win:window-id]",
 	"Resize": "width height [win:window-id]",
 	"Workspace": "workspace-name [Greedy]",
 	"WorkspacePrefix": "workspace-name-prefix [Greedy]",
@@ -57,3 +63,31 @@ func ShowUsage(cmd string) {
 	logger.Warning.Printf("Usage: %s\n", s)
 }
 
+func CmdGet(X *xgbutil.XUtil) (string, error) {
+	return xprop.PropValStr(xprop.GetProperty(X, X.RootWin(), "_WINGO_CMD"))
+}
+
+func CmdSet(X *xgbutil.XUtil, cmd string) error {
+	return xprop.ChangeProp(X, X.RootWin(), 8,
+		"_WINGO_CMD", "UTF8_STRING", []byte(cmd))
+}
+
+func StatusGet(X *xgbutil.XUtil) bool {
+	status, err := xprop.PropValStr(xprop.GetProperty(X, X.RootWin(),
+		"_WINGO_CMD_STATUS"))
+
+	return err == nil && strings.ToLower(status) == "success"
+}
+
+func StatusSet(X *xgbutil.XUtil, status bool) {
+	var statusStr string
+	if status {
+		statusStr = "Success"
+	} else {
+		statusStr = "Error"
+	}
+
+	// throw away the error
+	xprop.ChangeProp(X, X.RootWin(), 8, "_WINGO_CMD_STATUS", "UTF8_STRING",
+		[]byte(statusStr))
+}
