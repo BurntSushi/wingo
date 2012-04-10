@@ -315,13 +315,13 @@ func cmdMove(args ...string) func() {
 		return nil
 	}
 
-	x, xok := parsePos(args[0], false)
-	y, yok := parsePos(args[1], true)
-	if !xok || !yok {
-		return nil
-	}
-
 	return func() {
+		x, xok := parsePos(args[0], false)
+		y, yok := parsePos(args[1], true)
+		if !xok || !yok {
+			return
+		}
+
 		withFocusedOrArg(args, func(c *client) {
 			c.move(x, y)
 		})
@@ -450,13 +450,13 @@ func cmdResize(args ...string) func() {
 		return nil
 	}
 
-	w, wok := parseDim(args[0], false)
-	h, hok := parseDim(args[1], true)
-	if !wok || !hok {
-		return nil
-	}
-
 	return func() {
+		w, wok := parseDim(args[0], false)
+		h, hok := parseDim(args[1], true)
+		if !wok || !hok {
+			return
+		}
+
 		withFocusedOrArg(args, func(c *client) {
 			c.resize(w, h)
 		})
