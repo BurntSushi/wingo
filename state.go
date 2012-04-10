@@ -100,7 +100,7 @@ func (wm *state) fallback() {
 	var c *client
 	for i := len(wm.focus) - 1; i >= 0; i-- {
 		c = wm.focus[i]
-		if c.Mapped() && c.Alive() && c.workspace == WM.WrkActiveInd() {
+		if c.Mapped() && c.Alive() && c.workspace.id == WM.wrkActive().id {
 			logger.Message.Printf("Focus falling back to %s", c)
 			c.Focus()
 			return

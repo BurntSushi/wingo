@@ -423,7 +423,7 @@ func promptSelectListWorkspaces(
 	hWrks := make([]*promptSelectItem, 0, len(WM.workspaces)-len(WM.heads))
 
 	for head := range WM.heads {
-		wrk := WM.WrkHead(head)
+		wrk := WM.wrkHead(head)
 		vWrks = append(vWrks,
 			newPromptSelectItem(wrk.name, action(wrk),
 				wrk.promptStore["select_active"],
@@ -587,7 +587,7 @@ func promptSelectListClients(activeWrk, visible,
 		for i := len(WM.focus) - 1; i >= 0; i-- {
 			c := WM.focus[i]
 
-			if c.workspace != wrk.id {
+			if c.workspace.id != wrk.id {
 				continue
 			}
 
@@ -597,11 +597,10 @@ func promptSelectListClients(activeWrk, visible,
 				continue
 			}
 
-			w := WM.workspaces[c.workspace]
-			if activeWrk && !w.active {
+			if activeWrk && !c.workspace.active {
 				continue
 			}
-			if visible && !w.visible() {
+			if visible && !c.workspace.visible() {
 				continue
 			}
 			if !iconified && c.iconified {
@@ -635,7 +634,7 @@ func promptSelectListClients(activeWrk, visible,
 	// then lets order the groups by monitor.
 	if visible {
 		for head := range WM.heads {
-			if newGroup := addItems(WM.WrkHead(head)); newGroup != nil {
+			if newGroup := addItems(WM.wrkHead(head)); newGroup != nil {
 				groups = append(groups, newGroup)
 			}
 		}

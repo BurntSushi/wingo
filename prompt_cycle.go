@@ -224,11 +224,10 @@ func (pc *promptCycle) show(keyStr string, activeWrk, visible,
 	var c *client
 	for i := len(WM.focus) - 1; i >= 0; i-- {
 		c = WM.focus[i]
-		wrk := WM.workspaces[c.workspace]
-		if activeWrk && !wrk.active {
+		if activeWrk && !c.workspace.active {
 			continue
 		}
-		if visible && !wrk.visible() {
+		if visible && !c.workspace.visible() {
 			continue
 		}
 		if !iconified && c.iconified {

@@ -41,11 +41,6 @@ func (c *client) manage() error {
 	WM.focusAdd(c)
 	c.Raise()
 
-	// Some prompts need to do some heavy-lifting ONE time for each client.
-	// (i.e., creating images.)
-	// These images are added to the "prompt" map in each client.
-	c.promptAdd()
-
 	// Listen to the client for property and structure changes.
 	c.window.listen(xgb.EventMaskPropertyChange |
 		xgb.EventMaskStructureNotify)
@@ -91,11 +86,17 @@ func (c *client) manage() error {
 	c.frameMouseConfig()
 
 	// Find the current workspace and attach this client
-	WM.WrkActive().Add(c, false)
+	WM.wrkActive().add(c)
+
+	// Some prompts need to do some heavy-lifting ONE time for each client.
+	// (i.e., creating images.)
+	// These images are added to the "prompt" map in each client.
+	c.promptAdd()
 
 	// If the initial state isn't iconic or is absent, then we can map
 	if c.hints.Flags&icccm.HintState == 0 ||
 		c.hints.InitialState != icccm.StateIconic {
+
 		c.Map()
 		c.Focus()
 	}

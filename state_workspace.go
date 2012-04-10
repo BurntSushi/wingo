@@ -31,7 +31,7 @@ func newWorkspace(id int) *workspace {
 	return wrk
 }
 
-func (wm *state) WrkActive() *workspace {
+func (wm *state) wrkActive() *workspace {
 	for _, wrk := range wm.workspaces {
 		if wrk.active {
 			return wrk
@@ -43,19 +43,7 @@ func (wm *state) WrkActive() *workspace {
 	panic("Wingo *must* have an active workspace at all times. This is a bug!")
 }
 
-func (wm *state) WrkActiveInd() int {
-	for i, wrk := range wm.workspaces {
-		if wrk.active {
-			return i
-		}
-	}
-
-	logger.Error.Printf("Could not find an active workspace index in: %v",
-		wm.workspaces)
-	panic("Wingo *must* have an active workspace at all times. This is a bug!")
-}
-
-func (wm *state) WrkHead(head int) *workspace {
+func (wm *state) wrkHead(head int) *workspace {
 	for _, wrk := range wm.workspaces {
 		if wrk.head == head {
 			return wrk
@@ -68,7 +56,7 @@ func (wm *state) WrkHead(head int) *workspace {
 		"This is a bug!")
 }
 
-func (wm *state) WrkFind(name string) *workspace {
+func (wm *state) wrkFind(name string) *workspace {
 	for _, wrk := range wm.workspaces {
 		if strings.ToLower(name) == strings.ToLower(wrk.name) {
 			return wrk
@@ -77,13 +65,12 @@ func (wm *state) WrkFind(name string) *workspace {
 	return nil
 }
 
-func (wm *state) WrkSet(wrk int, fallback bool, greedy bool) {
-	if wrk > len(wm.workspaces) || wm.workspaces[wrk].active {
+func (wrkNew *workspace) activate(fallback bool, greedy bool) {
+	if wrkNew.active {
 		return
 	}
 
-	wrkActive := wm.WrkActive()
-	wrkNew := wm.workspaces[wrk]
+	wrkActive := WM.wrkActive()
 
 	if !wrkNew.visible() {
 		wrkActiveHead := wrkActive.head
@@ -111,39 +98,59 @@ func (wm *state) WrkSet(wrk int, fallback bool, greedy bool) {
 	}
 }
 
-func (wrk *workspace) Add(c *client, checkVisible bool) {
-	cwork := c.workspace
-	wrk.add(c, checkVisible)
+func (wrk *workspace) add(c *client) {
+	wrk.addSingle(c)
 
 	// Don't forget to add transients
 	for _, c2 := range WM.clients {
-		if c.transient(c2) && c2.workspace == cwork {
-			wrk.add(c2, checkVisible)
+		if c.transient(c2) && c2.workspace != nil &&
+			c2.workspace.id == c.workspace.id {
+
+			wrk.addSingle(c2)
 		}
 	}
 }
 
-func (wrk *workspace) add(c *client, checkVisible bool) {
+func (wrk *workspace) addSingle(c *client) {
 	// Resist change if we don't need it.
-	if c.workspace == wrk.id {
+	if c.workspace != nil && c.workspace.id == wrk.id {
 		return
 	}
 
 	// Look at the client's current workspace, and if it's valid, remove it.
-	if c.workspace >= 0 && c.workspace < len(WM.workspaces) {
+	if c.workspace != nil {
 		// code for removing a client from a workspace
 	}
 
 	// This should be the *only* place this happens!!!
-	c.workspace = wrk.id
+	c.workspace = wrk
 
-	// It's okay if the following map/unmap is redundant with the client's
-	// current state. They will bail appropriately if so.
-	if checkVisible {
-		if wrk.visible() {
-			c.Map()
-		} else {
-			c.Unmap()
+	// We're going to have to do layout stuff here.
+	// To determine which layout the client will be in, we must first
+	// determine whether or not it must be floating. If it must be floating,
+	// obviously the client will be in the floating layout.
+	// Otherwise, we must look at the currently active layout for this
+	// workspace, and use that.
+	// The aforementioned logic should actually be encapsulated somewhere
+	// else (with a workspace receiver).
+}
+
+func (wrk *workspace) mapOrUnmap(c *client) {
+	if wrk.visible() {
+		c.Map()
+	} else {
+		c.Unmap()
+	}
+
+	for _, c2 := range WM.clients {
+		if c.transient(c2) && c2.workspace != nil &&
+			c2.workspace.id == c.workspace.id {
+
+			if wrk.visible() {
+				c2.Map()
+			} else {
+				c2.Unmap()
+			}
 		}
 	}
 }
@@ -169,7 +176,7 @@ func (wrk *workspace) relayout() {
 
 func (wrk *workspace) hide() {
 	for _, c := range WM.clients {
-		if c.workspace == wrk.id {
+		if c.workspace.id == wrk.id {
 			c.Unmap()
 		}
 	}
@@ -177,12 +184,8 @@ func (wrk *workspace) hide() {
 
 func (wrk *workspace) show() {
 	for _, c := range WM.clients {
-		if c.workspace == wrk.id {
+		if c.workspace.id == wrk.id {
 			c.Map()
 		}
 	}
-}
-
-func (wrk *workspace) Activate() {
-
 }

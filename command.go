@@ -287,10 +287,10 @@ func cmdHeadFocus(withClient bool, args ...string) func() {
 		if withClient {
 			withFocusedOrArg(args, func(c *client) {
 				c.Raise()
-				wrk.Add(c, false)
+				wrk.add(c)
 			})
 		}
-		WM.WrkSet(wrk.id, true, greedy)
+		wrk.activate(true, greedy)
 	}
 }
 
@@ -401,7 +401,7 @@ func cmdPromptSelect(args ...string) func() {
 		f = func() []*promptSelectGroup {
 			action := func(wrk *workspace) func() {
 				return func() {
-					WM.WrkSet(wrk.id, true, true)
+					wrk.activate(true, true)
 				}
 			}
 			return promptSelectListWorkspaces(action)
@@ -412,8 +412,8 @@ func cmdPromptSelect(args ...string) func() {
 				return func() {
 					withFocused(func(c *client) {
 						c.Raise()
-						wrk.Add(c, false)
-						WM.WrkSet(wrk.id, true, true)
+						wrk.add(c)
+						wrk.activate(true, true)
 					})
 				}
 			}
@@ -473,7 +473,7 @@ func cmdWorkspace(withClient bool, setClient bool, args ...string) func() {
 	}
 
 	return func() {
-		wrk := WM.WrkFind(args[0])
+		wrk := WM.wrkFind(args[0])
 		if wrk == nil {
 			logger.Warning.Printf("The 'Workspace' command could not find "+
 				"workspace '%s'.", args[0])
@@ -488,16 +488,17 @@ func cmdWorkspace(withClient bool, setClient bool, args ...string) func() {
 		if withClient {
 			withFocused(func(c *client) {
 				c.Raise()
-				wrk.Add(c, false)
+				wrk.add(c)
 			})
 		}
 
 		if setClient {
 			withFocusedOrArg(args, func(c *client) {
-				wrk.Add(c, true)
+				wrk.add(c)
+				wrk.mapOrUnmap(c)
 			})
 		} else {
-			WM.WrkSet(wrk.id, true, greedy)
+			wrk.activate(true, greedy)
 		}
 	}
 }
@@ -570,17 +571,18 @@ func cmdWorkspacePrefix(withClient bool, args ...string) func() {
 		if withClient {
 			withFocused(func(c *client) {
 				c.Raise()
-				wrk.Add(c, false)
+				wrk.add(c)
 			})
 		}
-		WM.WrkSet(wrk.id, true, greedy)
+		wrk.activate(true, greedy)
 	}
 }
 
 func cmdWorkspaceLeft() func() {
 	return func() {
-		wrkAct := WM.WrkActive()
-		WM.WrkSet(mod(wrkAct.id-1, len(WM.workspaces)), true, false)
+		wrkAct := WM.wrkActive()
+		wrkLeft := WM.workspaces[mod(wrkAct.id-1, len(WM.workspaces))]
+		wrkLeft.activate(true, false)
 	}
 }
 
@@ -588,18 +590,19 @@ func cmdWorkspaceLeftWithClient() func() {
 	return func() {
 		withFocused(func(c *client) {
 			c.Raise()
-			wrkAct := WM.WrkActive()
-			wrkPrev := WM.workspaces[mod(wrkAct.id-1, len(WM.workspaces))]
-			wrkPrev.Add(c, false)
-			WM.WrkSet(wrkPrev.id, true, false)
+			wrkAct := WM.wrkActive()
+			wrkLeft := WM.workspaces[mod(wrkAct.id-1, len(WM.workspaces))]
+			wrkLeft.add(c)
+			wrkLeft.activate(true, false)
 		})
 	}
 }
 
 func cmdWorkspaceRight() func() {
 	return func() {
-		wrkAct := WM.WrkActive()
-		WM.WrkSet(mod(wrkAct.id+1, len(WM.workspaces)), true, false)
+		wrkAct := WM.wrkActive()
+		wrkRight := WM.workspaces[mod(wrkAct.id+1, len(WM.workspaces))]
+		wrkRight.activate(true, false)
 	}
 }
 
@@ -607,10 +610,10 @@ func cmdWorkspaceRightWithClient() func() {
 	return func() {
 		withFocused(func(c *client) {
 			c.Raise()
-			wrkAct := WM.WrkActive()
-			wrkNext := WM.workspaces[mod(wrkAct.id+1, len(WM.workspaces))]
-			wrkNext.Add(c, false)
-			WM.WrkSet(wrkNext.id, true, false)
+			wrkAct := WM.wrkActive()
+			wrkRight := WM.workspaces[mod(wrkAct.id+1, len(WM.workspaces))]
+			wrkRight.add(c)
+			wrkRight.activate(true, false)
 		})
 	}
 }

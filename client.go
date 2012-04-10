@@ -17,7 +17,7 @@ import (
 
 type client struct {
 	window              *window
-	workspace           int
+	workspace           *workspace
 	layer               int
 	name, vname, wmname string
 	isMapped            bool
@@ -48,7 +48,7 @@ type client struct {
 func newClient(id xgb.Id) *client {
 	return &client{
 		window:       newWindow(id),
-		workspace:    -1,
+		workspace:    nil,
 		layer:        StackDefault,
 		name:         "",
 		vname:        "",
@@ -237,8 +237,8 @@ func (c *client) TrulyAlive() bool {
 
 // ForceWorkspace makes the current workspace this client's workspace.
 func (c *client) ForceWorkspace() {
-	if WM.WrkActiveInd() != c.workspace {
-		WM.WrkSet(c.workspace, false, false)
+	if WM.wrkActive().id != c.workspace.id {
+		c.workspace.activate(false, false)
 	}
 }
 

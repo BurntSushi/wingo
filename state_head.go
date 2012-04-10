@@ -14,7 +14,7 @@ func rootGeometryChange(X *xgbutil.XUtil, ev xevent.ConfigureNotifyEvent) {
 }
 
 func (wm *state) headActive() xrect.Rect {
-	return wm.headGeom(wm.WrkActive().head)
+	return wm.headGeom(wm.wrkActive().head)
 }
 
 func (wm *state) headGeom(i int) xrect.Rect {
