@@ -1,3 +1,6 @@
+$OPACITY_UP := `transset-df -p --max 1.0 --inc 0.05`
+$OPACITY_DOWN := `transset-df -p --min 0.1 --dec 0.05`
+
 [Root]
 1 := Focus
 
@@ -7,32 +10,44 @@
 [Frame]
 Mod4-1 := Move
 Mod4-3 := Resize
-Mod4-4 up := `transset-df -p --max 1.0 --inc 0.05`
-Mod4-5 up := `transset-df -p --min 0.1 --dec 0.05`
+Mod4-4 up := $OPACITY_UP
+Mod4-5 up := $OPACITY_DOWN
 
 [FullIcon]
 1 := Move
 1 := FocusRaise
 3 := Resize
+Mod4-4 up := $OPACITY_UP
+Mod4-5 up := $OPACITY_DOWN
 
 [FullTitleText]
 1 := Move
 1 := FocusRaise
 3 := Resize
+Mod4-4 up := $OPACITY_UP
+Mod4-5 up := $OPACITY_DOWN
 
 [FullTitleBar]
 1 := Move
 1 := FocusRaise
 3 := Resize
+Mod4-4 up := $OPACITY_UP
+Mod4-5 up := $OPACITY_DOWN
 
 [FullClose]
 1 up := Close
+Mod4-4 up := $OPACITY_UP
+Mod4-5 up := $OPACITY_DOWN
 
 [FullMaximize]
 1 up := MaximizeToggle
+Mod4-4 up := $OPACITY_UP
+Mod4-5 up := $OPACITY_DOWN
 
 [FullMinimize]
 1 up := Minimize
+Mod4-4 up := $OPACITY_UP
+Mod4-5 up := $OPACITY_DOWN
 
 [FullTop]
 1 := Resize Top

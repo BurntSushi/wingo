@@ -7,8 +7,10 @@ import (
 )
 
 func frameMaximize(f Frame) {
-	f.ConfigureFrame(DoX|DoY|DoW|DoH, ROOT.geom.X(), ROOT.geom.Y(),
-		ROOT.geom.Width(), ROOT.geom.Height(), 0, 0, true, true)
+	headGeom := WM.headActive()
+	f.ConfigureFrame(DoX|DoY|DoW|DoH,
+		headGeom.X(), headGeom.Y(), headGeom.Width(), headGeom.Height(),
+		0, 0, true, true)
 }
 
 func frameMoveBegin(f Frame, rx, ry, ex, ey int) {

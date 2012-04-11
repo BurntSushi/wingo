@@ -16,6 +16,7 @@ type state struct {
 	clients    []*client // a list of clients in order of being added
 	stack      []*client // clients ordered by visual stack
 	focus      []*client // focus order of clients; may be smaller than clients
+	headsRaw   xinerama.Heads
 	heads      xinerama.Heads
 	workspaces workspaces
 }
@@ -70,7 +71,7 @@ func (wm *state) updateEwmhClients() {
 // There can only ever be one focused client, so just find it
 func (wm *state) focused() *client {
 	for _, client := range wm.clients {
-		if client.state == StateActive {
+		if client.normal && client.state == StateActive {
 			return client
 		}
 	}

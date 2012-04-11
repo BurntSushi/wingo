@@ -30,7 +30,7 @@ const (
 func newWindow(id xgb.Id) *window {
 	return &window{
 		id:   id,
-		geom: xrect.Make(0, 0, 1, 1),
+		geom: xrect.New(0, 0, 1, 1),
 	}
 }
 

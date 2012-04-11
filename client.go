@@ -23,11 +23,13 @@ type client struct {
 	isMapped            bool
 	initMap             bool
 	state               int
+	normal              bool
 	maximized           bool
 	iconified           bool
 	initialMap          bool
 	lastTime            int
 	unmapIgnore         int
+	hasStruts           bool
 
 	types        []string
 	hints        *icccm.Hints
@@ -49,7 +51,7 @@ func newClient(id xgb.Id) *client {
 	return &client{
 		window:       newWindow(id),
 		workspace:    nil,
-		layer:        StackDefault,
+		layer:        stackDefault,
 		name:         "",
 		vname:        "",
 		wmname:       "",
@@ -97,10 +99,23 @@ func (c *client) unmanage() {
 	xevent.Detach(X, c.window.id)
 	c.promptRemove()
 	WM.stackRemove(c)
-	WM.focusRemove(c)
 	WM.clientRemove(c)
 
+	if c.normal {
+		WM.focusRemove(c)
+	}
+	if c.hasStruts {
+		WM.headsApplyStruts()
+	}
+
 	WM.updateEwmhStacking()
+}
+
+func (c *client) focusRaise() {
+	if !c.normal {
+		return
+	}
+	WM.focusAdd(c)
 }
 
 func (c *client) Map() {
@@ -139,6 +154,31 @@ func (c *client) unmappedFallback() {
 	if focused != nil && focused.Id() == c.Id() {
 		WM.fallback()
 	}
+}
+
+// normalSet sets whether a client is normal or not.
+// Once a client is managed, this cannot change.
+// A client is defined to be normal in terms of what it is NOT.
+// A client is normal when all of the following things are false:
+// Has type _NET_WM_WINDOW_TYPE_DESKTOP
+// Has type _NET_WM_WINDOW_TYPE_DOCK
+// Has type _NET_WM_WINDOW_TYPE_SPLASH
+// Has type _NET_WM_WINDOW_TYPE_DROPDOWN_MENU
+// Has type _NET_WM_WINDOW_TYPE_POPUP_MENU
+// Has type _NET_WM_WINDOW_TYPE_TOOLTIP
+// Has type _NET_WM_WINDOW_TYPE_NOTIFICATION
+// Has type _NET_WM_WINDOW_TYPE_COMBO
+// Has type _NET_WM_WINDOW_TYPE_DND
+func (c *client) normalSet() {
+	c.normal = strIndex("_NET_WM_WINDOW_TYPE_DESKTOP", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_DOCK", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_SPLASH", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_DROPDOWN_MENU", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_POPUP_MENU", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_TOOLTIP", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_NOTIFICATION", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_COMBO", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_DND", c.types) == -1
 }
 
 func (c *client) IconifyToggle() {
@@ -278,7 +318,7 @@ func (c *client) Focus() {
 }
 
 func (c *client) Focused() {
-	WM.focusAdd(c)
+	c.focusRaise()
 	c.state = StateActive
 	c.Frame().Active()
 
@@ -299,21 +339,33 @@ func (c *client) MaximizeToggle() {
 	}
 
 	if c.maximized {
-		c.maximized = false
-		c.frameNada.Unmaximize()
-		c.frameSlim.Unmaximize()
-		c.frameBorders.Unmaximize()
-		c.frameFull.Unmaximize()
-		c.LoadGeom("unmaximized")
+		c.unmaximize()
 	} else {
-		c.maximized = true
-		c.SaveGeom("unmaximized")
-		c.frameNada.Maximize()
-		c.frameSlim.Maximize()
-		c.frameBorders.Maximize()
-		c.frameFull.Maximize()
-		frameMaximize(c.Frame())
+		c.maximize()
 	}
+}
+
+func (c *client) maximize() {
+	// only save if we're not already maximized
+	if !c.maximized {
+		c.SaveGeom("unmaximized")
+	}
+
+	c.maximized = true
+	c.frameNada.Maximize()
+	c.frameSlim.Maximize()
+	c.frameBorders.Maximize()
+	c.frameFull.Maximize()
+	frameMaximize(c.Frame())
+}
+
+func (c *client) unmaximize() {
+	c.maximized = false
+	c.frameNada.Unmaximize()
+	c.frameSlim.Unmaximize()
+	c.frameBorders.Unmaximize()
+	c.frameFull.Unmaximize()
+	c.LoadGeom("unmaximized")
 }
 
 func (c *client) EnsureUnmax() {
@@ -342,7 +394,7 @@ func (c *client) moveresize(x, y, w, h int) {
 }
 
 func (c *client) SaveGeom(key string) {
-	c.geomStore[key] = xrect.Make(xrect.Pieces(c.Frame().Geom()))
+	c.geomStore[key] = xrect.New(xrect.Pieces(c.Frame().Geom()))
 }
 
 func (c *client) LoadGeom(key string) {
@@ -357,8 +409,8 @@ func (c *client) LoadGeom(key string) {
 func (c *client) Raise() {
 	WM.stackRaise(c, false)
 
-	// Also raise its transients...
-	toRaise := make([]*client, 0, 2)
+	// Also raise its transients if they are in the same layer...
+	toRaise := []*client{c}
 	for i := len(WM.stack) - 1; i >= 0; i-- {
 		if c.transient(WM.stack[i]) {
 			toRaise = append(toRaise, WM.stack[i])
@@ -368,7 +420,7 @@ func (c *client) Raise() {
 	for _, c2 := range toRaise {
 		WM.stackRaise(c2, false)
 	}
-	WM.stackRefresh(len(toRaise) + 1)
+	WM.stackUpdate(toRaise)
 }
 
 func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
@@ -414,6 +466,8 @@ func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
 		if err == nil {
 			c.lastTime = newTime
 		}
+	case "_NET_WM_STRUT_PARTIAL":
+		WM.headsApplyStruts()
 	}
 }
 

@@ -48,3 +48,8 @@ func (c *client) transientType() bool {
 		strIndex("_NET_WM_WINDOW_TYPE_UTILITY", c.types) > -1 ||
 		strIndex("_NET_WM_WINDOW_TYPE_DIALOG", c.types) > -1
 }
+
+// isTransient just tests if 'transientFor' is a window id.
+func (c *client) isTransient() bool {
+	return c.transientFor > 0
+}

@@ -27,19 +27,35 @@ func (c *client) manage() error {
 		return err
 	}
 
+	// determines whether this is a "normal" client window or not.
+	c.normalSet()
+
 	// time for reparenting/decorating
 	c.initFrame()
-	c.frame = c.frameFull
+	if c.normal {
+		c.frame = c.frameFull
+	} else {
+		c.frame = c.frameNada
+	}
 	FrameClientReset(c.Frame())
 	c.Frame().On()
+
+	// time to add the client to the WM state
+	WM.clientAdd(c)
 
 	// Reparent's sends an unmap, we need to ignore it!
 	c.unmapIgnore++
 
-	// time to add the client to the WM state
-	WM.clientAdd(c)
-	WM.focusAdd(c)
+	// Which stacking layer does this client belong in?
+	c.stackDetermine()
 	c.Raise()
+	c.focusRaise()
+
+	// if this client has struts, apply them!
+	if strut, _ := ewmh.WmStrutPartialGet(X, c.Id()); strut != nil {
+		WM.headsApplyStruts()
+		c.hasStruts = true
+	}
 
 	// Listen to the client for property and structure changes.
 	c.window.listen(xgb.EventMaskPropertyChange |
@@ -98,7 +114,11 @@ func (c *client) manage() error {
 		c.hints.InitialState != icccm.StateIconic {
 
 		c.Map()
-		c.Focus()
+
+		// Only focus it if it's a normal client
+		if c.normal {
+			c.Focus()
+		}
 	}
 
 	return nil
@@ -152,7 +172,15 @@ func (c *client) initPopulate() error {
 
 	c.vname, _ = ewmh.WmVisibleNameGet(X, c.Id())
 	c.wmname, _ = icccm.WmNameGet(X, c.Id())
+
 	c.transientFor, _ = icccm.WmTransientForGet(X, c.Id())
+	if c.transientFor == 0 {
+		for _, c2 := range WM.clients {
+			if c2.transient(c) {
+				c.transientFor = c2.Id()
+			}
+		}
+	}
 
 	c.types, err = ewmh.WmWindowTypeGet(X, c.Id())
 	if err != nil {
@@ -160,6 +188,7 @@ func (c *client) initPopulate() error {
 			"using 'normal'.", c.Id())
 		c.types = []string{"_NET_WM_WINDOW_TYPE_NORMAL"}
 	}
+
 	return nil
 }
 
@@ -183,5 +212,18 @@ func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
 		logger.Warning.Printf("Could not manage window %X because: %v\n",
 			client, err)
 		return
+	}
+}
+
+// stackDetermine infers which layer this client should be in.
+// Typically used when first managing a client.
+func (c *client) stackDetermine() {
+	switch {
+	case strIndex("_NET_WM_WINDOW_TYPE_DESKTOP", c.types) > -1:
+		c.layer = stackDesktop
+	case strIndex("_NET_WM_WINDOW_TYPE_DOCK", c.types) > -1:
+		c.layer = stackDock
+	default:
+		c.layer = stackDefault
 	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/BurntSushi/xgbutil"
+	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xinerama"
 	"github.com/BurntSushi/xgbutil/xrect"
@@ -98,7 +99,39 @@ func (wm *state) headsLoad() {
 	}
 
 	// update the state of the world
-	wm.heads = heads
+	wm.headsRaw = heads
+
+	// apply struts!
+	wm.headsApplyStruts()
+}
+
+// headsApplyStruts looks for struts set on all clients, and applies them
+// to the current set of heads.
+func (wm *state) headsApplyStruts() {
+	// reset the current heads
+	wm.headsReload()
+
+	// now go through each client, find any struts and apply them. easy peasy!
+	for _, c := range wm.clients {
+		strut, _ := ewmh.WmStrutPartialGet(X, c.Id())
+		if strut == nil {
+			continue
+		}
+		logger.Debug.Println(c)
+		xrect.ApplyStrut(wm.heads, ROOT.geom.Width(), ROOT.geom.Height(),
+			strut.Left, strut.Right, strut.Top, strut.Bottom,
+			strut.LeftStartY, strut.LeftEndY,
+			strut.RightStartY, strut.RightEndY,
+			strut.TopStartX, strut.TopEndX,
+			strut.BottomStartX, strut.BottomEndX)
+	}
+
+	// Make currently visible and maximized clients fix themselves.
+	for _, c := range wm.clients {
+		if c.isMapped && c.maximized {
+			c.maximize()
+		}
+	}
 }
 
 // fillWorkspaces is used when there are more heads than there are workspaces.
@@ -124,8 +157,8 @@ func (wm *state) fillWorkspaces(heads xinerama.Heads) {
 // to listen to geometry changes on the root window, rather than using RandR
 // to listen to OutputChange events.
 func stateHeadsGet() xinerama.Heads {
-	heads, err := xinerama.PhysicalHeads(X)
-	if err != nil || len(heads) == 0 {
+	rawHeads, err := xinerama.PhysicalHeads(X)
+	if err != nil || len(rawHeads) == 0 {
 		if err == nil {
 			logger.Warning.Printf("Could not find any physical heads with " +
 				"the Xinerama extension.")
@@ -136,10 +169,18 @@ func stateHeadsGet() xinerama.Heads {
 		logger.Warning.Printf("Assuming one head with size equivalent to the " +
 			"root window.")
 
-		heads = xinerama.Heads{
-			xrect.Make(ROOT.geom.X(), ROOT.geom.Y(),
+		rawHeads = xinerama.Heads{
+			xrect.New(ROOT.geom.X(), ROOT.geom.Y(),
 				ROOT.geom.Width(), ROOT.geom.Height()),
 		}
 	}
-	return heads
+	return rawHeads
+}
+
+// headsReload puts the raw monitor geometry back into wm.heads
+func (wm *state) headsReload() {
+	wm.heads = make(xinerama.Heads, len(wm.headsRaw))
+	for i, h := range wm.headsRaw {
+		wm.heads[i] = xrect.New(h.X(), h.Y(), h.Width(), h.Height())
+	}
 }

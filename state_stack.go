@@ -18,12 +18,12 @@ import (
 // Namely, a window in layer X can *never* be above a window in layer X + 1
 // and can *never* be below a window in layer X - 1.
 const (
-	StackDesktop = iota
-	StackBelow
-	StackDefault
-	StackDock
-	StackAbove
-	StackFullscreen
+	stackDesktop = iota
+	stackBelow
+	stackDefault
+	stackAbove
+	stackDock
+	stackFullscreen
 )
 
 // updateEwmhStacking refreshes the _NET_CLIENT_LIST_STACKING property on the
@@ -41,30 +41,26 @@ func (wm *state) updateEwmhStacking() {
 	}
 }
 
-// stackRefresh forces the current state of the stack to be reality.
+// stackUpdate forces the current state of the stack to be reality.
 // This is useful when we want to make multiple modifications to the stack,
 // and apply them all at once. This prevents window flashing when the stack
 // is unchanged.
-// Also, the 'count' parameter can be specified when N clients are raised
-// with stackRaise(client, false) so that the stack can be made visually up
-// to date in N stacking operations. (Instead of restacking all clients.)
-// If count is 0, then the whole stack is refreshed.
-func (wm *state) stackRefresh(count int) {
+func (wm *state) stackUpdate(clients []*client) {
 	if len(wm.stack) <= 1 {
 		return
 	}
-
-	// do the whole stack
-	if count == 0 || count >= len(wm.stack) {
-		count = len(wm.stack) - 1
-	}
-
-	var beneath *client
-	for i := count - 1; i >= 0; i-- {
-		beneath = wm.stack[i+1]
-		wm.stack[i].Frame().ConfigureClient(DoSibling|DoStack, 0, 0, 0, 0,
-			beneath.Frame().ParentId(),
-			xgb.StackModeAbove, false)
+	for i := len(wm.stack) - 1; i >= 0; i-- {
+		if cliIndex(wm.stack[i], clients) > -1 {
+			if i == len(wm.stack)-1 {
+				wm.stack[i].Frame().ConfigureClient(
+					DoSibling|DoStack, 0, 0, 0, 0,
+					wm.stack[i-1].Frame().ParentId(), xgb.StackModeBelow, false)
+			} else {
+				wm.stack[i].Frame().ConfigureClient(
+					DoSibling|DoStack, 0, 0, 0, 0,
+					wm.stack[i+1].Frame().ParentId(), xgb.StackModeAbove, false)
+			}
+		}
 	}
 }
 
