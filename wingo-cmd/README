@@ -1,0 +1,19 @@
+wingo-cmd is a tool that can issue commands to Wingo from the command line.
+
+The set of commands available should be equivalent to the set of commands
+available to be bound to keys. (There is no documentation for this yet.)
+
+Example usage:
+
+Move the active window to (20, 100)
+
+  wingo-cmd Move 20 100
+
+Resize the window with id 0xa00001 to half the screen width and height
+
+  wingo-cmd Resize 0.5 0.5 0xa00001  
+
+Close the active window:
+
+  wingo-cmd Close
+
