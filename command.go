@@ -51,6 +51,8 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 		return usage(cmdMinimize(args...))
 	case "Move":
 		return usage(cmdMove(args...))
+	case "Place":
+		return usage(cmdPlace(args...))
 	case "PromptCycleNext":
 		if len(keyStr) == 0 {
 			return nil
@@ -325,6 +327,13 @@ func cmdMove(args ...string) func() {
 		withFocusedOrArg(args, func(c *client) {
 			c.move(x, y)
 		})
+	}
+}
+
+func cmdPlace(args ...string) func() {
+	return func() {
+		wrk := WM.wrkActive()
+		wrk.layout().place()
 	}
 }
 
@@ -666,17 +675,28 @@ func commandShellFun(cmd string) func() {
 			addArg(startArgPos, len(splitCmdName[1]))
 		}
 
-		cmd := exec.Command(cmdName, args...)
-		cmd.Stderr = &stderr
+		// XXX: This is very weird.
+		// If I don't put this into its own go-routine and wait a small
+		// amount of time, commands that start new X clients fail miserably.
+		// And when I say miserably, I mean they take down X itself.
+		// For some reason, this avoids that problem. For now...
+		// (I thought the problem was the grab imposed by a key binding,
+		// but ungrabbing the keyboard before running this command didn't
+		// change behavior.)
+		go func() {
+			time.Sleep(time.Microsecond)
+			cmd := exec.Command(cmdName, args...)
+			cmd.Stderr = &stderr
 
-		err := cmd.Run()
-		if err != nil {
-			logger.Warning.Printf("Error running '%s': %s", allCmd, err)
-			if stderr.Len() > 0 {
-				logger.Warning.Printf("Error running '%s': %s",
-					allCmd, stderr.String())
+			err := cmd.Run()
+			if err != nil {
+				logger.Warning.Printf("Error running '%s': %s", allCmd, err)
+				if stderr.Len() > 0 {
+					logger.Warning.Printf("Error running '%s': %s",
+						allCmd, stderr.String())
+				}
 			}
-		}
+		}()
 	}
 }
 
