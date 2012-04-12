@@ -4,7 +4,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/BurntSushi/xgbutil/xrect"
+
 	"github.com/BurntSushi/wingo/logger"
+)
+
+const (
+	workspaceFloating = iota
+	workspaceTiling
 )
 
 type workspaces []*workspace
@@ -15,6 +22,8 @@ type workspace struct {
 	head        int    // the most recent physical head this workspace was on
 	active      bool
 	promptStore map[string]*window
+	state       int // the default placement policy of this workspace
+	tilers      []layout
 }
 
 func newWorkspace(id int) *workspace {
@@ -24,7 +33,9 @@ func newWorkspace(id int) *workspace {
 		head:        -1,
 		active:      false,
 		promptStore: make(map[string]*window),
+		state:       workspaceTiling,
 	}
+	wrk.tilers = []layout{newTileVertical(wrk)}
 
 	wrk.promptAdd()
 
@@ -119,7 +130,7 @@ func (wrk *workspace) addSingle(c *client) {
 
 	// Look at the client's current workspace, and if it's valid, remove it.
 	if c.workspace != nil {
-		// code for removing a client from a workspace
+		c.workspace.remove(c)
 	}
 
 	// This should be the *only* place this happens!!!
@@ -133,6 +144,12 @@ func (wrk *workspace) addSingle(c *client) {
 	// workspace, and use that.
 	// The aforementioned logic should actually be encapsulated somewhere
 	// else (with a workspace receiver).
+	wrk.layout().add(c)
+}
+
+func (wrk *workspace) remove(c *client) {
+	wrk.layout().remove(c)
+	c.workspace = nil // better be trashing this client or updating this soon!
 }
 
 func (wrk *workspace) mapOrUnmap(c *client) {
@@ -164,6 +181,18 @@ func (wrk *workspace) nameSet(name string) {
 	wrk.promptUpdateName()
 }
 
+func (wrk *workspace) headGeom() xrect.Rect {
+	if wrk.head < 0 || wrk.head >= len(WM.heads) {
+		logger.Error.Printf("'%d' is not a valid head number.", wrk.head)
+		logger.Error.Printf(
+			"Perhaps you're trying to access the geometry of a " +
+			"hidden workspace? Bad mistake. :-/")
+		panic("")
+	}
+
+	return WM.heads[wrk.head]
+}
+
 func (wrk *workspace) headSet(headNum int) {
 	wrk.head = headNum
 	if wrk.visible() {
@@ -172,6 +201,14 @@ func (wrk *workspace) headSet(headNum int) {
 }
 
 func (wrk *workspace) relayout() {
+}
+
+func (wrk *workspace) layout() layout {
+	return wrk.tilers[0]
+}
+
+func (wrk *workspace) tiling() bool {
+	return wrk.state == workspaceTiling
 }
 
 func (wrk *workspace) hide() {
@@ -188,4 +225,8 @@ func (wrk *workspace) show() {
 			c.Map()
 		}
 	}
+}
+
+func (wrk *workspace) String() string {
+	return wrk.name
 }

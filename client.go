@@ -24,6 +24,7 @@ type client struct {
 	initMap             bool
 	state               int
 	normal              bool
+	floating            bool
 	maximized           bool
 	iconified           bool
 	initialMap          bool
@@ -58,6 +59,8 @@ func newClient(id xgb.Id) *client {
 		isMapped:     false,
 		initMap:      false,
 		state:        StateInactive,
+		normal:       true,
+		floating:     false,
 		maximized:    false,
 		iconified:    false,
 		initialMap:   false,
@@ -100,6 +103,7 @@ func (c *client) unmanage() {
 	c.promptRemove()
 	WM.stackRemove(c)
 	WM.clientRemove(c)
+	c.workspace.remove(c)
 
 	if c.normal {
 		WM.focusRemove(c)
@@ -380,17 +384,17 @@ func (c *client) EnsureUnmax() {
 
 func (c *client) move(x, y int) {
 	c.EnsureUnmax()
-	c.Frame().ConfigureClient(DoX|DoY, x, y, 0, 0, 0, 0, false)
+	c.Frame().ConfigureFrame(DoX|DoY, x, y, 0, 0, 0, 0, false, true)
 }
 
 func (c *client) resize(w, h int) {
 	c.EnsureUnmax()
-	c.Frame().ConfigureClient(DoW|DoH, 0, 0, w, h, 0, 0, false)
+	c.Frame().ConfigureFrame(DoW|DoH, 0, 0, w, h, 0, 0, false, true)
 }
 
 func (c *client) moveresize(x, y, w, h int) {
 	c.EnsureUnmax()
-	c.Frame().ConfigureClient(DoX|DoY|DoW|DoH, x, y, w, h, 0, 0, false)
+	c.Frame().ConfigureFrame(DoX|DoY|DoW|DoH, x, y, w, h, 0, 0, false, true)
 }
 
 func (c *client) SaveGeom(key string) {
