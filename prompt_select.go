@@ -323,8 +323,7 @@ func (ps *promptSelect) show(listFun promptSelectListFun,
 
 	// To the top!
 	if len(WM.stack) > 0 {
-		ps.top.configure(DoSibling|DoStack, 0, 0, 0, 0,
-			WM.stack[0].Frame().ParentId(), xgb.StackModeAbove)
+		ps.top.configure(DoStack, 0, 0, 0, 0, 0, xgb.StackModeAbove)
 	}
 
 	ps.showing = true

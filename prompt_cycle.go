@@ -192,8 +192,7 @@ func (pc *promptCycle) show(keyStr string, activeWrk, visible,
 
 	// To the top!
 	if len(WM.stack) > 0 {
-		pc.top.configure(DoSibling|DoStack, 0, 0, 0, 0,
-			WM.stack[0].Frame().ParentId(), xgb.StackModeAbove)
+		pc.top.configure(DoStack, 0, 0, 0, 0, 0, xgb.StackModeAbove)
 	}
 
 	// get our screen geometry so we can position ourselves
