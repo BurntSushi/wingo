@@ -22,9 +22,9 @@ func (s *layoutSection) add(item *layoutItem) {
 	// Let's make sure we set the proper proportion.
 	// To do this, we give it its equal share and take what we need
 	// from each item in this section.
-	item.proportion = 1.0 / float64(len(*s) + 1)
+	item.proportion = 1.0 / float64(len(*s)+1)
 	for _, item2 := range *s {
-		item2.proportion -= item2.proportion / float64(len(*s) + 1)
+		item2.proportion -= item2.proportion / float64(len(*s)+1)
 	}
 	*s = append(*s, item)
 }

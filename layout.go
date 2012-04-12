@@ -43,8 +43,8 @@ func (ly *tileVertical) place() {
 	headGeom := ly.workspace.headGeom()
 	msize, ssize := len(ly.store.masters), len(ly.store.slaves)
 
-	mx, mw := headGeom.X(), int(float64(headGeom.Width()) * ly.proportion)
-	sx, sw := mx + mw, headGeom.Width() - mw
+	mx, mw := headGeom.X(), int(float64(headGeom.Width())*ly.proportion)
+	sx, sw := mx+mw, headGeom.Width()-mw
 
 	// If we have zero widths, then we don't place.
 	if mw <= 0 || mw > headGeom.Width() || sw <= 0 || sw > headGeom.Width() {
@@ -57,7 +57,7 @@ func (ly *tileVertical) place() {
 			mw = headGeom.Width()
 		}
 		for i, item := range ly.store.masters {
-			item.client.moveresize(mx, headGeom.Y() + i * mh, mw, mh)
+			item.client.moveresize(mx, headGeom.Y()+i*mh, mw, mh)
 		}
 	}
 	if ssize > 0 {
@@ -96,7 +96,7 @@ func (ly *tileVertical) String() string {
 		slaves = append(slaves, item.String())
 	}
 	sep := "--------------------------------------\n"
-	return fmt.Sprintf("\n%sTile Vertical on workspace '%s':\n" +
+	return fmt.Sprintf("\n%sTile Vertical on workspace '%s':\n"+
 		"MASTERS:\n\t%s\nSLAVES:\n\t%s\n%s",
 		sep, ly.workspace, strings.Join(masters, "\n"),
 		strings.Join(slaves, "\n\t"), sep)

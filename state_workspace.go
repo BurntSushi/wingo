@@ -186,7 +186,7 @@ func (wrk *workspace) headGeom() xrect.Rect {
 		logger.Error.Printf("'%d' is not a valid head number.", wrk.head)
 		logger.Error.Printf(
 			"Perhaps you're trying to access the geometry of a " +
-			"hidden workspace? Bad mistake. :-/")
+				"hidden workspace? Bad mistake. :-/")
 		panic("")
 	}
 
