@@ -98,6 +98,14 @@ func (c *client) manage() error {
 			c.unmanage()
 		}).Connect(X, c.window.id)
 
+	// Focus follows mouse? (Attach to frame window!)
+	if CONF.ffm {
+		xevent.EnterNotifyFun(
+			func(X *xgbutil.XUtil, ev xevent.EnterNotifyEvent) {
+				c.Focus()
+			}).Connect(X, c.Frame().ParentId())
+	}
+
 	c.clientMouseConfig()
 	c.frameMouseConfig()
 

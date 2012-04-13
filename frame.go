@@ -1,8 +1,8 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
-
 import (
+	"code.google.com/p/jamslam-x-go-binding/xgb"
+
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xgraphics"
 	"github.com/BurntSushi/xgbutil/xrect"
@@ -56,8 +56,11 @@ type frameParent struct {
 func newParent(c *client) *frameParent {
 	mask := xgb.CWEventMask
 	val := uint32(xgb.EventMaskSubstructureRedirect |
-		xgb.EventMaskButtonPress |
-		xgb.EventMaskButtonRelease)
+		xgb.EventMaskButtonPress | xgb.EventMaskButtonRelease)
+	if CONF.ffm {
+		val |= xgb.EventMaskEnterWindow
+	}
+
 	parent := createWindow(X.RootWin(), mask, val)
 	p := &frameParent{
 		window: parent,

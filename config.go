@@ -12,6 +12,7 @@ import (
 type conf struct {
 	mouse                 map[string][]mouseCommand
 	key                   map[string][]keyCommand
+	ffm bool
 	workspaces            []string
 	confirmKey, cancelKey string
 	backspaceKey          string
@@ -22,6 +23,7 @@ func defaultConfig() *conf {
 	return &conf{
 		mouse:        map[string][]mouseCommand{},
 		key:          map[string][]keyCommand{},
+		ffm: false,
 		workspaces:   []string{"1", "2", "3", "4"},
 		confirmKey:   "Return",
 		cancelKey:    "Escape",
@@ -191,10 +193,9 @@ func loadOptionsConfigSection(cdata *wini.Data, section string) {
 			if workspaces, ok := getLastString(key); ok {
 				CONF.workspaces = strings.Split(workspaces, " ")
 			}
-		case "cancel":
-			setString(key, &CONF.cancelKey)
-		case "confirm":
-			setString(key, &CONF.confirmKey)
+		case "focus_follows_mouse": setBool(key, &CONF.ffm)
+		case "cancel": setString(key, &CONF.cancelKey)
+		case "confirm": setString(key, &CONF.confirmKey)
 		}
 	}
 }
@@ -245,6 +246,25 @@ func getLastString(k wini.Key) (string, bool) {
 	if len(vals) == 0 {
 		logger.Warning.Println(k.Err("No values found."))
 		return "", false
+	}
+
+	return vals[len(vals)-1], true
+}
+
+func setBool(k wini.Key, place *bool) {
+	if v, ok := getLastBool(k); ok {
+		*place = v
+	}
+}
+
+func getLastBool(k wini.Key) (bool, bool) {
+	vals, err := k.Bools()
+	if err != nil {
+		logger.Warning.Println(err)
+		return false, false
+	} else if len(vals) == 0 {
+		logger.Warning.Println(k.Err("No values found."))
+		return false, false
 	}
 
 	return vals[len(vals)-1], true

@@ -1,6 +1,7 @@
 [Misc]
 cancel := Escape
 confirm := Return
+focus_follows_mouse := no
 
 [Workspaces]
 # workspaces := Awork Bwork Cwork Dwork Ework 
