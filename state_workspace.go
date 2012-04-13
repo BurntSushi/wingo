@@ -23,6 +23,7 @@ type workspace struct {
 	active      bool
 	promptStore map[string]*window
 	state       int // the default placement policy of this workspace
+	floaters    []layout
 	tilers      []layout
 }
 
@@ -33,8 +34,9 @@ func newWorkspace(id int) *workspace {
 		head:        -1,
 		active:      false,
 		promptStore: make(map[string]*window),
-		state:       workspaceTiling,
+		state:       workspaceFloating,
 	}
+	wrk.floaters = []layout{newFloating(wrk)}
 	wrk.tilers = []layout{newTileVertical(wrk)}
 
 	wrk.promptAdd()
@@ -144,12 +146,26 @@ func (wrk *workspace) addSingle(c *client) {
 	// workspace, and use that.
 	// The aforementioned logic should actually be encapsulated somewhere
 	// else (with a workspace receiver).
-	wrk.layout().add(c)
+	c.layoutSet()
+	wrk.tile()
 }
 
 func (wrk *workspace) remove(c *client) {
-	wrk.layout().remove(c)
+	wrk.tilersRemove(c)
 	c.workspace = nil // better be trashing this client or updating this soon!
+	wrk.tile()
+}
+
+func (wrk *workspace) tilersAdd(c *client) {
+	for _, ly := range wrk.tilers {
+		ly.add(c)
+	}
+}
+
+func (wrk *workspace) tilersRemove(c *client) {
+	for _, ly := range wrk.tilers {
+		ly.remove(c)
+	}
 }
 
 func (wrk *workspace) mapOrUnmap(c *client) {
@@ -204,11 +220,36 @@ func (wrk *workspace) relayout() {
 }
 
 func (wrk *workspace) layout() layout {
-	return wrk.tilers[0]
+	if wrk.tiling() {
+		return wrk.tilers[0]
+	}
+	return wrk.floaters[0]
+}
+
+func (wrk *workspace) tile() {
+	if wrk.tiling() {
+		wrk.layout().place()
+	}
+}
+
+func (wrk *workspace) untile() {
+	if wrk.tiling() {
+		wrk.layout().unplace()
+	}
 }
 
 func (wrk *workspace) tiling() bool {
 	return wrk.state == workspaceTiling
+}
+
+func (wrk *workspace) tilingSet(enable bool) {
+	if enable {
+		wrk.state = workspaceTiling
+		wrk.tile()
+	} else {
+		wrk.untile()
+		wrk.state = workspaceFloating
+	}
 }
 
 func (wrk *workspace) hide() {
@@ -220,6 +261,7 @@ func (wrk *workspace) hide() {
 }
 
 func (wrk *workspace) show() {
+	wrk.tile()
 	for _, c := range WM.clients {
 		if c.workspace.id == wrk.id {
 			c.Map()

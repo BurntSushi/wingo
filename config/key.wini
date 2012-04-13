@@ -7,7 +7,9 @@ Mod4-i := Minimize
 Mod1-Shift-t := Move 0.25 0.25
 Mod1-Shift-t := Resize 0.5 0.5
 
-Mod1-a := Place
+Mod1-a := TileStart
+Mod1-u := TileStop
+Mod1-f := ClientToggleFloating
 
 Mod1-w := HeadFocus 0
 Mod1-e := HeadFocus 1

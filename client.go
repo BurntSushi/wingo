@@ -38,7 +38,7 @@ type client struct {
 	protocols    []string
 	transientFor xgb.Id
 
-	geomStore   map[string]xrect.Rect
+	geomStore   map[string]*clientGeom
 	promptStore map[string]*window
 
 	frame        Frame
@@ -70,13 +70,25 @@ func newClient(id xgb.Id) *client {
 		nhints:       nil,
 		protocols:    nil,
 		transientFor: 0,
-		geomStore:    make(map[string]xrect.Rect),
+		geomStore:    make(map[string]*clientGeom),
 		promptStore:  make(map[string]*window),
 		frame:        nil,
 		frameNada:    nil,
 		frameSlim:    nil,
 		frameBorders: nil,
 		frameFull:    nil,
+	}
+}
+
+type clientGeom struct {
+	xrect.Rect
+	maximized bool
+}
+
+func (c *client) newClientGeom() *clientGeom {
+	return &clientGeom{
+		Rect:      xrect.New(xrect.Pieces(c.Frame().Geom())),
+		maximized: c.maximized,
 	}
 }
 
@@ -96,6 +108,7 @@ func (c *client) unmanage() {
 	if c.Mapped() {
 		c.unmappedFallback()
 	}
+	c.workspace.remove(c)
 	c.frame.Destroy()
 	c.setWmState(icccm.StateWithdrawn)
 
@@ -103,7 +116,6 @@ func (c *client) unmanage() {
 	c.promptRemove()
 	WM.stackRemove(c)
 	WM.clientRemove(c)
-	c.workspace.remove(c)
 
 	if c.normal {
 		WM.focusRemove(c)
@@ -352,9 +364,18 @@ func (c *client) MaximizeToggle() {
 func (c *client) maximize() {
 	// only save if we're not already maximized
 	if !c.maximized {
-		c.SaveGeom("unmaximized")
+		c.saveGeom("unmaximized")
 	}
 
+	c.maximizeNoSave()
+}
+
+func (c *client) unmaximize() {
+	c.unmaximizeNoRestore()
+	c.loadGeom("unmaximized")
+}
+
+func (c *client) maximizeNoSave() {
 	c.maximized = true
 	c.frameNada.Maximize()
 	c.frameSlim.Maximize()
@@ -363,22 +384,43 @@ func (c *client) maximize() {
 	frameMaximize(c.Frame())
 }
 
-func (c *client) unmaximize() {
+func (c *client) unmaximizeNoRestore() {
 	c.maximized = false
 	c.frameNada.Unmaximize()
 	c.frameSlim.Unmaximize()
 	c.frameBorders.Unmaximize()
 	c.frameFull.Unmaximize()
-	c.LoadGeom("unmaximized")
 }
 
 func (c *client) EnsureUnmax() {
 	if c.maximized {
-		c.maximized = false
-		c.frameNada.Unmaximize()
-		c.frameSlim.Unmaximize()
-		c.frameBorders.Unmaximize()
-		c.frameFull.Unmaximize()
+		c.unmaximizeNoRestore()
+	}
+}
+
+func (c *client) toggleFloating() {
+	c.floating = !c.floating
+	c.layoutSet()
+	c.workspace.tile()
+}
+
+// layoutSet determines whether client MUST be floating or not.
+// If a client doesn't have to be floating, then it is *always* stored
+// in the tilers' state. The presumption is, if a client doesn't have to be
+// floating, then when a tiler is active, it is being tiled.
+// If a client MUST be floating, then the tilers should not know about it.
+// DO NOT INVOKE A TILE COMMAND HERE. Try it. I dare you.
+func (c *client) layoutSet() {
+	floating := false
+
+	if c.floating {
+		floating = true
+	}
+
+	if floating {
+		c.workspace.tilersRemove(c)
+	} else {
+		c.workspace.tilersAdd(c)
 	}
 }
 
@@ -397,16 +439,33 @@ func (c *client) moveresize(x, y, w, h int) {
 	c.Frame().ConfigureFrame(DoX|DoY|DoW|DoH, x, y, w, h, 0, 0, false, true)
 }
 
-func (c *client) SaveGeom(key string) {
-	c.geomStore[key] = xrect.New(xrect.Pieces(c.Frame().Geom()))
+func (c *client) saveGeom(key string) {
+	c.geomStore[key] = c.newClientGeom()
 }
 
-func (c *client) LoadGeom(key string) {
-	if geom, ok := c.geomStore[key]; ok {
-		c.Frame().ConfigureFrame(
-			DoX|DoY|DoW|DoH,
-			geom.X(), geom.Y(), geom.Width(), geom.Height(),
-			0, 0, false, true)
+func (c *client) saveGeomNoClobber(key string) {
+	if _, ok := c.geomStore[key]; !ok {
+		c.saveGeom(key)
+	}
+}
+
+func (c *client) loadGeom(key string) {
+	if cgeom, ok := c.geomStore[key]; ok {
+		if cgeom.maximized {
+			// We don't save because we don't want to clobber the existing
+			// "restore" state the client has saved.
+			c.maximizeNoSave()
+		} else {
+			c.Frame().ConfigureFrame(
+				DoX|DoY|DoW|DoH,
+				cgeom.X(), cgeom.Y(), cgeom.Width(), cgeom.Height(),
+				0, 0, false, true)
+		}
+		delete(c.geomStore, key)
+	} else {
+		logger.Warning.Printf(
+			"Could not load client geometry state '%s' on client '%s'.",
+			key, c)
 	}
 }
 

@@ -74,15 +74,21 @@ func (ls *layoutStore) add(c *client) bool {
 }
 
 func (ls *layoutStore) remove(c *client) bool {
+	removed := false
 	if mi := ls.mFindClient(c); mi >= 0 {
 		(&ls.masters).remove(mi)
-		return true
+		removed = true
 	}
 	if si := ls.sFindClient(c); si >= 0 {
 		(&ls.slaves).remove(si)
-		return true
+		removed = true
 	}
-	return false
+
+	if removed {
+		c.loadGeom("layout_before_tiling")
+	}
+
+	return removed
 }
 
 func (ls *layoutStore) mFindClient(c *client) int {

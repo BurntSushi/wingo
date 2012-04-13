@@ -31,6 +31,8 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 	switch cmd {
 	case "Close":
 		return usage(cmdClose(args...))
+	case "ClientToggleFloating":
+		return usage(cmdClientToggleFloating(args...))
 	case "Focus":
 		return usage(cmdFocus(args...))
 	case "FrameBorders":
@@ -51,8 +53,6 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 		return usage(cmdMinimize(args...))
 	case "Move":
 		return usage(cmdMove(args...))
-	case "Place":
-		return usage(cmdPlace(args...))
 	case "PromptCycleNext":
 		if len(keyStr) == 0 {
 			return nil
@@ -71,6 +71,10 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 		return usage(cmdRaise(args...))
 	case "Resize":
 		return usage(cmdResize(args...))
+	case "TileStart":
+		return usage(cmdTileStart(args...))
+	case "TileStop":
+		return usage(cmdTileStop(args...))
 	case "Workspace":
 		return usage(cmdWorkspace(false, false, args...))
 	case "WorkspacePrefix":
@@ -203,6 +207,14 @@ func withFocusedOrArg(args []string, f func(c *client)) {
 	}
 }
 
+func cmdClientToggleFloating(args ...string) func() {
+	return func() {
+		withFocusedOrArg(args, func(c *client) {
+			c.toggleFloating()
+		})
+	}
+}
+
 func cmdClose(args ...string) func() {
 	return func() {
 		withFocusedOrArg(args, func(c *client) {
@@ -327,13 +339,6 @@ func cmdMove(args ...string) func() {
 		withFocusedOrArg(args, func(c *client) {
 			c.move(x, y)
 		})
-	}
-}
-
-func cmdPlace(args ...string) func() {
-	return func() {
-		wrk := WM.wrkActive()
-		wrk.layout().place()
 	}
 }
 
@@ -469,6 +474,20 @@ func cmdResize(args ...string) func() {
 		withFocusedOrArg(args, func(c *client) {
 			c.resize(w, h)
 		})
+	}
+}
+
+func cmdTileStart(args ...string) func() {
+	return func() {
+		wrk := WM.wrkActive()
+		wrk.tilingSet(true)
+	}
+}
+
+func cmdTileStop(args ...string) func() {
+	return func() {
+		wrk := WM.wrkActive()
+		wrk.tilingSet(false)
 	}
 }
 
