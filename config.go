@@ -12,7 +12,7 @@ import (
 type conf struct {
 	mouse                 map[string][]mouseCommand
 	key                   map[string][]keyCommand
-	ffm bool
+	ffm                   bool
 	workspaces            []string
 	confirmKey, cancelKey string
 	backspaceKey          string
@@ -23,7 +23,7 @@ func defaultConfig() *conf {
 	return &conf{
 		mouse:        map[string][]mouseCommand{},
 		key:          map[string][]keyCommand{},
-		ffm: false,
+		ffm:          false,
 		workspaces:   []string{"1", "2", "3", "4"},
 		confirmKey:   "Return",
 		cancelKey:    "Escape",
@@ -193,9 +193,12 @@ func loadOptionsConfigSection(cdata *wini.Data, section string) {
 			if workspaces, ok := getLastString(key); ok {
 				CONF.workspaces = strings.Split(workspaces, " ")
 			}
-		case "focus_follows_mouse": setBool(key, &CONF.ffm)
-		case "cancel": setString(key, &CONF.cancelKey)
-		case "confirm": setString(key, &CONF.confirmKey)
+		case "focus_follows_mouse":
+			setBool(key, &CONF.ffm)
+		case "cancel":
+			setString(key, &CONF.cancelKey)
+		case "confirm":
+			setString(key, &CONF.confirmKey)
 		}
 	}
 }
