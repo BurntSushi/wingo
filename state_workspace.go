@@ -269,7 +269,7 @@ func (wrk *workspace) hide() {
 
 func (wrk *workspace) show() {
 	wrk.tile()
-	for _, c := range WM.clients {
+	for _, c := range WM.stack {
 		if c.workspace.id == wrk.id {
 			if c.layout().floating() {
 				c.loadGeom("workspace_switch")
