@@ -1,6 +1,7 @@
 package main
 
 type layout interface {
+	floating() bool
 	place()
 	unplace()
 	add(c *client)

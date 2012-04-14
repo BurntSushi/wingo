@@ -25,6 +25,53 @@ func (wm *state) headGeom(i int) xrect.Rect {
 	return wm.heads[i]
 }
 
+// headChoose *only* looks at the client's geometry, determines which head
+// it overlaps with the most, and updates that client's workspace appropriately.
+// If the workspace is updated, headChoose returns true. Otherwise, false.
+func (wm *state) headChoose(c *client, newGeom xrect.Rect) bool {
+	// If this client isn't mapped, don't do anything.
+	if !c.Mapped() {
+		return false
+	}
+
+	mostOverlap := xrect.LargestOverlap(newGeom, WM.headsRaw)
+
+	// If there's no overlap or no change, just leave the client where it is.
+	if mostOverlap < 0 || mostOverlap == c.workspace.head {
+		return false
+	}
+
+	// mostOverlap is a different monitor.
+	// So switch this client to its new workspace.
+	wrk := WM.wrkHead(mostOverlap)
+	wrk.add(c)
+
+	// If this is an active client, then update the active workspace too!
+	if c.state == StateActive {
+		wrk.activate(false, false)
+	}
+	return true
+}
+
+// headConvert takes a source and a destination rect, along with a rect
+// in the source's rectangle, and returns a new rect translated into the
+// destination rect.
+func (wm *state) headConvert(rect, src, dest xrect.Rect) xrect.Rect {
+	nx, ny, nw, nh := xrect.Pieces(rect)
+
+	rectRatio := func(r xrect.Rect) float64 {
+		return float64(r.Width()) / float64(r.Height())
+	}
+	ratio := rectRatio(dest) / rectRatio(src)
+
+	nx = int(ratio*float64(nx-src.X())) + dest.X()
+	ny = int(ratio*float64(ny-src.Y())) + dest.Y()
+
+	// XXX: Allow window scaling as a config option.
+
+	return xrect.New(nx, ny, nw, nh)
+}
+
 func (wm *state) headsLoad() {
 	heads := stateHeadsGet()
 

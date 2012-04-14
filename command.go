@@ -292,8 +292,20 @@ func cmdHeadFocus(withClient bool, args ...string) func() {
 
 		if withClient {
 			withFocusedOrArg(args, func(c *client) {
+				c.Unmap() // prevent flickering
+				defer c.Map()
+
 				c.Raise()
+				c.saveGeomTransients("monitor_switch")
 				wrk.add(c)
+
+				// If the new layout is floating, then load geometry
+				// in the new monitor. Otherwise, trash the geometry.
+				if c.layout().floating() {
+					c.loadGeomTransients("monitor_switch")
+				} else {
+					c.deleteGeomTransients("monitor_switch")
+				}
 			})
 		}
 		wrk.activate(true, greedy)

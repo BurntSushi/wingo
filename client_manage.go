@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"code.google.com/p/jamslam-x-go-binding/xgb"
 
 	"github.com/BurntSushi/xgbutil"
@@ -59,6 +61,15 @@ func (c *client) manage() error {
 
 	// Listen to events and response to them
 	c.listen()
+
+	// Has the user specified that this client should always float?
+	if c.confAlwaysFloat() {
+		c.forceFloating = true
+	}
+
+	// Always set the initial position to the origin of the current head.
+	headGeom := WM.headActive()
+	c.move(headGeom.X(), headGeom.Y())
 
 	// Find the current workspace and attach this client
 	WM.wrkActive().add(c)
@@ -160,15 +171,7 @@ func (c *client) initPopulate() error {
 
 	c.vname, _ = ewmh.WmVisibleNameGet(X, c.Id())
 	c.wmname, _ = icccm.WmNameGet(X, c.Id())
-
-	c.transientFor, _ = icccm.WmTransientForGet(X, c.Id())
-	if c.transientFor == 0 {
-		for _, c2 := range WM.clients {
-			if c2.transient(c) {
-				c.transientFor = c2.Id()
-			}
-		}
-	}
+	c.wmclass, _ = icccm.WmClassGet(X, c.Id())
 
 	c.types, err = ewmh.WmWindowTypeGet(X, c.Id())
 	if err != nil {
@@ -176,6 +179,22 @@ func (c *client) initPopulate() error {
 			"using 'normal'.", c.Id())
 		c.types = []string{"_NET_WM_WINDOW_TYPE_NORMAL"}
 	}
+
+	c.transientFor, _ = icccm.WmTransientForGet(X, c.Id())
+	logger.Debug.Printf("Checking if '%s' is a transient...", c)
+	if c.transientFor == 0 {
+		for _, c2 := range WM.clients {
+			if c2.transient(c) {
+				c.transientFor = c2.Id()
+				logger.Debug.Printf("YES IT IS")
+				break
+			}
+		}
+	}
+	if c.transientFor == 0 {
+		logger.Debug.Printf("NOPE")
+	}
+	logger.Debug.Println("------------------------------")
 
 	return nil
 }
@@ -245,6 +264,23 @@ func (c *client) stackDetermine() {
 	default:
 		c.layer = stackDefault
 	}
+}
+
+// confAlwaysFloat checks to see if any part of WM_CLASS is in "always_floating"
+func (c *client) confAlwaysFloat() bool {
+	if c.wmclass == nil {
+		return false
+	}
+
+	lowerInstance := strings.ToLower(c.wmclass.Instance)
+	lowerClass := strings.ToLower(c.wmclass.Class)
+	for _, search := range CONF.alwaysFloating {
+		searchLow := strings.ToLower(search)
+		if searchLow == lowerInstance || searchLow == lowerClass {
+			return true
+		}
+	}
+	return false
 }
 
 func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {

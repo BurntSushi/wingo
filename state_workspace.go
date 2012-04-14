@@ -86,19 +86,21 @@ func (wrkNew *workspace) activate(fallback bool, greedy bool) {
 	wrkActive := WM.wrkActive()
 
 	if !wrkNew.visible() {
+		wrkActive.hide()
+
 		wrkActiveHead := wrkActive.head
 		wrkActive.headSet(wrkNew.head)
 		wrkNew.headSet(wrkActiveHead)
 
-		wrkActive.hide()
 		wrkNew.show()
 	} else if greedy {
+		wrkActive.hide()
+		wrkNew.hide()
+
 		wrkActiveHead := wrkActive.head
 		wrkActive.headSet(wrkNew.head)
 		wrkNew.headSet(wrkActiveHead)
 
-		wrkActive.hide()
-		wrkNew.hide()
 		wrkActive.show()
 		wrkNew.show()
 	}
@@ -112,16 +114,18 @@ func (wrkNew *workspace) activate(fallback bool, greedy bool) {
 }
 
 func (wrk *workspace) add(c *client) {
-	wrk.addSingle(c)
+	// Don't forget to add transients if this isn't the client's first workspace
+	if c.workspace != nil {
+		for _, c2 := range WM.clients {
+			if c.transient(c2) && c2.workspace != nil &&
+				c2.workspace.id == c.workspace.id {
 
-	// Don't forget to add transients
-	for _, c2 := range WM.clients {
-		if c.transient(c2) && c2.workspace != nil &&
-			c2.workspace.id == c.workspace.id {
-
-			wrk.addSingle(c2)
+				wrk.addSingle(c2)
+			}
 		}
 	}
+
+	wrk.addSingle(c)
 }
 
 func (wrk *workspace) addSingle(c *client) {
@@ -255,6 +259,9 @@ func (wrk *workspace) tilingSet(enable bool) {
 func (wrk *workspace) hide() {
 	for _, c := range WM.clients {
 		if c.workspace.id == wrk.id {
+			if c.layout().floating() {
+				c.saveGeom("workspace_switch")
+			}
 			c.Unmap()
 		}
 	}
@@ -264,6 +271,9 @@ func (wrk *workspace) show() {
 	wrk.tile()
 	for _, c := range WM.clients {
 		if c.workspace.id == wrk.id {
+			if c.layout().floating() {
+				c.loadGeom("workspace_switch")
+			}
 			c.Map()
 		}
 	}

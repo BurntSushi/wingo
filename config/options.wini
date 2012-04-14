@@ -2,6 +2,7 @@
 cancel := Escape
 confirm := Return
 focus_follows_mouse := no
+always_floating := gmrun
 
 [Workspaces]
 # workspaces := Awork Bwork Cwork Dwork Ework 

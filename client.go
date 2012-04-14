@@ -37,6 +37,7 @@ type client struct {
 	nhints       *icccm.NormalHints
 	protocols    []string
 	transientFor xgb.Id
+	wmclass      *icccm.WmClass
 
 	geomStore   map[string]*clientGeom
 	promptStore map[string]*window
@@ -70,6 +71,7 @@ func newClient(id xgb.Id) *client {
 		nhints:        nil,
 		protocols:     nil,
 		transientFor:  0,
+		wmclass:       nil,
 		geomStore:     make(map[string]*clientGeom),
 		promptStore:   make(map[string]*window),
 		frame:         nil,
@@ -78,18 +80,6 @@ func newClient(id xgb.Id) *client {
 		frameBorders:  nil,
 		frameFull:     nil,
 	}
-}
-
-func (c *client) frameSet(f Frame) {
-	if f == c.Frame() { // no need to change...
-		return
-	}
-	if c.Frame() != nil {
-		c.Frame().Off()
-	}
-	c.frame = f
-	c.Frame().On()
-	FrameReset(c.Frame())
 }
 
 func (c *client) unmanage() {
@@ -142,6 +132,9 @@ func (c *client) Unmap() {
 }
 
 func (c *client) UnmapFallback() {
+	if !c.Mapped() {
+		return
+	}
 	c.unmapIgnore++
 	c.unmappedFallback()
 }
@@ -311,88 +304,6 @@ func (c *client) Unfocused() {
 	c.Frame().Inactive()
 }
 
-func (c *client) MaximizeToggle() {
-	// Don't do anything if a max size is specified.
-	if c.nhints.Flags&icccm.SizeHintPMaxSize > 0 {
-		return
-	}
-
-	if c.maximized {
-		c.unmaximize()
-	} else {
-		c.maximize()
-	}
-}
-
-func (c *client) maximize() {
-	if !c.layout().maximizable() {
-		return
-	}
-	if !c.maximized {
-		c.saveGeom("unmaximized")
-	}
-
-	c.maximizeRaw()
-}
-
-func (c *client) unmaximize() {
-	c.unmaximizeRaw()
-	c.loadGeom("unmaximized")
-}
-
-func (c *client) maximizeRaw() {
-	c.maximized = true
-	c.frameNada.Maximize()
-	c.frameSlim.Maximize()
-	c.frameBorders.Maximize()
-	c.frameFull.Maximize()
-	frameMaximize(c.Frame())
-}
-
-func (c *client) unmaximizeRaw() {
-	c.maximized = false
-	c.frameNada.Unmaximize()
-	c.frameSlim.Unmaximize()
-	c.frameBorders.Unmaximize()
-	c.frameFull.Unmaximize()
-}
-
-func (c *client) EnsureUnmax() {
-	if c.maximized {
-		c.unmaximizeRaw()
-	}
-}
-
-func (c *client) move(x, y int) {
-	c.EnsureUnmax()
-	c.Frame().ConfigureFrame(DoX|DoY, x, y, 0, 0, 0, 0, false, true)
-}
-
-func (c *client) move_novalid(x, y int) {
-	c.EnsureUnmax()
-	c.Frame().ConfigureFrame(DoX|DoY, x, y, 0, 0, 0, 0, true, true)
-}
-
-func (c *client) resize(w, h int) {
-	c.EnsureUnmax()
-	c.Frame().ConfigureFrame(DoW|DoH, 0, 0, w, h, 0, 0, false, true)
-}
-
-func (c *client) resize_novalid(w, h int) {
-	c.EnsureUnmax()
-	c.Frame().ConfigureFrame(DoW|DoH, 0, 0, w, h, 0, 0, true, true)
-}
-
-func (c *client) moveresize(x, y, w, h int) {
-	c.EnsureUnmax()
-	c.Frame().ConfigureFrame(DoX|DoY|DoW|DoH, x, y, w, h, 0, 0, false, true)
-}
-
-func (c *client) moveresize_novalid(x, y, w, h int) {
-	c.EnsureUnmax()
-	c.Frame().ConfigureFrame(DoX|DoY|DoW|DoH, x, y, w, h, 0, 0, true, true)
-}
-
 func (c *client) Raise() {
 	WM.stackRaise(c, false)
 
@@ -447,6 +358,11 @@ func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
 		if err == nil {
 			c.nhints = nhints
 		}
+	case "WM_TRANSIENT_FOR":
+		transientFor, err := icccm.WmTransientForGet(X, c.Id())
+		if err == nil {
+			c.transientFor = transientFor
+		}
 	case "_NET_WM_USER_TIME":
 		newTime, err := ewmh.WmUserTimeGet(X, c.window.id)
 		showVals(c.lastTime, newTime)
@@ -494,6 +410,18 @@ func (c *client) updateName() {
 
 func (c *client) Frame() Frame {
 	return c.frame
+}
+
+func (c *client) frameSet(f Frame) {
+	if f == c.Frame() { // no need to change...
+		return
+	}
+	if c.Frame() != nil {
+		c.Frame().Off()
+	}
+	c.frame = f
+	c.Frame().On()
+	FrameReset(c.Frame())
 }
 
 func (c *client) FrameNada() {

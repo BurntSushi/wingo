@@ -2,11 +2,9 @@ package main
 
 import (
 	"github.com/BurntSushi/xgbutil/xrect"
-
-	"github.com/BurntSushi/wingo/logger"
 )
 
-const layoutFloatMaxOverlapClients = 10
+const layoutFloatMaxOverlapClients = 20
 
 type floating struct {
 	workspace *workspace
@@ -18,6 +16,9 @@ func newFloating(wrk *workspace) *floating {
 	}
 }
 
+func (ly *floating) floating() bool {
+	return true
+}
 func (ly *floating) place()           {}
 func (ly *floating) unplace()         {}
 func (ly *floating) add(c *client)    {}
@@ -45,22 +46,32 @@ func (ly *floating) moveresize(c *client, x, y, w, h int) {
 // layoutFloatMaxOverlapClients visible clients on the active workspace.
 // It becomes a bit too slow otherwise.
 func (ly *floating) xy_no_overlap(c *client) {
-	// If there are too many clients visible on this workspace, give up.
-	// (It's too slow otherwise.)
-	clientCount := 0
-	for _, c2 := range WM.clients {
-		if c2.workspace == ly.workspace && c.Id() != c2.Id() && c2.isMapped {
-			clientCount++
-		}
-	}
-	if clientCount > layoutFloatMaxOverlapClients {
-		return
+	// Function to determine whether a client's geometry should be
+	// factored into the free rectangles calculation.
+	// Ignore: clients not on c's workspace, c itself, unmapped clients
+	// and clients that aren't floating (i.e., are tiling).
+	useClient := func(c2 *client) bool {
+		return c.workspace.id == c2.workspace.id && c.Id() != c2.Id() &&
+			c2.Mapped() && c2.layout().floating()
 	}
 
 	// The geometry of the active head serves as a starting point of our
 	// free rectangle algorithm, and also as a fallback if there are no
 	// suitable free rectangles.
 	headGeom := WM.headActive()
+
+	// If there are too many clients visible on this workspace, give up.
+	// (It's too slow otherwise.)
+	clientCount := 0
+	for _, c2 := range WM.clients {
+		if useClient(c2) {
+			clientCount++
+		}
+	}
+	if clientCount > layoutFloatMaxOverlapClients {
+		c.move(headGeom.X(), headGeom.Y())
+		return
+	}
 
 	// Constructs a slice of rects representing all empty rectangles on
 	// the active head.
@@ -69,8 +80,7 @@ func (ly *floating) xy_no_overlap(c *client) {
 		empties := []xrect.Rect{headGeom}
 
 		for _, c2 := range WM.clients {
-			if c2.workspace != ly.workspace || c.Id() == c2.Id() ||
-				!c2.isMapped {
+			if !useClient(c2) {
 				continue
 			}
 
@@ -109,7 +119,6 @@ func (ly *floating) xy_no_overlap(c *client) {
 	if choose == nil {
 		c.move(headGeom.X(), headGeom.Y())
 	} else {
-		logger.Debug.Println("choice", choose)
 		c.move(choose.X(), choose.Y())
 	}
 }

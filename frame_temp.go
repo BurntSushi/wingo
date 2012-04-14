@@ -1,13 +1,14 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
-
 import (
+	"code.google.com/p/jamslam-x-go-binding/xgb"
+
 	"github.com/BurntSushi/xgbutil/ewmh"
+	"github.com/BurntSushi/xgbutil/xrect"
 )
 
 func frameMaximize(f Frame) {
-	headGeom := WM.headActive()
+	headGeom := xrect.New(xrect.Pieces(f.Client().workspace.headGeom()))
 	f.ConfigureFrame(DoX|DoY|DoW|DoH,
 		headGeom.X(), headGeom.Y(), headGeom.Width(), headGeom.Height(),
 		0, 0, true, true)
@@ -39,6 +40,7 @@ func frameMoveEnd(f Frame, rx, ry, ex, ey int) {
 	moving.moving = false
 	moving.lastRootX, moving.lastRootY = 0, 0
 	FrameReset(f)
+	WM.headChoose(f.Client(), f.Geom())
 }
 
 func frameResizeBegin(f Frame, direction uint32,
@@ -221,4 +223,5 @@ func frameResizeEnd(f Frame, rx, ry, ex, ey int) {
 	// Example: Libreoffice in Xephyr. Try resizing it with the mouse and
 	// releasing the mouse button really quickly.
 	FrameReset(f)
+	WM.headChoose(f.Client(), f.Geom())
 }

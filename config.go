@@ -14,6 +14,7 @@ type conf struct {
 	key                   map[string][]keyCommand
 	ffm                   bool
 	workspaces            []string
+	alwaysFloating        []string
 	confirmKey, cancelKey string
 	backspaceKey          string
 	tabKey, revTabKey     string
@@ -21,15 +22,16 @@ type conf struct {
 
 func defaultConfig() *conf {
 	return &conf{
-		mouse:        map[string][]mouseCommand{},
-		key:          map[string][]keyCommand{},
-		ffm:          false,
-		workspaces:   []string{"1", "2", "3", "4"},
-		confirmKey:   "Return",
-		cancelKey:    "Escape",
-		backspaceKey: "BackSpace",
-		tabKey:       "Tab",
-		revTabKey:    "ISO_Left_Tab",
+		mouse:          map[string][]mouseCommand{},
+		key:            map[string][]keyCommand{},
+		ffm:            false,
+		workspaces:     []string{"1", "2", "3", "4"},
+		alwaysFloating: []string{},
+		confirmKey:     "Return",
+		cancelKey:      "Escape",
+		backspaceKey:   "BackSpace",
+		tabKey:         "Tab",
+		revTabKey:      "ISO_Left_Tab",
 	}
 }
 
@@ -192,6 +194,10 @@ func loadOptionsConfigSection(cdata *wini.Data, section string) {
 		case "workspaces":
 			if workspaces, ok := getLastString(key); ok {
 				CONF.workspaces = strings.Split(workspaces, " ")
+			}
+		case "always_floating":
+			if alwaysFloating, ok := getLastString(key); ok {
+				CONF.alwaysFloating = strings.Split(alwaysFloating, " ")
 			}
 		case "focus_follows_mouse":
 			setBool(key, &CONF.ffm)

@@ -310,8 +310,8 @@ func (ps *promptSelect) show(listFun promptSelectListFun,
 	width := min(maxWidth, maxFontWidth+2*(bs+padding))
 
 	// position the damn window based on its width/height (i.e., center it)
-	posx := headGeom.Width()/2 - width/2
-	posy := headGeom.Height()/2 - height/2
+	posx := headGeom.X() + headGeom.Width()/2 - width/2
+	posy := headGeom.Y() + headGeom.Height()/2 - height/2
 
 	// Issue the configure requests. We also need to adjust the borders.
 	ps.top.moveresize(DoX|DoY|DoW|DoH, posx, posy, width, height)

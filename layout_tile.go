@@ -21,6 +21,10 @@ func newTileVertical(wrk *workspace) *tileVertical {
 	}
 }
 
+func (ly *tileVertical) floating() bool {
+	return false
+}
+
 func (ly *tileVertical) place() {
 	// If this layout isn't visible, don't do anything.
 	if !ly.workspace.visible() {
@@ -46,7 +50,7 @@ func (ly *tileVertical) place() {
 		for i, item := range ly.store.masters {
 			item.client.saveGeomNoClobber("layout_before_tiling")
 			item.client.FrameBorders()
-			item.client.moveresize_novalid(mx, headGeom.Y()+i*mh, mw, mh)
+			item.client.moveresizeNoValid(mx, headGeom.Y()+i*mh, mw, mh)
 		}
 	}
 	if ssize > 0 {
@@ -58,7 +62,7 @@ func (ly *tileVertical) place() {
 			sh := int(float64(headGeom.Height()) * item.proportion)
 			item.client.saveGeomNoClobber("layout_before_tiling")
 			item.client.FrameBorders()
-			item.client.moveresize_novalid(sx, sy, sw, sh)
+			item.client.moveresizeNoValid(sx, sy, sw, sh)
 			sy += sh
 		}
 	}
@@ -90,15 +94,15 @@ func (ly *tileVertical) maximizable() bool {
 }
 
 func (ly *tileVertical) move(c *client, x, y int) {
-	c.move_novalid(x, y)
+	c.moveNoValid(x, y)
 }
 
 func (ly *tileVertical) resize(c *client, w, h int) {
-	c.resize_novalid(w, h)
+	c.resizeNoValid(w, h)
 }
 
 func (ly *tileVertical) moveresize(c *client, x, y, w, h int) {
-	c.moveresize_novalid(x, y, w, h)
+	c.moveresizeNoValid(x, y, w, h)
 }
 
 // For debugging
