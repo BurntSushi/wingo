@@ -24,7 +24,7 @@ type client struct {
 	initMap             bool
 	state               int
 	normal              bool
-	floating            bool
+	forceFloating       bool
 	maximized           bool
 	iconified           bool
 	initialMap          bool
@@ -50,45 +50,33 @@ type client struct {
 
 func newClient(id xgb.Id) *client {
 	return &client{
-		window:       newWindow(id),
-		workspace:    nil,
-		layer:        stackDefault,
-		name:         "",
-		vname:        "",
-		wmname:       "",
-		isMapped:     false,
-		initMap:      false,
-		state:        StateInactive,
-		normal:       true,
-		floating:     false,
-		maximized:    false,
-		iconified:    false,
-		initialMap:   false,
-		lastTime:     0,
-		unmapIgnore:  0,
-		hints:        nil,
-		nhints:       nil,
-		protocols:    nil,
-		transientFor: 0,
-		geomStore:    make(map[string]*clientGeom),
-		promptStore:  make(map[string]*window),
-		frame:        nil,
-		frameNada:    nil,
-		frameSlim:    nil,
-		frameBorders: nil,
-		frameFull:    nil,
-	}
-}
-
-type clientGeom struct {
-	xrect.Rect
-	maximized bool
-}
-
-func (c *client) newClientGeom() *clientGeom {
-	return &clientGeom{
-		Rect:      xrect.New(xrect.Pieces(c.Frame().Geom())),
-		maximized: c.maximized,
+		window:        newWindow(id),
+		workspace:     nil,
+		layer:         stackDefault,
+		name:          "",
+		vname:         "",
+		wmname:        "",
+		isMapped:      false,
+		initMap:       false,
+		state:         StateInactive,
+		normal:        true,
+		forceFloating: false,
+		maximized:     false,
+		iconified:     false,
+		initialMap:    false,
+		lastTime:      0,
+		unmapIgnore:   0,
+		hints:         nil,
+		nhints:        nil,
+		protocols:     nil,
+		transientFor:  0,
+		geomStore:     make(map[string]*clientGeom),
+		promptStore:   make(map[string]*window),
+		frame:         nil,
+		frameNada:     nil,
+		frameSlim:     nil,
+		frameBorders:  nil,
+		frameFull:     nil,
 	}
 }
 
@@ -170,31 +158,6 @@ func (c *client) unmappedFallback() {
 	if focused != nil && focused.Id() == c.Id() {
 		WM.fallback()
 	}
-}
-
-// normalSet sets whether a client is normal or not.
-// Once a client is managed, this cannot change.
-// A client is defined to be normal in terms of what it is NOT.
-// A client is normal when all of the following things are false:
-// Has type _NET_WM_WINDOW_TYPE_DESKTOP
-// Has type _NET_WM_WINDOW_TYPE_DOCK
-// Has type _NET_WM_WINDOW_TYPE_SPLASH
-// Has type _NET_WM_WINDOW_TYPE_DROPDOWN_MENU
-// Has type _NET_WM_WINDOW_TYPE_POPUP_MENU
-// Has type _NET_WM_WINDOW_TYPE_TOOLTIP
-// Has type _NET_WM_WINDOW_TYPE_NOTIFICATION
-// Has type _NET_WM_WINDOW_TYPE_COMBO
-// Has type _NET_WM_WINDOW_TYPE_DND
-func (c *client) normalSet() {
-	c.normal = strIndex("_NET_WM_WINDOW_TYPE_DESKTOP", c.types) == -1 &&
-		strIndex("_NET_WM_WINDOW_TYPE_DOCK", c.types) == -1 &&
-		strIndex("_NET_WM_WINDOW_TYPE_SPLASH", c.types) == -1 &&
-		strIndex("_NET_WM_WINDOW_TYPE_DROPDOWN_MENU", c.types) == -1 &&
-		strIndex("_NET_WM_WINDOW_TYPE_POPUP_MENU", c.types) == -1 &&
-		strIndex("_NET_WM_WINDOW_TYPE_TOOLTIP", c.types) == -1 &&
-		strIndex("_NET_WM_WINDOW_TYPE_NOTIFICATION", c.types) == -1 &&
-		strIndex("_NET_WM_WINDOW_TYPE_COMBO", c.types) == -1 &&
-		strIndex("_NET_WM_WINDOW_TYPE_DND", c.types) == -1
 }
 
 func (c *client) IconifyToggle() {
@@ -362,20 +325,22 @@ func (c *client) MaximizeToggle() {
 }
 
 func (c *client) maximize() {
-	// only save if we're not already maximized
+	if !c.layout().maximizable() {
+		return
+	}
 	if !c.maximized {
 		c.saveGeom("unmaximized")
 	}
 
-	c.maximizeNoSave()
+	c.maximizeRaw()
 }
 
 func (c *client) unmaximize() {
-	c.unmaximizeNoRestore()
+	c.unmaximizeRaw()
 	c.loadGeom("unmaximized")
 }
 
-func (c *client) maximizeNoSave() {
+func (c *client) maximizeRaw() {
 	c.maximized = true
 	c.frameNada.Maximize()
 	c.frameSlim.Maximize()
@@ -384,7 +349,7 @@ func (c *client) maximizeNoSave() {
 	frameMaximize(c.Frame())
 }
 
-func (c *client) unmaximizeNoRestore() {
+func (c *client) unmaximizeRaw() {
 	c.maximized = false
 	c.frameNada.Unmaximize()
 	c.frameSlim.Unmaximize()
@@ -394,33 +359,7 @@ func (c *client) unmaximizeNoRestore() {
 
 func (c *client) EnsureUnmax() {
 	if c.maximized {
-		c.unmaximizeNoRestore()
-	}
-}
-
-func (c *client) toggleFloating() {
-	c.floating = !c.floating
-	c.layoutSet()
-	c.workspace.tile()
-}
-
-// layoutSet determines whether client MUST be floating or not.
-// If a client doesn't have to be floating, then it is *always* stored
-// in the tilers' state. The presumption is, if a client doesn't have to be
-// floating, then when a tiler is active, it is being tiled.
-// If a client MUST be floating, then the tilers should not know about it.
-// DO NOT INVOKE A TILE COMMAND HERE. Try it. I dare you.
-func (c *client) layoutSet() {
-	floating := false
-
-	if c.floating {
-		floating = true
-	}
-
-	if floating {
-		c.workspace.tilersRemove(c)
-	} else {
-		c.workspace.tilersAdd(c)
+		c.unmaximizeRaw()
 	}
 }
 
@@ -429,9 +368,19 @@ func (c *client) move(x, y int) {
 	c.Frame().ConfigureFrame(DoX|DoY, x, y, 0, 0, 0, 0, false, true)
 }
 
+func (c *client) move_novalid(x, y int) {
+	c.EnsureUnmax()
+	c.Frame().ConfigureFrame(DoX|DoY, x, y, 0, 0, 0, 0, true, true)
+}
+
 func (c *client) resize(w, h int) {
 	c.EnsureUnmax()
 	c.Frame().ConfigureFrame(DoW|DoH, 0, 0, w, h, 0, 0, false, true)
+}
+
+func (c *client) resize_novalid(w, h int) {
+	c.EnsureUnmax()
+	c.Frame().ConfigureFrame(DoW|DoH, 0, 0, w, h, 0, 0, true, true)
 }
 
 func (c *client) moveresize(x, y, w, h int) {
@@ -439,34 +388,9 @@ func (c *client) moveresize(x, y, w, h int) {
 	c.Frame().ConfigureFrame(DoX|DoY|DoW|DoH, x, y, w, h, 0, 0, false, true)
 }
 
-func (c *client) saveGeom(key string) {
-	c.geomStore[key] = c.newClientGeom()
-}
-
-func (c *client) saveGeomNoClobber(key string) {
-	if _, ok := c.geomStore[key]; !ok {
-		c.saveGeom(key)
-	}
-}
-
-func (c *client) loadGeom(key string) {
-	if cgeom, ok := c.geomStore[key]; ok {
-		if cgeom.maximized {
-			// We don't save because we don't want to clobber the existing
-			// "restore" state the client has saved.
-			c.maximizeNoSave()
-		} else {
-			c.Frame().ConfigureFrame(
-				DoX|DoY|DoW|DoH,
-				cgeom.X(), cgeom.Y(), cgeom.Width(), cgeom.Height(),
-				0, 0, false, true)
-		}
-		delete(c.geomStore, key)
-	} else {
-		logger.Warning.Printf(
-			"Could not load client geometry state '%s' on client '%s'.",
-			key, c)
-	}
+func (c *client) moveresize_novalid(x, y, w, h int) {
+	c.EnsureUnmax()
+	c.Frame().ConfigureFrame(DoX|DoY|DoW|DoH, x, y, w, h, 0, 0, true, true)
 }
 
 func (c *client) Raise() {
@@ -566,104 +490,6 @@ func (c *client) updateName() {
 
 	c.frameFull.updateTitle()
 	c.promptUpdateName()
-}
-
-func (c *client) GravitizeX(x int, gravity int) int {
-	// Don't do anything if there's no gravity options set and we're
-	// trying to infer gravity.
-	// This is equivalent to setting NorthWest gravity
-	if gravity > -1 && c.nhints.Flags&icccm.SizeHintPWinGravity == 0 {
-		return x
-	}
-
-	// Otherwise, we're either inferring gravity (from normal hints), or
-	// using some forced notion of gravity (probably from EWMH stuff)
-	var g int
-	if gravity > -1 {
-		g = gravity
-	} else {
-		g = int(c.nhints.WinGravity)
-	}
-
-	f := c.Frame()
-	switch {
-	case g == xgb.GravityStatic || g == xgb.GravityBitForget:
-		x -= f.Left()
-	case g == xgb.GravityNorth || g == xgb.GravitySouth ||
-		g == xgb.GravityCenter:
-		x -= abs(f.Left()-f.Right()) / 2
-	case g == xgb.GravityNorthEast || g == xgb.GravityEast ||
-		g == xgb.GravitySouthEast:
-		x -= f.Left() + f.Right()
-	}
-
-	return x
-}
-
-func (c *client) GravitizeY(y int, gravity int) int {
-	// Don't do anything if there's no gravity options set and we're
-	// trying to infer gravity.
-	// This is equivalent to setting NorthWest gravity
-	if gravity > -1 && c.nhints.Flags&icccm.SizeHintPWinGravity == 0 {
-		return y
-	}
-
-	// Otherwise, we're either inferring gravity (from normal hints), or
-	// using some forced notion of gravity (probably from EWMH stuff)
-	var g int
-	if gravity > -1 {
-		g = gravity
-	} else {
-		g = int(c.nhints.WinGravity)
-	}
-
-	f := c.Frame()
-	switch {
-	case g == xgb.GravityStatic || g == xgb.GravityBitForget:
-		y -= f.Top()
-	case g == xgb.GravityEast || g == xgb.GravityWest ||
-		g == xgb.GravityCenter:
-		y -= abs(f.Top()-f.Bottom()) / 2
-	case g == xgb.GravitySouthEast || g == xgb.GravitySouth ||
-		g == xgb.GravitySouthWest:
-		y -= f.Top() + f.Bottom()
-	}
-
-	return y
-}
-
-func (c *client) ValidateHeight(height int) int {
-	return c.validateSize(height, c.nhints.HeightInc, c.nhints.BaseHeight,
-		c.nhints.MinHeight, c.nhints.MaxHeight)
-}
-
-func (c *client) ValidateWidth(width int) int {
-	return c.validateSize(width, c.nhints.WidthInc, c.nhints.BaseWidth,
-		c.nhints.MinWidth, c.nhints.MaxWidth)
-}
-
-func (c *client) validateSize(size, inc, base, min, max int) int {
-	if size < min && c.nhints.Flags&icccm.SizeHintPMinSize > 0 {
-		return min
-	}
-	if size < 1 {
-		return 1
-	}
-	if size > max && c.nhints.Flags&icccm.SizeHintPMaxSize > 0 {
-		return max
-	}
-	if inc > 1 && c.nhints.Flags&icccm.SizeHintPResizeInc > 0 {
-		var whichb int
-		if base > 0 {
-			whichb = base
-		} else {
-			whichb = min
-		}
-		size = whichb +
-			(int(round(float64(size-whichb)/float64(inc))) * inc)
-	}
-
-	return size
 }
 
 func (c *client) Frame() Frame {

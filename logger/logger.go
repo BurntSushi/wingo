@@ -15,7 +15,7 @@ import (
 
 type logger struct {
 	logType int
-	plain *log.Logger
+	plain   *log.Logger
 	colored *log.Logger
 }
 
@@ -28,7 +28,7 @@ const (
 )
 
 var (
-	flags = FlagDebug | FlagMessage | FlagWarning | FlagError
+	flags  = FlagDebug | FlagMessage | FlagWarning | FlagError
 	colors = true
 
 	Debug, Lots, Message, Warning, Error *logger

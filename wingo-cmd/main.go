@@ -1,4 +1,5 @@
 package main
+
 /*
 	wingo-cmd is a small program that allows one to issue any command (except
 	for mouse commands) to Wingo.
@@ -100,7 +101,6 @@ func main() {
 
 	logger.Error.Println(
 		"Timed out while trying to issue command to Wingo. " +
-		"Are you sure Wingo is running?")
+			"Are you sure Wingo is running?")
 	os.Exit(1)
 }
-

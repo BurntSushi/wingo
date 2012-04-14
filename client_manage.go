@@ -27,6 +27,9 @@ func (c *client) manage() error {
 		return err
 	}
 
+	// Reparent's sends an unmap, we need to ignore it!
+	c.unmapIgnore++
+
 	// determines whether this is a "normal" client window or not.
 	c.normalSet()
 
@@ -43,9 +46,6 @@ func (c *client) manage() error {
 	// time to add the client to the WM state
 	WM.clientAdd(c)
 
-	// Reparent's sends an unmap, we need to ignore it!
-	c.unmapIgnore++
-
 	// Which stacking layer does this client belong in?
 	c.stackDetermine()
 	c.Raise()
@@ -57,60 +57,15 @@ func (c *client) manage() error {
 		c.hasStruts = true
 	}
 
-	// Listen to the client for property and structure changes.
-	c.window.listen(xgb.EventMaskPropertyChange |
-		xgb.EventMaskStructureNotify)
-
-	// attach some event handlers
-	xevent.PropertyNotifyFun(
-		func(X *xgbutil.XUtil, ev xevent.PropertyNotifyEvent) {
-			c.updateProperty(ev)
-		}).Connect(X, c.window.id)
-	xevent.ConfigureRequestFun(
-		func(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
-			// Don't honor configure requests when we're moving or resizing
-			// Or if we're maximized. They need to oblige EWMH for that!
-			if c.frame.Moving() || c.frame.Resizing() || c.maximized {
-				return
-			}
-
-			flags := int(ev.ValueMask) & ^int(DoStack) & ^int(DoSibling)
-			c.frame.ConfigureClient(flags, int(ev.X), int(ev.Y),
-				int(ev.Width), int(ev.Height),
-				ev.Sibling, ev.StackMode, false)
-		}).Connect(X, c.window.id)
-	xevent.UnmapNotifyFun(
-		func(X *xgbutil.XUtil, ev xevent.UnmapNotifyEvent) {
-			if !c.Mapped() {
-				return
-			}
-
-			if c.unmapIgnore > 0 {
-				c.unmapIgnore -= 1
-				return
-			}
-
-			c.unmappedFallback()
-			c.unmanage()
-		}).Connect(X, c.window.id)
-	xevent.DestroyNotifyFun(
-		func(X *xgbutil.XUtil, ev xevent.DestroyNotifyEvent) {
-			c.unmanage()
-		}).Connect(X, c.window.id)
-
-	// Focus follows mouse? (Attach to frame window!)
-	if CONF.ffm {
-		xevent.EnterNotifyFun(
-			func(X *xgbutil.XUtil, ev xevent.EnterNotifyEvent) {
-				c.Focus()
-			}).Connect(X, c.Frame().ParentId())
-	}
-
-	c.clientMouseConfig()
-	c.frameMouseConfig()
+	// Listen to events and response to them
+	c.listen()
 
 	// Find the current workspace and attach this client
 	WM.wrkActive().add(c)
+
+	if lay, ok := c.layout().(*floating); c.normal && ok {
+		lay.xy_no_overlap(c)
+	}
 
 	// Some prompts need to do some heavy-lifting ONE time for each client.
 	// (i.e., creating images.)
@@ -140,6 +95,31 @@ func (c *client) initFrame() {
 	c.frameSlim = newFrameSlim(parent, c)
 	c.frameBorders = newFrameBorders(parent, c)
 	c.frameFull = newFrameFull(parent, c)
+}
+
+// normalSet sets whether a client is normal or not.
+// Once a client is managed, this cannot change.
+// A client is defined to be normal in terms of what it is NOT.
+// A client is normal when all of the following things are false:
+// Has type _NET_WM_WINDOW_TYPE_DESKTOP
+// Has type _NET_WM_WINDOW_TYPE_DOCK
+// Has type _NET_WM_WINDOW_TYPE_SPLASH
+// Has type _NET_WM_WINDOW_TYPE_DROPDOWN_MENU
+// Has type _NET_WM_WINDOW_TYPE_POPUP_MENU
+// Has type _NET_WM_WINDOW_TYPE_TOOLTIP
+// Has type _NET_WM_WINDOW_TYPE_NOTIFICATION
+// Has type _NET_WM_WINDOW_TYPE_COMBO
+// Has type _NET_WM_WINDOW_TYPE_DND
+func (c *client) normalSet() {
+	c.normal = strIndex("_NET_WM_WINDOW_TYPE_DESKTOP", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_DOCK", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_SPLASH", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_DROPDOWN_MENU", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_POPUP_MENU", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_TOOLTIP", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_NOTIFICATION", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_COMBO", c.types) == -1 &&
+		strIndex("_NET_WM_WINDOW_TYPE_DND", c.types) == -1
 }
 
 func (c *client) initPopulate() error {
@@ -200,6 +180,73 @@ func (c *client) initPopulate() error {
 	return nil
 }
 
+func (c *client) listen() {
+	// Listen to the client for property and structure changes.
+	c.window.listen(xgb.EventMaskPropertyChange |
+		xgb.EventMaskStructureNotify)
+
+	// attach some event handlers
+	xevent.PropertyNotifyFun(
+		func(X *xgbutil.XUtil, ev xevent.PropertyNotifyEvent) {
+			c.updateProperty(ev)
+		}).Connect(X, c.window.id)
+	xevent.ConfigureRequestFun(
+		func(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
+			// Don't honor configure requests when we're moving or resizing
+			// Or if we're maximized. They need to oblige EWMH for that!
+			if c.frame.Moving() || c.frame.Resizing() || c.maximized {
+				return
+			}
+
+			flags := int(ev.ValueMask) & ^int(DoStack) & ^int(DoSibling)
+			c.frame.ConfigureClient(flags, int(ev.X), int(ev.Y),
+				int(ev.Width), int(ev.Height),
+				ev.Sibling, ev.StackMode, false)
+		}).Connect(X, c.window.id)
+	xevent.UnmapNotifyFun(
+		func(X *xgbutil.XUtil, ev xevent.UnmapNotifyEvent) {
+			if !c.Mapped() {
+				return
+			}
+
+			if c.unmapIgnore > 0 {
+				c.unmapIgnore -= 1
+				return
+			}
+
+			c.unmappedFallback()
+			c.unmanage()
+		}).Connect(X, c.window.id)
+	xevent.DestroyNotifyFun(
+		func(X *xgbutil.XUtil, ev xevent.DestroyNotifyEvent) {
+			c.unmanage()
+		}).Connect(X, c.window.id)
+
+	// Focus follows mouse? (Attach to frame window!)
+	if CONF.ffm {
+		xevent.EnterNotifyFun(
+			func(X *xgbutil.XUtil, ev xevent.EnterNotifyEvent) {
+				c.Focus()
+			}).Connect(X, c.Frame().ParentId())
+	}
+
+	c.clientMouseConfig()
+	c.frameMouseConfig()
+}
+
+// stackDetermine infers which layer this client should be in.
+// Typically used when first managing a client.
+func (c *client) stackDetermine() {
+	switch {
+	case strIndex("_NET_WM_WINDOW_TYPE_DESKTOP", c.types) > -1:
+		c.layer = stackDesktop
+	case strIndex("_NET_WM_WINDOW_TYPE_DOCK", c.types) > -1:
+		c.layer = stackDock
+	default:
+		c.layer = stackDefault
+	}
+}
+
 func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
 	X.Grab()
 	defer X.Ungrab()
@@ -220,18 +267,5 @@ func clientMapRequest(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
 		logger.Warning.Printf("Could not manage window %X because: %v\n",
 			client, err)
 		return
-	}
-}
-
-// stackDetermine infers which layer this client should be in.
-// Typically used when first managing a client.
-func (c *client) stackDetermine() {
-	switch {
-	case strIndex("_NET_WM_WINDOW_TYPE_DESKTOP", c.types) > -1:
-		c.layer = stackDesktop
-	case strIndex("_NET_WM_WINDOW_TYPE_DOCK", c.types) > -1:
-		c.layer = stackDock
-	default:
-		c.layer = stackDefault
 	}
 }

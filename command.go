@@ -31,8 +31,6 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 	switch cmd {
 	case "Close":
 		return usage(cmdClose(args...))
-	case "ClientToggleFloating":
-		return usage(cmdClientToggleFloating(args...))
 	case "Focus":
 		return usage(cmdFocus(args...))
 	case "FrameBorders":
@@ -75,6 +73,8 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 		return usage(cmdTileStart(args...))
 	case "TileStop":
 		return usage(cmdTileStop(args...))
+	case "ToggleForceFloating":
+		return usage(cmdToggleForceFloating(args...))
 	case "Workspace":
 		return usage(cmdWorkspace(false, false, args...))
 	case "WorkspacePrefix":
@@ -207,14 +207,6 @@ func withFocusedOrArg(args []string, f func(c *client)) {
 	}
 }
 
-func cmdClientToggleFloating(args ...string) func() {
-	return func() {
-		withFocusedOrArg(args, func(c *client) {
-			c.toggleFloating()
-		})
-	}
-}
-
 func cmdClose(args ...string) func() {
 	return func() {
 		withFocusedOrArg(args, func(c *client) {
@@ -337,7 +329,7 @@ func cmdMove(args ...string) func() {
 		}
 
 		withFocusedOrArg(args, func(c *client) {
-			c.move(x, y)
+			c.layout().move(c, x, y)
 		})
 	}
 }
@@ -472,7 +464,7 @@ func cmdResize(args ...string) func() {
 		}
 
 		withFocusedOrArg(args, func(c *client) {
-			c.resize(w, h)
+			c.layout().resize(c, w, h)
 		})
 	}
 }
@@ -488,6 +480,14 @@ func cmdTileStop(args ...string) func() {
 	return func() {
 		wrk := WM.wrkActive()
 		wrk.tilingSet(false)
+	}
+}
+
+func cmdToggleForceFloating(args ...string) func() {
+	return func() {
+		withFocusedOrArg(args, func(c *client) {
+			c.toggleForceFloating()
+		})
 	}
 }
 

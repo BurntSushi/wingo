@@ -45,7 +45,8 @@ func (ly *tileVertical) place() {
 		}
 		for i, item := range ly.store.masters {
 			item.client.saveGeomNoClobber("layout_before_tiling")
-			item.client.moveresize(mx, headGeom.Y()+i*mh, mw, mh)
+			item.client.FrameBorders()
+			item.client.moveresize_novalid(mx, headGeom.Y()+i*mh, mw, mh)
 		}
 	}
 	if ssize > 0 {
@@ -56,7 +57,8 @@ func (ly *tileVertical) place() {
 		for _, item := range ly.store.slaves {
 			sh := int(float64(headGeom.Height()) * item.proportion)
 			item.client.saveGeomNoClobber("layout_before_tiling")
-			item.client.moveresize(sx, sy, sw, sh)
+			item.client.FrameBorders()
+			item.client.moveresize_novalid(sx, sy, sw, sh)
 			sy += sh
 		}
 	}
@@ -75,24 +77,28 @@ func (ly *tileVertical) unplace() {
 
 func (ly *tileVertical) add(c *client) {
 	if added := ly.store.add(c); added {
-		logger.Debug.Println("ADDED NEW CLIENT:", c)
 	}
 }
 
 func (ly *tileVertical) remove(c *client) {
 	if removed := ly.store.remove(c); removed {
-		logger.Debug.Println("REMOVED CLIENT:", c)
 	}
 }
 
-// in determines whether the client should be in this layout.
-// Note that 'in' either returns true for every layout in a particular
-// workspace or false for every layout in a particular workspace.
-// It's up to the workspace to handle which layout is controlling placement.
-func (ly *tileVertical) in(c *client) bool {
-	return !c.floating &&
-		ly.workspace.tiling() &&
-		c.workspace.id == ly.workspace.id
+func (ly *tileVertical) maximizable() bool {
+	return false
+}
+
+func (ly *tileVertical) move(c *client, x, y int) {
+	c.move_novalid(x, y)
+}
+
+func (ly *tileVertical) resize(c *client, w, h int) {
+	c.resize_novalid(w, h)
+}
+
+func (ly *tileVertical) moveresize(c *client, x, y, w, h int) {
+	c.moveresize_novalid(x, y, w, h)
 }
 
 // For debugging

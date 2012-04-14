@@ -10,7 +10,7 @@ bindata: $(BINDATA)
 sushi-bindata: $(WINGOPKG)/bindata.a
 
 gofmt:
-	gofmt -w *.go wini/*.go
+	gofmt -w *.go wini/*.go cmdusage/*.go logger/*.go wingo-cmd/*.go
 	colcheck *.go */*.go
 
 cmd:
