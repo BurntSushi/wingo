@@ -133,6 +133,8 @@ func (f *frameFull) On() {
 }
 
 func (f *frameFull) Active() {
+	f.state = frameStateActive
+
 	if THEME.full.borderSize > 0 {
 		f.topSide.active()
 		f.bottomSide.active()
@@ -158,6 +160,8 @@ func (f *frameFull) Active() {
 }
 
 func (f *frameFull) Inactive() {
+	f.state = frameStateInactive
+
 	if THEME.full.borderSize > 0 {
 		f.topSide.inactive()
 		f.bottomSide.inactive()

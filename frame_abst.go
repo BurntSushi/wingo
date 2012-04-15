@@ -10,6 +10,7 @@ type abstFrame struct {
 	parent   *frameParent
 	moving   *moveState
 	resizing *resizeState
+	state int
 }
 
 func newFrameAbst(p *frameParent, c *client) *abstFrame {
@@ -27,6 +28,10 @@ func (f *abstFrame) Destroy() {
 		X.Conn().ReparentWindow(f.Client().Id(), ROOT.id, 0, 0)
 	}
 	f.parent.window.destroy()
+}
+
+func (f *abstFrame) FrameState() int {
+	return f.state
 }
 
 func (f *abstFrame) State() int {

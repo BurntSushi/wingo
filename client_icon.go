@@ -88,14 +88,14 @@ func (c *client) iconTryIcccm() (*image.RGBA, *image.RGBA, bool, bool) {
 	img, err := xgraphics.PixmapToImage(X, c.hints.IconPixmap)
 	if err != nil {
 		logger.Warning.Printf("Could not get IconPixmap from window %s "+
-			"because: %v", err)
+			"because: %v", c, err)
 		return nil, nil, false, false
 	}
 
 	mask, err := xgraphics.BitmapToImage(X, c.hints.IconMask)
 	if err != nil {
 		logger.Warning.Printf("Could not get IconMask from window %s "+
-			"because: %v", err)
+			"because: %v", c, err)
 		return img, nil, true, false
 	}
 

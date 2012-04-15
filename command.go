@@ -31,6 +31,8 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 	switch cmd {
 	case "Close":
 		return usage(cmdClose(args...))
+	case "Flash":
+		return usage(cmdFlash(args...))
 	case "Focus":
 		return usage(cmdFocus(args...))
 	case "FrameBorders":
@@ -732,25 +734,24 @@ func commandShellFun(cmd string) func() {
 }
 
 // This is a start, but it is not quite ready for prime-time yet.
-// 1. If the window is destroyed while the go routine is still running,
-// we're in big trouble.
-// 2. This has no way to stop from some external event (like focus).
-// Basically, both of these things can be solved by using channels to tell
-// the goroutine to quit. Not difficult but also not worth my time atm.
-func cmd_active_flash() {
-	focused := WM.focused()
+// This has no way to stop from some external event (like focus).
+// Solve using channels. Later.
+func cmdFlash(args ...string) func() {
+	return func() {
+		withFocusedOrArg(args, func(c *client) {
+			go func() {
+				for i := 0; i < 10; i++ {
+					if c.Frame().FrameState() == frameStateActive {
+						logger.Debug.Printf("Making '%s' inactive...", c)
+						c.Frame().Inactive()
+					} else {
+						logger.Debug.Printf("Making '%s' active...", c)
+						c.Frame().Active()
+					}
 
-	if focused != nil {
-		go func(c *client) {
-			for i := 0; i < 10; i++ {
-				if c.Frame().State() == StateActive {
-					c.Frame().Inactive()
-				} else {
-					c.Frame().Active()
+					time.Sleep(time.Second)
 				}
-
-				time.Sleep(time.Second)
-			}
-		}(focused)
+			}()
+		})
 	}
 }

@@ -29,6 +29,16 @@ func (c *client) manage() error {
 		return err
 	}
 
+	// Some prompts need to do some heavy-lifting ONE time for each client.
+	// (i.e., creating images.)
+	// These images are added to the "prompt" map in each client.
+	// Since this could be intensive, let's push it to the background.
+	// We don't need to wait for it, since the prompt knows how to handle
+	// clients that haven't been initialized yet.
+	go func() {
+		c.promptAdd()
+	}()
+
 	// Reparent's sends an unmap, we need to ignore it!
 	c.unmapIgnore++
 
@@ -77,11 +87,6 @@ func (c *client) manage() error {
 	if lay, ok := c.layout().(*floating); c.normal && ok {
 		lay.xy_no_overlap(c)
 	}
-
-	// Some prompts need to do some heavy-lifting ONE time for each client.
-	// (i.e., creating images.)
-	// These images are added to the "prompt" map in each client.
-	c.promptAdd()
 
 	// If the initial state isn't iconic or is absent, then we can map
 	if c.hints.Flags&icccm.HintState == 0 ||
@@ -181,20 +186,14 @@ func (c *client) initPopulate() error {
 	}
 
 	c.transientFor, _ = icccm.WmTransientForGet(X, c.Id())
-	logger.Debug.Printf("Checking if '%s' is a transient...", c)
 	if c.transientFor == 0 {
 		for _, c2 := range WM.clients {
 			if c2.transient(c) {
 				c.transientFor = c2.Id()
-				logger.Debug.Printf("YES IT IS")
 				break
 			}
 		}
 	}
-	if c.transientFor == 0 {
-		logger.Debug.Printf("NOPE")
-	}
-	logger.Debug.Println("------------------------------")
 
 	return nil
 }

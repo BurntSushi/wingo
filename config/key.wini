@@ -1,4 +1,5 @@
 [Global]
+Mod1-Mod4-f := Flash
 Mod4-c := Close
 Mod1-Shift-c := Quit
 Mod4-j := `chromium`

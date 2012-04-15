@@ -1,9 +1,9 @@
 package main
 
 import (
-	// "log" 
-	// "os" 
-	// "runtime/pprof" 
+	// "log"
+	// "os"
+	// "runtime/pprof"
 
 	"code.google.com/p/jamslam-x-go-binding/xgb"
 

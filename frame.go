@@ -11,6 +11,8 @@ import (
 const (
 	StateActive = iota
 	StateInactive
+	frameStateActive
+	frameStateInactive
 )
 
 type Frame interface {
@@ -21,6 +23,7 @@ type Frame interface {
 		sibling xgb.Id, stackMode byte, ignoreHints, sendNotify bool)
 	Current() bool
 	Destroy()
+	FrameState() int
 	Geom() xrect.Rect // the geometry of the parent window
 	Map()
 	Off()
