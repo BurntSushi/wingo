@@ -28,9 +28,10 @@ func (wm *state) headGeom(i int) xrect.Rect {
 // headChoose *only* looks at the client's geometry, determines which head
 // it overlaps with the most, and updates that client's workspace appropriately.
 // If the workspace is updated, headChoose returns true. Otherwise, false.
+// We also quit if the client is sticky.
 func (wm *state) headChoose(c *client, newGeom xrect.Rect) bool {
-	// If this client isn't mapped, don't do anything.
-	if !c.Mapped() {
+	// If this client isn't mapped or is sticky, don't do anything.
+	if !c.Mapped() || c.workspace.id < 0 {
 		return false
 	}
 
@@ -164,7 +165,6 @@ func (wm *state) headsApplyStruts() {
 		if strut == nil {
 			continue
 		}
-		logger.Debug.Println(c)
 		xrect.ApplyStrut(wm.heads, ROOT.geom.Width(), ROOT.geom.Height(),
 			strut.Left, strut.Right, strut.Top, strut.Bottom,
 			strut.LeftStartY, strut.LeftEndY,

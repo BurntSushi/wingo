@@ -81,8 +81,12 @@ func (c *client) manage() error {
 	headGeom := WM.headActive()
 	c.move(headGeom.X(), headGeom.Y())
 
-	// Find the current workspace and attach this client
-	WM.wrkActive().add(c)
+	// Find the current workspace and attach this client if it's normal
+	if c.normal {
+		WM.wrkActive().add(c)
+	} else { // otherwise we make it always visible
+		WM.stickyWrk.add(c)
+	}
 
 	if lay, ok := c.layout().(*floating); c.normal && ok {
 		lay.xy_no_overlap(c)

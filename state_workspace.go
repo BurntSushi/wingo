@@ -79,7 +79,7 @@ func (wm *state) wrkFind(name string) *workspace {
 }
 
 func (wrkNew *workspace) activate(fallback bool, greedy bool) {
-	if wrkNew.active {
+	if wrkNew.active || wrkNew.id < 0 {
 		return
 	}
 
@@ -193,7 +193,7 @@ func (wrk *workspace) mapOrUnmap(c *client) {
 }
 
 func (wrk *workspace) visible() bool {
-	return wrk.head > -1
+	return wrk.head > -1 || wrk.id < 0
 }
 
 func (wrk *workspace) nameSet(name string) {
@@ -202,6 +202,12 @@ func (wrk *workspace) nameSet(name string) {
 }
 
 func (wrk *workspace) headGeom() xrect.Rect {
+	if wrk.id < 0 {
+		logger.Error.Println(
+			"The sticky workspace does not have a specific head geometry " +
+				"associated with it. Assuming such things is a BUG.")
+		panic("")
+	}
 	if wrk.head < 0 || wrk.head >= len(WM.heads) {
 		logger.Error.Printf("'%d' is not a valid head number.", wrk.head)
 		logger.Error.Printf(
@@ -215,12 +221,6 @@ func (wrk *workspace) headGeom() xrect.Rect {
 
 func (wrk *workspace) headSet(headNum int) {
 	wrk.head = headNum
-	if wrk.visible() {
-		wrk.relayout()
-	}
-}
-
-func (wrk *workspace) relayout() {
 }
 
 func (wrk *workspace) layout() layout {
@@ -243,10 +243,14 @@ func (wrk *workspace) untile() {
 }
 
 func (wrk *workspace) tiling() bool {
-	return wrk.state == workspaceTiling
+	return wrk.id >= 0 && wrk.state == workspaceTiling
 }
 
 func (wrk *workspace) tilingSet(enable bool) {
+	if wrk.id < 0 {
+		return
+	}
+
 	if enable {
 		wrk.state = workspaceTiling
 		wrk.tile()

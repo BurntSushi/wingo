@@ -77,6 +77,8 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 		return usage(cmdTileStop(args...))
 	case "ToggleForceFloating":
 		return usage(cmdToggleForceFloating(args...))
+	case "ToggleSticky":
+		return usage(cmdToggleSticky(args...))
 	case "Workspace":
 		return usage(cmdWorkspace(false, false, args...))
 	case "WorkspacePrefix":
@@ -505,6 +507,18 @@ func cmdToggleForceFloating(args ...string) func() {
 	}
 }
 
+func cmdToggleSticky(args ...string) func() {
+	return func() {
+		withFocusedOrArg(args, func(c *client) {
+			if c.workspace.id >= 0 {
+				WM.stickyWrk.add(c)
+			} else {
+				WM.wrkActive().add(c)
+			}
+		})
+	}
+}
+
 func cmdWorkspace(withClient bool, setClient bool, args ...string) func() {
 	if withClient && setClient {
 		panic("Bug in cmdWorkspace. 'withClient' and 'setClient' cannot " +
@@ -742,10 +756,8 @@ func cmdFlash(args ...string) func() {
 			go func() {
 				for i := 0; i < 10; i++ {
 					if c.Frame().FrameState() == frameStateActive {
-						logger.Debug.Printf("Making '%s' inactive...", c)
 						c.Frame().Inactive()
 					} else {
-						logger.Debug.Printf("Making '%s' active...", c)
 						c.Frame().Active()
 					}
 

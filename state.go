@@ -19,9 +19,13 @@ type state struct {
 	headsRaw   xinerama.Heads
 	heads      xinerama.Heads
 	workspaces workspaces
+	stickyWrk  *workspace
 }
 
 func newState() *state {
+	stickyWrk := newWorkspace(-1)
+	stickyWrk.nameSet("Sticky")
+
 	wrks := make(workspaces, len(CONF.workspaces))
 	for i, wrkName := range CONF.workspaces {
 		wrks[i] = newWorkspace(i)
@@ -34,6 +38,7 @@ func newState() *state {
 		focus:      make([]*client, 0),
 		heads:      nil,
 		workspaces: wrks,
+		stickyWrk:  stickyWrk,
 	}
 }
 

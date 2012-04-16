@@ -118,11 +118,14 @@ func (c *client) MaximizeToggle() {
 	}
 }
 
+func (c *client) maximizable() bool {
+	return c.workspace.id >= 0 &&
+		c.workspace.visible() &&
+		c.layout().maximizable()
+}
+
 func (c *client) maximize() {
-	if !c.workspace.visible() {
-		return
-	}
-	if !c.layout().maximizable() {
+	if !c.maximizable() {
 		return
 	}
 	if !c.maximized {
@@ -142,7 +145,7 @@ func (c *client) unmaximize() {
 }
 
 func (c *client) maximizeRaw() {
-	if !c.workspace.visible() {
+	if c.workspace.id < 0 || !c.workspace.visible() {
 		return
 	}
 
