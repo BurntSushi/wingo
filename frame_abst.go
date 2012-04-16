@@ -10,7 +10,7 @@ type abstFrame struct {
 	parent   *frameParent
 	moving   *moveState
 	resizing *resizeState
-	state int
+	state    int
 }
 
 func newFrameAbst(p *frameParent, c *client) *abstFrame {
