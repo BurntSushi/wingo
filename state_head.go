@@ -153,6 +153,9 @@ func (wm *state) headsLoad() {
 
 	// apply struts!
 	wm.headsApplyStruts()
+
+	// Update the desktop geometry.
+	WM.ewmhDesktopGeometry()
 }
 
 // headsApplyStruts looks for struts set on all clients, and applies them

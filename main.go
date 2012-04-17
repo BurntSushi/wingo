@@ -58,6 +58,9 @@ func main() {
 		return
 	}
 
+	// Create the _NET_SUPPORTING_WM_CHECK window.
+	WM.ewmhSupportingWmCheck()
+
 	// Load configuration
 	err = loadConfig()
 	if err != nil {
@@ -124,6 +127,13 @@ func main() {
 func set_supported() {
 	// Purposefully NOT supported
 	// _NET_DESKTOP_GEOMETRY, _NET_DESKTOP_VIEWPORT, _NET_VIRTUAL_ROOTS
+	// _NET_WORKAREA
+
+	// Purposefully PARTIALLY supported
+	// _NET_NUMBER_OF_DESKTOPS
+	//	Read support only. Wingo ignores client messages to add/remove
+	//	desktops.
+	//	Wingo provides facilities to add/remove any desktop using commands.
 
 	// Some day...
 	// _NET_DESKTOP_LAYOUT, _NET_SHOWING_DESKTOP
@@ -133,8 +143,8 @@ func set_supported() {
 
 	supported := []string{
 		"_NET_SUPPORTED", "_NET_CLIENT_LIST", "_NET_CLIENT_LIST_STACKING",
-		"_NET_NUMBER_OF_DESKTOPS", "_NET_CURRENT_DESKTOP",
-		"_NET_DESKTOP_NAMES",
+		"_NET_NUMBER_OF_DESKTOPS", "_NET_DESKTOP_GEOMETRY",
+		"_NET_CURRENT_DESKTOP", "_NET_DESKTOP_NAMES", "_NET_ACTIVE_WINDOW",
 
 		"_NET_WM_ICON",
 	}

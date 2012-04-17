@@ -293,6 +293,7 @@ func (c *client) Focused() {
 	c.focusRaise()
 	c.state = StateActive
 	c.Frame().Active()
+	ewmh.ActiveWindowSet(X, c.Id())
 
 	// Forcefully unfocus all other clients
 	WM.unfocusExcept(c.Id())

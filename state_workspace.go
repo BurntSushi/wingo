@@ -207,7 +207,7 @@ func (wrk *workspace) visible() bool {
 func (wrk *workspace) nameSet(name string) {
 	wrk.name = name
 	wrk.promptUpdateName()
-	WM.ewmhUpdateDesktopNames()
+	WM.ewmhDesktopNames()
 }
 
 func (wrk *workspace) headGeom() xrect.Rect {

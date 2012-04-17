@@ -49,7 +49,7 @@ func (wm *state) workspaceAdd(id int, name string) {
 	wm.workspaces = append(wm.workspaces, wrk)
 
 	ewmh.NumberOfDesktopsSet(X, len(wm.workspaces))
-	wm.ewmhUpdateDesktopNames()
+	wm.ewmhDesktopNames()
 }
 
 func (wm *state) clientAdd(c *client) {
@@ -94,9 +94,11 @@ func (wm *state) focused() *client {
 }
 
 func (wm *state) unfocusExcept(id xgb.Id) {
-	for _, c := range wm.focus {
-		if c.Id() != id {
-			c.Unfocused()
+	// Go in reverse to make switching appear quicker in the common case
+	// if there are a lot of windows.
+	for i := len(wm.focus) - 1; i >= 0; i-- {
+		if wm.focus[i].Id() != id {
+			wm.focus[i].Unfocused()
 		}
 	}
 }
@@ -127,6 +129,7 @@ func (wm *state) fallback() {
 	// this is IMPORTANT. if we fail here, we risk a lock-up
 	logger.Message.Printf("Focus falling back to ROOT")
 	ROOT.focus()
+	ewmh.ActiveWindowSet(X, 0x0)
 	wm.unfocusExcept(0)
 }
 

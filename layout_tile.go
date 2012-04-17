@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/BurntSushi/wingo/logger"
+	// "github.com/BurntSushi/wingo/logger" 
 )
 
 type tileVertical struct {
@@ -67,15 +67,20 @@ func (ly *tileVertical) place() {
 		}
 	}
 
-	logger.Debug.Println(ly)
+	// logger.Debug.Println(ly) 
 }
 
 func (ly *tileVertical) unplace() {
-	for _, item := range ly.store.masters {
-		item.client.loadGeom("layout_before_tiling")
-	}
-	for _, item := range ly.store.slaves {
-		item.client.loadGeom("layout_before_tiling")
+	// Instead of just hopping through the masters and slaves directly,
+	// we start "unplacing" from the top of the stack. This makes untiling
+	// with lots of windows appear quicker :-)
+	for _, c := range WM.stack {
+		if i := ly.store.mFindClient(c); i > -1 {
+			ly.store.masters[i].client.loadGeom("layout_before_tiling")
+		}
+		if i := ly.store.sFindClient(c); i > -1 {
+			ly.store.slaves[i].client.loadGeom("layout_before_tiling")
+		}
 	}
 }
 
