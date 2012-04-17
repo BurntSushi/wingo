@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xrect"
 
 	"github.com/BurntSushi/wingo/logger"
@@ -105,11 +106,18 @@ func (wrkNew *workspace) activate(fallback bool, greedy bool) {
 		wrkNew.show()
 	}
 
-	wrkActive.active = false
-	wrkNew.active = true
+	wrkActive.activeSet(false)
+	wrkNew.activeSet(true)
 
 	if fallback {
 		WM.fallback()
+	}
+}
+
+func (wrk *workspace) activeSet(active bool) {
+	wrk.active = active
+	if active {
+		ewmh.CurrentDesktopSet(X, wrk.id)
 	}
 }
 
@@ -199,6 +207,7 @@ func (wrk *workspace) visible() bool {
 func (wrk *workspace) nameSet(name string) {
 	wrk.name = name
 	wrk.promptUpdateName()
+	WM.ewmhUpdateDesktopNames()
 }
 
 func (wrk *workspace) headGeom() xrect.Rect {

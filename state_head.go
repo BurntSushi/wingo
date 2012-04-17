@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xevent"
@@ -92,7 +94,7 @@ func (wm *state) headsLoad() {
 	// Make the first one active and the first N workspaces visible,
 	// where N is the number of heads
 	if firstTime {
-		wm.workspaces[0].active = true
+		wm.workspaces[0].activeSet(true)
 		for i := 0; i < len(heads); i++ {
 			wm.workspaces[i].headSet(i)
 		}
@@ -104,7 +106,7 @@ func (wm *state) headsLoad() {
 				wrk.hide()
 				wrk.headSet(-1)
 				if wrk.active {
-					wrk.active = false
+					wrk.activeSet(false)
 					activeHidden = true
 				}
 			}
@@ -135,7 +137,7 @@ func (wm *state) headsLoad() {
 		if activeHidden {
 			for _, wrk := range wm.workspaces {
 				if wrk.visible() {
-					wrk.active = true
+					wrk.activeSet(true)
 					break
 				}
 			}
@@ -193,7 +195,7 @@ func (wm *state) fillWorkspaces(heads xinerama.Heads) {
 		"think you're configuration is correct.")
 
 	for i := len(wm.workspaces); i < len(heads); i++ {
-		wm.workspaces = append(wm.workspaces, newWorkspace(i))
+		wm.workspaceAdd(i, fmt.Sprintf("Default workspace %d", i+1))
 	}
 }
 

@@ -81,9 +81,6 @@ func main() {
 	WM = newState()
 	WM.headsLoad()
 
-	// Set supported atoms
-	ewmh.SupportedSet(X, []string{"_NET_WM_ICON"})
-
 	// Attach all global key bindings
 	attachAllKeys()
 
@@ -122,4 +119,25 @@ func main() {
 	// } 
 	// pprof.WriteHeapProfile(f) 
 	// f.Close() 
+}
+
+func set_supported() {
+	// Purposefully NOT supported
+	// _NET_DESKTOP_GEOMETRY, _NET_DESKTOP_VIEWPORT, _NET_VIRTUAL_ROOTS
+
+	// Some day...
+	// _NET_DESKTOP_LAYOUT, _NET_SHOWING_DESKTOP
+
+	// breadcrumb: _NET_ACTIVE_WINDOW, _NET_WORKAREA,
+	// _NET_SUPPORTING_WM_CHECK, 
+
+	supported := []string{
+		"_NET_SUPPORTED", "_NET_CLIENT_LIST", "_NET_CLIENT_LIST_STACKING",
+		"_NET_NUMBER_OF_DESKTOPS", "_NET_CURRENT_DESKTOP",
+		"_NET_DESKTOP_NAMES",
+
+		"_NET_WM_ICON",
+	}
+	// Set supported atoms
+	ewmh.SupportedSet(X, supported)
 }

@@ -6,7 +6,7 @@
 # cd $PWD 
 
 if [ "$1" != "--no-compile" ]; then
-  go build -o zzz
+  go build
   if [ ! $? = 0 ]; then
     exit
   fi
@@ -23,7 +23,7 @@ xemu=$!
 sleep 0.5
 export DISPLAY=:10
 
-DISPLAY=:10 ./zzz &
+DISPLAY=:10 ./wingo &
 # DISPLAY=:10 wingo & 
 # DISPLAY=:10 openbox & 
 # go run $PWD/wingo.go & 

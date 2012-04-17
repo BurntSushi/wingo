@@ -23,23 +23,33 @@ type state struct {
 }
 
 func newState() *state {
-	stickyWrk := newWorkspace(-1)
-	stickyWrk.nameSet("Sticky")
-
-	wrks := make(workspaces, len(CONF.workspaces))
-	for i, wrkName := range CONF.workspaces {
-		wrks[i] = newWorkspace(i)
-		wrks[i].nameSet(wrkName)
-	}
-
-	return &state{
+	wm := &state{
 		clients:    make([]*client, 0),
 		stack:      make([]*client, 0),
 		focus:      make([]*client, 0),
 		heads:      nil,
-		workspaces: wrks,
-		stickyWrk:  stickyWrk,
+		workspaces: make(workspaces, 0, len(CONF.workspaces)),
+		stickyWrk:  nil,
 	}
+
+	// Add the special workspace that holds windows that are always visible
+	wm.stickyWrk = newWorkspace(-1)
+	wm.stickyWrk.nameSet("Sticky")
+
+	for i, wrkName := range CONF.workspaces {
+		wm.workspaceAdd(i, wrkName)
+	}
+
+	return wm
+}
+
+func (wm *state) workspaceAdd(id int, name string) {
+	wrk := newWorkspace(id)
+	wrk.nameSet(name)
+	wm.workspaces = append(wm.workspaces, wrk)
+
+	ewmh.NumberOfDesktopsSet(X, len(wm.workspaces))
+	wm.ewmhUpdateDesktopNames()
 }
 
 func (wm *state) clientAdd(c *client) {
