@@ -5,6 +5,8 @@ import (
 
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xrect"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 func (c *client) GravitizeX(x int, gravity int) int {
@@ -251,6 +253,21 @@ func (c *client) saveGeomNoClobber(key string) {
 	}
 }
 
+func (c *client) copyGeom(src, dest string) {
+	c.geomStore[dest] = c.geomStore[src]
+}
+
+func (c *client) copyGeomTransients(src, dest string) {
+	for _, c2 := range WM.clients {
+		if c.transient(c2) && c2.workspace != nil &&
+			c2.workspace.id == c.workspace.id {
+
+			c2.copyGeom(src, dest)
+		}
+	}
+	c.copyGeom(src, dest)
+}
+
 func (c *client) loadGeom(key string) {
 	if cgeom, ok := c.geomStore[key]; ok {
 		c.frameSet(cgeom.frame)
@@ -260,6 +277,7 @@ func (c *client) loadGeom(key string) {
 		if c.workspace.visible() && cgeom.headGeom != nil &&
 			c.workspace.headGeom() != cgeom.headGeom {
 
+			logger.Debug.Println(c, cgeom.headGeom, c.workspace.headGeom())
 			newGeom = WM.headConvert(cgeom, cgeom.headGeom,
 				c.workspace.headGeom())
 		}

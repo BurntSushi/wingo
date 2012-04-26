@@ -299,8 +299,16 @@ func cmdHeadFocus(withClient bool, args ...string) func() {
 				c.Unmap() // prevent flickering
 				defer c.Map()
 
-				c.Raise()
-				c.saveGeomTransients("monitor_switch")
+				// If the client is tiling, then we copy its "before tiling"
+				// state to 'monitor switch'. This is so we restore its
+				// proper geometry and not its geometry while in a tiling
+				// layout.
+				if c.layout().floating() {
+					c.saveGeomTransients("monitor_switch")
+				} else {
+					c.copyGeomTransients(
+						"layout_before_tiling", "monitor_switch")
+				}
 				wrk.add(c)
 
 				// If the new layout is floating, then load geometry
@@ -310,6 +318,8 @@ func cmdHeadFocus(withClient bool, args ...string) func() {
 				} else {
 					c.deleteGeomTransients("monitor_switch")
 				}
+
+				// c.Raise() 
 			})
 		}
 		wrk.activate(true, greedy)
