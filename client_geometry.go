@@ -5,8 +5,6 @@ import (
 
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xrect"
-
-	"github.com/BurntSushi/wingo/logger"
 )
 
 func (c *client) GravitizeX(x int, gravity int) int {
@@ -131,7 +129,7 @@ func (c *client) maximize() {
 		return
 	}
 	if !c.maximized {
-		c.saveGeom("unmaximized")
+		c.saveState("unmaximized")
 	}
 
 	c.maximizeRaw()
@@ -143,7 +141,7 @@ func (c *client) unmaximize() {
 	}
 
 	c.unmaximizeRaw()
-	c.loadGeom("unmaximized")
+	c.loadState("unmaximized")
 }
 
 func (c *client) maximizeRaw() {
@@ -211,20 +209,28 @@ func (c *client) moveresizeNoValid(x, y, w, h int) {
 	c.geomChangeNoValid(DoX|DoY|DoW|DoH, x, y, w, h)
 }
 
-type clientGeom struct {
+const (
+	clientStateGeom = 1 << iota
+	clientStateFrame
+	clientStateHead
+)
+
+var clientStateAll = clientStateGeom | clientStateFrame | clientStateHead
+
+type clientState struct {
 	xrect.Rect
 	maximized bool
 	frame     Frame
 	headGeom  xrect.Rect
 }
 
-func (c *client) newClientGeom() *clientGeom {
+func (c *client) newClientState() *clientState {
 	var headGeom xrect.Rect = nil
 	if c.workspace.visible() {
 		headGeom = xrect.New(xrect.Pieces(c.workspace.headGeom()))
 	}
 
-	return &clientGeom{
+	return &clientState{
 		Rect:      xrect.New(xrect.Pieces(c.Frame().Geom())),
 		maximized: c.maximized,
 		frame:     c.frame,
@@ -232,52 +238,49 @@ func (c *client) newClientGeom() *clientGeom {
 	}
 }
 
-func (c *client) saveGeom(key string) {
-	c.geomStore[key] = c.newClientGeom()
+func (c *client) saveState(key string) {
+	c.stateStore[key] = c.newClientState()
 }
 
-func (c *client) saveGeomTransients(key string) {
+func (c *client) saveStateTransients(key string) {
 	for _, c2 := range WM.clients {
 		if c.transient(c2) && c2.workspace != nil &&
 			c2.workspace.id == c.workspace.id {
 
-			c2.saveGeom(key)
+			c2.saveState(key)
 		}
 	}
-	c.saveGeom(key)
+	c.saveState(key)
 }
 
-func (c *client) saveGeomNoClobber(key string) {
-	if _, ok := c.geomStore[key]; !ok {
-		c.saveGeom(key)
+func (c *client) saveStateNoClobber(key string) {
+	if _, ok := c.stateStore[key]; !ok {
+		c.saveState(key)
 	}
 }
 
-func (c *client) copyGeom(src, dest string) {
-	c.geomStore[dest] = c.geomStore[src]
+func (c *client) copyState(src, dest string) {
+	c.stateStore[dest] = c.stateStore[src]
 }
 
-func (c *client) copyGeomTransients(src, dest string) {
+func (c *client) copyStateTransients(src, dest string) {
 	for _, c2 := range WM.clients {
 		if c.transient(c2) && c2.workspace != nil &&
 			c2.workspace.id == c.workspace.id {
 
-			c2.copyGeom(src, dest)
+			c2.copyState(src, dest)
 		}
 	}
-	c.copyGeom(src, dest)
+	c.copyState(src, dest)
 }
 
-func (c *client) loadGeom(key string) {
-	if cgeom, ok := c.geomStore[key]; ok {
-		c.frameSet(cgeom.frame)
+func (c *client) loadState(key string) {
+	if cgeom, ok := c.stateStore[key]; ok {
 		newGeom := cgeom.Rect
 
-		// let's convert head geometry if need be.
 		if c.workspace.visible() && cgeom.headGeom != nil &&
 			c.workspace.headGeom() != cgeom.headGeom {
 
-			logger.Debug.Println(c, cgeom.headGeom, c.workspace.headGeom())
 			newGeom = WM.headConvert(cgeom, cgeom.headGeom,
 				c.workspace.headGeom())
 		}
@@ -287,39 +290,47 @@ func (c *client) loadGeom(key string) {
 			// "restore" state the client has saved.
 			c.maximizeRaw()
 		} else {
-			c.Frame().ConfigureFrame(
-				DoX|DoY|DoW|DoH,
-				newGeom.X(), newGeom.Y(), newGeom.Width(), newGeom.Height(),
-				0, 0, false, true)
+			// Only reset this geometry if it isn't finishing a move/resize
+			if !c.frame.Moving() && !c.frame.Resizing() {
+				c.Frame().ConfigureFrame(
+					DoX|DoY|DoW|DoH,
+					newGeom.X(), newGeom.Y(), newGeom.Width(), newGeom.Height(),
+					0, 0, false, true)
+			}
 		}
-		delete(c.geomStore, key)
+
+		// This comes last, otherwise we might be inspecting the wrong frame
+		// for information (like whether the client is moving/resizing).
+		c.frameSet(cgeom.frame)
+
+		delete(c.stateStore, key)
 	}
 }
 
-func (c *client) loadGeomTransients(key string) {
+func (c *client) loadStateTransients(key string, flags int) {
 	for _, c2 := range WM.clients {
 		if c.transient(c2) && c2.workspace != nil &&
 			c2.workspace.id == c.workspace.id {
 
-			c2.loadGeom(key)
+			c2.loadState(key)
 		}
 	}
-	c.loadGeom(key)
+	c.loadState(key)
 }
 
-func (c *client) deleteGeom(key string) {
-	if _, ok := c.geomStore[key]; ok {
-		delete(c.geomStore, key)
+func (c *client) deleteState(key string) {
+	if _, ok := c.stateStore[key]; ok {
+		delete(c.stateStore, key)
 	}
 }
 
-func (c *client) deleteGeomTransients(key string) {
+func (c *client) deleteStateTransients(key string) {
 	for _, c2 := range WM.clients {
 		if c.transient(c2) && c2.workspace != nil &&
 			c2.workspace.id == c.workspace.id {
 
-			c2.deleteGeom(key)
+			c2.deleteState(key)
 		}
 	}
-	c.deleteGeom(key)
+	c.deleteState(key)
 }

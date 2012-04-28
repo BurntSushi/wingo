@@ -184,6 +184,11 @@ func (wm *state) headsApplyStruts() {
 			c.maximize()
 		}
 	}
+
+	// Now make workspaces that are tiling fix themselves.
+	for _, wrk := range WM.workspaces {
+		wrk.tile()
+	}
 }
 
 // fillWorkspaces is used when there are more heads than there are workspaces.

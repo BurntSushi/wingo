@@ -304,22 +304,30 @@ func cmdHeadFocus(withClient bool, args ...string) func() {
 				// proper geometry and not its geometry while in a tiling
 				// layout.
 				if c.layout().floating() {
-					c.saveGeomTransients("monitor_switch")
+					c.saveStateTransients("monitor_switch")
 				} else {
-					c.copyGeomTransients(
+					c.copyStateTransients(
 						"layout_before_tiling", "monitor_switch")
 				}
 				wrk.add(c)
 
 				// If the new layout is floating, then load geometry
-				// in the new monitor. Otherwise, trash the geometry.
+				// in the new monitor.
+				// Otherwise... things get tricky. We copy the monitor_switch
+				// state into "layout_before_tiling." This is because the
+				// monitor_switch state has the desirable "non-tiling" state.
 				if c.layout().floating() {
-					c.loadGeomTransients("monitor_switch")
+					c.loadStateTransients("monitor_switch", clientStateAll)
 				} else {
-					c.deleteGeomTransients("monitor_switch")
+					c.copyStateTransients(
+						"monitor_switch", "layout_before_tiling")
+					c.deleteStateTransients("monitor_switch")
 				}
 
-				// c.Raise() 
+				// Finally, if this window is active, raise it.
+				if c.state == StateActive {
+					c.Raise()
+				}
 			})
 		}
 		wrk.activate(true, greedy)

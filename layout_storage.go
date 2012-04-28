@@ -85,7 +85,7 @@ func (ls *layoutStore) remove(c *client) bool {
 	}
 
 	if removed {
-		c.loadGeom("layout_before_tiling")
+		c.loadState("layout_before_tiling")
 	}
 
 	return removed

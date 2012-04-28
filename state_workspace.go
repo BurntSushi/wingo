@@ -273,7 +273,7 @@ func (wrk *workspace) hide() {
 	for _, c := range WM.clients {
 		if c.workspace.id == wrk.id {
 			if c.layout().floating() {
-				c.saveGeom("workspace_switch")
+				c.saveState("workspace_switch")
 			}
 			c.Unmap()
 		}
@@ -285,7 +285,7 @@ func (wrk *workspace) show() {
 	for _, c := range WM.stack {
 		if c.workspace.id == wrk.id {
 			if c.layout().floating() {
-				c.loadGeom("workspace_switch")
+				c.loadState("workspace_switch")
 			}
 			c.Map()
 		}

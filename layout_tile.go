@@ -48,7 +48,7 @@ func (ly *tileVertical) place() {
 			mw = headGeom.Width()
 		}
 		for i, item := range ly.store.masters {
-			item.client.saveGeomNoClobber("layout_before_tiling")
+			item.client.saveStateNoClobber("layout_before_tiling")
 			item.client.FrameBorders()
 			item.client.moveresizeNoValid(mx, headGeom.Y()+i*mh, mw, mh)
 		}
@@ -60,7 +60,7 @@ func (ly *tileVertical) place() {
 		sy := headGeom.Y()
 		for _, item := range ly.store.slaves {
 			sh := int(float64(headGeom.Height()) * item.proportion)
-			item.client.saveGeomNoClobber("layout_before_tiling")
+			item.client.saveStateNoClobber("layout_before_tiling")
 			item.client.FrameBorders()
 			item.client.moveresizeNoValid(sx, sy, sw, sh)
 			sy += sh
@@ -76,10 +76,10 @@ func (ly *tileVertical) unplace() {
 	// with lots of windows appear quicker :-)
 	for _, c := range WM.stack {
 		if i := ly.store.mFindClient(c); i > -1 {
-			ly.store.masters[i].client.loadGeom("layout_before_tiling")
+			ly.store.masters[i].client.loadState("layout_before_tiling")
 		}
 		if i := ly.store.sFindClient(c); i > -1 {
-			ly.store.slaves[i].client.loadGeom("layout_before_tiling")
+			ly.store.slaves[i].client.loadState("layout_before_tiling")
 		}
 	}
 }

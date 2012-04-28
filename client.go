@@ -39,7 +39,7 @@ type client struct {
 	transientFor xgb.Id
 	wmclass      *icccm.WmClass
 
-	geomStore   map[string]*clientGeom
+	stateStore  map[string]*clientState
 	promptStore map[string]*window
 
 	frame        Frame
@@ -72,7 +72,7 @@ func newClient(id xgb.Id) *client {
 		protocols:     nil,
 		transientFor:  0,
 		wmclass:       nil,
-		geomStore:     make(map[string]*clientGeom),
+		stateStore:    make(map[string]*clientState),
 		promptStore:   make(map[string]*window),
 		frame:         nil,
 		frameNada:     nil,

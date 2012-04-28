@@ -36,11 +36,12 @@ func frameMoveStep(f Frame, rx, ry, ex, ey int) {
 }
 
 func frameMoveEnd(f Frame, rx, ry, ex, ey int) {
+	FrameReset(f)
+	WM.headChoose(f.Client(), f.Geom())
+
 	moving := f.MovingState()
 	moving.moving = false
 	moving.lastRootX, moving.lastRootY = 0, 0
-	FrameReset(f)
-	WM.headChoose(f.Client(), f.Geom())
 }
 
 func frameResizeBegin(f Frame, direction uint32,
@@ -208,6 +209,14 @@ func frameResizeStep(f Frame, rx, ry, ex, ey int) {
 }
 
 func frameResizeEnd(f Frame, rx, ry, ex, ey int) {
+	// If windows are really slow to respond/resize, this may be necessary.
+	// If we don't, it's possible for the client to be out of whack inside
+	// the decorations.
+	// Example: Libreoffice in Xephyr. Try resizing it with the mouse and
+	// releasing the mouse button really quickly.
+	FrameReset(f)
+	WM.headChoose(f.Client(), f.Geom())
+
 	// just zero out the resizing state
 	resizing := f.ResizingState()
 	resizing.resizing = false
@@ -216,12 +225,4 @@ func frameResizeEnd(f Frame, rx, ry, ex, ey int) {
 	resizing.width, resizing.height = 0, 0
 	resizing.xs, resizing.ys = false, false
 	resizing.ws, resizing.hs = false, false
-
-	// If windows are really slow to respond/resize, this may be necessary.
-	// If we don't, it's possible for the client to be out of whack inside
-	// the decorations.
-	// Example: Libreoffice in Xephyr. Try resizing it with the mouse and
-	// releasing the mouse button really quickly.
-	FrameReset(f)
-	WM.headChoose(f.Client(), f.Geom())
 }
