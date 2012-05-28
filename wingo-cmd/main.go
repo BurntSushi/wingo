@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/ewmh"
@@ -93,7 +93,7 @@ func main() {
 		}).Connect(X, X.RootWin())
 
 	// Listen to Root property change events
-	xwindow.Listen(X, X.RootWin(), xgb.EventMaskPropertyChange)
+	xwindow.Listen(X, X.RootWin(), xproto.EventMaskPropertyChange)
 
 	go xevent.Main(X)
 

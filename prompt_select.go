@@ -26,7 +26,7 @@ package main
 import (
 	"strings"
 
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/keybind"
@@ -108,7 +108,7 @@ type promptSelect struct {
 }
 
 // Id returns the parent window of this prompt.
-func (ps *promptSelect) Id() xgb.Id {
+func (ps *promptSelect) Id() xproto.Window {
 	return ps.top.id
 }
 
@@ -138,12 +138,12 @@ func newPromptSelect() *promptSelect {
 	bLft.moveresize(DoX|DoY|DoW, 0, 0, bs, 0)
 	bRht.moveresize(DoY|DoW, 0, 0, bs, 0)
 
-	top.change(xgb.CWBackPixel, uint32(THEME.prompt.bgColor))
-	bInp.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
-	bTop.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
-	bBot.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
-	bLft.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
-	bRht.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
+	top.change(xproto.CwBackPixel, uint32(THEME.prompt.bgColor))
+	bInp.change(xproto.CwBackPixel, uint32(THEME.prompt.borderColor))
+	bTop.change(xproto.CwBackPixel, uint32(THEME.prompt.borderColor))
+	bBot.change(xproto.CwBackPixel, uint32(THEME.prompt.borderColor))
+	bLft.change(xproto.CwBackPixel, uint32(THEME.prompt.borderColor))
+	bRht.change(xproto.CwBackPixel, uint32(THEME.prompt.borderColor))
 
 	// actual mapping doesn't happen until top is mapped
 	bInp.map_()
@@ -210,7 +210,7 @@ func newPromptSelect() *promptSelect {
 				if len(ps.itemsShowing) == 0 {
 					break
 				}
-				if mods&xgb.ModMaskShift > 0 {
+				if mods&xproto.ModMaskShift > 0 {
 					if ps.selected == -1 {
 						ps.selected++
 					}
@@ -323,7 +323,7 @@ func (ps *promptSelect) show(listFun promptSelectListFun,
 
 	// To the top!
 	if len(WM.stack) > 0 {
-		ps.top.configure(DoStack, 0, 0, 0, 0, 0, xgb.StackModeAbove)
+		ps.top.configure(DoStack, 0, 0, 0, 0, 0, xproto.StackModeAbove)
 	}
 
 	ps.showing = true
@@ -530,13 +530,13 @@ func (wrk *workspace) promptSelectUpdateName() {
 	// Don't let text overlap borders.
 	wrk.promptStore["select_active"].configure(
 		DoSibling|DoStack, 0, 0, 0, 0,
-		PROMPTS.slct.bRht.id, xgb.StackModeBelow)
+		PROMPTS.slct.bRht.id, xproto.StackModeBelow)
 	wrk.promptStore["select_inactive"].configure(
 		DoSibling|DoStack, 0, 0, 0, 0,
-		PROMPTS.slct.bRht.id, xgb.StackModeBelow)
+		PROMPTS.slct.bRht.id, xproto.StackModeBelow)
 	wrk.promptStore["select_label"].configure(
 		DoSibling|DoStack, 0, 0, 0, 0,
-		PROMPTS.slct.bRht.id, xgb.StackModeBelow)
+		PROMPTS.slct.bRht.id, xproto.StackModeBelow)
 }
 
 // createWorkspaceLabels creates the "Visible" and "Hidden" labels used
@@ -568,10 +568,10 @@ func (ps *promptSelect) createWorkspaceLabels() {
 	// Don't let text overlap borders.
 	ps.labVisible.configure(
 		DoSibling|DoStack, 0, 0, 0, 0,
-		ps.bRht.id, xgb.StackModeBelow)
+		ps.bRht.id, xproto.StackModeBelow)
 	ps.labHidden.configure(
 		DoSibling|DoStack, 0, 0, 0, 0,
-		ps.bRht.id, xgb.StackModeBelow)
+		ps.bRht.id, xproto.StackModeBelow)
 }
 
 // promptSelectListClients generates a list of clients grouped by workspace.
@@ -712,8 +712,8 @@ func (c *client) promptSelectUpdateName() {
 	// Don't let text overlap borders.
 	c.promptStore["select_active"].configure(
 		DoSibling|DoStack, 0, 0, 0, 0,
-		PROMPTS.slct.bRht.id, xgb.StackModeBelow)
+		PROMPTS.slct.bRht.id, xproto.StackModeBelow)
 	c.promptStore["select_inactive"].configure(
 		DoSibling|DoStack, 0, 0, 0, 0,
-		PROMPTS.slct.bRht.id, xgb.StackModeBelow)
+		PROMPTS.slct.bRht.id, xproto.StackModeBelow)
 }

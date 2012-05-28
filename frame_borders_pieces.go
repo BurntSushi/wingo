@@ -1,16 +1,18 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
-
 import (
+	"github.com/BurntSushi/xgb/xproto"
+
 	"github.com/BurntSushi/xgbutil/xgraphics"
 )
 
-func (f *frameBorders) newPieceWindow(ident string, cursor xgb.Id) *window {
-	mask := xgb.CWBackPixmap | xgb.CWEventMask | xgb.CWCursor
-	vals := []uint32{xgb.BackPixmapParentRelative,
-		xgb.EventMaskButtonPress | xgb.EventMaskButtonRelease |
-			xgb.EventMaskButtonMotion | xgb.EventMaskPointerMotion,
+func (f *frameBorders) newPieceWindow(ident string,
+	cursor xproto.Cursor) *window {
+
+	mask := xproto.CwBackPixmap | xproto.CwEventMask | xproto.CwCursor
+	vals := []uint32{xproto.BackPixmapParentRelative,
+		xproto.EventMaskButtonPress | xproto.EventMaskButtonRelease |
+			xproto.EventMaskButtonMotion | xproto.EventMaskPointerMotion,
 		uint32(cursor)}
 	win := createWindow(f.ParentId(), mask, vals...)
 
@@ -20,7 +22,7 @@ func (f *frameBorders) newPieceWindow(ident string, cursor xgb.Id) *window {
 }
 
 func (f *frameBorders) pieceImages(borderTypes, gradientType, gradientDir,
-	width, height int) (xgb.Id, xgb.Id) {
+	width, height int) (xproto.Pixmap, xproto.Pixmap) {
 
 	imgA := renderBorder(borderTypes,
 		THEME.borders.aThinColor, THEME.borders.aBorderColor,
@@ -32,7 +34,7 @@ func (f *frameBorders) pieceImages(borderTypes, gradientType, gradientDir,
 }
 
 func (f *frameBorders) cornerImages(borderTypes,
-	diagonal int) (xgb.Id, xgb.Id) {
+	diagonal int) (xproto.Pixmap, xproto.Pixmap) {
 
 	imgA := renderCorner(borderTypes,
 		THEME.borders.aThinColor, THEME.borders.aBorderColor,

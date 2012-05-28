@@ -1,22 +1,16 @@
 package main
 
-// import ( 
-// "image" 
-// "image/color" 
-// "image/draw" 
-// ) 
-
-import "code.google.com/p/jamslam-x-go-binding/xgb"
-
 import (
+	"github.com/BurntSushi/xgb/xproto"
+
 	"github.com/BurntSushi/xgbutil/xgraphics"
 )
 
-func (f *frameFull) newPieceWindow(ident string, cursor xgb.Id) *window {
-	mask := xgb.CWBackPixmap | xgb.CWEventMask | xgb.CWCursor
-	vals := []uint32{xgb.BackPixmapParentRelative,
-		xgb.EventMaskButtonPress | xgb.EventMaskButtonRelease |
-			xgb.EventMaskButtonMotion | xgb.EventMaskPointerMotion,
+func (f *frameFull) newPieceWindow(ident string, cursor xproto.Cursor) *window {
+	mask := xproto.CwBackPixmap | xproto.CwEventMask | xproto.CwCursor
+	vals := []uint32{xproto.BackPixmapParentRelative,
+		xproto.EventMaskButtonPress | xproto.EventMaskButtonRelease |
+			xproto.EventMaskButtonMotion | xproto.EventMaskPointerMotion,
 		uint32(cursor)}
 	win := createWindow(f.ParentId(), mask, vals...)
 
@@ -33,8 +27,8 @@ func (f *frameFull) newButtonClose() framePiece {
 		THEME.full.titleSize, THEME.full.titleSize,
 		renderGradientVert, renderGradientRegular)
 
-	xgraphics.Blend(imgA, THEME.full.aCloseButton, nil, 100, 0, 0)
-	xgraphics.Blend(imgI, THEME.full.iCloseButton, nil, 100, 0, 0)
+	xgraphics.BlendOld(imgA, THEME.full.aCloseButton, nil, 100, 0, 0)
+	xgraphics.BlendOld(imgI, THEME.full.iCloseButton, nil, 100, 0, 0)
 
 	win := f.newPieceWindow("close", 0)
 	win.moveresize(DoY|DoW|DoH,
@@ -52,8 +46,8 @@ func (f *frameFull) newButtonMaximize() framePiece {
 		THEME.full.titleSize, THEME.full.titleSize,
 		renderGradientVert, renderGradientRegular)
 
-	xgraphics.Blend(imgA, THEME.full.aMaximizeButton, nil, 100, 0, 0)
-	xgraphics.Blend(imgI, THEME.full.iMaximizeButton, nil, 100, 0, 0)
+	xgraphics.BlendOld(imgA, THEME.full.aMaximizeButton, nil, 100, 0, 0)
+	xgraphics.BlendOld(imgI, THEME.full.iMaximizeButton, nil, 100, 0, 0)
 
 	win := f.newPieceWindow("maximize", 0)
 	win.moveresize(DoY|DoW|DoH,
@@ -71,8 +65,8 @@ func (f *frameFull) newButtonMinimize() framePiece {
 		THEME.full.titleSize, THEME.full.titleSize,
 		renderGradientVert, renderGradientRegular)
 
-	xgraphics.Blend(imgA, THEME.full.aMinimizeButton, nil, 100, 0, 0)
-	xgraphics.Blend(imgI, THEME.full.iMinimizeButton, nil, 100, 0, 0)
+	xgraphics.BlendOld(imgA, THEME.full.aMinimizeButton, nil, 100, 0, 0)
+	xgraphics.BlendOld(imgI, THEME.full.iMinimizeButton, nil, 100, 0, 0)
 
 	win := f.newPieceWindow("minimize", 0)
 	win.moveresize(DoY|DoW|DoH,
@@ -122,7 +116,9 @@ func (f *frameFull) newIcon() framePiece {
 // on the borders of a 'full' frame.
 //
 
-func (f *frameFull) borderImages(width, height int) (xgb.Id, xgb.Id) {
+func (f *frameFull) borderImages(
+	width, height int) (xproto.Pixmap, xproto.Pixmap) {
+
 	imgA := renderBorder(0, 0, newThemeColor(THEME.full.aBorderColor),
 		width, height, 0, 0)
 	imgI := renderBorder(0, 0, newThemeColor(THEME.full.iBorderColor),

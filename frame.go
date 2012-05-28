@@ -1,7 +1,7 @@
 package main
 
 import (
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xgraphics"
@@ -18,9 +18,9 @@ const (
 type Frame interface {
 	Client() *client
 	ConfigureClient(flags, x, y, w, h int,
-		sibling xgb.Id, stackMode byte, ignoreHints bool)
+		sibling xproto.Window, stackMode byte, ignoreHints bool)
 	ConfigureFrame(flags, x, y, w, h int,
-		sibling xgb.Id, stackMode byte, ignoreHints, sendNotify bool)
+		sibling xproto.Window, stackMode byte, ignoreHints, sendNotify bool)
 	Current() bool
 	Destroy()
 	FrameState() int
@@ -29,7 +29,7 @@ type Frame interface {
 	Off()
 	On()
 	Parent() *frameParent
-	ParentId() xgb.Id
+	ParentId() xproto.Window
 	ParentWin() *window
 	State() int
 	Active()
@@ -57,11 +57,11 @@ type frameParent struct {
 }
 
 func newParent(c *client) *frameParent {
-	mask := xgb.CWEventMask
-	val := uint32(xgb.EventMaskSubstructureRedirect |
-		xgb.EventMaskButtonPress | xgb.EventMaskButtonRelease)
+	mask := xproto.CwEventMask
+	val := uint32(xproto.EventMaskSubstructureRedirect |
+		xproto.EventMaskButtonPress | xproto.EventMaskButtonRelease)
 	if CONF.ffm {
-		val |= xgb.EventMaskEnterWindow
+		val |= xproto.EventMaskEnterWindow
 	}
 
 	parent := createWindow(X.RootWin(), mask, val)
@@ -70,7 +70,7 @@ func newParent(c *client) *frameParent {
 		client: c,
 	}
 
-	X.Conn().ReparentWindow(c.Id(), parent.id, 0, 0)
+	xproto.ReparentWindow(X.Conn(), c.Id(), parent.id, 0, 0)
 
 	return p
 }
@@ -84,11 +84,11 @@ func (p *frameParent) Win() *window {
 // of the available states for quick switching.
 type framePiece struct {
 	win         *window
-	imgActive   xgb.Id
-	imgInactive xgb.Id
+	imgActive   xproto.Pixmap
+	imgInactive xproto.Pixmap
 }
 
-func newFramePiece(win *window, imgA, imgI xgb.Id) framePiece {
+func newFramePiece(win *window, imgA, imgI xproto.Pixmap) framePiece {
 	return framePiece{win: win, imgActive: imgA, imgInactive: imgI}
 }
 
@@ -99,12 +99,12 @@ func (p *framePiece) destroy() {
 }
 
 func (p *framePiece) active() {
-	p.win.change(xgb.CWBackPixmap, uint32(p.imgActive))
+	p.win.change(xproto.CwBackPixmap, uint32(p.imgActive))
 	p.win.clear()
 }
 
 func (p *framePiece) inactive() {
-	p.win.change(xgb.CWBackPixmap, uint32(p.imgInactive))
+	p.win.change(xproto.CwBackPixmap, uint32(p.imgInactive))
 	p.win.clear()
 }
 
@@ -165,7 +165,7 @@ func FrameReset(f Frame) {
 
 // FrameMR is short for FrameMoveresize.
 func FrameMR(f Frame, flags int, x, y int, w, h int, ignoreHints bool) {
-	f.ConfigureClient(flags, x, y, w, h, xgb.Id(0), 0, ignoreHints)
+	f.ConfigureClient(flags, x, y, w, h, 0, 0, ignoreHints)
 }
 
 // FrameValidateHeight validates a height of a *frame*, which is equivalent
@@ -214,7 +214,7 @@ func FrameConfigureClient(f Frame, flags, x, y, w, h int) (int, int, int, int) {
 // Also, the fx and fy coordinates are interpreted plainly as root window
 // coordinates. (No gravitization.)
 func FrameConfigureFrame(f Frame, flags, fx, fy, fw, fh int,
-	sibling xgb.Id, stackMode byte, ignoreHints bool, sendNotify bool) {
+	sibling xproto.Window, stackMode byte, ignoreHints bool, sendNotify bool) {
 
 	cw, ch := fw, fh
 	framex, framey, _, _ := xrect.RectPieces(f.Geom())
@@ -248,8 +248,8 @@ func FrameConfigureFrame(f Frame, flags, fx, fy, fw, fh int,
 			f.Client().Id(),
 			0, framex, framey,
 			clientw, clienth, 0, false)
-		X.Conn().SendEvent(false, f.Client().Id(), xgb.EventMaskStructureNotify,
-			configNotify.Bytes())
+		xproto.SendEvent(X.Conn(), false, f.Client().Id(),
+			xproto.EventMaskStructureNotify, string(configNotify.Bytes()))
 	}
 
 	f.Parent().Win().configure(flags, fx, fy, fw, fh, sibling, stackMode)

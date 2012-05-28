@@ -1,8 +1,8 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
-
 import (
+	"github.com/BurntSushi/xgb/xproto"
+
 	"github.com/BurntSushi/xgbutil/xrect"
 )
 
@@ -25,7 +25,7 @@ func newFrameAbst(p *frameParent, c *client) *abstFrame {
 
 func (f *abstFrame) Destroy() {
 	if f.Client().TrulyAlive() {
-		X.Conn().ReparentWindow(f.Client().Id(), ROOT.id, 0, 0)
+		xproto.ReparentWindow(X.Conn(), f.Client().Id(), ROOT.id, 0, 0)
 	}
 	f.parent.window.destroy()
 }
@@ -66,7 +66,7 @@ func (f *abstFrame) Parent() *frameParent {
 	return f.parent
 }
 
-func (f *abstFrame) ParentId() xgb.Id {
+func (f *abstFrame) ParentId() xproto.Window {
 	return f.parent.window.id
 }
 

@@ -3,28 +3,37 @@
 */
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
+import (
+	"github.com/BurntSushi/xgb/xproto"
 
-import "github.com/BurntSushi/xgbutil/xcursor"
+	"github.com/BurntSushi/xgbutil/xcursor"
+
+	"github.com/BurntSushi/wingo/logger"
+)
 
 var (
-	cursorLeftPtr           xgb.Id
-	cursorFleur             xgb.Id
-	cursorWatch             xgb.Id
-	cursorTopSide           xgb.Id
-	cursorTopRightCorner    xgb.Id
-	cursorRightSide         xgb.Id
-	cursorBottomRightCorner xgb.Id
-	cursorBottomSide        xgb.Id
-	cursorBottomLeftCorner  xgb.Id
-	cursorLeftSide          xgb.Id
-	cursorTopLeftCorner     xgb.Id
+	cursorLeftPtr           xproto.Cursor
+	cursorFleur             xproto.Cursor
+	cursorWatch             xproto.Cursor
+	cursorTopSide           xproto.Cursor
+	cursorTopRightCorner    xproto.Cursor
+	cursorRightSide         xproto.Cursor
+	cursorBottomRightCorner xproto.Cursor
+	cursorBottomSide        xproto.Cursor
+	cursorBottomLeftCorner  xproto.Cursor
+	cursorLeftSide          xproto.Cursor
+	cursorTopLeftCorner     xproto.Cursor
 )
 
 func setupCursors() {
 	// lazy...
-	cc := func(cursor uint16) xgb.Id {
-		return xcursor.CreateCursor(X, cursor)
+	cc := func(cursor uint16) xproto.Cursor {
+		cid, err := xcursor.CreateCursor(X, cursor)
+		if err != nil {
+			logger.Warning.Printf("Could not load cursor '%d'.", cursor)
+			return 0
+		}
+		return cid
 	}
 
 	cursorLeftPtr = cc(xcursor.LeftPtr)

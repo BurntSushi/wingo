@@ -1,7 +1,7 @@
 package main
 
 import (
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xrect"
@@ -45,7 +45,7 @@ func frameMoveEnd(f Frame, rx, ry, ex, ey int) {
 }
 
 func frameResizeBegin(f Frame, direction uint32,
-	rx, ry, ex, ey int) (bool, xgb.Id) {
+	rx, ry, ex, ey int) (bool, xproto.Cursor) {
 
 	resizing := f.ResizingState()
 	dir := direction
@@ -109,7 +109,7 @@ func frameResizeBegin(f Frame, direction uint32,
 	}
 
 	// Find the right cursor
-	var cursor xgb.Id = 0
+	var cursor xproto.Cursor = 0
 	switch dir {
 	case ewmh.SizeTop:
 		cursor = cursorTopSide

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
@@ -155,7 +155,7 @@ func (f *frameFull) Active() {
 	f.buttonMaximize.active()
 	f.buttonMinimize.active()
 
-	f.ParentWin().change(xgb.CWBackPixel, uint32(0xffffff))
+	f.ParentWin().change(xproto.CwBackPixel, uint32(0xffffff))
 	f.ParentWin().clear()
 }
 
@@ -182,7 +182,7 @@ func (f *frameFull) Inactive() {
 	f.buttonMaximize.inactive()
 	f.buttonMinimize.inactive()
 
-	f.ParentWin().change(xgb.CWBackPixel, uint32(0xffffff))
+	f.ParentWin().change(xproto.CwBackPixel, uint32(0xffffff))
 	f.ParentWin().clear()
 }
 
@@ -270,7 +270,7 @@ func (f *frameFull) Right() int {
 }
 
 func (f *frameFull) ConfigureClient(flags, x, y, w, h int,
-	sibling xgb.Id, stackMode byte, ignoreHints bool) {
+	sibling xproto.Window, stackMode byte, ignoreHints bool) {
 
 	x, y, w, h = FrameConfigureClient(f, flags, x, y, w, h)
 	f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints,
@@ -278,7 +278,7 @@ func (f *frameFull) ConfigureClient(flags, x, y, w, h int,
 }
 
 func (f *frameFull) ConfigureFrame(flags, fx, fy, fw, fh int,
-	sibling xgb.Id, stackMode byte, ignoreHints bool, sendNotify bool) {
+	sibling xproto.Window, stackMode byte, ignoreHints bool, sendNotify bool) {
 
 	FrameConfigureFrame(f, flags, fx, fy, fw, fh, sibling, stackMode,
 		ignoreHints, sendNotify)
@@ -322,10 +322,10 @@ func (f *frameFull) updateIcon() {
 		THEME.full.titleSize, THEME.full.titleSize,
 		renderGradientVert, renderGradientRegular)
 
-	img, msk := f.Client().iconImage(THEME.full.titleSize-4,
+	img := f.Client().iconImage(THEME.full.titleSize-4,
 		THEME.full.titleSize-4)
-	xgraphics.Blend(imgA, img, msk, 100, 2, 2)
-	xgraphics.Blend(imgI, img, msk, 100, 2, 2)
+	xgraphics.BlendOld(imgA, img, nil, 100, 2, 2)
+	xgraphics.BlendOld(imgI, img, nil, 100, 2, 2)
 
 	if f.icon.imgActive > 0 {
 		xgraphics.FreePixmap(X, f.icon.imgActive)

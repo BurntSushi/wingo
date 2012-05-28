@@ -1,7 +1,7 @@
 package main
 
 import (
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xrect"
@@ -26,13 +26,13 @@ func (c *client) GravitizeX(x int, gravity int) int {
 
 	f := c.Frame()
 	switch {
-	case g == xgb.GravityStatic || g == xgb.GravityBitForget:
+	case g == xproto.GravityStatic || g == xproto.GravityBitForget:
 		x -= f.Left()
-	case g == xgb.GravityNorth || g == xgb.GravitySouth ||
-		g == xgb.GravityCenter:
+	case g == xproto.GravityNorth || g == xproto.GravitySouth ||
+		g == xproto.GravityCenter:
 		x -= abs(f.Left()-f.Right()) / 2
-	case g == xgb.GravityNorthEast || g == xgb.GravityEast ||
-		g == xgb.GravitySouthEast:
+	case g == xproto.GravityNorthEast || g == xproto.GravityEast ||
+		g == xproto.GravitySouthEast:
 		x -= f.Left() + f.Right()
 	}
 
@@ -58,13 +58,13 @@ func (c *client) GravitizeY(y int, gravity int) int {
 
 	f := c.Frame()
 	switch {
-	case g == xgb.GravityStatic || g == xgb.GravityBitForget:
+	case g == xproto.GravityStatic || g == xproto.GravityBitForget:
 		y -= f.Top()
-	case g == xgb.GravityEast || g == xgb.GravityWest ||
-		g == xgb.GravityCenter:
+	case g == xproto.GravityEast || g == xproto.GravityWest ||
+		g == xproto.GravityCenter:
 		y -= abs(f.Top()-f.Bottom()) / 2
-	case g == xgb.GravitySouthEast || g == xgb.GravitySouth ||
-		g == xgb.GravitySouthWest:
+	case g == xproto.GravitySouthEast || g == xproto.GravitySouth ||
+		g == xproto.GravitySouthWest:
 		y -= f.Top() + f.Bottom()
 	}
 

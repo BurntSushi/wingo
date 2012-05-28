@@ -3,7 +3,7 @@ package main
 import (
 	"strings"
 
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/ewmh"
@@ -204,8 +204,8 @@ func (c *client) initPopulate() error {
 
 func (c *client) listen() {
 	// Listen to the client for property and structure changes.
-	c.window.listen(xgb.EventMaskPropertyChange |
-		xgb.EventMaskStructureNotify)
+	c.window.listen(xproto.EventMaskPropertyChange |
+		xproto.EventMaskStructureNotify)
 
 	// attach some event handlers
 	xevent.PropertyNotifyFun(

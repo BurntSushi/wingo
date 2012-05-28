@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
@@ -36,7 +36,7 @@ type client struct {
 	hints        *icccm.Hints
 	nhints       *icccm.NormalHints
 	protocols    []string
-	transientFor xgb.Id
+	transientFor xproto.Window
 	wmclass      *icccm.WmClass
 
 	stateStore  map[string]*clientState
@@ -49,7 +49,7 @@ type client struct {
 	frameFull    *frameFull
 }
 
-func newClient(id xgb.Id) *client {
+func newClient(id xproto.Window) *client {
 	return &client{
 		window:        newWindow(id),
 		workspace:     nil,
@@ -206,7 +206,7 @@ func (c *client) Close() {
 			return
 		}
 
-		X.Conn().SendEvent(false, c.window.id, 0, cm.Bytes())
+		xproto.SendEvent(X.Conn(), false, c.window.id, 0, string(cm.Bytes()))
 	} else {
 		c.window.kill()
 	}
@@ -219,14 +219,19 @@ func (c *client) Close() {
 // (unmapIgnore is incremented whenever Wingo unmaps a window. When Wingo
 // unmaps a window, we *don't* want to delete it, just hide it.)
 func (c *client) Alive() bool {
-	X.Flush()             // fills up the XGB event queue with ready events
+	X.Sync()              // fills up the XGB event queue with ready events
 	xevent.Read(X, false) // fills up the xgbutil event queue without blocking
 
 	// we only consider a client marked for deletion when 'ignore' reaches 0
 	ignore := c.unmapIgnore
-	for _, ev := range X.QueuePeek() {
+	for _, everr := range xevent.Peek(X) {
+		if everr.Err != nil {
+			continue
+		}
+
 		wid := c.Win().id
-		if unmap, ok := ev.(xgb.UnmapNotifyEvent); ok && unmap.Window == wid {
+		ev := everr.Event
+		if um, ok := ev.(xproto.UnmapNotifyEvent); ok && um.Window == wid {
 			if ignore <= 0 {
 				return false
 			}
@@ -240,7 +245,7 @@ func (c *client) Alive() bool {
 // Namely, when we know the window has been unmapped but are not sure
 // if it is still an X resource.
 func (c *client) TrulyAlive() bool {
-	_, err := xwindow.RawGeometry(X, c.window.id)
+	_, err := xwindow.RawGeometry(X, xproto.Drawable(c.window.id))
 	if err != nil {
 		return false
 	}
@@ -277,13 +282,13 @@ func (c *client) Focus() {
 		cm, err := xevent.NewClientMessage(32, c.window.id,
 			wm_protocols,
 			int(wm_take_focus),
-			int(X.GetTime()))
+			int(X.TimeGet()))
 		if err != nil {
 			logger.Warning.Println(err)
 			return
 		}
 
-		X.Conn().SendEvent(false, c.window.id, 0, cm.Bytes())
+		xproto.SendEvent(X.Conn(), false, c.window.id, 0, string(cm.Bytes()))
 
 		c.Focused()
 	}
@@ -445,7 +450,7 @@ func (c *client) Geom() xrect.Rect {
 	return c.window.geom
 }
 
-func (c *client) Id() xgb.Id {
+func (c *client) Id() xproto.Window {
 	return c.window.id
 }
 

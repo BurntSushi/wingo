@@ -1,7 +1,7 @@
 package main
 
 import (
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/keybind"
@@ -22,7 +22,7 @@ type promptCycle struct {
 	iconBorder             *window
 }
 
-func (pc *promptCycle) Id() xgb.Id {
+func (pc *promptCycle) Id() xproto.Window {
 	return pc.top.id
 }
 
@@ -44,11 +44,11 @@ func newPromptCycle() *promptCycle {
 	bLft.moveresize(DoX|DoY|DoW, 0, 0, bs, 0)
 	bRht.moveresize(DoY|DoW, 0, 0, bs, 0)
 
-	top.change(xgb.CWBackPixel, uint32(THEME.prompt.bgColor))
-	bTop.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
-	bBot.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
-	bLft.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
-	bRht.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
+	top.change(xproto.CwBackPixel, uint32(THEME.prompt.bgColor))
+	bTop.change(xproto.CwBackPixel, uint32(THEME.prompt.borderColor))
+	bBot.change(xproto.CwBackPixel, uint32(THEME.prompt.borderColor))
+	bLft.change(xproto.CwBackPixel, uint32(THEME.prompt.borderColor))
+	bRht.change(xproto.CwBackPixel, uint32(THEME.prompt.borderColor))
 
 	// actual mapping doesn't happen until top is mapped
 	bTop.map_()
@@ -147,10 +147,10 @@ func (pc *promptCycle) highlight() {
 		}
 
 		if i == pc.selected {
-			iconPar.change(xgb.CWBackPixel, uint32(THEME.prompt.borderColor))
+			iconPar.change(xproto.CwBackPixel, uint32(THEME.prompt.borderColor))
 			winTitle.map_()
 		} else {
-			iconPar.change(xgb.CWBackPixel, uint32(THEME.prompt.bgColor))
+			iconPar.change(xproto.CwBackPixel, uint32(THEME.prompt.bgColor))
 			winTitle.unmap()
 		}
 		iconPar.clear()
@@ -184,7 +184,7 @@ func (pc *promptCycle) show(keyStr string, activeWrk, visible,
 	}
 
 	// save the modifiers used to initially start this prompt
-	pc.grabbedMods, _ = keybind.ParseString(X, keyStr)
+	pc.grabbedMods, _, _ = keybind.ParseString(X, keyStr)
 	bs := THEME.prompt.borderSize
 	cbs := THEME.prompt.cycleIconBorderSize
 	is := THEME.prompt.cycleIconSize
@@ -192,7 +192,7 @@ func (pc *promptCycle) show(keyStr string, activeWrk, visible,
 
 	// To the top!
 	if len(WM.stack) > 0 {
-		pc.top.configure(DoStack, 0, 0, 0, 0, 0, xgb.StackModeAbove)
+		pc.top.configure(DoStack, 0, 0, 0, 0, 0, xproto.StackModeAbove)
 	}
 
 	// get our screen geometry so we can position ourselves
@@ -337,7 +337,7 @@ func (c *client) promptCycleAdd() {
 	}
 
 	c.promptStore["cycle_border"] = createWindow(
-		PROMPTS.cycle.Id(), xgb.CWBackPixel, uint32(THEME.prompt.bgColor))
+		PROMPTS.cycle.Id(), xproto.CwBackPixel, uint32(THEME.prompt.bgColor))
 	c.promptStore["cycle_border"].moveresize(
 		DoW|DoH, 0, 0,
 		THEME.prompt.cycleIconSize+2*THEME.prompt.cycleIconBorderSize,
@@ -390,10 +390,10 @@ func (c *client) promptCycleUpdateIcon() {
 	cbs := THEME.prompt.cycleIconBorderSize
 	alpha := THEME.prompt.cycleIconTransparency // value checked at startup
 
-	img, mask := c.iconImage(iconSize, iconSize)
+	img := c.iconImage(iconSize, iconSize)
 
-	imgAct := xgraphics.BlendBg(img, mask, 100, bgc)
-	imgInact := xgraphics.BlendBg(img, mask, alpha, bgc)
+	imgAct := xgraphics.BlendBg(img, nil, 100, bgc)
+	imgInact := xgraphics.BlendBg(img, nil, alpha, bgc)
 
 	if w, ok := c.promptStore["cycle_act"]; ok {
 		xgraphics.PaintImg(X, w.id, imgAct)
@@ -433,7 +433,7 @@ func (c *client) promptCycleUpdateName() {
 		bs+padding, bs+padding, ew, eh)
 	c.promptStore["cycle_title"].configure(
 		DoSibling|DoStack, 0, 0, 0, 0,
-		PROMPTS.cycle.bRht.id, xgb.StackModeBelow)
+		PROMPTS.cycle.bRht.id, xproto.StackModeBelow)
 
 	// Set the largest font size we've seen.
 	PROMPTS.cycle.fontHeight = max(PROMPTS.cycle.fontHeight, eh)

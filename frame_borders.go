@@ -1,6 +1,8 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
+import (
+	"github.com/BurntSushi/xgb/xproto"
+)
 
 type frameBorders struct {
 	*abstFrame
@@ -90,7 +92,7 @@ func (f *frameBorders) Active() {
 	f.bottomLeft.active()
 	f.bottomRight.active()
 
-	f.ParentWin().change(xgb.CWBackPixel, uint32(0xff0000))
+	f.ParentWin().change(xproto.CwBackPixel, uint32(0xff0000))
 	f.ParentWin().clear()
 }
 
@@ -105,7 +107,7 @@ func (f *frameBorders) Inactive() {
 	f.bottomLeft.inactive()
 	f.bottomRight.inactive()
 
-	f.ParentWin().change(xgb.CWBackPixel, uint32(0xff0000))
+	f.ParentWin().change(xproto.CwBackPixel, uint32(0xff0000))
 	f.ParentWin().clear()
 }
 
@@ -170,14 +172,14 @@ func (f *frameBorders) Right() int {
 }
 
 func (f *frameBorders) ConfigureClient(flags, x, y, w, h int,
-	sibling xgb.Id, stackMode byte, ignoreHints bool) {
+	sibling xproto.Window, stackMode byte, ignoreHints bool) {
 
 	x, y, w, h = FrameConfigureClient(f, flags, x, y, w, h)
 	f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints, true)
 }
 
 func (f *frameBorders) ConfigureFrame(flags, fx, fy, fw, fh int,
-	sibling xgb.Id, stackMode byte, ignoreHints bool, sendNotify bool) {
+	sibling xproto.Window, stackMode byte, ignoreHints bool, sendNotify bool) {
 
 	FrameConfigureFrame(f, flags, fx, fy, fw, fh, sibling, stackMode,
 		ignoreHints, sendNotify)

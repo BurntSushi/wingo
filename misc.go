@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/keybind"
 
@@ -36,7 +36,7 @@ func cliIndex(needle *client, haystack []*client) int {
 
 // keyMatch is a utility function for comparing two keysym strings for equality.
 // It automatically converts a (mods, byte) pair to a string.
-func keyMatch(target string, mods uint16, keycode xgb.Keycode) bool {
+func keyMatch(target string, mods uint16, keycode xproto.Keycode) bool {
 	guess := keybind.LookupString(X, mods, keycode)
 	return strings.ToLower(guess) == strings.ToLower(target)
 }

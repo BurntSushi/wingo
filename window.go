@@ -1,51 +1,57 @@
 package main
 
-import "image"
-
-import "code.google.com/p/jamslam-x-go-binding/xgb"
-
 import (
+	"image"
+
+	"github.com/BurntSushi/xgb/xproto"
+
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xgraphics"
 	"github.com/BurntSushi/xgbutil/xrect"
 	"github.com/BurntSushi/xgbutil/xwindow"
+
+	"github.com/BurntSushi/wingo/logger"
 )
 
 type window struct {
-	id   xgb.Id
+	id   xproto.Window
 	geom xrect.Rect
 }
 
 const (
-	DoX       = xgb.ConfigWindowX
-	DoY       = xgb.ConfigWindowY
-	DoW       = xgb.ConfigWindowWidth
-	DoH       = xgb.ConfigWindowHeight
-	DoBorder  = xgb.ConfigWindowBorderWidth
-	DoSibling = xgb.ConfigWindowSibling
-	DoStack   = xgb.ConfigWindowStackMode
+	DoX       = xproto.ConfigWindowX
+	DoY       = xproto.ConfigWindowY
+	DoW       = xproto.ConfigWindowWidth
+	DoH       = xproto.ConfigWindowHeight
+	DoBorder  = xproto.ConfigWindowBorderWidth
+	DoSibling = xproto.ConfigWindowSibling
+	DoStack   = xproto.ConfigWindowStackMode
 )
 
-func newWindow(id xgb.Id) *window {
+func newWindow(id xproto.Window) *window {
 	return &window{
 		id:   id,
 		geom: xrect.New(0, 0, 1, 1),
 	}
 }
 
-func createWindow(parent xgb.Id, masks int, vals ...uint32) *window {
-	wid := X.Conn().NewId()
+func createWindow(parent xproto.Window, masks int, vals ...uint32) *window {
+	wid, err := xproto.NewWindowId(X.Conn())
+	if err != nil {
+		logger.Error.Printf("Could not create window: %s", err)
+		return nil
+	}
 	scrn := X.Screen()
 
-	X.Conn().CreateWindow(scrn.RootDepth, wid, parent, 0, 0, 1, 1, 0,
-		xgb.WindowClassInputOutput, scrn.RootVisual,
+	xproto.CreateWindow(X.Conn(), scrn.RootDepth, wid, parent, 0, 0, 1, 1, 0,
+		xproto.WindowClassInputOutput, scrn.RootVisual,
 		uint32(masks), vals)
 
 	return newWindow(wid)
 }
 
-func createImageWindow(parent xgb.Id, img image.Image,
+func createImageWindow(parent xproto.Window, img image.Image,
 	masks int, vals ...uint32) *window {
 	newWin := createWindow(parent, masks, vals...)
 
@@ -58,28 +64,29 @@ func createImageWindow(parent xgb.Id, img image.Image,
 }
 
 func (w *window) listen(masks int) {
-	xwindow.Listen(X, w.id, masks)
+	xproto.ChangeWindowAttributes(X.Conn(), w.id,
+		xproto.CwEventMask, []uint32{uint32(masks)})
 }
 
 func (w *window) map_() {
-	X.Conn().MapWindow(w.id)
+	xproto.MapWindow(X.Conn(), w.id)
 }
 
 func (w *window) unmap() {
-	X.Conn().UnmapWindow(w.id)
+	xproto.UnmapWindow(X.Conn(), w.id)
 }
 
 func (w *window) change(masks int, vals ...uint32) {
-	X.Conn().ChangeWindowAttributes(w.id, uint32(masks), vals)
+	xproto.ChangeWindowAttributes(X.Conn(), w.id, uint32(masks), vals)
 }
 
 func (w *window) clear() {
-	X.Conn().ClearArea(false, w.id, 0, 0, 0, 0)
+	xproto.ClearArea(X.Conn(), false, w.id, 0, 0, 0, 0)
 }
 
 func (w *window) geometry() (xrect.Rect, error) {
 	var err error
-	w.geom, err = xwindow.RawGeometry(X, w.id)
+	w.geom, err = xwindow.RawGeometry(X, xproto.Drawable(w.id))
 	if err != nil {
 		return nil, err
 	}
@@ -87,16 +94,16 @@ func (w *window) geometry() (xrect.Rect, error) {
 }
 
 func (w *window) kill() {
-	X.Conn().KillClient(uint32(w.id))
+	xproto.KillClient(X.Conn(), uint32(w.id))
 }
 
 func (w *window) destroy() {
-	X.Conn().DestroyWindow(w.id)
+	xproto.DestroyWindow(X.Conn(), w.id)
 	xevent.Detach(X, w.id)
 }
 
 func (w *window) focus() {
-	X.Conn().SetInputFocus(xgb.InputFocusPointerRoot, w.id, 0)
+	xproto.SetInputFocus(X.Conn(), xproto.InputFocusPointerRoot, w.id, 0)
 }
 
 // moveresize is a wrapper around configure that only accepts parameters
@@ -104,7 +111,7 @@ func (w *window) focus() {
 func (win *window) moveresize(flags, x, y, w, h int) {
 	// Kill any hopes of stacking
 	flags = (flags & ^DoSibling) & ^DoStack
-	win.configure(flags, x, y, w, h, xgb.Id(0), 0)
+	win.configure(flags, x, y, w, h, 0, 0)
 }
 
 // configure is the method version of 'configure'.
@@ -112,7 +119,7 @@ func (win *window) moveresize(flags, x, y, w, h int) {
 // geometry. (We don't want another set of 'if' statements because it
 // needs to be as efficient as possible.)
 func (win *window) configure(flags, x, y, w, h int,
-	sibling xgb.Id, stackMode byte) {
+	sibling xproto.Window, stackMode byte) {
 
 	vals := []uint32{}
 
@@ -150,14 +157,14 @@ func (win *window) configure(flags, x, y, w, h int,
 		return
 	}
 
-	X.Conn().ConfigureWindow(win.id, uint16(flags), vals)
+	xproto.ConfigureWindow(X.Conn(), win.id, uint16(flags), vals)
 }
 
 // configure is a nice wrapper around ConfigureWindow.
 // We purposefully omit 'BorderWidth' because I don't think it's ever used
 // any more.
-func configure(window xgb.Id, flags, x, y, w, h int,
-	sibling xgb.Id, stackMode byte) {
+func configure(window xproto.Window, flags, x, y, w, h int,
+	sibling xproto.Window, stackMode byte) {
 
 	vals := []uint32{}
 
@@ -186,7 +193,7 @@ func configure(window xgb.Id, flags, x, y, w, h int,
 		vals = append(vals, uint32(stackMode))
 	}
 
-	X.Conn().ConfigureWindow(window, uint16(flags), vals)
+	xproto.ConfigureWindow(X.Conn(), window, uint16(flags), vals)
 }
 
 // configureRequest responds to generic configure requests from windows that

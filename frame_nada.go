@@ -1,6 +1,8 @@
 package main
 
-import "code.google.com/p/jamslam-x-go-binding/xgb"
+import (
+	"github.com/BurntSushi/xgb/xproto"
+)
 
 type frameNada struct {
 	*abstFrame
@@ -58,14 +60,14 @@ func (f *frameNada) Right() int {
 }
 
 func (f *frameNada) ConfigureClient(flags, x, y, w, h int,
-	sibling xgb.Id, stackMode byte, ignoreHints bool) {
+	sibling xproto.Window, stackMode byte, ignoreHints bool) {
 
 	x, y, w, h = FrameConfigureClient(f, flags, x, y, w, h)
 	f.ConfigureFrame(flags, x, y, w, h, sibling, stackMode, ignoreHints, true)
 }
 
 func (f *frameNada) ConfigureFrame(flags, fx, fy, fw, fh int,
-	sibling xgb.Id, stackMode byte, ignoreHints bool, sendNotify bool) {
+	sibling xproto.Window, stackMode byte, ignoreHints bool, sendNotify bool) {
 
 	FrameConfigureFrame(f, flags, fx, fy, fw, fh, sibling, stackMode,
 		ignoreHints, sendNotify)

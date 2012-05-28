@@ -173,18 +173,18 @@ func loadTheme() error {
 	}
 
 	// re-color some images
-	xgraphics.ColorImage(THEME.full.aCloseButton,
-		colorFromInt(THEME.full.aCloseColor))
-	xgraphics.ColorImage(THEME.full.iCloseButton,
-		colorFromInt(THEME.full.iCloseColor))
-	xgraphics.ColorImage(THEME.full.aMaximizeButton,
-		colorFromInt(THEME.full.aMaximizeColor))
-	xgraphics.ColorImage(THEME.full.iMaximizeButton,
-		colorFromInt(THEME.full.iMaximizeColor))
-	xgraphics.ColorImage(THEME.full.aMinimizeButton,
-		colorFromInt(THEME.full.aMinimizeColor))
-	xgraphics.ColorImage(THEME.full.iMinimizeButton,
-		colorFromInt(THEME.full.iMinimizeColor))
+	// xgraphics.ColorImage(THEME.full.aCloseButton, 
+	// colorFromInt(THEME.full.aCloseColor)) 
+	// xgraphics.ColorImage(THEME.full.iCloseButton, 
+	// colorFromInt(THEME.full.iCloseColor)) 
+	// xgraphics.ColorImage(THEME.full.aMaximizeButton, 
+	// colorFromInt(THEME.full.aMaximizeColor)) 
+	// xgraphics.ColorImage(THEME.full.iMaximizeButton, 
+	// colorFromInt(THEME.full.iMaximizeColor)) 
+	// xgraphics.ColorImage(THEME.full.aMinimizeButton, 
+	// colorFromInt(THEME.full.aMinimizeColor)) 
+	// xgraphics.ColorImage(THEME.full.iMinimizeButton, 
+	// colorFromInt(THEME.full.iMinimizeColor)) 
 
 	// Scale some images...
 	THEME.full.aCloseButton = xgraphics.Scale(THEME.full.aCloseButton,
@@ -396,7 +396,7 @@ func setGradient(k wini.Key, clr *themeColor) {
 }
 
 func builtInIcon() draw.Image {
-	img, err := xgraphics.LoadPngFromBytes(bindata.WingoPng())
+	img, err := xgraphics.NewBytes(X, bindata.WingoPng())
 	if err != nil {
 		logger.Warning.Printf("Could not get built in icon image because: %v",
 			err)
@@ -406,7 +406,7 @@ func builtInIcon() draw.Image {
 }
 
 func builtInButton(loadBuiltIn func() []byte) draw.Image {
-	img, err := xgraphics.LoadPngFromBytes(loadBuiltIn())
+	img, err := xgraphics.NewBytes(X, loadBuiltIn())
 	if err != nil {
 		logger.Warning.Printf("Could not get built in button image because: %v",
 			err)
@@ -417,7 +417,7 @@ func builtInButton(loadBuiltIn func() []byte) draw.Image {
 
 func setImage(k wini.Key, place *draw.Image) {
 	if v, ok := getLastString(k); ok {
-		img, err := xgraphics.LoadPngFromFile(v)
+		img, err := xgraphics.NewFileName(X, v)
 		if err != nil {
 			logger.Warning.Printf(
 				"Could not load '%s' as a png image because: %v", v, err)

@@ -3,7 +3,7 @@ package main
 import (
 	"strings"
 
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xinerama"
@@ -72,7 +72,7 @@ func (wm *state) clientRemove(c *client) {
 
 func (wm *state) updateEwmhClients() {
 	numWins := len(wm.clients)
-	winList := make([]xgb.Id, numWins)
+	winList := make([]xproto.Window, numWins)
 	for i, c := range wm.clients {
 		winList[i] = c.Win().id
 	}
@@ -93,7 +93,7 @@ func (wm *state) focused() *client {
 	return nil
 }
 
-func (wm *state) unfocusExcept(id xgb.Id) {
+func (wm *state) unfocusExcept(id xproto.Window) {
 	// Go in reverse to make switching appear quicker in the common case
 	// if there are a lot of windows.
 	for i := len(wm.focus) - 1; i >= 0; i-- {

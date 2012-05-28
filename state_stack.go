@@ -1,7 +1,7 @@
 package main
 
 import (
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/ewmh"
 
@@ -30,7 +30,7 @@ const (
 // root window.
 func (wm *state) updateEwmhStacking() {
 	numWins := len(wm.stack)
-	winList := make([]xgb.Id, numWins)
+	winList := make([]xproto.Window, numWins)
 	for i, c := range wm.stack {
 		winList[numWins-i-1] = c.Win().id
 	}
@@ -54,11 +54,13 @@ func (wm *state) stackUpdate(clients []*client) {
 			if i == len(wm.stack)-1 {
 				wm.stack[i].Frame().ConfigureClient(
 					DoSibling|DoStack, 0, 0, 0, 0,
-					wm.stack[i-1].Frame().ParentId(), xgb.StackModeBelow, false)
+					wm.stack[i-1].Frame().ParentId(),
+					xproto.StackModeBelow, false)
 			} else {
 				wm.stack[i].Frame().ConfigureClient(
 					DoSibling|DoStack, 0, 0, 0, 0,
-					wm.stack[i+1].Frame().ParentId(), xgb.StackModeAbove, false)
+					wm.stack[i+1].Frame().ParentId(),
+					xproto.StackModeAbove, false)
 			}
 		}
 	}
@@ -98,7 +100,7 @@ func (wm *state) stackRaise(c *client, configure bool) {
 			if configure {
 				c.Frame().ConfigureClient(DoSibling|DoStack, 0, 0, 0, 0,
 					c2.Frame().ParentId(),
-					xgb.StackModeAbove, false)
+					xproto.StackModeAbove, false)
 			}
 			wm.stack = append(wm.stack[:i],
 				append([]*client{c}, wm.stack[i:]...)...)
@@ -114,7 +116,7 @@ func (wm *state) stackRaise(c *client, configure bool) {
 		c.Frame().ConfigureClient(
 			DoSibling|DoStack, 0, 0, 0, 0,
 			wm.stack[len(wm.stack)-1].Frame().ParentId(),
-			xgb.StackModeBelow, false)
+			xproto.StackModeBelow, false)
 	}
 	wm.stack = append(wm.stack, c)
 }

@@ -8,7 +8,7 @@ import (
 	"time"
 	"unicode"
 
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xevent"
@@ -174,7 +174,7 @@ func commandArgsClient(args []string) (*client, bool) {
 			return nil, false
 		}
 
-		goodId := xgb.Id(maybeId64)
+		goodId := xproto.Window(maybeId64)
 		for _, c := range WM.clients {
 			if c.Id() == goodId {
 				return c, true
@@ -473,7 +473,7 @@ func cmdPromptSelect(args ...string) func() {
 func cmdQuit() func() {
 	return func() {
 		logger.Message.Println("The User has told us to quit.")
-		X.Quit()
+		xevent.Quit(X)
 	}
 }
 

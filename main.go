@@ -5,7 +5,7 @@ import (
 	// "os"
 	// "runtime/pprof"
 
-	"code.google.com/p/jamslam-x-go-binding/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/ewmh"
@@ -36,7 +36,7 @@ func main() {
 	// pprof.StartCPUProfile(f) 
 	// defer pprof.StopCPUProfile() 
 
-	X, err = xgbutil.Dial("")
+	X, err = xgbutil.NewConn()
 	if err != nil {
 		logger.Error.Println(err)
 		logger.Error.Println("Error connecting to X, quitting...")
@@ -94,10 +94,10 @@ func main() {
 	setupCursors()
 
 	// Listen to Root. It is all-important.
-	ROOT.listen(xgb.EventMaskPropertyChange |
-		xgb.EventMaskStructureNotify |
-		xgb.EventMaskSubstructureNotify |
-		xgb.EventMaskSubstructureRedirect)
+	ROOT.listen(xproto.EventMaskPropertyChange |
+		xproto.EventMaskStructureNotify |
+		xproto.EventMaskSubstructureNotify |
+		xproto.EventMaskSubstructureRedirect)
 
 	// Update state when the root window changes size
 	xevent.ConfigureNotifyFun(rootGeometryChange).Connect(X, ROOT.id)

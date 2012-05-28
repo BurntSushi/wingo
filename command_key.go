@@ -45,7 +45,7 @@ func (kcmd keyCommand) attach(run func()) {
 	if kcmd.cmd == "PromptCyclePrev" || kcmd.cmd == "PromptCycleNext" {
 		// We've got to parse the key string first and make sure
 		// there are some modifiers; otherwise this utterly fails!
-		mods, _ := keybind.ParseString(X, kcmd.keyStr)
+		mods, _, _ := keybind.ParseString(X, kcmd.keyStr)
 		if mods == 0 {
 			logger.Warning.Printf("Sorry but the key binding '%s' for the %s "+
 				"command is invalid. It must have a modifier "+
@@ -57,22 +57,22 @@ func (kcmd keyCommand) attach(run func()) {
 		keybind.KeyPressFun(
 			func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 				run()
-			}).Connect(X, ROOT.id, kcmd.keyStr)
+			}).Connect(X, ROOT.id, kcmd.keyStr, true)
 		keybind.KeyPressFun(
 			func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 				run()
-			}).Connect(X, X.Dummy(), kcmd.keyStr)
+			}).Connect(X, X.Dummy(), kcmd.keyStr, true)
 	} else {
 		if kcmd.down {
 			keybind.KeyPressFun(
 				func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 					run()
-				}).Connect(X, ROOT.id, kcmd.keyStr)
+				}).Connect(X, ROOT.id, kcmd.keyStr, true)
 		} else {
 			keybind.KeyReleaseFun(
 				func(X *xgbutil.XUtil, ev xevent.KeyReleaseEvent) {
 					run()
-				}).Connect(X, ROOT.id, kcmd.keyStr)
+				}).Connect(X, ROOT.id, kcmd.keyStr, true)
 		}
 	}
 }
