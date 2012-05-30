@@ -6,6 +6,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xgraphics"
 	"github.com/BurntSushi/xgbutil/xrect"
+	"github.com/BurntSushi/xgbutil/xwindow"
 )
 
 const (
@@ -30,7 +31,7 @@ type Frame interface {
 	On()
 	Parent() *frameParent
 	ParentId() xproto.Window
-	ParentWin() *window
+	ParentWin() *xwindow.Window
 	State() int
 	Active()
 	Inactive()
@@ -52,7 +53,7 @@ type Frame interface {
 }
 
 type frameParent struct {
-	window *window
+	window *xwindow.Window
 	client *client
 }
 
@@ -75,7 +76,7 @@ func newParent(c *client) *frameParent {
 	return p
 }
 
-func (p *frameParent) Win() *window {
+func (p *frameParent) Win() *xwindow.Window {
 	return p.window
 }
 
@@ -83,12 +84,12 @@ func (p *frameParent) Win() *window {
 // decorations. Basically, it contains the raw X window and pixmaps for each
 // of the available states for quick switching.
 type framePiece struct {
-	win         *window
+	win         *xwindow.Window
 	imgActive   xproto.Pixmap
 	imgInactive xproto.Pixmap
 }
 
-func newFramePiece(win *window, imgA, imgI xproto.Pixmap) framePiece {
+func newFramePiece(win *xwindow.Window, imgA, imgI xproto.Pixmap) framePiece {
 	return framePiece{win: win, imgActive: imgA, imgInactive: imgI}
 }
 

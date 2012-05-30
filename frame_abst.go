@@ -4,6 +4,7 @@ import (
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/xrect"
+	"github.com/BurntSushi/xgbutil/xwindow"
 )
 
 type abstFrame struct {
@@ -70,7 +71,7 @@ func (f *abstFrame) ParentId() xproto.Window {
 	return f.parent.window.id
 }
 
-func (f *abstFrame) ParentWin() *window {
+func (f *abstFrame) ParentWin() *xwindow.Window {
 	return f.parent.window
 }
 

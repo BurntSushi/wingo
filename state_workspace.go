@@ -6,6 +6,7 @@ import (
 
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xrect"
+	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/logger"
 )
@@ -22,7 +23,7 @@ type workspace struct {
 	name        string // note that this does not have to be unique
 	head        int    // the most recent physical head this workspace was on
 	active      bool
-	promptStore map[string]*window
+	promptStore map[string]*xwindow.Window
 	state       int // the default placement policy of this workspace
 	floaters    []layout
 	tilers      []layout

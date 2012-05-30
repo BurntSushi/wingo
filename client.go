@@ -16,7 +16,7 @@ import (
 )
 
 type client struct {
-	window              *window
+	window              *xwindow.Window
 	workspace           *workspace
 	layer               int
 	name, vname, wmname string
@@ -40,7 +40,7 @@ type client struct {
 	wmclass      *icccm.WmClass
 
 	stateStore  map[string]*clientState
-	promptStore map[string]*window
+	promptStore map[string]*xwindow.Window
 
 	frame        Frame
 	frameNada    *frameNada
@@ -51,7 +51,7 @@ type client struct {
 
 func newClient(id xproto.Window) *client {
 	return &client{
-		window:        newWindow(id),
+		window:        xwindow.New(X, id),
 		workspace:     nil,
 		layer:         stackDefault,
 		name:          "",
@@ -73,7 +73,7 @@ func newClient(id xproto.Window) *client {
 		transientFor:  0,
 		wmclass:       nil,
 		stateStore:    make(map[string]*clientState),
-		promptStore:   make(map[string]*window),
+		promptStore:   make(map[string]*xwindow.Window),
 		frame:         nil,
 		frameNada:     nil,
 		frameSlim:     nil,
@@ -90,7 +90,7 @@ func (c *client) unmanage() {
 	c.frame.Destroy()
 	c.setWmState(icccm.StateWithdrawn)
 
-	xevent.Detach(X, c.window.id)
+	xevent.Detach(X, c.window.Id)
 	c.promptRemove()
 	WM.stackRemove(c)
 	WM.clientRemove(c)
@@ -116,7 +116,7 @@ func (c *client) Map() {
 	if c.Mapped() {
 		return
 	}
-	c.window.map_()
+	c.window.Map()
 	c.frame.Map()
 	c.isMapped = true
 	c.initMap = true
@@ -167,7 +167,7 @@ func (c *client) setWmState(state int) {
 		return
 	}
 
-	err := icccm.WmStateSet(X, c.window.id, &icccm.WmState{State: state})
+	err := icccm.WmStateSet(X, c.Id(), &icccm.WmState{State: state})
 	if err != nil {
 		var stateStr string
 		switch state {
@@ -199,16 +199,16 @@ func (c *client) Close() {
 			return
 		}
 
-		cm, err := xevent.NewClientMessage(32, c.window.id, wm_protocols,
+		cm, err := xevent.NewClientMessage(32, c.Id(), wm_protocols,
 			int(wm_del_win))
 		if err != nil {
 			logger.Warning.Println(err)
 			return
 		}
 
-		xproto.SendEvent(X.Conn(), false, c.window.id, 0, string(cm.Bytes()))
+		xproto.SendEvent(X.Conn(), false, c.Id(), 0, string(cm.Bytes()))
 	} else {
-		c.window.kill()
+		c.window.Kill()
 	}
 }
 
@@ -229,7 +229,7 @@ func (c *client) Alive() bool {
 			continue
 		}
 
-		wid := c.Win().id
+		wid := c.Id()
 		ev := everr.Event
 		if um, ok := ev.(xproto.UnmapNotifyEvent); ok && um.Window == wid {
 			if ignore <= 0 {
@@ -245,7 +245,7 @@ func (c *client) Alive() bool {
 // Namely, when we know the window has been unmapped but are not sure
 // if it is still an X resource.
 func (c *client) TrulyAlive() bool {
-	_, err := xwindow.RawGeometry(X, xproto.Drawable(c.window.id))
+	_, err := xwindow.RawGeometry(X, xproto.Drawable(c.Id()))
 	if err != nil {
 		return false
 	}
@@ -262,7 +262,7 @@ func (c *client) ForceWorkspace() {
 func (c *client) Focus() {
 	if c.hints.Flags&icccm.HintInput > 0 && c.hints.Input == 1 {
 		c.ForceWorkspace()
-		c.window.focus()
+		c.window.Focus()
 		c.Focused()
 	} else if strIndex("WM_TAKE_FOCUS", c.protocols) > -1 {
 		c.ForceWorkspace()
@@ -279,16 +279,14 @@ func (c *client) Focus() {
 			return
 		}
 
-		cm, err := xevent.NewClientMessage(32, c.window.id,
-			wm_protocols,
-			int(wm_take_focus),
-			int(X.TimeGet()))
+		cm, err := xevent.NewClientMessage(32, c.Id(),
+			wm_protocols, int(wm_take_focus), int(X.TimeGet()))
 		if err != nil {
 			logger.Warning.Println(err)
 			return
 		}
 
-		xproto.SendEvent(X.Conn(), false, c.window.id, 0, string(cm.Bytes()))
+		xproto.SendEvent(X.Conn(), false, c.Id(), 0, string(cm.Bytes()))
 
 		c.Focused()
 	}
@@ -370,7 +368,7 @@ func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
 			c.transientFor = transientFor
 		}
 	case "_NET_WM_USER_TIME":
-		newTime, err := ewmh.WmUserTimeGet(X, c.window.id)
+		newTime, err := ewmh.WmUserTimeGet(X, c.Id())
 		showVals(c.lastTime, newTime)
 		if err == nil {
 			c.lastTime = newTime
@@ -447,11 +445,11 @@ func (c *client) FrameFull() {
 }
 
 func (c *client) Geom() xrect.Rect {
-	return c.window.geom
+	return c.window.Geom
 }
 
 func (c *client) Id() xproto.Window {
-	return c.window.id
+	return c.window.Id
 }
 
 func (c *client) Layer() int {
@@ -475,10 +473,10 @@ func (c *client) Name() string {
 	return "N/A"
 }
 
-func (c *client) Win() *window {
+func (c *client) Win() *xwindow.Window {
 	return c.window
 }
 
 func (c *client) String() string {
-	return fmt.Sprintf("%s (%X)", c.Name(), c.window.id)
+	return fmt.Sprintf("%s (%X)", c.Name(), c.Id())
 }

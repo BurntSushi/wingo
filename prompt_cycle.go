@@ -7,6 +7,7 @@ import (
 	"github.com/BurntSushi/xgbutil/keybind"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xgraphics"
+	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/logger"
 )
@@ -17,9 +18,9 @@ type promptCycle struct {
 	grabbedMods            uint16
 	clients                []*client
 	fontHeight             int
-	top                    *window
-	bTop, bBot, bLft, bRht *window
-	iconBorder             *window
+	top                    *xwindow.Window
+	bTop, bBot, bLft, bRht *xwindow.Window
+	iconBorder             *xwindow.Window
 }
 
 func (pc *promptCycle) Id() xproto.Window {

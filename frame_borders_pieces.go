@@ -4,10 +4,11 @@ import (
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/xgraphics"
+	"github.com/BurntSushi/xgbutil/xwindow"
 )
 
 func (f *frameBorders) newPieceWindow(ident string,
-	cursor xproto.Cursor) *window {
+	cursor xproto.Cursor) *xwindow.Window {
 
 	mask := xproto.CwBackPixmap | xproto.CwEventMask | xproto.CwCursor
 	vals := []uint32{xproto.BackPixmapParentRelative,

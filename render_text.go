@@ -7,6 +7,7 @@ import (
 	"code.google.com/p/freetype-go/freetype/truetype"
 
 	"github.com/BurntSushi/xgbutil/xgraphics"
+	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/logger"
 )
@@ -18,7 +19,7 @@ import (
 const renderTextBreathe = 5
 
 type textInput struct {
-	win       *window
+	win       *xwindow.Window
 	img       *wImg
 	text      []rune
 	bgColor   int

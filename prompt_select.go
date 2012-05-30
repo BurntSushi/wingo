@@ -32,6 +32,7 @@ import (
 	"github.com/BurntSushi/xgbutil/keybind"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xgraphics"
+	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/logger"
 )
@@ -51,7 +52,7 @@ type promptSelectListFun func() []*promptSelectGroup
 // prompt under a specific heading.
 type promptSelectGroup struct {
 	label string
-	win   *window
+	win   *xwindow.Window
 	items []*promptSelectItem
 }
 
@@ -70,10 +71,10 @@ func newPromptSelectGroup(label string, win *window,
 
 // promptSelectItem represents a single *selectable* item in a prompt.
 type promptSelectItem struct {
-	text     string  // visually displayed and used for tab completion
-	action   func()  // performed when this item is selected
-	active   *window // window w/ image when selected
-	inactive *window // window w/ image when not selected
+	text     string          // visually displayed and used for tab completion
+	action   func()          // performed when this item is selected
+	active   *xwindow.Window // window w/ image when selected
+	inactive *xwindow.Window // window w/ image when not selected
 }
 
 func newPromptSelectItem(text string, action func(),
@@ -98,13 +99,13 @@ type promptSelect struct {
 	prefixSearch bool                // whether prefix or substring search
 	groups       []*promptSelectGroup
 	itemsShowing []*promptSelectItem
-	top          *window
+	top          *xwindow.Window
 	input        *textInput
-	labVisible   *window
-	labHidden    *window
-	bInp         *window
-	bTop, bBot   *window
-	bLft, bRht   *window
+	labVisible   *xwindow.Window
+	labHidden    *xwindow.Window
+	bInp         *xwindow.Window
+	bTop, bBot   *xwindow.Window
+	bLft, bRht   *xwindow.Window
 }
 
 // Id returns the parent window of this prompt.

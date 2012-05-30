@@ -106,7 +106,15 @@ func main() {
 	xevent.MapRequestFun(clientMapRequest).Connect(X, ROOT.id)
 
 	// Oblige configure requests from windows we don't manage.
-	xevent.ConfigureRequestFun(configureRequest).Connect(X, ROOT.id)
+	xevent.ConfigureRequestFun(
+		func(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
+			flags := int(ev.ValueMask) &
+				^int(xproto.ConfigWindowSibling) &
+				^int(xproto.ConfigWindowStack)
+			xwindow.New(ev.Window).Configure(flags,
+				int(ev.X), int(ev.Y), int(ev.Width), int(ev.Height),
+				ev.Sibling, ev.StackMode)
+		}).Connect(X, ROOT.id)
 
 	// Listen to Root client message events.
 	// We satisfy EWMH with these AND it also provides a mechanism
