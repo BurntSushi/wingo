@@ -15,6 +15,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xprop"
 
 	"github.com/BurntSushi/wingo/cmdusage"
+	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
 )
 
@@ -317,7 +318,7 @@ func cmdHeadFocus(withClient bool, args ...string) func() {
 				// state into "layout_before_tiling." This is because the
 				// monitor_switch state has the desirable "non-tiling" state.
 				if c.layout().floating() {
-					c.loadStateTransients("monitor_switch", clientStateAll)
+					c.loadStateTransients("monitor_switch")
 				} else {
 					c.copyStateTransients(
 						"monitor_switch", "layout_before_tiling")
@@ -325,7 +326,7 @@ func cmdHeadFocus(withClient bool, args ...string) func() {
 				}
 
 				// Finally, if this window is active, raise it.
-				if c.state == StateActive {
+				if c.state == frame.Active {
 					c.Raise()
 				}
 			})
@@ -773,7 +774,7 @@ func cmdFlash(args ...string) func() {
 		withFocusedOrArg(args, func(c *client) {
 			go func() {
 				for i := 0; i < 10; i++ {
-					if c.Frame().FrameState() == frameStateActive {
+					if c.State() == frame.Active {
 						c.Frame().Inactive()
 					} else {
 						c.Frame().Active()

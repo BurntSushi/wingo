@@ -59,7 +59,7 @@ type promptSelectGroup struct {
 // newPromptSelectGroup creates a new group.
 // If 'win' is nil, then the group has no visual effect, but can still be used
 // to order items. Or, more practically, a singleton group with no label.
-func newPromptSelectGroup(label string, win *window,
+func newPromptSelectGroup(label string, win *xwindow.Window,
 	items []*promptSelectItem) *promptSelectGroup {
 
 	return &promptSelectGroup{
@@ -78,7 +78,7 @@ type promptSelectItem struct {
 }
 
 func newPromptSelectItem(text string, action func(),
-	active, inactive *window) *promptSelectItem {
+	active, inactive *xwindow.Window) *promptSelectItem {
 
 	return &promptSelectItem{
 		text:     text,

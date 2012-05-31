@@ -24,7 +24,7 @@ type promptCycle struct {
 }
 
 func (pc *promptCycle) Id() xproto.Window {
-	return pc.top.id
+	return pc.top.Id
 }
 
 // promptCycleInitialize sets up the cycle prompt window.

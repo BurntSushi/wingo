@@ -12,17 +12,19 @@ import (
 	"github.com/BurntSushi/xgbutil/keybind"
 	"github.com/BurntSushi/xgbutil/mousebind"
 	"github.com/BurntSushi/xgbutil/xevent"
+	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/theme"
 )
 
 // global variables!
 var (
 	X       *xgbutil.XUtil
 	WM      *state
-	ROOT    *window
+	ROOT    *xwindow.Window
 	CONF    *conf
-	THEME   *theme
+	THEME   *theme.Theme
 	PROMPTS prompts
 )
 
@@ -49,8 +51,8 @@ func main() {
 	mousebind.Initialize(X)
 
 	// Create a root window abstraction and load its geometry
-	ROOT = newWindow(X.RootWin())
-	_, err = ROOT.geometry()
+	ROOT = xwindow.New(X, X.RootWin())
+	_, err = ROOT.Geometry()
 	if err != nil {
 		logger.Error.Println("Could not get ROOT window geometry because: %v",
 			err)
@@ -70,7 +72,7 @@ func main() {
 	}
 
 	// Load theme
-	err = loadTheme()
+	THEME, err = theme.LoadTheme(X)
 	if err != nil {
 		logger.Error.Println(err)
 		logger.Error.Println("No theme configuration found. Quitting...")
@@ -94,32 +96,32 @@ func main() {
 	setupCursors()
 
 	// Listen to Root. It is all-important.
-	ROOT.listen(xproto.EventMaskPropertyChange |
+	ROOT.Listen(xproto.EventMaskPropertyChange |
 		xproto.EventMaskStructureNotify |
 		xproto.EventMaskSubstructureNotify |
 		xproto.EventMaskSubstructureRedirect)
 
 	// Update state when the root window changes size
-	xevent.ConfigureNotifyFun(rootGeometryChange).Connect(X, ROOT.id)
+	xevent.ConfigureNotifyFun(rootGeometryChange).Connect(X, ROOT.Id)
 
 	// Oblige map request events
-	xevent.MapRequestFun(clientMapRequest).Connect(X, ROOT.id)
+	xevent.MapRequestFun(clientMapRequest).Connect(X, ROOT.Id)
 
 	// Oblige configure requests from windows we don't manage.
 	xevent.ConfigureRequestFun(
 		func(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
 			flags := int(ev.ValueMask) &
 				^int(xproto.ConfigWindowSibling) &
-				^int(xproto.ConfigWindowStack)
-			xwindow.New(ev.Window).Configure(flags,
+				^int(xproto.ConfigWindowStackMode)
+			xwindow.New(X, ev.Window).Configure(flags,
 				int(ev.X), int(ev.Y), int(ev.Width), int(ev.Height),
 				ev.Sibling, ev.StackMode)
-		}).Connect(X, ROOT.id)
+		}).Connect(X, ROOT.Id)
 
 	// Listen to Root client message events.
 	// We satisfy EWMH with these AND it also provides a mechanism
 	// to issue commands using wingo-cmd.
-	xevent.ClientMessageFun(commandHandler).Connect(X, ROOT.id)
+	xevent.ClientMessageFun(commandHandler).Connect(X, ROOT.Id)
 
 	xevent.Main(X)
 

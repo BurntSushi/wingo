@@ -99,7 +99,7 @@ func (ly *tileVertical) maximizable() bool {
 }
 
 func (ly *tileVertical) move(c *client, x, y int) {
-	c.moveNoValid(x, y)
+	c.move(x, y)
 }
 
 func (ly *tileVertical) resize(c *client, w, h int) {

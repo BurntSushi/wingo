@@ -19,6 +19,7 @@ import (
 	"github.com/BurntSushi/xgbutil/mousebind"
 	"github.com/BurntSushi/xgbutil/xevent"
 
+	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
 )
 
@@ -44,7 +45,7 @@ func (mcmd mouseCommand) setup(c *client, wid xproto.Window) {
 	// the events (i.e., grab synchronously).
 	// Otherwise, we don't need to grab at all!
 	run := mcmd.commandFun()
-	if wid == c.Id() || (c.Frame() != nil && wid == c.Frame().ParentId()) {
+	if wid == c.Id() || (c.Frame() != nil && wid == c.Frame().Parent().Id) {
 		if mcmd.down {
 			mcmd.attach(wid, func() { run(c) }, true, true)
 		} else { // we have to handle release grabs specially!
@@ -62,16 +63,16 @@ func (c *client) setupMoveDrag(dragWin xproto.Window,
 
 	dStart := xgbutil.MouseDragBeginFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xproto.Cursor) {
-			frameMoveBegin(c.Frame(), rx, ry, ex, ey)
+			frame.DragMoveBegin(c.Frame(), rx, ry, ex, ey)
 			return true, cursorFleur
 		})
 	dStep := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-			frameMoveStep(c.Frame(), rx, ry, ex, ey)
+			frame.DragMoveStep(c.Frame(), rx, ry, ex, ey)
 		})
 	dEnd := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-			frameMoveEnd(c.Frame(), rx, ry, ex, ey)
+			frame.DragMoveEnd(c.Frame(), rx, ry, ex, ey)
 		})
 	mousebind.Drag(X, X.Dummy(), dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
@@ -83,15 +84,15 @@ func (c *client) setupResizeDrag(dragWin xproto.Window,
 
 	dStart := xgbutil.MouseDragBeginFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xproto.Cursor) {
-			return frameResizeBegin(c.Frame(), direction, rx, ry, ex, ey)
+			return frame.DragResizeBegin(c.Frame(), direction, rx, ry, ex, ey)
 		})
 	dStep := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-			frameResizeStep(c.Frame(), rx, ry, ex, ey)
+			frame.DragResizeStep(c.Frame(), rx, ry, ex, ey)
 		})
 	dEnd := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-			frameResizeEnd(c.Frame(), rx, ry, ex, ey)
+			frame.DragResizeEnd(c.Frame(), rx, ry, ex, ey)
 		})
 	mousebind.Drag(X, X.Dummy(), dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
@@ -131,23 +132,23 @@ func rootMouseConfig() {
 				"Undefined root mouse command: '%s'", mcmd.cmd)
 			continue
 		}
-		mcmd.attach(ROOT.id, run, false, false)
+		mcmd.attach(ROOT.Id, run, false, false)
 	}
 }
 
 func (c *client) clientMouseConfig() {
 	for _, mcmd := range CONF.mouse["client"] {
-		mcmd.setup(c, c.window.id)
+		mcmd.setup(c, c.Id())
 	}
 }
 
 func (c *client) frameMouseConfig() {
 	for _, mcmd := range CONF.mouse["frame"] {
-		mcmd.setup(c, c.Frame().ParentId())
+		mcmd.setup(c, c.Frame().Parent().Id)
 	}
 }
 
-func (c *client) framePieceMouseConfig(piece string, pieceid xproto.Window) {
+func (c *client) FramePieceMouseConfig(piece string, pieceid xproto.Window) {
 	for _, mcmd := range CONF.mouse[piece] {
 		mcmd.setup(c, pieceid)
 	}
@@ -202,7 +203,7 @@ func getRootMouseCommand(cmd string) func() {
 	switch cmd {
 	case "Focus":
 		return func() {
-			ROOT.focus()
+			ROOT.Focus()
 			WM.unfocusExcept(0)
 		}
 	}

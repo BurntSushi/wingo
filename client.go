@@ -12,6 +12,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xrect"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
+	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
 )
 
@@ -42,11 +43,11 @@ type client struct {
 	stateStore  map[string]*clientState
 	promptStore map[string]*xwindow.Window
 
-	frame        Frame
-	frameNada    *frameNada
-	frameSlim    *frameSlim
-	frameBorders *frameBorders
-	frameFull    *frameFull
+	frame        frame.Frame
+	frameNada    *frame.Nada
+	frameSlim    *frame.Slim
+	frameBorders *frame.Borders
+	frameFull    *frame.Full
 }
 
 func newClient(id xproto.Window) *client {
@@ -59,7 +60,7 @@ func newClient(id xproto.Window) *client {
 		wmname:        "",
 		isMapped:      false,
 		initMap:       false,
-		state:         StateInactive,
+		state:         frame.Inactive,
 		normal:        true,
 		forceFloating: false,
 		maximized:     false,
@@ -294,7 +295,7 @@ func (c *client) Focus() {
 
 func (c *client) Focused() {
 	c.focusRaise()
-	c.state = StateActive
+	c.state = frame.Active
 	c.Frame().Active()
 	ewmh.ActiveWindowSet(X, c.Id())
 
@@ -304,7 +305,7 @@ func (c *client) Focused() {
 }
 
 func (c *client) Unfocused() {
-	c.state = StateInactive
+	c.state = frame.Inactive
 	c.Frame().Inactive()
 }
 
@@ -349,13 +350,13 @@ func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
 	case "WM_NAME":
 		c.updateName()
 	case "_NET_WM_ICON":
-		c.frameFull.updateIcon()
+		c.frameFull.UpdateIcon()
 		c.promptUpdateIcon()
 	case "WM_HINTS":
 		hints, err := icccm.WmHintsGet(X, c.Id())
 		if err == nil {
 			c.hints = hints
-			c.frameFull.updateIcon()
+			c.frameFull.UpdateIcon()
 		}
 	case "WM_NORMAL_HINTS":
 		nhints, err := icccm.WmNormalHintsGet(X, c.Id())
@@ -408,15 +409,15 @@ func (c *client) updateName() {
 		}
 	}
 
-	c.frameFull.updateTitle()
+	c.frameFull.UpdateTitle()
 	c.promptUpdateName()
 }
 
-func (c *client) Frame() Frame {
+func (c *client) Frame() frame.Frame {
 	return c.frame
 }
 
-func (c *client) frameSet(f Frame) {
+func (c *client) frameSet(f frame.Frame) {
 	if f == c.Frame() { // no need to change...
 		return
 	}
@@ -425,7 +426,7 @@ func (c *client) frameSet(f Frame) {
 	}
 	c.frame = f
 	c.Frame().On()
-	FrameReset(c.Frame())
+	frame.Reset(c.Frame())
 }
 
 func (c *client) FrameNada() {
@@ -448,6 +449,10 @@ func (c *client) Geom() xrect.Rect {
 	return c.window.Geom
 }
 
+func (c *client) HeadGeom() xrect.Rect {
+	return c.workspace.headGeom()
+}
+
 func (c *client) Id() xproto.Window {
 	return c.window.Id
 }
@@ -458,6 +463,14 @@ func (c *client) Layer() int {
 
 func (c *client) Mapped() bool {
 	return c.isMapped
+}
+
+func (c *client) Maximized() bool {
+	return c.maximized
+}
+
+func (c *client) State() int {
+	return c.state
 }
 
 func (c *client) Name() string {

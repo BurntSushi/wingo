@@ -10,6 +10,7 @@ import (
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xevent"
 
+	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
 )
 
@@ -19,7 +20,7 @@ func (c *client) manage() error {
 	// Before we bring a client into window management, we need to populate
 	// some information first. Sometimes this process results in us *not*
 	// managing the client!
-	_, err := c.Win().geometry()
+	_, err := c.Win().Geometry()
 	if err != nil {
 		return err
 	}
@@ -52,7 +53,7 @@ func (c *client) manage() error {
 	} else {
 		c.frame = c.frameNada
 	}
-	FrameClientReset(c.Frame())
+	frame.Reset(c.Frame())
 	c.Frame().On()
 
 	// time to add the client to the WM state
@@ -108,13 +109,28 @@ func (c *client) manage() error {
 }
 
 func (c *client) initFrame() {
-	// We want one parent window for all frames.
-	parent := newParent(c)
+	var err error
 
-	c.frameNada = newFrameNada(parent, c)
-	c.frameSlim = newFrameSlim(parent, c)
-	c.frameBorders = newFrameBorders(parent, c)
-	c.frameFull = newFrameFull(parent, c)
+	c.frameNada, err = frame.NewNada(X, THEME, nil, c)
+	if err != nil {
+		logger.Error.Fatalln(err)
+	}
+	p := c.frameNada.Parent() // use same parent window
+
+	c.frameSlim, err = frame.NewSlim(X, THEME, p, c)
+	if err != nil {
+		logger.Error.Fatalln(err)
+	}
+
+	c.frameBorders, err = frame.NewBorders(X, THEME, p, c)
+	if err != nil {
+		logger.Error.Fatalln(err)
+	}
+
+	c.frameFull, err = frame.NewFull(X, THEME, p, c)
+	if err != nil {
+		logger.Error.Fatalln(err)
+	}
 }
 
 // normalSet sets whether a client is normal or not.
@@ -204,14 +220,14 @@ func (c *client) initPopulate() error {
 
 func (c *client) listen() {
 	// Listen to the client for property and structure changes.
-	c.window.listen(xproto.EventMaskPropertyChange |
+	c.window.Listen(xproto.EventMaskPropertyChange |
 		xproto.EventMaskStructureNotify)
 
 	// attach some event handlers
 	xevent.PropertyNotifyFun(
 		func(X *xgbutil.XUtil, ev xevent.PropertyNotifyEvent) {
 			c.updateProperty(ev)
-		}).Connect(X, c.window.id)
+		}).Connect(X, c.Id())
 	xevent.ConfigureRequestFun(
 		func(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
 			// Don't honor configure requests when we're moving or resizing
@@ -220,11 +236,14 @@ func (c *client) listen() {
 				return
 			}
 
-			flags := int(ev.ValueMask) & ^int(DoStack) & ^int(DoSibling)
-			c.frame.ConfigureClient(flags, int(ev.X), int(ev.Y),
-				int(ev.Width), int(ev.Height),
-				ev.Sibling, ev.StackMode, false)
-		}).Connect(X, c.window.id)
+			flags := int(ev.ValueMask) &
+				^int(xproto.ConfigWindowStackMode) &
+				^int(xproto.ConfigWindowSibling)
+
+			x, y, w, h := frame.ClientToFrame(c.frame,
+				int(ev.X), int(ev.Y), int(ev.Width), int(ev.Height))
+			c.frame.MROpt(true, flags, x, y, w, h)
+		}).Connect(X, c.Id())
 	xevent.UnmapNotifyFun(
 		func(X *xgbutil.XUtil, ev xevent.UnmapNotifyEvent) {
 			if !c.Mapped() {
@@ -238,18 +257,18 @@ func (c *client) listen() {
 
 			c.unmappedFallback()
 			c.unmanage()
-		}).Connect(X, c.window.id)
+		}).Connect(X, c.Id())
 	xevent.DestroyNotifyFun(
 		func(X *xgbutil.XUtil, ev xevent.DestroyNotifyEvent) {
 			c.unmanage()
-		}).Connect(X, c.window.id)
+		}).Connect(X, c.Id())
 
 	// Focus follows mouse? (Attach to frame window!)
 	if CONF.ffm {
 		xevent.EnterNotifyFun(
 			func(X *xgbutil.XUtil, ev xevent.EnterNotifyEvent) {
 				c.Focus()
-			}).Connect(X, c.Frame().ParentId())
+			}).Connect(X, c.Frame().Parent().Id)
 	}
 
 	c.clientMouseConfig()

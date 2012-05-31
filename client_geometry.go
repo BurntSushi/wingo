@@ -5,6 +5,8 @@ import (
 
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xrect"
+
+	"github.com/BurntSushi/wingo/frame"
 )
 
 func (c *client) GravitizeX(x int, gravity int) int {
@@ -154,7 +156,7 @@ func (c *client) maximizeRaw() {
 	c.frameSlim.Maximize()
 	c.frameBorders.Maximize()
 	c.frameFull.Maximize()
-	frameMaximize(c.Frame())
+	frame.Maximize(c.Frame())
 }
 
 func (c *client) unmaximizeRaw() {
@@ -175,52 +177,35 @@ func (c *client) EnsureUnmax() {
 	}
 }
 
-func (c *client) geomChange(flags, x, y, w, h int) {
-	c.EnsureUnmax()
-	c.Frame().ConfigureFrame(flags, x, y, w, h, 0, 0, false, true)
-}
-
-func (c *client) geomChangeNoValid(flags, x, y, w, h int) {
-	c.EnsureUnmax()
-	c.Frame().ConfigureFrame(flags, x, y, w, h, 0, 0, true, true)
-}
-
 func (c *client) move(x, y int) {
-	c.geomChange(DoX|DoY, x, y, 0, 0)
-}
-
-func (c *client) moveNoValid(x, y int) {
-	c.geomChangeNoValid(DoX|DoY, x, y, 0, 0)
+	c.EnsureUnmax()
+	c.Frame().Move(x, y)
 }
 
 func (c *client) resize(w, h int) {
-	c.geomChange(DoW|DoH, 0, 0, w, h)
+	c.EnsureUnmax()
+	c.Frame().Resize(true, w, h)
 }
 
 func (c *client) resizeNoValid(w, h int) {
-	c.geomChangeNoValid(DoW|DoH, 0, 0, w, h)
+	c.EnsureUnmax()
+	c.Frame().Resize(false, w, h)
 }
 
 func (c *client) moveresize(x, y, w, h int) {
-	c.geomChange(DoX|DoY|DoW|DoH, x, y, w, h)
+	c.EnsureUnmax()
+	c.Frame().MoveResize(true, x, y, w, h)
 }
 
 func (c *client) moveresizeNoValid(x, y, w, h int) {
-	c.geomChangeNoValid(DoX|DoY|DoW|DoH, x, y, w, h)
+	c.EnsureUnmax()
+	c.Frame().MoveResize(false, x, y, w, h)
 }
-
-const (
-	clientStateGeom = 1 << iota
-	clientStateFrame
-	clientStateHead
-)
-
-var clientStateAll = clientStateGeom | clientStateFrame | clientStateHead
 
 type clientState struct {
 	xrect.Rect
 	maximized bool
-	frame     Frame
+	frame     frame.Frame
 	headGeom  xrect.Rect
 }
 
@@ -292,10 +277,8 @@ func (c *client) loadState(key string) {
 		} else {
 			// Only reset this geometry if it isn't finishing a move/resize
 			if !c.frame.Moving() && !c.frame.Resizing() {
-				c.Frame().ConfigureFrame(
-					DoX|DoY|DoW|DoH,
-					newGeom.X(), newGeom.Y(), newGeom.Width(), newGeom.Height(),
-					0, 0, false, true)
+				c.Frame().MoveResize(true,
+					newGeom.X(), newGeom.Y(), newGeom.Width(), newGeom.Height())
 			}
 		}
 
@@ -307,7 +290,7 @@ func (c *client) loadState(key string) {
 	}
 }
 
-func (c *client) loadStateTransients(key string, flags int) {
+func (c *client) loadStateTransients(key string) {
 	for _, c2 := range WM.clients {
 		if c.transient(c2) && c2.workspace != nil &&
 			c2.workspace.id == c.workspace.id {

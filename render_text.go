@@ -10,6 +10,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/render"
 )
 
 // The extents appear to cut off some of the text.
@@ -20,7 +21,7 @@ const renderTextBreathe = 5
 
 type textInput struct {
 	win       *xwindow.Window
-	img       *wImg
+	img       *render.Image
 	text      []rune
 	bgColor   int
 	font      *truetype.Font
@@ -34,7 +35,7 @@ type textInput struct {
 // backspace to delete characters. There is no support for navigating text
 // with the arrow keys or the "delete" key. I don't plan on adding it either.
 // I have no idea how well this works with other languages.
-func renderTextInputCreate(parent *window, bgColor int,
+func renderTextInputCreate(parent *xwindow.Window, bgColor int,
 	font *truetype.Font, fontSize float64, fontColor int,
 	width int) *textInput {
 
@@ -43,7 +44,7 @@ func renderTextInputCreate(parent *window, bgColor int,
 		return nil
 	}
 
-	img := renderSolid(bgColor, width, height+renderTextBreathe)
+	img := render.NewSolid(bgColor, width, height+renderTextBreathe)
 	win := createImageWindow(parent.id, img, 0)
 
 	return &textInput{

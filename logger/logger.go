@@ -110,3 +110,39 @@ func (lg *logger) Println(v ...interface{}) {
 		lg.plain.Println(v...)
 	}
 }
+
+func (lg *logger) Fatal(v ...interface{}) {
+	if lg.logType&flags == 0 {
+		return
+	}
+
+	if colors {
+		lg.colored.Fatal(v...)
+	} else {
+		lg.plain.Fatal(v...)
+	}
+}
+
+func (lg *logger) Fatalf(format string, v ...interface{}) {
+	if lg.logType&flags == 0 {
+		return
+	}
+
+	if colors {
+		lg.colored.Fatalf(format, v...)
+	} else {
+		lg.plain.Fatalf(format, v...)
+	}
+}
+
+func (lg *logger) Fatalln(v ...interface{}) {
+	if lg.logType&flags == 0 {
+		return
+	}
+
+	if colors {
+		lg.colored.Fatalln(v...)
+	} else {
+		lg.plain.Fatalln(v...)
+	}
+}
