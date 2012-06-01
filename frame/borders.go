@@ -11,7 +11,7 @@ import (
 type Borders struct {
 	*frame
 
-	topSide, bottomSide, leftSide, rightSide piece
+	topSide, bottomSide, leftSide, rightSide   piece
 	topLeft, topRight, bottomLeft, bottomRight piece
 }
 

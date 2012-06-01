@@ -6,7 +6,6 @@ import (
 	"github.com/BurntSushi/wingo/misc"
 )
 
-
 type Color struct {
 	Start, End int
 }
@@ -78,4 +77,3 @@ func (tc Color) Steps(size int) []color.RGBA {
 
 	return stps
 }
-

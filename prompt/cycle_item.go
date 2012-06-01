@@ -31,17 +31,17 @@ type CycleChoice interface {
 //
 // Also, the Image and Text corresponding to this item can be updated.
 type CycleItem struct {
-	cycle *Cycle
+	cycle  *Cycle
 	choice CycleChoice
 
-	win *xwindow.Window
+	win              *xwindow.Window
 	active, inactive *xwindow.Window
-	text *xwindow.Window
+	text             *xwindow.Window
 }
 
 func newCycleItem(cycle *Cycle, choice CycleChoice) *CycleItem {
 	ci := &CycleItem{
-		cycle: cycle,
+		cycle:  cycle,
 		choice: choice,
 	}
 	t := ci.cycle.theme
@@ -79,7 +79,7 @@ func (ci *CycleItem) show(x, y int) {
 	}
 
 	is, ibs := ci.cycle.theme.IconSize, ci.cycle.theme.IconBorderSize
-	ci.win.MoveResize(x, y, is + 2*ibs, is + 2*ibs)
+	ci.win.MoveResize(x, y, is+2*ibs, is+2*ibs)
 	ci.win.Map()
 }
 
@@ -131,14 +131,14 @@ func (ci *CycleItem) UpdateText() {
 
 	x, y, err := img.Text(0, 0, t.FontColor, t.FontSize, t.Font, text)
 	if err != nil {
-		logger.Warning.Printf("Could not draw text for prompt cycle " +
+		logger.Warning.Printf("Could not draw text for prompt cycle "+
 			"because: %s", err)
 		return
 	}
 
 	// Use the x,y returned by img.Text to resize the window to the real
 	// dimensions and to only draw the appropriate image contents.
-	w, h := x, y + misc.TextBreathe
+	w, h := x, y+misc.TextBreathe
 	ci.text.Resize(w, h)
 
 	img.XSurfaceSet(ci.text.Id)
@@ -147,4 +147,3 @@ func (ci *CycleItem) UpdateText() {
 	subimg.XPaint(ci.text.Id)
 	img.Destroy()
 }
-

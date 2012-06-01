@@ -16,16 +16,16 @@ type Parent struct {
 func newParent(X *xgbutil.XUtil, cid xproto.Window) (*Parent, error) {
 	parent, err := xwindow.Generate(X)
 	if err != nil {
-		logger.Error.Printf("Could not create a parent window for client " +
+		logger.Error.Printf("Could not create a parent window for client "+
 			"with id '%d' because: %s", cid, err)
-		logger.Error.Fatalf("In a state where no new windows can be created. "+
+		logger.Error.Fatalf("In a state where no new windows can be created. " +
 			"Unfortunately, we must exit.")
 	}
 
 	err = parent.CreateChecked(X.RootWin(), 0, 0, 1, 1,
 		xproto.CwEventMask,
-		xproto.EventMaskSubstructureRedirect |
-		xproto.EventMaskButtonPress | xproto.EventMaskButtonRelease)
+		xproto.EventMaskSubstructureRedirect|
+			xproto.EventMaskButtonPress|xproto.EventMaskButtonRelease)
 	if err != nil {
 		return nil, err
 	}

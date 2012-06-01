@@ -23,29 +23,29 @@ const (
 )
 
 type MoveState struct {
-	Moving bool
+	Moving       bool
 	RootX, RootY int
 }
 
 type ResizeState struct {
-	Resizing bool
-	RootX, RootY int
+	Resizing            bool
+	RootX, RootY        int
 	X, Y, Width, Height int
-	Xs, Ys, Ws, Hs bool
+	Xs, Ys, Ws, Hs      bool
 }
 
 // frame is a type that provides mostly boiler-plate methods to all frames.
 // It's appropriate to think of it as an abstract frame, as it does not
 // satisfy the Frame interface by itself.
 type frame struct {
-	X *xgbutil.XUtil
+	X     *xgbutil.XUtil
 	theme *theme.Theme
 
-	MoveState MoveState
+	MoveState   MoveState
 	ResizeState ResizeState
-	State int
-	parent *Parent
-	client client
+	State       int
+	parent      *Parent
+	client      client
 }
 
 func newFrame(X *xgbutil.XUtil,
@@ -60,8 +60,8 @@ func newFrame(X *xgbutil.XUtil,
 	}
 
 	return &frame{
-		X: X,
-		theme: t,
+		X:      X,
+		theme:  t,
 		parent: p,
 		client: c,
 	}, nil

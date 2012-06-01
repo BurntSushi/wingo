@@ -30,15 +30,15 @@ func (f *Nada) On() {
 	Reset(f)
 }
 
-func (f *Nada) Active() {}
-func (f *Nada) Inactive() {}
-func (f *Nada) Maximize() {}
+func (f *Nada) Active()     {}
+func (f *Nada) Inactive()   {}
+func (f *Nada) Maximize()   {}
 func (f *Nada) Unmaximize() {}
 
-func (f *Nada) Top() int { return 0 }
+func (f *Nada) Top() int    { return 0 }
 func (f *Nada) Bottom() int { return 0 }
-func (f *Nada) Left() int { return 0 }
-func (f *Nada) Right() int { return 0 }
+func (f *Nada) Left() int   { return 0 }
+func (f *Nada) Right() int  { return 0 }
 
 func (f *Nada) MROpt(validate bool, flags, x, y, w, h int) {
 	mropt(f, validate, flags, x, y, w, h)

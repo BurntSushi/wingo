@@ -180,4 +180,3 @@ func (img *Image) GradientFunc(gradientType, gradientDir int, clr theme.Color,
 		}
 	}
 }
-

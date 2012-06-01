@@ -14,7 +14,7 @@ func ColorFromInt(clr int) color.RGBA {
 // IntFromColor takes a color and returns an RGB integer (i.e., 0x3366ff).
 func IntFromColor(clr color.Color) int {
 	r, g, b, _ := clr.RGBA()
-	return IntFromRGB(int(r >> 8), int(g >> 8), int(b >> 8))
+	return IntFromRGB(int(r>>8), int(g>>8), int(b>>8))
 }
 
 // RGBFromInt returns the R, G and B portions of an integer.

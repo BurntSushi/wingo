@@ -48,7 +48,7 @@ func (f *Slim) Inactive() {
 	f.parent.ClearAll()
 }
 
-func (f *Slim) Maximize() {}
+func (f *Slim) Maximize()   {}
 func (f *Slim) Unmaximize() {}
 
 func (f *Slim) Top() int {

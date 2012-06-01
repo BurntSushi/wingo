@@ -14,8 +14,8 @@ type piece struct {
 
 func newPiece(w *xwindow.Window, active, inactive xproto.Pixmap) piece {
 	return piece{
-		Window: w,
-		active: active,
+		Window:   w,
+		active:   active,
 		inactive: inactive,
 	}
 }

@@ -17,17 +17,17 @@ func (f *Full) newPieceWindow(ident string,
 
 	win, err := xwindow.Generate(f.X)
 	if err != nil {
-		logger.Error.Printf("Could not create a frame window for client " +
+		logger.Error.Printf("Could not create a frame window for client "+
 			"with id '%d' because: %s", f.client.Id(), err)
-		logger.Error.Fatalf("In a state where no new windows can be created. "+
+		logger.Error.Fatalf("In a state where no new windows can be created. " +
 			"Unfortunately, we must exit.")
 	}
 
 	err = win.CreateChecked(f.parent.Id, 0, 0, 1, 1,
-		xproto.CwBackPixmap | xproto.CwEventMask | xproto.CwCursor,
+		xproto.CwBackPixmap|xproto.CwEventMask|xproto.CwCursor,
 		xproto.BackPixmapParentRelative,
-		xproto.EventMaskButtonPress | xproto.EventMaskButtonRelease |
-		xproto.EventMaskButtonMotion | xproto.EventMaskPointerMotion,
+		xproto.EventMaskButtonPress|xproto.EventMaskButtonRelease|
+			xproto.EventMaskButtonMotion|xproto.EventMaskPointerMotion,
 		uint32(cursor))
 	if err != nil {
 		logger.Warning.Println(err)

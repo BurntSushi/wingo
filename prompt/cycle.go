@@ -19,46 +19,46 @@ import (
 )
 
 type Cycle struct {
-	X *xgbutil.XUtil
-	theme CycleTheme
+	X      *xgbutil.XUtil
+	theme  CycleTheme
 	config CycleConfig
 
-	items []*CycleItem
-	showing bool
-	selected int
-	grabMods uint16
+	items      []*CycleItem
+	showing    bool
+	selected   int
+	grabMods   uint16
 	fontHeight int
 
-	win *xwindow.Window
+	win                    *xwindow.Window
 	bTop, bBot, bLft, bRht *xwindow.Window
 }
 
 type CycleTheme struct {
-	BorderSize int
-	BgColor color.RGBA
+	BorderSize  int
+	BgColor     color.RGBA
 	BorderColor color.RGBA
-	Padding int
+	Padding     int
 
-	Font *truetype.Font
-	FontSize float64
+	Font      *truetype.Font
+	FontSize  float64
 	FontColor color.RGBA
 
-	IconSize int
-	IconBorderSize int
+	IconSize         int
+	IconBorderSize   int
 	IconTransparency int
 }
 
 type CycleConfig struct {
-	GrabWin xproto.Window
+	GrabWin   xproto.Window
 	CancelKey string
 }
 
 func NewCycle(X *xgbutil.XUtil, theme CycleTheme, config CycleConfig) *Cycle {
 	cycle := &Cycle{
-		X: X,
-		theme: theme,
-		config: config,
-		showing: false,
+		X:        X,
+		theme:    theme,
+		config:   config,
+		showing:  false,
 		selected: 0,
 		grabMods: 0,
 	}
@@ -145,7 +145,6 @@ func (cycle *Cycle) keyResponse() xevent.KeyReleaseFun {
 	}
 	return xevent.KeyReleaseFun(f)
 }
-
 
 // Show will map and show the slice of items provided.
 //
@@ -320,4 +319,3 @@ func (cycle *Cycle) highlight() {
 		}
 	}
 }
-
