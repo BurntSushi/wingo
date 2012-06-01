@@ -1,3 +1,7 @@
+Things are currently *very* broken. Any attempt at getting Wingo running at the
+moment will be completely fruitless. It's basically undergoing a *near*
+re-write in light of the changes made to xgb and xgbutil.
+
 A fully-featured and EWMH compliant window manager written in Go.
 
 Please do not use Wingo yet. It's not ready.
