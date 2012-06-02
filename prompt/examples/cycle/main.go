@@ -1,9 +1,15 @@
+// Example cycle shows how to use the cycle prompt. It is by no means
+// comprehensive and should not be considered functional. Namely, it polls
+// for state once and never updates itself. The example is intended to
+// half-heartedly emulate an alt-tab window cycling dialog.
+//
+// A proper usage of alt-tab would require listening for changes on the
+// _NET_CLIENT_STACKING_LIST property and listening for changes on each
+// individual window (like its name, icon and existence itself).
 package main
 
 import (
-	"image/color"
 	"log"
-	"os"
 
 	"github.com/BurntSushi/xgb/xproto"
 
@@ -13,55 +19,60 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xrect"
 	"github.com/BurntSushi/xgbutil/xgraphics"
+	"github.com/BurntSushi/xgbutil/xinerama"
+	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/prompt"
 )
 
 var (
-	theme = prompt.CycleTheme{
-		BorderSize: 5,
-		BgColor: color.RGBA{0xff, 0xff, 0xff, 0xff},
-		BorderColor: color.RGBA{0x33, 0x66, 0xff, 0xff},
-		Padding: 10,
-		Font: nil, // set later; have to read the font file
-		FontSize: 20.0,
-		FontColor: color.RGBA{0x0, 0x0, 0x0, 0xff},
-		IconSize: 100,
-		IconBorderSize: 5,
-	}
-
-	config = prompt.CycleConfig{
-		CancelKey: "Escape",
-	}
-
-	fontPath = "/usr/share/fonts/TTF/FreeMonoBold.ttf"
+	// The key combinations to use to cycle forwards and backwards in the
+	// cycle prompt.
+	cyclePrev, cycleNext = "Mod4-Shift-tab", "Mod4-tab"
 )
 
 type window struct {
 	X *xgbutil.XUtil
-	Id xproto.Window
+	id xproto.Window
+	mapped bool
 }
 
 func newWindow(X *xgbutil.XUtil, parent, id xproto.Window) *window {
-	return &window{
+	w := &window{
 		X: X,
-		Id: id,
+		id: id,
 	}
+	w.setMapped()
+	return w
+}
+
+// Using EWMH, ask the window manager whether the window is mapped or not.
+func (w *window) setMapped() {
+	states, err := ewmh.WmStateGet(w.X, w.id)
+	fatal(err)
+	for _, state := range states {
+		if state == "_NET_WM_STATE_HIDDEN" {
+			w.mapped = false
+			return
+		}
+	}
+	w.mapped = true
 }
 
 func (w *window) CycleIsActive() bool {
-	return true
+	return w.mapped
 }
 
 func (w *window) CycleImage() *xgraphics.Image {
-	ximg, err := xgraphics.FindIcon(w.X, w.Id, theme.IconSize, theme.IconSize)
+	ximg, err := xgraphics.FindIcon(w.X, w.id,
+		prompt.DefaultCycleTheme.IconSize, prompt.DefaultCycleTheme.IconSize)
 	fatal(err)
 
 	return ximg
 }
 
 func (w *window) CycleText() string {
-	name, err := ewmh.WmNameGet(w.X, w.Id)
+	name, err := ewmh.WmNameGet(w.X, w.id)
 	if err != nil {
 		return "N/A"
 	}
@@ -73,7 +84,7 @@ func (w *window) CycleHighlighted() {
 }
 
 func (w *window) CycleSelected() {
-	println("selected")
+	fatal(ewmh.ActiveWindowReq(w.X, w.id))
 }
 
 func fatal(err error) {
@@ -88,50 +99,64 @@ func main() {
 
 	keybind.Initialize(X)
 
-	fontReader, err := os.Open(fontPath)
-	fatal(err)
+	cycle := prompt.NewCycle(X,
+		prompt.DefaultCycleTheme, prompt.DefaultCycleConfig)
 
-	font, err := xgraphics.ParseFont(fontReader)
-	fatal(err)
-
-	theme.Font = font
-	config.GrabWin = X.Dummy()
-	cycle := prompt.NewCycle(X, theme, config)
-
-	clients, err := ewmh.ClientListGet(X)
+	clients, err := ewmh.ClientListStackingGet(X)
 	fatal(err)
 	items := make([]*prompt.CycleItem, 0)
-	for _, cid := range clients {
-		item := cycle.AddItem(newWindow(X, cycle.Id(), cid))
+	for i := len(clients) - 1; i >= 0; i-- {
+		item := cycle.AddItem(newWindow(X, cycle.Id(), clients[i]))
 		items = append(items, item)
 	}
 
-	keybind.KeyPressFun(
-		func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
-			shown := cycle.Show(xrect.New(0, 0, 1920, 1080), "Mod4-tab", items)
-			if !shown {
-				log.Fatal("Did not show cycle prompt.")
-			}
-			cycle.Next()
-		}).Connect(X, X.RootWin(), "Mod4-tab", true)
-	keybind.KeyPressFun(
-		func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
-			cycle.Next()
-		}).Connect(X, X.Dummy(), "Mod4-tab", true)
-
-	keybind.KeyPressFun(
-		func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
-			shown := cycle.Show(xrect.New(0, 0, 1920, 1080), "Mod4-Shift-tab", items)
-			if !shown {
-				log.Fatal("Did not show cycle prompt.")
-			}
-			cycle.Prev()
-		}).Connect(X, X.RootWin(), "Mod4-Shift-tab", true)
-	keybind.KeyPressFun(
-		func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
-			cycle.Prev()
-		}).Connect(X, X.Dummy(), "Mod4-Shift-tab", true)
+	keyHandlers(X, cycle, items)
 
 	println("Loaded...")
 	xevent.Main(X)
+}
+
+func headGeom(X *xgbutil.XUtil) xrect.Rect {
+	if X.ExtInitialized("XINERAMA") {
+		heads, err := xinerama.PhysicalHeads(X)
+		if err == nil {
+			return heads[0]
+		}
+	}
+
+	geom, err := xwindow.New(X, X.RootWin()).Geometry()
+	fatal(err)
+	return geom
+}
+
+func keyHandlers(X *xgbutil.XUtil,
+	cycle *prompt.Cycle, items []*prompt.CycleItem) {
+
+	geom := headGeom(X)
+
+	keybind.KeyPressFun(
+		func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+			shown := cycle.Show(geom, cycleNext, items)
+			if !shown {
+				log.Fatal("Did not show cycle prompt.")
+			}
+			cycle.Next()
+		}).Connect(X, X.RootWin(), cycleNext, true)
+	keybind.KeyPressFun(
+		func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+			cycle.Next()
+		}).Connect(X, cycle.GrabId(), cycleNext, true)
+
+	keybind.KeyPressFun(
+		func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+			shown := cycle.Show(geom, cyclePrev, items)
+			if !shown {
+				log.Fatal("Did not show cycle prompt.")
+			}
+			cycle.Prev()
+		}).Connect(X, X.RootWin(), cyclePrev, true)
+	keybind.KeyPressFun(
+		func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
+			cycle.Prev()
+		}).Connect(X, cycle.GrabId(), cyclePrev, true)
 }

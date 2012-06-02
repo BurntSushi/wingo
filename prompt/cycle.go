@@ -1,6 +1,7 @@
 package prompt
 
 import (
+	"bytes"
 	"image/color"
 
 	"code.google.com/p/freetype-go/freetype/truetype"
@@ -14,12 +15,23 @@ import (
 	"github.com/BurntSushi/xgbutil/xrect"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
+	"github.com/BurntSushi/wingo/bindata"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/misc"
 )
 
+// Cycle represents a single cycle prompt. A new cycle prompt can be created by:
+//
+//	cycle := prompt.NewCycle(XUtilValue, cycleThemeValue, cycleConfigValue)
+//
+// And it can be displayed using:
+//
+//	shown := cycle.Show(geometry, "", cycleItemsSlice)
+//
+// Where the cycle item slice is constructed from *CycleItem values that are
+// created using the (*Cycle).AddItem method.
 type Cycle struct {
-	X      *xgbutil.XUtil
+	X      *xgbutil.XUtil // exported for no reason
 	theme  CycleTheme
 	config CycleConfig
 
@@ -33,26 +45,14 @@ type Cycle struct {
 	bTop, bBot, bLft, bRht *xwindow.Window
 }
 
-type CycleTheme struct {
-	BorderSize  int
-	BgColor     color.RGBA
-	BorderColor color.RGBA
-	Padding     int
-
-	Font      *truetype.Font
-	FontSize  float64
-	FontColor color.RGBA
-
-	IconSize         int
-	IconBorderSize   int
-	IconTransparency int
-}
-
-type CycleConfig struct {
-	GrabWin   xproto.Window
-	CancelKey string
-}
-
+// NewCycle creates a new prompt. As many prompts as you want can be created,
+// and they could even technically be shown simultaneously so long as at most
+// one of them is using a grab. (The grab will fail for the others and they
+// will not be shown.)
+//
+// CycleTheme and CycleConfig values can either use DefaultCycle{Theme,Config}
+// values found in this package, or custom ones can be created using
+// composite literals.
 func NewCycle(X *xgbutil.XUtil, theme CycleTheme, config CycleConfig) *Cycle {
 	cycle := &Cycle{
 		X:        X,
@@ -72,6 +72,10 @@ func NewCycle(X *xgbutil.XUtil, theme CycleTheme, config CycleConfig) *Cycle {
 	cycle.bTop, cycle.bBot = cwin(cycle.win.Id), cwin(cycle.win.Id)
 	cycle.bLft, cycle.bRht = cwin(cycle.win.Id), cwin(cycle.win.Id)
 
+	// Make the top-level window override redirect so the window manager
+	// doesn't mess with us.
+	cycle.win.Change(xproto.CwOverrideRedirect, 1)
+
 	// Set the colors of each window.
 	cclr := func(w *xwindow.Window, clr color.RGBA) {
 		w.Change(xproto.CwBackPixel, uint32(misc.IntFromColor(clr)))
@@ -90,7 +94,7 @@ func NewCycle(X *xgbutil.XUtil, theme CycleTheme, config CycleConfig) *Cycle {
 	cycle.bRht.Map()
 
 	// Connect the key response handler (i.e., the alt-tab'ing, canceling, etc.)
-	cycle.keyResponse().Connect(X, cycle.config.GrabWin)
+	cycle.keyResponse().Connect(X, X.Dummy())
 
 	// Guess the maximum font height.
 	_, cycle.fontHeight = xgraphics.TextMaxExtents(
@@ -100,6 +104,14 @@ func NewCycle(X *xgbutil.XUtil, theme CycleTheme, config CycleConfig) *Cycle {
 	return cycle
 }
 
+// GrabId returns the window id that the grab is set on. This is useful if you
+// need to attach any Key{Press,Release} handlers.
+func (cycle *Cycle) GrabId() xproto.Window {
+	return cycle.X.Dummy()
+}
+
+// Id returns the window id of the top-level window of the cycle prompt.
+// I'm not sure why you might need it.
 func (cycle *Cycle) Id() xproto.Window {
 	return cycle.win.Id
 }
@@ -172,10 +184,12 @@ func (cycle *Cycle) Show(workarea xrect.Rect,
 	// in xgbutil/keybind.go if you're interested.
 	// This makes it impossible to press and release alt-tab too quickly
 	// to have it not register.
-	if err := keybind.SmartGrab(cycle.X, cycle.config.GrabWin); err != nil {
-		logger.Warning.Println("Could not grab keyboard for prompt cycle: %s",
-			err)
-		return false
+	if cycle.config.Grab {
+		if err := keybind.SmartGrab(cycle.X, cycle.X.Dummy()); err != nil {
+			logger.Warning.Printf(
+				"Could not grab keyboard for prompt cycle: %s", err)
+			return false
+		}
 	}
 
 	// Save the list of cycle items (this how we know when to cycle between
@@ -249,6 +263,24 @@ func (cycle *Cycle) Show(workarea xrect.Rect,
 	return true
 }
 
+// Hide will hide the cycle prompt and reset any relevant state information.
+// The keyboard grab will also be released if one was made.
+func (cycle *Cycle) Hide() {
+	if !cycle.showing {
+		return
+	}
+
+	if cycle.config.Grab {
+		keybind.SmartUngrab(cycle.X)
+	}
+	cycle.win.Unmap()
+	cycle.showing = false
+	cycle.selected = -1
+	cycle.grabMods = 0
+	cycle.items = nil
+}
+
+// Next will highlight the next choice in the dialog.
 func (cycle *Cycle) Next() {
 	if !cycle.showing {
 		return
@@ -268,6 +300,7 @@ func (cycle *Cycle) Next() {
 	cycle.highlight()
 }
 
+// Prev will highlight the previous choice in the dialog.
 func (cycle *Cycle) Prev() {
 	if !cycle.showing {
 		return
@@ -283,20 +316,19 @@ func (cycle *Cycle) Prev() {
 	cycle.highlight()
 }
 
+// AddItem should be thought of as a *CycleItem constructor. Its main role is
+// to adapt a CycleChoice value to a value that is suitable for the cycle
+// prompt to paint onto its window. The resulting CycleItem value can be used
+// to update the image/text.
+//
+// The CycleItem value must be destroyed by calling (*CycleItem).Destroy when
+// it is no longer used. (This frees the X window resources associated with
+// the *CycleItem.)
 func (cycle *Cycle) AddItem(choice CycleChoice) *CycleItem {
 	return newCycleItem(cycle, choice)
 }
 
-func (cycle *Cycle) Hide() {
-	cycle.win.Unmap()
-	keybind.SmartUngrab(cycle.X)
-
-	cycle.showing = false
-	cycle.selected = -1
-	cycle.grabMods = 0
-	cycle.items = nil
-}
-
+// Choose "selects" the currently highlighted choice.
 func (cycle *Cycle) Choose() {
 	if !cycle.showing ||
 		len(cycle.items) == 0 ||
@@ -310,6 +342,7 @@ func (cycle *Cycle) Choose() {
 	cycle.Hide()
 }
 
+// highlight highlights the current choice and unhighlights the rest.
 func (cycle *Cycle) highlight() {
 	for i, item := range cycle.items {
 		if i == cycle.selected {
@@ -318,4 +351,53 @@ func (cycle *Cycle) highlight() {
 			item.unhighlight()
 		}
 	}
+}
+
+// CycleTheme values can be used to create prompts with different colors,
+// padding, border sizes, icon sizes, fonts, etc. You may use DefaultCycleTheme
+// for a reasonable default theme if you don't care about the particulars.
+type CycleTheme struct {
+	BorderSize  int
+	BgColor     color.RGBA
+	BorderColor color.RGBA
+	Padding     int
+
+	Font      *truetype.Font
+	FontSize  float64
+	FontColor color.RGBA
+
+	IconSize         int
+	IconBorderSize   int
+	IconTransparency int
+}
+
+var DefaultCycleTheme = CycleTheme{
+	BorderSize:  10,
+	BgColor:     color.RGBA{0xff, 0xff, 0xff, 0xff},
+	BorderColor: color.RGBA{0x0, 0x0, 0x0, 0xff},
+	Padding:     10,
+	Font: xgraphics.MustFont(xgraphics.ParseFont(
+		bytes.NewBuffer(bindata.DejavusansTtf()))),
+	FontSize:         20.0,
+	FontColor:        color.RGBA{0x0, 0x0, 0x0, 0xff},
+	IconSize:         100,
+	IconBorderSize:   5,
+	IconTransparency: 50,
+}
+
+// CycleConfig values can be used to create prompts with different
+// configurations. As of right now, the only configuration options supported
+// is whether to issue a keyboard grab and the key to
+// use to "cancel" the prompt. (If empty, no cancel key feature will be used
+// automatically.)
+// For a reasonable default configuration, use DefaultCycleConfig. It will
+// set "Escape" as the cancel key and issue a grab.
+type CycleConfig struct {
+	Grab      bool
+	CancelKey string
+}
+
+var DefaultCycleConfig = CycleConfig{
+	Grab:      true,
+	CancelKey: "Escape",
 }
