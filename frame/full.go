@@ -9,6 +9,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/render"
 	"github.com/BurntSushi/wingo/theme"
 )
@@ -355,17 +356,10 @@ func (f *Full) UpdateTitle() {
 	title := f.client.Name()
 	font := f.theme.Full.Font
 	fontSize := f.theme.Full.FontSize
-	aFontColor := theme.ColorFromInt(f.theme.Full.AFontColor)
-	iFontColor := theme.ColorFromInt(f.theme.Full.IFontColor)
+	aFontColor := misc.ColorFromInt(f.theme.Full.AFontColor)
+	iFontColor := misc.ColorFromInt(f.theme.Full.IFontColor)
 
-	ew, eh, err := xgraphics.TextMaxExtents(font, fontSize, title)
-	if err != nil {
-		logger.Warning.Printf("Could not get text extents for name '%s' on "+
-			"window %s because: %v",
-			title, f.Client(), err)
-		logger.Warning.Printf("Resorting to default with of 300.")
-		ew = 300
-	}
+	ew, eh := xgraphics.TextMaxExtents(font, fontSize, title)
 
 	imgA := render.NewBorder(f.X, 0, 0, f.theme.Full.ATitleColor,
 		ew, f.theme.Full.TitleSize,
@@ -376,7 +370,7 @@ func (f *Full) UpdateTitle() {
 
 	y := (f.theme.Full.TitleSize-eh)/2 - 1
 
-	_, _, err = imgA.Text(0, y, aFontColor, fontSize, font, title)
+	_, _, err := imgA.Text(0, y, aFontColor, fontSize, font, title)
 	if err != nil {
 		logger.Warning.Printf("Could not draw window title for window %s "+
 			"because: %v", f.client, err)
