@@ -12,12 +12,6 @@ import (
 	"github.com/BurntSushi/wingo/misc"
 )
 
-// DrawText is a convenience function that will create a new image, render
-// the provided text to it, paint the image to the provided window, and resize
-// the window to fit the text snugly.
-//
-// An error can occur when rendering the text to an image.
-//
 // BUG(burntsushi): I don't think freetype-go has a way to compute text extents
 // before rendering text to an image. To work-around this, DrawText will over
 // estimate the extents by assuming each character has a width equal to 1 em,
@@ -29,6 +23,12 @@ import (
 // below the base line). So to work-around this, the height of the extents is
 // padded by a fixed pixel amount. This is wrong and will break if the font
 // size is too large.
+
+// DrawText is a convenience function that will create a new image, render
+// the provided text to it, paint the image to the provided window, and resize
+// the window to fit the text snugly.
+//
+// An error can occur when rendering the text to an image.
 func DrawText(win *xwindow.Window, font *truetype.Font, size float64,
 	fontClr, bgClr color.RGBA, text string) error {
 
