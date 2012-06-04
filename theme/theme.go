@@ -14,6 +14,7 @@ import (
 	"github.com/BurntSushi/wingo/bindata"
 	"github.com/BurntSushi/wingo/config"
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/wini"
 )
 
@@ -176,7 +177,7 @@ func LoadTheme(X *xgbutil.XUtil) (*Theme, error) {
 	// re-color some images
 	colorize := func(im *xgraphics.Image, clr int) {
 		var i int
-		r8, g8, b8 := RGBFromInt(clr)
+		r8, g8, b8 := misc.RGBFromInt(clr)
 		r, g, b := uint8(r8), uint8(g8), uint8(b8)
 		im.ForExp(func(x, y int) (uint8, uint8, uint8, uint8) {
 			i = im.PixOffset(x, y)
