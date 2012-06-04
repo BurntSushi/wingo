@@ -85,7 +85,9 @@ func main() {
 			case misc.KeyMatch(X, "BackSpace", mods, kc):
 				input.Remove()
 			case misc.KeyMatch(X, "Return", mods, kc):
-				log.Println("Return has been pressed. Quitting...")
+				log.Println("Return has been pressed.")
+				log.Printf("The current text is: %s", string(input.Text))
+				log.Println("Quitting...")
 				xevent.Quit(X)
 			case misc.KeyMatch(X, "Escape", mods, kc):
 				input.Reset()
