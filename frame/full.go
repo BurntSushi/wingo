@@ -360,6 +360,7 @@ func (f *Full) UpdateTitle() {
 	iFontColor := misc.ColorFromInt(f.theme.Full.IFontColor)
 
 	ew, eh := xgraphics.TextMaxExtents(font, fontSize, title)
+	eh += misc.TextBreathe
 
 	imgA := render.NewBorder(f.X, 0, 0, f.theme.Full.ATitleColor,
 		ew, f.theme.Full.TitleSize,
@@ -370,7 +371,7 @@ func (f *Full) UpdateTitle() {
 
 	y := (f.theme.Full.TitleSize-eh)/2 - 1
 
-	_, _, err := imgA.Text(0, y, aFontColor, fontSize, font, title)
+	x2, _, err := imgA.Text(0, y, aFontColor, fontSize, font, title)
 	if err != nil {
 		logger.Warning.Printf("Could not draw window title for window %s "+
 			"because: %v", f.client, err)
@@ -391,6 +392,9 @@ func (f *Full) UpdateTitle() {
 
 	imgA.CreatePixmap()
 	imgI.CreatePixmap()
+	imgA.SubImage(image.Rect(0, 0, x2, imgA.Bounds().Max.Y)).XDraw()
+	imgI.SubImage(image.Rect(0, 0, x2, imgI.Bounds().Max.Y)).XDraw()
+
 	f.titleText.active, f.titleText.inactive = imgA.Pixmap, imgI.Pixmap
 
 	f.titleText.MROpt(fW, 0, 0, ew, 0)
