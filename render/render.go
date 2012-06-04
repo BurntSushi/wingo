@@ -8,6 +8,7 @@ import (
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
+	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/theme"
 )
 
@@ -46,7 +47,7 @@ func New(ximg *xgraphics.Image) *Image {
 func NewSolid(X *xgbutil.XUtil, bgColor, width, height int) *Image {
 	img := New(xgraphics.New(X, image.Rect(0, 0, width, height)))
 
-	r, g, b := theme.RGBFromInt(bgColor)
+	r, g, b := misc.RGBFromInt(bgColor)
 	r8, g8, b8 := uint8(r), uint8(g), uint8(b)
 	img.ForExp(func(x, y int) (uint8, uint8, uint8, uint8) {
 		return r8, g8, b8, 0xff
@@ -63,7 +64,7 @@ func NewBorder(X *xgbutil.XUtil, borderType, borderColor int,
 	if bgColor.IsGradient() {
 		img.Gradient(gradientType, gradientDir, bgColor)
 	} else {
-		r, g, b := theme.RGBFromInt(bgColor.Start)
+		r, g, b := misc.RGBFromInt(bgColor.Start)
 		r8, g8, b8 := uint8(r), uint8(g), uint8(b)
 		img.ForExp(func(x, y int) (uint8, uint8, uint8, uint8) {
 			return r8, g8, b8, 0xff
@@ -118,7 +119,7 @@ func NewCorner(X *xgbutil.XUtil, borderType, borderColor int,
 
 // XXX: Optimize.
 func (img *Image) ThinBorder(borderType, borderColor int) {
-	borderClr := theme.ColorFromInt(borderColor)
+	borderClr := misc.ColorFromInt(borderColor)
 	width, height := img.Bounds().Dx(), img.Bounds().Dy()
 
 	// Now go through and add a "thin border."
