@@ -5,6 +5,7 @@
 package logger
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -28,8 +29,9 @@ const (
 )
 
 var (
-	flags  = FlagDebug | FlagMessage | FlagWarning | FlagError
-	colors = true
+	flags    = FlagDebug | FlagMessage | FlagWarning | FlagError
+	logFlags = log.Lshortfile
+	colors   = true
 
 	Debug, Lots, Message, Warning, Error *logger
 )
@@ -37,30 +39,26 @@ var (
 func init() {
 	Debug = newLogger(
 		FlagDebug,
-		log.New(os.Stderr, "WINGO DEBUG: *** ", log.Ldate|log.Ltime),
+		log.New(os.Stderr, "WINGO DEBUG: *** ", logFlags),
 		log.New(os.Stderr,
-			BgGreen(Blue("WINGO DEBUG:")).String()+" ",
-			log.Ldate|log.Ltime))
+			BgGreen(Blue("WINGO DEBUG:")).String()+" ", logFlags))
 	Lots = newLogger(
 		FlagLots,
-		log.New(os.Stderr, "WINGO LOTS: ", log.Ldate|log.Ltime),
-		log.New(os.Stderr, "WINGO LOTS: ", log.Ldate|log.Ltime))
+		log.New(os.Stderr, "WINGO LOTS: ", logFlags),
+		log.New(os.Stderr, "WINGO LOTS: ", logFlags))
 	Message = newLogger(
 		FlagMessage,
-		log.New(os.Stderr, "WINGO MESSAGE: ", log.Ldate|log.Ltime),
-		log.New(os.Stderr, "WINGO MESSAGE: ", log.Ldate|log.Ltime))
+		log.New(os.Stderr, "WINGO MESSAGE: ", logFlags),
+		log.New(os.Stderr, "WINGO MESSAGE: ", logFlags))
 	Warning = newLogger(
 		FlagWarning,
-		log.New(os.Stderr, "WINGO WARNING: ", log.Ldate|log.Ltime),
+		log.New(os.Stderr, "WINGO WARNING: ", logFlags),
 		log.New(os.Stderr,
-			Bold(Red("WINGO WARNING:")).String()+" ",
-			log.Ldate|log.Ltime))
+			Bold(Red("WINGO WARNING:")).String()+" ", logFlags))
 	Error = newLogger(
 		FlagError,
-		log.New(os.Stderr, "WINGO ERROR: ", log.Ldate|log.Ltime|log.Lshortfile),
-		log.New(os.Stderr,
-			BgMagenta("WINGO ERROR:").String()+" ",
-			log.Ldate|log.Ltime|log.Lshortfile))
+		log.New(os.Stderr, "WINGO ERROR: ", logFlags),
+		log.New(os.Stderr, BgMagenta("WINGO ERROR:").String()+" ", logFlags))
 }
 
 func newLogger(logType int, plain *log.Logger, colored *log.Logger) *logger {
@@ -81,9 +79,9 @@ func (lg *logger) Print(v ...interface{}) {
 	}
 
 	if colors {
-		lg.colored.Print(v...)
+		lg.colored.Output(2, fmt.Sprint(v...))
 	} else {
-		lg.plain.Print(v...)
+		lg.plain.Output(2, fmt.Sprint(v...))
 	}
 }
 
@@ -93,9 +91,9 @@ func (lg *logger) Printf(format string, v ...interface{}) {
 	}
 
 	if colors {
-		lg.colored.Printf(format, v...)
+		lg.colored.Output(2, fmt.Sprintf(format, v...))
 	} else {
-		lg.plain.Printf(format, v...)
+		lg.plain.Output(2, fmt.Sprintf(format, v...))
 	}
 }
 
@@ -105,9 +103,9 @@ func (lg *logger) Println(v ...interface{}) {
 	}
 
 	if colors {
-		lg.colored.Println(v...)
+		lg.colored.Output(2, fmt.Sprintln(v...))
 	} else {
-		lg.plain.Println(v...)
+		lg.plain.Output(2, fmt.Sprintln(v...))
 	}
 }
 
@@ -117,10 +115,11 @@ func (lg *logger) Fatal(v ...interface{}) {
 	}
 
 	if colors {
-		lg.colored.Fatal(v...)
+		lg.colored.Output(2, fmt.Sprint(v...))
 	} else {
-		lg.plain.Fatal(v...)
+		lg.plain.Output(2, fmt.Sprint(v...))
 	}
+	os.Exit(1)
 }
 
 func (lg *logger) Fatalf(format string, v ...interface{}) {
@@ -129,10 +128,11 @@ func (lg *logger) Fatalf(format string, v ...interface{}) {
 	}
 
 	if colors {
-		lg.colored.Fatalf(format, v...)
+		lg.colored.Output(2, fmt.Sprintf(format, v...))
 	} else {
-		lg.plain.Fatalf(format, v...)
+		lg.plain.Output(2, fmt.Sprintf(format, v...))
 	}
+	os.Exit(1)
 }
 
 func (lg *logger) Fatalln(v ...interface{}) {
@@ -141,8 +141,9 @@ func (lg *logger) Fatalln(v ...interface{}) {
 	}
 
 	if colors {
-		lg.colored.Fatalln(v...)
+		lg.colored.Output(2, fmt.Sprintln(v...))
 	} else {
-		lg.plain.Fatalln(v...)
+		lg.plain.Output(2, fmt.Sprintln(v...))
 	}
+	os.Exit(1)
 }
