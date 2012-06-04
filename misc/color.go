@@ -29,3 +29,10 @@ func RGBFromInt(clr int) (r int, g int, b int) {
 func IntFromRGB(r, g, b int) int {
 	return (r << 16) + (g << 8) + b
 }
+
+// RGBA8FromColor takes a color and returns the R, G, B and A portions in
+// uint8 form.
+func RGBA8FromColor(clr color.Color) (r, g, b, a uint8) {
+	r32, g32, b32, a32 := clr.RGBA()
+	return uint8(r32 >> 8), uint8(g32 >> 8), uint8(b32 >> 8), uint8(a32 >> 8)
+}
