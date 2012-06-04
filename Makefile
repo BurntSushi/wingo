@@ -3,7 +3,7 @@ D=data
 WINGOPKG=$(HOME)/go/me/pkg/linux_amd64/github.com/BurntSushi/wingo
 BINDATA=$(BD)/wingo.png.go \
 				$(BD)/close.png.go $(BD)/maximize.png.go $(BD)/minimize.png.go \
-				$(BD)/DejaVuSans.ttf.go
+				$(BD)/DejaVuSans.ttf.go $(BD)/FreeMono.ttf.go
 
 bindata: $(BINDATA)
 
