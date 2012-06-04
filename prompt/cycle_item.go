@@ -1,8 +1,6 @@
 package prompt
 
 import (
-	"image"
-
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/xgraphics"
@@ -10,6 +8,7 @@ import (
 
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/misc"
+	"github.com/BurntSushi/wingo/text"
 )
 
 // CycleChoice is any value capable of being shown in a prompt cycle.
@@ -114,6 +113,11 @@ func (ci *CycleItem) show(x, y int) {
 	ci.win.Map()
 }
 
+// hide simply unmaps the parent window for this item.
+func (ci *CycleItem) hide() {
+	ci.win.Unmap()
+}
+
 // choose selects this choice.
 func (ci *CycleItem) choose() {
 	ci.choice.CycleSelected()
@@ -173,29 +177,12 @@ func (ci *CycleItem) UpdateImage() {
 // CycleChoice. The text is retrieved by calling CycleChoice.CycleText.
 func (ci *CycleItem) UpdateText() {
 	t := ci.cycle.theme
-	text := ci.choice.CycleText()
+	txt := ci.choice.CycleText()
 
-	ewidth, eheight := xgraphics.TextMaxExtents(t.Font, t.FontSize, text)
-	eheight += misc.TextBreathe
-
-	img := xgraphics.New(ci.cycle.X, image.Rect(0, 0, ewidth, eheight))
-	xgraphics.BlendBgColor(img, t.BgColor)
-
-	x, y, err := img.Text(0, 0, t.FontColor, t.FontSize, t.Font, text)
+	err := text.DrawText(ci.text,
+		t.Font, t.FontSize, t.FontColor, t.BgColor, txt)
 	if err != nil {
-		logger.Warning.Printf("Could not draw text for prompt cycle "+
-			"because: %s", err)
-		return
+		logger.Warning.Printf("(*CycleItem).UpdateText: "+
+			"Could not render text: %s", err)
 	}
-
-	// Use the x,y returned by img.Text to resize the window to the real
-	// dimensions and to only draw the appropriate image contents.
-	w, h := x, y+misc.TextBreathe
-	ci.text.Resize(w, h)
-
-	img.XSurfaceSet(ci.text.Id)
-	subimg := img.SubImage(image.Rect(0, 0, w, h))
-	subimg.XDraw()
-	subimg.XPaint(ci.text.Id)
-	img.Destroy()
 }

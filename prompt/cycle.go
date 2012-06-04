@@ -59,7 +59,7 @@ func NewCycle(X *xgbutil.XUtil, theme CycleTheme, config CycleConfig) *Cycle {
 		theme:    theme,
 		config:   config,
 		showing:  false,
-		selected: 0,
+		selected: -1,
 		grabMods: 0,
 	}
 
@@ -274,6 +274,10 @@ func (cycle *Cycle) Hide() {
 		keybind.SmartUngrab(cycle.X)
 	}
 	cycle.win.Unmap()
+
+	for _, item := range cycle.items {
+		item.hide()
+	}
 	cycle.showing = false
 	cycle.selected = -1
 	cycle.grabMods = 0
