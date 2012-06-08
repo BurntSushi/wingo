@@ -41,8 +41,8 @@ type frame struct {
 	X     *xgbutil.XUtil
 	theme *theme.Theme
 
-	MoveState   MoveState
-	ResizeState ResizeState
+	MoveState   *MoveState
+	ResizeState *ResizeState
 	State       int
 	parent      *Parent
 	client      client
@@ -60,10 +60,12 @@ func newFrame(X *xgbutil.XUtil,
 	}
 
 	return &frame{
-		X:      X,
-		theme:  t,
-		parent: p,
-		client: c,
+		X:           X,
+		theme:       t,
+		parent:      p,
+		client:      c,
+		MoveState:   &MoveState{},
+		ResizeState: &ResizeState{},
 	}, nil
 }
 
@@ -75,13 +77,25 @@ func (f *frame) Parent() *Parent {
 	return f.parent
 }
 
+// Destroy will check if the client window is still a sub-window of this frame,
+// and reparent it to the root window if so.
+//
+// Destroy does *not* destroy the parent window! The caller must do that, since
+// the parent window is shared across many frames.
 func (f *frame) Destroy() {
-	err := xproto.ReparentWindowChecked(f.X.Conn(), f.client.Id(),
-		f.X.RootWin(), 0, 0).Check()
+	// Only re-parent if the current parent is this frame window.
+	parent, err := f.client.Win().Parent()
 	if err != nil {
-		logger.Warning.Println(err)
+		// We don't care about this error
+		return
 	}
-	f.parent.Destroy()
+	if parent.Id == f.parent.Id {
+		err := xproto.ReparentWindowChecked(f.X.Conn(), f.client.Id(),
+			f.X.RootWin(), 0, 0).Check()
+		if err != nil {
+			logger.Warning.Println(err)
+		}
+	}
 }
 
 func (f *frame) Map() {
@@ -100,7 +114,7 @@ func (f *frame) Moving() bool {
 	return f.MoveState.Moving
 }
 
-func (f *frame) MovingState() MoveState {
+func (f *frame) MovingState() *MoveState {
 	return f.MoveState
 }
 
@@ -108,6 +122,6 @@ func (f *frame) Resizing() bool {
 	return f.ResizeState.Resizing
 }
 
-func (f *frame) ResizingState() ResizeState {
+func (f *frame) ResizingState() *ResizeState {
 	return f.ResizeState
 }

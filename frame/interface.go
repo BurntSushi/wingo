@@ -24,9 +24,9 @@ type Frame interface {
 	MROpt(validate bool, flags, x, y, width, height int)
 
 	Moving() bool
-	MovingState() MoveState
+	MovingState() *MoveState
 	Resizing() bool
-	ResizingState() ResizeState
+	ResizingState() *ResizeState
 
 	Current() bool
 
@@ -45,7 +45,7 @@ type Frame interface {
 
 func Reset(f Frame) {
 	geom := f.Geom()
-	resize(f, true, geom.Width(), geom.Height())
+	f.Resize(true, geom.Width(), geom.Height())
 }
 
 func ClientToFrame(f Frame, x, y, w, h int) (int, int, int, int) {
@@ -57,6 +57,7 @@ func ClientToFrame(f Frame, x, y, w, h int) (int, int, int, int) {
 
 func validateWidthHeight(f Frame, validate bool,
 	w, h int) (fw, fh, cw, ch int) {
+
 	fw, fh, cw, ch = w, h, w, h
 
 	cw -= f.Left() + f.Right()
@@ -101,7 +102,7 @@ func resize(f Frame, validate bool, w, h int) {
 
 func Maximize(f Frame) {
 	hg := xrect.New(xrect.Pieces(f.Client().HeadGeom()))
-	moveresize(f, false, hg.X(), hg.Y(), hg.Width(), hg.Height())
+	f.MoveResize(false, hg.X(), hg.Y(), hg.Width(), hg.Height())
 }
 
 func DragMoveBegin(f Frame, rx, ry, ex, ey int) {
@@ -122,7 +123,7 @@ func DragMoveStep(f Frame, rx, ry, ex, ey int) {
 	newy := f.Geom().Y() + ry - moving.RootY
 	moving.RootX, moving.RootY = rx, ry
 
-	move(f, newx, newy)
+	f.Move(newx, newy)
 }
 
 func DragMoveEnd(f Frame, rx, ry, ex, ey int) {
@@ -136,6 +137,9 @@ func DragMoveEnd(f Frame, rx, ry, ex, ey int) {
 
 func DragResizeBegin(f Frame, direction uint32,
 	rx, ry, ex, ey int) (bool, xproto.Cursor) {
+
+	// call for side-effect; makes sure parent window has a valid geometry
+	f.Parent().Geometry()
 
 	resizing := f.ResizingState()
 	dir := direction
@@ -239,9 +243,6 @@ func DragResizeBegin(f Frame, direction uint32,
 		dir == ewmh.SizeTopRight || dir == ewmh.SizeBottomRight ||
 		dir == ewmh.SizeBottom || dir == ewmh.SizeBottomLeft
 
-	// call for side-effect; makes sure parent window has a valid geometry
-	f.Parent().Geometry()
-
 	// unmax!
 	f.Client().EnsureUnmax()
 
@@ -272,8 +273,8 @@ func DragResizeStep(f Frame, rx, ry, ex, ey int) {
 			neww = resizing.Width + diffx
 		}
 
-		topBot := f.Top() + f.Bottom()
-		validw = f.Client().ValidateWidth(neww-topBot) + topBot
+		leftRight := f.Left() + f.Right()
+		validw = f.Client().ValidateWidth(neww-leftRight) + leftRight
 
 		// If validation changed our width, we need to make sure
 		// our x-value is appropriately changed
@@ -289,8 +290,8 @@ func DragResizeStep(f Frame, rx, ry, ex, ey int) {
 			newh = resizing.Height + diffy
 		}
 
-		leftRight := f.Left() + f.Right()
-		validh = f.Client().ValidateHeight(newh-leftRight) + leftRight
+		topBot := f.Top() + f.Bottom()
+		validh = f.Client().ValidateHeight(newh-topBot) + topBot
 
 		// If validation changed our height, we need to make sure
 		// our y-value is appropriately changed
@@ -299,7 +300,7 @@ func DragResizeStep(f Frame, rx, ry, ex, ey int) {
 		}
 	}
 
-	moveresize(f, false, newx, newy, validw, validh)
+	f.MROpt(false, flags, newx, newy, validw, validh)
 }
 
 func DragResizeEnd(f Frame, rx, ry, ex, ey int) {
