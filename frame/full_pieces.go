@@ -1,6 +1,8 @@
 package frame
 
 import (
+	"image"
+
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/xgraphics"
@@ -46,8 +48,8 @@ func (f *Full) newButtonClose() piece {
 		f.theme.Full.TitleSize, f.theme.Full.TitleSize,
 		render.GradientVert, render.GradientRegular)
 
-	xgraphics.BlendOld(imgA, f.theme.Full.ACloseButton, nil, 100, 0, 0)
-	xgraphics.BlendOld(imgI, f.theme.Full.ICloseButton, nil, 100, 0, 0)
+	xgraphics.Blend(imgA.Image, f.theme.Full.ACloseButton, image.ZP)
+	xgraphics.Blend(imgI.Image, f.theme.Full.ICloseButton, image.ZP)
 
 	win := f.newPieceWindow("close", 0)
 	win.MROpt(fY|fW|fH,
@@ -67,8 +69,8 @@ func (f *Full) newButtonMaximize() piece {
 		f.theme.Full.TitleSize, f.theme.Full.TitleSize,
 		render.GradientVert, render.GradientRegular)
 
-	xgraphics.BlendOld(imgA, f.theme.Full.AMaximizeButton, nil, 100, 0, 0)
-	xgraphics.BlendOld(imgI, f.theme.Full.IMaximizeButton, nil, 100, 0, 0)
+	xgraphics.Blend(imgA.Image, f.theme.Full.AMaximizeButton, image.ZP)
+	xgraphics.Blend(imgI.Image, f.theme.Full.IMaximizeButton, image.ZP)
 
 	win := f.newPieceWindow("maximize", 0)
 	win.MROpt(fY|fW|fH,
@@ -88,8 +90,8 @@ func (f *Full) newButtonMinimize() piece {
 		f.theme.Full.TitleSize, f.theme.Full.TitleSize,
 		render.GradientVert, render.GradientRegular)
 
-	xgraphics.BlendOld(imgA, f.theme.Full.AMinimizeButton, nil, 100, 0, 0)
-	xgraphics.BlendOld(imgI, f.theme.Full.IMinimizeButton, nil, 100, 0, 0)
+	xgraphics.Blend(imgA.Image, f.theme.Full.AMinimizeButton, image.ZP)
+	xgraphics.Blend(imgI.Image, f.theme.Full.IMinimizeButton, image.ZP)
 
 	win := f.newPieceWindow("minimize", 0)
 	win.MROpt(fY|fW|fH,
