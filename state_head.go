@@ -9,6 +9,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xinerama"
 	"github.com/BurntSushi/xgbutil/xrect"
 
+	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
 )
 
@@ -50,7 +51,7 @@ func (wm *state) headChoose(c *client, newGeom xrect.Rect) bool {
 	wrk.add(c)
 
 	// If this is an active client, then update the active workspace too!
-	if c.state == StateActive {
+	if c.state == frame.Active {
 		wrk.activate(false, false)
 	}
 	return true
@@ -170,7 +171,7 @@ func (wm *state) headsApplyStruts() {
 		if strut == nil {
 			continue
 		}
-		xrect.ApplyStrut(wm.heads, ROOT.geom.Width(), ROOT.geom.Height(),
+		xrect.ApplyStrut(wm.heads, ROOT.Geom.Width(), ROOT.Geom.Height(),
 			strut.Left, strut.Right, strut.Top, strut.Bottom,
 			strut.LeftStartY, strut.LeftEndY,
 			strut.RightStartY, strut.RightEndY,
@@ -227,8 +228,8 @@ func stateHeadsGet() xinerama.Heads {
 			"root window.")
 
 		rawHeads = xinerama.Heads{
-			xrect.New(ROOT.geom.X(), ROOT.geom.Y(),
-				ROOT.geom.Width(), ROOT.geom.Height()),
+			xrect.New(ROOT.Geom.X(), ROOT.Geom.Y(),
+				ROOT.Geom.Width(), ROOT.Geom.Height()),
 		}
 	}
 	return rawHeads

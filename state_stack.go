@@ -32,7 +32,7 @@ func (wm *state) updateEwmhStacking() {
 	numWins := len(wm.stack)
 	winList := make([]xproto.Window, numWins)
 	for i, c := range wm.stack {
-		winList[numWins-i-1] = c.Win().id
+		winList[numWins-i-1] = c.Id()
 	}
 	err := ewmh.ClientListStackingSet(X, winList)
 	if err != nil {
@@ -52,15 +52,11 @@ func (wm *state) stackUpdate(clients []*client) {
 	for i := len(wm.stack) - 1; i >= 0; i-- {
 		if cliIndex(wm.stack[i], clients) > -1 {
 			if i == len(wm.stack)-1 {
-				wm.stack[i].Frame().ConfigureClient(
-					DoSibling|DoStack, 0, 0, 0, 0,
-					wm.stack[i-1].Frame().ParentId(),
-					xproto.StackModeBelow, false)
+				wm.stack[i].Frame().Parent().StackSibling(
+					wm.stack[i-1].Frame().Parent().Id, xproto.StackModeBelow)
 			} else {
-				wm.stack[i].Frame().ConfigureClient(
-					DoSibling|DoStack, 0, 0, 0, 0,
-					wm.stack[i+1].Frame().ParentId(),
-					xproto.StackModeAbove, false)
+				wm.stack[i].Frame().Parent().StackSibling(
+					wm.stack[i+1].Frame().Parent().Id, xproto.StackModeAbove)
 			}
 		}
 	}
@@ -98,9 +94,8 @@ func (wm *state) stackRaise(c *client, configure bool) {
 
 		if c2.Layer() <= c.Layer() {
 			if configure {
-				c.Frame().ConfigureClient(DoSibling|DoStack, 0, 0, 0, 0,
-					c2.Frame().ParentId(),
-					xproto.StackModeAbove, false)
+				c.Frame().Parent().StackSibling(
+					c2.Frame().Parent().Id, xproto.StackModeAbove)
 			}
 			wm.stack = append(wm.stack[:i],
 				append([]*client{c}, wm.stack[i:]...)...)
@@ -113,10 +108,9 @@ func (wm *state) stackRaise(c *client, configure bool) {
 	// Thus, it must be the lowest client and it gets added to the end.
 	// We also must stack it below the lowest window in the list.
 	if configure {
-		c.Frame().ConfigureClient(
-			DoSibling|DoStack, 0, 0, 0, 0,
-			wm.stack[len(wm.stack)-1].Frame().ParentId(),
-			xproto.StackModeBelow, false)
+		c.Frame().Parent().StackSibling(
+			wm.stack[len(wm.stack)-1].Frame().Parent().Id,
+			xproto.StackModeBelow)
 	}
 	wm.stack = append(wm.stack, c)
 }

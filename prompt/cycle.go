@@ -104,6 +104,14 @@ func NewCycle(X *xgbutil.XUtil, theme CycleTheme, config CycleConfig) *Cycle {
 	return cycle
 }
 
+func (cycle *Cycle) Destroy() {
+	cycle.bTop.Destroy()
+	cycle.bBot.Destroy()
+	cycle.bLft.Destroy()
+	cycle.bRht.Destroy()
+	cycle.win.Destroy()
+}
+
 // GrabId returns the window id that the grab is set on. This is useful if you
 // need to attach any Key{Press,Release} handlers.
 func (cycle *Cycle) GrabId() xproto.Window {
@@ -174,6 +182,10 @@ func (cycle *Cycle) keyResponse() xevent.KeyReleaseFun {
 // Show returns false if the prompt cannot be shown for some reason.
 func (cycle *Cycle) Show(workarea xrect.Rect,
 	keyStr string, items []*CycleItem) bool {
+
+	if cycle.showing {
+		return false
+	}
 
 	// If there are no items, obviously quit.
 	if len(items) == 0 {
@@ -328,7 +340,7 @@ func (cycle *Cycle) Prev() {
 // The CycleItem value must be destroyed by calling (*CycleItem).Destroy when
 // it is no longer used. (This frees the X window resources associated with
 // the *CycleItem.)
-func (cycle *Cycle) AddItem(choice CycleChoice) *CycleItem {
+func (cycle *Cycle) AddChoice(choice CycleChoice) *CycleItem {
 	return newCycleItem(cycle, choice)
 }
 

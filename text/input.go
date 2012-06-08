@@ -55,6 +55,7 @@ func NewInput(X *xgbutil.XUtil, parent xproto.Window, width int, padding int,
 
 	img := xgraphics.New(X, image.Rect(0, 0, width, height))
 	win := xwindow.Must(xwindow.Create(X, parent))
+	win.Listen(xproto.EventMaskKeyPress)
 	win.Resize(width, height)
 
 	ti := &Input{
@@ -108,7 +109,7 @@ func (ti *Input) Render() {
 func (ti *Input) Add(mods uint16, kc xproto.Keycode) {
 	s := keybind.LookupString(ti.X, mods, kc)
 	if len(s) != 1 {
-		logger.Message.Printf("(*Input).Add: Could not translate string '%s' "+
+		logger.Lots.Printf("(*Input).Add: Could not translate string '%s' "+
 			"received from the keyboard to a single character.", s)
 		return
 	}

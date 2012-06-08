@@ -144,10 +144,10 @@ func (ci *CycleItem) unhighlight() {
 // to free X resources and should be called whenever the CycleItem will no
 // longer be used.
 func (ci *CycleItem) Destroy() {
-	ci.win.Destroy()
 	ci.active.Destroy()
 	ci.inactive.Destroy()
 	ci.text.Destroy()
+	ci.win.Destroy()
 }
 
 // UpdateImage will repaint the active and inactive images by calling

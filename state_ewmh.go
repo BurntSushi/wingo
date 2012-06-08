@@ -5,15 +5,16 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/xgbutil/ewmh"
+	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/logger"
 )
 
 func (wm *state) ewmhSupportingWmCheck() {
-	supportingWin := createWindow(ROOT.id, 0)
-	ewmh.SupportingWmCheckSet(X, ROOT.id, supportingWin.id)
-	ewmh.SupportingWmCheckSet(X, supportingWin.id, supportingWin.id)
-	ewmh.WmNameSet(X, supportingWin.id, "Wingo")
+	supportingWin := xwindow.Must(xwindow.Create(X, ROOT.Id))
+	ewmh.SupportingWmCheckSet(X, ROOT.Id, supportingWin.Id)
+	ewmh.SupportingWmCheckSet(X, supportingWin.Id, supportingWin.Id)
+	ewmh.WmNameSet(X, supportingWin.Id, "Wingo")
 }
 
 func (wm *state) ewmhDesktopNames() {
@@ -42,7 +43,7 @@ func (wm *state) ewmhWorkarea() {
 
 // ewmhDesktopGeometry is another totally useless property. Christ.
 func (wm *state) ewmhDesktopGeometry() {
-	rootGeom, err := ROOT.geometry()
+	rootGeom, err := ROOT.Geometry()
 	if err != nil {
 		logger.Error.Printf("Could not get ROOT window geometry: %s", err)
 		panic("")

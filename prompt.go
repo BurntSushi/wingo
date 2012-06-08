@@ -1,44 +1,38 @@
 package main
 
+import (
+	"github.com/BurntSushi/wingo/prompt"
+)
+
 type prompts struct {
-	cycle *promptCycle
-	slct  *promptSelect // temporary
+	cycle *prompt.Cycle
+	slct  *prompt.Select
 }
 
-func promptsInitialize() {
-	PROMPTS = prompts{
-		cycle: newPromptCycle(),
-		slct:  newPromptSelect(),
+func newPrompts() prompts {
+	return prompts{
+		cycle: prompt.NewCycle(X, prompt.DefaultCycleTheme,
+			prompt.DefaultCycleConfig),
+		slct: prompt.NewSelect(X, prompt.DefaultSelectTheme,
+			prompt.DefaultSelectConfig),
 	}
 }
 
-func (c *client) promptAdd() {
-	c.promptCycleAdd()
-	c.promptSelectAdd()
-}
+func showPromptCycle(keyStr string, activeWrk, visible, iconified bool) {
+	items := make([]*prompt.CycleItem, 0, len(WM.focus))
+	for i := len(WM.focus) - 1; i >= 0; i-- {
+		client := WM.focus[i]
+		if activeWrk && !client.workspace.active {
+			continue
+		}
+		if visible && !client.workspace.visible() {
+			continue
+		}
+		if !iconified && client.iconified {
+			continue
+		}
+		items = append(items, client.prompts.cycle)
+	}
 
-func (c *client) promptRemove() {
-	c.promptCycleRemove()
-	c.promptSelectRemove()
-}
-
-func (c *client) promptUpdateIcon() {
-	c.promptCycleUpdateIcon()
-}
-
-func (c *client) promptUpdateName() {
-	c.promptCycleUpdateName()
-	c.promptSelectUpdateName()
-}
-
-func (wrk *workspace) promptAdd() {
-	wrk.promptSelectAdd()
-}
-
-func (wrk *workspace) promptRemove() {
-	wrk.promptSelectRemove()
-}
-
-func (wrk *workspace) promptUpdateName() {
-	wrk.promptSelectUpdateName()
+	PROMPTS.cycle.Show(WM.headActive(), keyStr, items)
 }

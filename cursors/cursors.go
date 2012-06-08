@@ -23,7 +23,7 @@ var (
 	TopLeftCorner     xproto.Cursor
 )
 
-func SetupCursors(X *xgbutil.XUtil) {
+func Setup(X *xgbutil.XUtil) {
 	// lazy...
 	cc := func(cursor uint16) xproto.Cursor {
 		cid, err := xcursor.CreateCursor(X, cursor)

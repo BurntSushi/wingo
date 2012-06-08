@@ -19,6 +19,7 @@ import (
 	"github.com/BurntSushi/xgbutil/mousebind"
 	"github.com/BurntSushi/xgbutil/xevent"
 
+	"github.com/BurntSushi/wingo/cursors"
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
 )
@@ -64,7 +65,7 @@ func (c *client) setupMoveDrag(dragWin xproto.Window,
 	dStart := xgbutil.MouseDragBeginFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xproto.Cursor) {
 			frame.DragMoveBegin(c.Frame(), rx, ry, ex, ey)
-			return true, cursorFleur
+			return true, cursors.Fleur
 		})
 	dStep := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {

@@ -14,6 +14,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
+	"github.com/BurntSushi/wingo/cursors"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/theme"
 )
@@ -80,7 +81,7 @@ func main() {
 	}
 
 	// Initialize prompts
-	promptsInitialize()
+	PROMPTS = newPrompts()
 
 	// Create WM state
 	WM = newState()
@@ -93,7 +94,7 @@ func main() {
 	rootMouseConfig()
 
 	// Setup some cursors we use
-	setupCursors()
+	cursors.Setup(X)
 
 	// Listen to Root. It is all-important.
 	ROOT.Listen(xproto.EventMaskPropertyChange |

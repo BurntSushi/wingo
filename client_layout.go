@@ -24,9 +24,13 @@ func (c *client) layoutSet() {
 	}
 }
 
-func (c client) layout() layout {
+func (c *client) layout() layout {
 	if c.floating() {
 		return c.workspace.floaters[0]
 	}
 	return c.workspace.layout()
+}
+
+func (c *client) Layout() layout.Layout {
+	return c.workspace.Layout(c)
 }

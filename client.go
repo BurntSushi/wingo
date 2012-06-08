@@ -40,8 +40,8 @@ type client struct {
 	transientFor xproto.Window
 	wmclass      *icccm.WmClass
 
-	stateStore  map[string]*clientState
-	promptStore map[string]*xwindow.Window
+	stateStore map[string]*clientState
+	prompts    *clientPrompts
 
 	frame        frame.Frame
 	frameNada    *frame.Nada
@@ -74,7 +74,7 @@ func newClient(id xproto.Window) *client {
 		transientFor:  0,
 		wmclass:       nil,
 		stateStore:    make(map[string]*clientState),
-		promptStore:   make(map[string]*xwindow.Window),
+		prompts:       nil,
 		frame:         nil,
 		frameNada:     nil,
 		frameSlim:     nil,
@@ -84,15 +84,23 @@ func newClient(id xproto.Window) *client {
 }
 
 func (c *client) unmanage() {
+	X.Grab()
+	defer X.Ungrab()
+
 	if c.Mapped() {
 		c.unmappedFallback()
 	}
 	c.workspace.remove(c)
-	c.frame.Destroy()
+	c.frameNada.Destroy()
+	c.frameSlim.Destroy()
+	c.frameBorders.Destroy()
+	c.frameFull.Destroy()
+	c.frame.Parent().Destroy()
 	c.setWmState(icccm.StateWithdrawn)
 
-	xevent.Detach(X, c.window.Id)
-	c.promptRemove()
+	c.window.Detach()
+
+	c.prompts.destroy()
 	WM.stackRemove(c)
 	WM.clientRemove(c)
 
@@ -154,13 +162,8 @@ func (c *client) unmappedFallback() {
 	}
 }
 
-func (c *client) IconifyToggle() {
-	if c.iconified {
-		c.Map()
-	} else {
-		c.UnmapFallback()
-	}
-	c.iconified = !c.iconified
+func (c *client) IconifiedSet(iconified bool) {
+	c.iconified = iconified
 }
 
 func (c *client) setWmState(state int) {
@@ -181,7 +184,10 @@ func (c *client) setWmState(state int) {
 		default:
 			stateStr = "Unknown"
 		}
-		logger.Warning.Printf("Could not set window state to %s on %s "+
+
+		// This isn't a warning because it's totally expected when windows
+		// are closed rapidly.
+		logger.Message.Printf("Could not set window state to %s on %s "+
 			"because: %v", stateStr, c, err)
 	}
 }
@@ -207,9 +213,14 @@ func (c *client) Close() {
 			return
 		}
 
-		xproto.SendEvent(X.Conn(), false, c.Id(), 0, string(cm.Bytes()))
+		err = xproto.SendEventChecked(X.Conn(), false, c.Id(), 0,
+			string(cm.Bytes())).Check()
+		if err != nil {
+			logger.Message.Printf("Could not send WM_DELETE_WINDOW "+
+				"ClientMessage because: %s", err)
+		}
 	} else {
-		c.window.Kill()
+		c.window.Kill() // HULK SMASH!
 	}
 }
 
@@ -261,11 +272,14 @@ func (c *client) ForceWorkspace() {
 }
 
 func (c *client) Focus() {
+	showFocus := false
+
 	if c.hints.Flags&icccm.HintInput > 0 && c.hints.Input == 1 {
 		c.ForceWorkspace()
 		c.window.Focus()
-		c.Focused()
-	} else if strIndex("WM_TAKE_FOCUS", c.protocols) > -1 {
+		showFocus = true
+	}
+	if strIndex("WM_TAKE_FOCUS", c.protocols) > -1 {
 		c.ForceWorkspace()
 
 		wm_protocols, err := xprop.Atm(X, "WM_PROTOCOLS")
@@ -288,7 +302,9 @@ func (c *client) Focus() {
 		}
 
 		xproto.SendEvent(X.Conn(), false, c.Id(), 0, string(cm.Bytes()))
-
+		showFocus = true
+	}
+	if showFocus {
 		c.Focused()
 	}
 }
@@ -351,7 +367,7 @@ func (c *client) updateProperty(ev xevent.PropertyNotifyEvent) {
 		c.updateName()
 	case "_NET_WM_ICON":
 		c.frameFull.UpdateIcon()
-		c.promptUpdateIcon()
+		c.prompts.updateIcon()
 	case "WM_HINTS":
 		hints, err := icccm.WmHintsGet(X, c.Id())
 		if err == nil {
@@ -410,7 +426,7 @@ func (c *client) updateName() {
 	}
 
 	c.frameFull.UpdateTitle()
-	c.promptUpdateName()
+	c.prompts.updateName()
 }
 
 func (c *client) Frame() frame.Frame {

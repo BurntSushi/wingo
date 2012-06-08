@@ -35,13 +35,13 @@ func newWorkspace(id int) *workspace {
 		name:        fmt.Sprintf("Default workspace %d", id+1),
 		head:        -1,
 		active:      false,
-		promptStore: make(map[string]*window),
+		promptStore: make(map[string]*xwindow.Window),
 		state:       workspaceFloating,
 	}
 	wrk.floaters = []layout{newFloating(wrk)}
 	wrk.tilers = []layout{newTileVertical(wrk)}
 
-	wrk.promptAdd()
+	// wrk.promptAdd() 
 
 	return wrk
 }
@@ -207,7 +207,7 @@ func (wrk *workspace) visible() bool {
 
 func (wrk *workspace) nameSet(name string) {
 	wrk.name = name
-	wrk.promptUpdateName()
+	// wrk.promptUpdateName() 
 	WM.ewmhDesktopNames()
 }
 
@@ -284,6 +284,9 @@ func (wrk *workspace) hide() {
 func (wrk *workspace) show() {
 	wrk.tile()
 	for _, c := range WM.stack {
+		if c.iconified {
+			continue
+		}
 		if c.workspace.id == wrk.id {
 			if c.layout().floating() {
 				c.loadState("workspace_switch")

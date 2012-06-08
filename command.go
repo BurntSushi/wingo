@@ -64,8 +64,8 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 			return nil
 		}
 		return usage(cmdPromptCyclePrev(keyStr, args...))
-	case "PromptSelect":
-		return usage(cmdPromptSelect(args...))
+	// case "PromptSelect": 
+	// return usage(cmdPromptSelect(args...)) 
 	case "Quit":
 		return usage(cmdQuit())
 	case "Raise":
@@ -387,7 +387,8 @@ func cmdPromptCycleNext(keyStr string, args ...string) func() {
 	}
 
 	return func() {
-		PROMPTS.cycle.next(keyStr, activeWrk, visible, iconified)
+		showPromptCycle(keyStr, activeWrk, visible, iconified)
+		PROMPTS.cycle.Next()
 	}
 }
 
@@ -409,67 +410,68 @@ func cmdPromptCyclePrev(keyStr string, args ...string) func() {
 	}
 
 	return func() {
-		PROMPTS.cycle.prev(keyStr, activeWrk, visible, iconified)
+		showPromptCycle(keyStr, activeWrk, visible, iconified)
+		PROMPTS.cycle.Prev()
 	}
 }
 
-func cmdPromptSelect(args ...string) func() {
-	if len(args) < 1 {
-		return nil
-	}
-
-	prefixSearch := true
-	if len(args) > 1 && args[1] == "substring" {
-		prefixSearch = false
-	}
-
-	var f func() []*promptSelectGroup
-
-	switch args[0] {
-	case "clientsall":
-		f = func() []*promptSelectGroup {
-			return promptSelectListClients(false, false, true)
-		}
-	case "clientsworkspace":
-		f = func() []*promptSelectGroup {
-			return promptSelectListClients(true, false, true)
-		}
-	case "clientsmonitors":
-		f = func() []*promptSelectGroup {
-			return promptSelectListClients(false, true, true)
-		}
-	case "workspaces":
-		f = func() []*promptSelectGroup {
-			action := func(wrk *workspace) func() {
-				return func() {
-					wrk.activate(true, true)
-				}
-			}
-			return promptSelectListWorkspaces(action)
-		}
-	case "workspaceswithclient":
-		f = func() []*promptSelectGroup {
-			action := func(wrk *workspace) func() {
-				return func() {
-					withFocused(func(c *client) {
-						c.Raise()
-						wrk.add(c)
-						wrk.activate(true, true)
-					})
-				}
-			}
-			return promptSelectListWorkspaces(action)
-		}
-	default:
-		logger.Warning.Printf("Unrecognized argument '%s' for PromptSelect "+
-			"command", args[0])
-		return nil
-	}
-
-	return func() {
-		PROMPTS.slct.show(f, prefixSearch)
-	}
-}
+// func cmdPromptSelect(args ...string) func() { 
+// if len(args) < 1 { 
+// return nil 
+// } 
+//  
+// prefixSearch := true 
+// if len(args) > 1 && args[1] == "substring" { 
+// prefixSearch = false 
+// } 
+//  
+// var f func() []*promptSelectGroup 
+//  
+// switch args[0] { 
+// case "clientsall": 
+// f = func() []*promptSelectGroup { 
+// return promptSelectListClients(false, false, true) 
+// } 
+// case "clientsworkspace": 
+// f = func() []*promptSelectGroup { 
+// return promptSelectListClients(true, false, true) 
+// } 
+// case "clientsmonitors": 
+// f = func() []*promptSelectGroup { 
+// return promptSelectListClients(false, true, true) 
+// } 
+// case "workspaces": 
+// f = func() []*promptSelectGroup { 
+// action := func(wrk *workspace) func() { 
+// return func() { 
+// wrk.activate(true, true) 
+// } 
+// } 
+// return promptSelectListWorkspaces(action) 
+// } 
+// case "workspaceswithclient": 
+// f = func() []*promptSelectGroup { 
+// action := func(wrk *workspace) func() { 
+// return func() { 
+// withFocused(func(c *client) { 
+// c.Raise() 
+// wrk.add(c) 
+// wrk.activate(true, true) 
+// }) 
+// } 
+// } 
+// return promptSelectListWorkspaces(action) 
+// } 
+// default: 
+// logger.Warning.Printf("Unrecognized argument '%s' for PromptSelect "+ 
+// "command", args[0]) 
+// return nil 
+// } 
+//  
+// return func() { 
+// PROMPTS.slct.show(f, prefixSearch) 
+// } 
+// } 
 
 func cmdQuit() func() {
 	return func() {

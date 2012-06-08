@@ -11,6 +11,7 @@ import (
 
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/keybind"
+	"github.com/BurntSushi/xgbutil/mousebind"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xgraphics"
 	"github.com/BurntSushi/xgbutil/xrect"
@@ -69,11 +70,14 @@ func NewSelect(X *xgbutil.XUtil,
 	// Make the top-level window override redirect so the window manager
 	// doesn't mess with us.
 	slct.win.Change(xproto.CwOverrideRedirect, 1)
+	slct.win.Listen(xproto.EventMaskKeyPress)
 
 	// Create the text input window.
 	slct.input = text.NewInput(X, slct.win.Id, 1000, 10,
 		slct.theme.Font, slct.theme.FontSize,
 		slct.theme.FontColor, slct.theme.BgColor)
+	slct.input.Move(slct.theme.BorderSize, slct.theme.BorderSize)
+	slct.input.StackSibling(slct.bRht.Id, xproto.StackModeBelow)
 
 	// Colorize the windows.
 	cclr := func(w *xwindow.Window, clr color.RGBA) {
@@ -98,13 +102,25 @@ func NewSelect(X *xgbutil.XUtil,
 	// Connect the key response handler.
 	// The handler is responsible for tab completion and quitting if the
 	// cancel key has been pressed.
-	slct.keyResponse().Connect(X, slct.input.Id)
+	slct.keyResponse().Connect(X, slct.win.Id)
+
+	// Attach a mouse handler so the user can re-focus the prompt window.
+	mousebind.ButtonReleaseFun(
+		func(X *xgbutil.XUtil, ev xevent.ButtonReleaseEvent) {
+			slct.win.Focus()
+		}).Connect(X, slct.win.Id, "1", false, true)
 
 	return slct
 }
 
-func (slct *Select) GrabId() xproto.Window {
-	return slct.X.Dummy()
+func (slct *Select) Destroy() {
+	slct.input.Destroy()
+	slct.bInp.Destroy()
+	slct.bTop.Destroy()
+	slct.bBot.Destroy()
+	slct.bLft.Destroy()
+	slct.bRht.Destroy()
+	slct.win.Destroy()
 }
 
 func (slct *Select) Id() xproto.Window {
@@ -118,6 +134,14 @@ func (slct *Select) Id() xproto.Window {
 // SelectGroup interface themselves.)
 func (slct *Select) NewStaticGroup(label string) SelectGroup {
 	return group(label)
+}
+
+func (slct *Select) AddGroup(group SelectGroup) *SelectGroupItem {
+	return newSelectGroupItem(slct, group)
+}
+
+func (slct *Select) AddChoice(choice SelectChoice) *SelectItem {
+	return newSelectItem(slct, choice)
 }
 
 func (slct *Select) keyResponse() xevent.KeyPressFun {
@@ -167,6 +191,7 @@ func (slct *Select) keyResponse() xevent.KeyPressFun {
 		if beforeLen != len(slct.input.Text) {
 			slct.FilterItems(string(slct.input.Text))
 			slct.selected = -1
+			slct.highlight()
 		}
 	}
 	return xevent.KeyPressFun(f)
@@ -174,6 +199,10 @@ func (slct *Select) keyResponse() xevent.KeyPressFun {
 
 func (slct *Select) Show(workarea xrect.Rect, tabCompleteType int,
 	groups []*SelectShowGroup) bool {
+
+	if slct.showing {
+		return false
+	}
 
 	// if there aren't any groups, we obviously don't need to show anything.
 	if len(groups) == 0 {
@@ -194,16 +223,15 @@ func (slct *Select) Show(workarea xrect.Rect, tabCompleteType int,
 	bs := slct.theme.BorderSize
 	pad := slct.theme.Padding
 
-	maxWidth := int(float64(workarea.Width()) * 0.8)
 	inpHeight := slct.input.Geom.Height()
-	height := 2*(bs+pad) + inpHeight + (2 * misc.TextBreathe) + bs
+	height := 2*(bs+pad) + inpHeight + bs
 	maxFontWidth := 0
-	didLabelSpacing := false
+	didGroupSpacing := false
 	for _, group := range slct.groups {
-		if group.hasLabel() {
+		if len(group.items) > 0 && group.hasGroup() {
 			maxFontWidth = misc.Max(maxFontWidth, group.win.Geom.Width())
-			height += group.win.Geom.Height() + slct.theme.LabelSpacing
-			didLabelSpacing = true
+			height += group.win.Geom.Height() + slct.theme.GroupSpacing
+			didGroupSpacing = true
 		}
 		for _, item := range group.items {
 			maxFontWidth = misc.Max(maxFontWidth, item.regular.Geom.Width())
@@ -211,9 +239,10 @@ func (slct *Select) Show(workarea xrect.Rect, tabCompleteType int,
 		}
 	}
 
-	if didLabelSpacing {
-		height -= slct.theme.LabelSpacing
+	if didGroupSpacing {
+		height -= slct.theme.GroupSpacing
 	}
+	maxWidth := int(float64(workarea.Width()) * 0.8)
 	width := misc.Min(maxWidth, maxFontWidth+2*(bs+pad))
 
 	// position the damn window based on its width/height (i.e., center it)
@@ -222,7 +251,7 @@ func (slct *Select) Show(workarea xrect.Rect, tabCompleteType int,
 
 	// Issue the configure requests. We also need to adjust the borders.
 	slct.win.MoveResize(posx, posy, width, height)
-	slct.bInp.Resize(width, bs)
+	slct.bInp.MoveResize(0, bs+inpHeight, width, bs)
 	slct.bTop.Resize(width, bs)
 	slct.bBot.MoveResize(0, height-bs, width, bs)
 	slct.bLft.Resize(bs, height)
@@ -231,6 +260,7 @@ func (slct *Select) Show(workarea xrect.Rect, tabCompleteType int,
 	slct.showing = true
 	slct.selected = -1
 	slct.win.Map()
+	slct.win.Focus()
 
 	return true
 }
@@ -243,11 +273,12 @@ func (slct *Select) FilterItems(search string) {
 
 	slct.items = make([]*SelectItem, 0)
 
-	x, y := bs+pad, (2*bs)+pad+inpHeight+(2*misc.TextBreathe)
+	x, y := bs+pad, (2*bs)+pad+inpHeight
 	for _, group := range slct.groups {
 		shown := false // true when at least 1 item is showing
 
-		if group.hasLabel() {
+		if group.hasGroup() {
+			group.show(x, y)
 			y += group.win.Geom.Height()
 		}
 		for _, item := range group.items {
@@ -255,10 +286,12 @@ func (slct *Select) FilterItems(search string) {
 			switch slct.tabComplete {
 			case TabCompleteAny:
 				if !strings.Contains(haystack, needle) {
+					item.hide()
 					continue
 				}
 			default:
 				if !strings.HasPrefix(haystack, needle) {
+					item.hide()
 					continue
 				}
 			}
@@ -268,11 +301,11 @@ func (slct *Select) FilterItems(search string) {
 			slct.items = append(slct.items, item)
 			shown = true
 		}
-		if group.hasLabel() {
+		if group.hasGroup() {
 			if shown {
-				group.show(x, y)
-				y += slct.theme.LabelSpacing
+				y += slct.theme.GroupSpacing
 			} else {
+				group.hide()
 				y -= group.win.Geom.Height()
 			}
 		}
@@ -297,6 +330,13 @@ func (slct *Select) Hide() {
 }
 
 func (slct *Select) highlight() {
+	for i, item := range slct.items {
+		if i == slct.selected {
+			item.highlight()
+		} else {
+			item.unhighlight()
+		}
+	}
 }
 
 type SelectTheme struct {
@@ -312,18 +352,18 @@ type SelectTheme struct {
 	ActiveBgColor   color.RGBA
 	ActiveFontColor color.RGBA
 
-	LabelBgColor   color.RGBA
-	LabelFont      *truetype.Font
-	LabelFontSize  float64
-	LabelFontColor color.RGBA
-	LabelSpacing   int
+	GroupBgColor   color.RGBA
+	GroupFont      *truetype.Font
+	GroupFontSize  float64
+	GroupFontColor color.RGBA
+	GroupSpacing   int
 }
 
 var DefaultSelectTheme = SelectTheme{
 	BorderSize:  10,
 	BgColor:     color.RGBA{0xff, 0xff, 0xff, 0xff},
 	BorderColor: color.RGBA{0x0, 0x0, 0x0, 0xff},
-	Padding:     10,
+	Padding:     20,
 
 	Font: xgraphics.MustFont(xgraphics.ParseFont(
 		bytes.NewBuffer(bindata.DejavusansTtf()))),
@@ -333,12 +373,12 @@ var DefaultSelectTheme = SelectTheme{
 	ActiveBgColor:   color.RGBA{0x0, 0x0, 0x0, 0xff},
 	ActiveFontColor: color.RGBA{0xff, 0xff, 0xff, 0xff},
 
-	LabelBgColor: color.RGBA{0xff, 0xff, 0xff, 0xff},
-	LabelFont: xgraphics.MustFont(xgraphics.ParseFont(
+	GroupBgColor: color.RGBA{0xff, 0xff, 0xff, 0xff},
+	GroupFont: xgraphics.MustFont(xgraphics.ParseFont(
 		bytes.NewBuffer(bindata.DejavusansTtf()))),
-	LabelFontSize:  30.0,
-	LabelFontColor: color.RGBA{0x0, 0x0, 0x0, 0xff},
-	LabelSpacing:   20,
+	GroupFontSize:  25.0,
+	GroupFontColor: color.RGBA{0x33, 0x66, 0xff, 0xff},
+	GroupSpacing:   15,
 }
 
 type SelectConfig struct {

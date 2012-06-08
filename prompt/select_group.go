@@ -47,7 +47,7 @@ func newSelectGroupItem(slct *Select, group SelectGroup) *SelectGroupItem {
 	return si
 }
 
-func (si *SelectGroupItem) hasLabel() bool {
+func (si *SelectGroupItem) hasGroup() bool {
 	return !(si.win.Geom.Width() == 1 && si.win.Geom.Height() == 1)
 }
 
@@ -66,7 +66,7 @@ func (si *SelectGroupItem) UpdateText() {
 	}
 
 	err := text.DrawText(si.win,
-		t.LabelFont, t.LabelFontSize, t.LabelFontColor, t.LabelBgColor, txt)
+		t.GroupFont, t.GroupFontSize, t.GroupFontColor, t.GroupBgColor, txt)
 	if err != nil {
 		logger.Warning.Printf("(*SelectGroupItem).UpdateText: "+
 			"Could not render text: %s", err)

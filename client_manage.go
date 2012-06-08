@@ -37,7 +37,7 @@ func (c *client) manage() error {
 	// We don't need to wait for it, since the prompt knows how to handle
 	// clients that haven't been initialized yet.
 	go func() {
-		c.promptAdd()
+		c.prompts = newClientPrompts(c)
 	}()
 
 	// Reparent's sends an unmap, we need to ignore it!
@@ -53,7 +53,10 @@ func (c *client) manage() error {
 	} else {
 		c.frame = c.frameNada
 	}
-	frame.Reset(c.Frame())
+	x, y, w, h := frame.ClientToFrame(c.Frame(),
+		c.window.Geom.X(), c.window.Geom.Y(),
+		c.window.Geom.Width(), c.window.Geom.Height())
+	c.Frame().MoveResize(true, x, y, w, h)
 	c.Frame().On()
 
 	// time to add the client to the WM state

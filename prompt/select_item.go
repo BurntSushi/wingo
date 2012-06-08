@@ -58,6 +58,7 @@ func (si *SelectItem) choose() {
 }
 
 func (si *SelectItem) highlight() {
+	si.choice.SelectHighlighted()
 	si.highlighted.Map()
 	si.regular.Unmap()
 }

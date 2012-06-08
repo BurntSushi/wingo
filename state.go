@@ -8,6 +8,7 @@ import (
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xinerama"
 
+	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
 )
 
@@ -74,7 +75,7 @@ func (wm *state) updateEwmhClients() {
 	numWins := len(wm.clients)
 	winList := make([]xproto.Window, numWins)
 	for i, c := range wm.clients {
-		winList[i] = c.Win().id
+		winList[i] = c.Id()
 	}
 	err := ewmh.ClientListSet(X, winList)
 	if err != nil {
@@ -86,7 +87,7 @@ func (wm *state) updateEwmhClients() {
 // There can only ever be one focused client, so just find it
 func (wm *state) focused() *client {
 	for _, client := range wm.clients {
-		if client.normal && client.state == StateActive {
+		if client.normal && client.state == frame.Active {
 			return client
 		}
 	}
@@ -128,7 +129,7 @@ func (wm *state) fallback() {
 	// No windows to fall back on... root focus
 	// this is IMPORTANT. if we fail here, we risk a lock-up
 	logger.Message.Printf("Focus falling back to ROOT")
-	ROOT.focus()
+	ROOT.Focus()
 	ewmh.ActiveWindowSet(X, 0x0)
 	wm.unfocusExcept(0)
 }

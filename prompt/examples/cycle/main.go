@@ -106,7 +106,7 @@ func main() {
 	fatal(err)
 	items := make([]*prompt.CycleItem, 0)
 	for i := len(clients) - 1; i >= 0; i-- {
-		item := cycle.AddItem(newWindow(X, cycle.Id(), clients[i]))
+		item := cycle.AddChoice(newWindow(X, cycle.Id(), clients[i]))
 		items = append(items, item)
 	}
 
