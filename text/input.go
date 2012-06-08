@@ -26,11 +26,11 @@ type Input struct {
 	*xwindow.Window
 	img *xgraphics.Image
 
-	font *truetype.Font
-	fontSize float64
+	font      *truetype.Font
+	fontSize  float64
 	fontColor color.Color
-	bgColor color.Color
-	padding int
+	bgColor   color.Color
+	padding   int
 }
 
 // NewInput constructs Input values. It needs an X connection, a parent window,
@@ -51,7 +51,7 @@ func NewInput(X *xgbutil.XUtil, parent xproto.Window, width int, padding int,
 	_, height := xgraphics.TextMaxExtents(font, fontSize, "M")
 	height += misc.TextBreathe
 
-	width, height = width + 2*padding, height + 2*padding
+	width, height = width+2*padding, height+2*padding
 
 	img := xgraphics.New(X, image.Rect(0, 0, width, height))
 	win := xwindow.Must(xwindow.Create(X, parent))
@@ -59,14 +59,14 @@ func NewInput(X *xgbutil.XUtil, parent xproto.Window, width int, padding int,
 	win.Resize(width, height)
 
 	ti := &Input{
-		Window: win,
-		img: img,
-		Text: make([]rune, 0, 50),
-		font: font,
-		fontSize: fontSize,
+		Window:    win,
+		img:       img,
+		Text:      make([]rune, 0, 50),
+		font:      font,
+		fontSize:  fontSize,
 		fontColor: fontColor,
-		bgColor: bgColor,
-		padding: padding,
+		bgColor:   bgColor,
+		padding:   padding,
 	}
 
 	ti.Render()

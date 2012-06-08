@@ -10,9 +10,9 @@ bindata: $(BINDATA)
 sushi-bindata: $(WINGOPKG)/bindata.a
 
 gofmt:
-	gofmt -w *.go wini/*.go cmdusage/*.go logger/*.go wingo-cmd/*.go \
-		config/*.go cursors/*.go frame/*.go misc/*.go prompt/*.go render/*.go \
-		theme/*.go
+	gofmt -w *.go cmdusage/*.go config/*.go cursors/*.go frame/*.go \
+		heads/*.go layout/*.go logger/*.go misc/*.go prompt/*.go render/*.go \
+		text/*.go theme/*.go wingo-cmd/*.go wini/*.go workspace/*.go
 	colcheck *.go */*.go
 
 cmd:

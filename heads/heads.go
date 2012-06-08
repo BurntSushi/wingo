@@ -14,19 +14,20 @@ import (
 )
 
 type Heads struct {
-	X *xgbutil.XUtil
+	X        *xgbutil.XUtil
 	workarea xinerama.Heads // Slice of heads with struts applied.
-	geom xinerama.Heads // Raw geometry of heads.
-	active int // Index in workarea/geom/visibles of the active head.
-	workspaces *workspace.Workspaces // Slice of all available workspaces.
-	visibles []*workspace.Workspace // Slice of all visible workspaces.
+	geom     xinerama.Heads // Raw geometry of heads.
+	active   int            // Index in workarea/geom/visibles of active head.
+
+	workspaces *workspace.Workspaces  // Slice of all available workspaces.
+	visibles   []*workspace.Workspace // Slice of all visible workspaces.
 }
 
 func NewHeads(X *xgbutil.XUtil, clients workspace.Clients,
 	workspaceNames ...string) *Heads {
 
 	heads := &Heads{
-		X: X,
+		X:      X,
 		active: -1, // Initialization value.
 	}
 	works := workspace.NewWorkspaces(X, heads, workspaceNames...)
@@ -105,13 +106,13 @@ func query(X *xgbutil.XUtil) xinerama.Heads {
 		heads, err := xinerama.PhysicalHeads(X)
 		if err != nil || len(heads) == 0 {
 			if err == nil {
-				logger.Warning.Printf("Could not find any physical heads "+
+				logger.Warning.Printf("Could not find any physical heads " +
 					"with the Xinerama extension.")
 			} else {
 				logger.Warning.Printf("Could not load physical heads via "+
 					"Xinerama: %s", err)
 			}
-			logger.Warning.Printf("Assuming one head with size equivalent "+
+			logger.Warning.Printf("Assuming one head with size equivalent " +
 				"to the root window.")
 		} else {
 			return heads

@@ -5,13 +5,13 @@ import (
 )
 
 type Vertical struct {
-	store *store
+	store      *store
 	proportion float64
 }
 
 func NewVertical() *Vertical {
 	return &Vertical{
-		store: newStore(),
+		store:      newStore(),
 		proportion: 0.5,
 	}
 }
@@ -22,8 +22,8 @@ func (v *Vertical) Place(geom xrect.Rect) {
 	}
 
 	msize, ssize := len(v.store.masters), len(v.store.slaves)
-	mx, mw := geom.X(), int(float64(geom.Width()) * v.proportion)
-	sx, sw := mx+mw, geom.Width() - mw
+	mx, mw := geom.X(), int(float64(geom.Width())*v.proportion)
+	sx, sw := mx+mw, geom.Width()-mw
 
 	// If there are zero widths or they are too big, don't do anything.
 	if mw <= 0 || mw > geom.Width() || sw <= 0 || sw > geom.Width() {
@@ -37,7 +37,7 @@ func (v *Vertical) Place(geom xrect.Rect) {
 		}
 		for i, item := range v.store.masters {
 			item.client.FrameTile()
-			item.client.MoveResize(false, mx, geom.Y() + i*mh, mw, mh)
+			item.client.MoveResize(false, mx, geom.Y()+i*mh, mw, mh)
 		}
 	}
 	if ssize > 0 {

@@ -8,27 +8,27 @@ import (
 )
 
 type Workspace struct {
-	X *xgbutil.XUtil
+	X   *xgbutil.XUtil
 	all *Workspaces
 
-	Name string
+	Name  string
 	State int
 
-	floaters []layout.Floater
+	floaters   []layout.Floater
 	curFloater int
 
-	autoTilers []layout.AutoTiler
+	autoTilers   []layout.AutoTiler
 	curAutoTiler int
 }
 
 func (wrks *Workspaces) newWorkspace(name string) *Workspace {
 	wrk := &Workspace{
-		X: wrks.X,
-		all: wrks,
-		Name: name,
+		X:     wrks.X,
+		all:   wrks,
+		Name:  name,
 		State: Floating,
 
-		curFloater: 0,
+		curFloater:   0,
 		curAutoTiler: 0,
 	}
 

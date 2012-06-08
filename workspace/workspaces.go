@@ -24,8 +24,8 @@ type Heads interface {
 }
 
 type Workspaces struct {
-	X *xgbutil.XUtil
-	Wrks []*Workspace
+	X     *xgbutil.XUtil
+	Wrks  []*Workspace
 	heads Heads
 }
 
@@ -36,8 +36,8 @@ func NewWorkspaces(X *xgbutil.XUtil, heads Heads, names ...string) *Workspaces {
 	}
 
 	workspaces := &Workspaces{
-		X: X,
-		Wrks: make([]*Workspace, len(names)),
+		X:     X,
+		Wrks:  make([]*Workspace, len(names)),
 		heads: heads,
 	}
 	for _, name := range names {
@@ -74,4 +74,3 @@ func (wrks *Workspaces) Get(i int) *Workspace {
 	}
 	return wrks.Wrks[i]
 }
-
