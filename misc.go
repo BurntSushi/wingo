@@ -1,4 +1,3 @@
-// A collection of miscellaneous helper functions.
 package main
 
 import (
