@@ -35,8 +35,9 @@ The implementation of Move can be in a method:
 func (cmd Move) Run() interface{} {
   switch clientId := cmd.client.Run().(type) {
   case int:
-    focus.Focus(findClient(clientId))
+    findClient(clientId).Move(cmd.x, cmd.y)
   }
+  return nil
 }
 
 Which should be part of the Command interface:
