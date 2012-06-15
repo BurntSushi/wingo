@@ -22,8 +22,6 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/bindata"
-	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/text"
 )
 
@@ -48,16 +46,12 @@ func main() {
 	X, err := xgbutil.NewConn()
 	fatal(err)
 
-	// Remove logger.FlagMessage if you don't want to see a Wingo message
-	// every time a key pressed can't be mapped to a single character.
-	logger.FlagsSet(logger.FlagMessage | logger.FlagWarning | logger.FlagError)
-
 	// Remember to always initialize the keybind package before usage.
 	keybind.Initialize(X)
 
 	// We create a benign parent window. Its only value in this example is
 	// instructional. In particular, it shows how to have a sub-window get
-	// focused using the ICCCM WM_TAKE_FOCUS protocol. (Since by default,
+	// focus using the ICCCM WM_TAKE_FOCUS protocol. (Since by default,
 	// the window manager will assign focus to your top-level window.)
 	// The real magic happens below with the WMTakeFocus method call.
 	parentWin, err := xwindow.Create(X, X.RootWin())
@@ -82,14 +76,14 @@ func main() {
 		func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 			mods, kc := ev.State, ev.Detail
 			switch {
-			case misc.KeyMatch(X, "BackSpace", mods, kc):
+			case keybind.KeyMatch(X, "BackSpace", mods, kc):
 				input.Remove()
-			case misc.KeyMatch(X, "Return", mods, kc):
+			case keybind.KeyMatch(X, "Return", mods, kc):
 				log.Println("Return has been pressed.")
 				log.Printf("The current text is: %s", string(input.Text))
 				log.Println("Quitting...")
 				xevent.Quit(X)
-			case misc.KeyMatch(X, "Escape", mods, kc):
+			case keybind.KeyMatch(X, "Escape", mods, kc):
 				input.Reset()
 			default:
 				input.Add(mods, kc)

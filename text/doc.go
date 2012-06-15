@@ -22,7 +22,7 @@ type into it:
 	input.Listen(xproto.EventMaskKeyPress)
 	xevent.KeyPressFun(
 		func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
-			if misc.KeyMatch(X, "BackSpace", ev.State, ev.Detail) {
+			if keybind.KeyMatch(X, "BackSpace", ev.State, ev.Detail) {
 				input.Remove()
 			} else {
 				input.Add(ev.State, ev.Detail)
