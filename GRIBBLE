@@ -102,11 +102,23 @@ program = command, { ";" command } ;
 
 command = [ "(" ], identifier, { param }, [ ")" ] ;
 
-param = { alpha | digit } | "(" command ")" ;
+param = string | integer | float | "(" command ")" ;
 
 identifier = "A" | ... | "Z", { alpha | digit } ;
+
+string = '"', { [^\n] }, '"'
+
+integer = digit, { digit }
+
+float = [ digit, { digit } ], ".", digit, { digit }
 
 alpha = "A" | ... | "Z" | "a" | ... | "z"
 
 digit = "0" | ... | "9"
+
+Note that string, integer and float are meant to correspond to any valid values 
+of the corresponding Go types (i.e., string, int, uint, int64, float64, 
+float32, etc.), even if the grammar does not (in which case, the grammar should 
+be considered wrong). The exception to this is "string", which does not allow 
+new lines, whereas Go strings do.
 
