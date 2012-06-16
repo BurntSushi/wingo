@@ -16,11 +16,13 @@ given command structs).
 So that one can define a command like so:
 
 type Move struct {
-  name string `Move`
-  client Command `1`
-  rawClientId int `1`
-  x int `2`
-  y int `3`
+  Name string `Move`
+  Client struct {
+    Alt1 Command
+    Alt2 int
+  } `1`
+  X int `2`
+  Y int `3`
 }
 
 Where name must match "Move"; the name of the command. 'client' is itself a
