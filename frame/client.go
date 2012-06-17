@@ -8,7 +8,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 )
 
-type client interface {
+type Client interface {
 	State() int
 	Frame() Frame
 	Maximized() bool

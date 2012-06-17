@@ -13,7 +13,7 @@ type Slim struct {
 }
 
 func NewSlim(X *xgbutil.XUtil,
-	t *theme.Theme, p *Parent, c client) (*Slim, error) {
+	t *theme.Theme, p *Parent, c Client) (*Slim, error) {
 
 	f, err := newFrame(X, t, p, c)
 	if err != nil {
@@ -39,11 +39,15 @@ func (f *Slim) On() {
 }
 
 func (f *Slim) Active() {
+	f.State = Active
+
 	f.parent.Change(xproto.CwBackPixel, uint32(f.theme.Slim.ABorderColor))
 	f.parent.ClearAll()
 }
 
 func (f *Slim) Inactive() {
+	f.State = Inactive
+
 	f.parent.Change(xproto.CwBackPixel, uint32(f.theme.Slim.IBorderColor))
 	f.parent.ClearAll()
 }

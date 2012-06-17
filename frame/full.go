@@ -25,7 +25,7 @@ type Full struct {
 }
 
 func NewFull(X *xgbutil.XUtil,
-	t *theme.Theme, p *Parent, c client) (*Full, error) {
+	t *theme.Theme, p *Parent, c Client) (*Full, error) {
 
 	f, err := newFrame(X, t, p, c)
 	if err != nil {
@@ -145,6 +145,8 @@ func (f *Full) On() {
 }
 
 func (f *Full) Active() {
+	f.State = Active
+
 	if f.theme.Full.BorderSize > 0 {
 		f.topSide.Active()
 		f.bottomSide.Active()
@@ -170,6 +172,8 @@ func (f *Full) Active() {
 }
 
 func (f *Full) Inactive() {
+	f.State = Inactive
+
 	if f.theme.Full.BorderSize > 0 {
 		f.topSide.Inactive()
 		f.bottomSide.Inactive()

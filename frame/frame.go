@@ -45,11 +45,12 @@ type frame struct {
 	ResizeState *ResizeState
 	State       int
 	parent      *Parent
-	client      client
+	client      Client
+	isMapped    bool
 }
 
 func newFrame(X *xgbutil.XUtil,
-	t *theme.Theme, p *Parent, c client) (*frame, error) {
+	t *theme.Theme, p *Parent, c Client) (*frame, error) {
 
 	var err error
 	if p == nil {
@@ -66,10 +67,12 @@ func newFrame(X *xgbutil.XUtil,
 		client:      c,
 		MoveState:   &MoveState{},
 		ResizeState: &ResizeState{},
+		State:       Inactive,
+		isMapped:    false,
 	}, nil
 }
 
-func (f *frame) Client() client {
+func (f *frame) Client() Client {
 	return f.client
 }
 
@@ -100,14 +103,20 @@ func (f *frame) Destroy() {
 
 func (f *frame) Map() {
 	f.parent.Map()
+	f.isMapped = true
 }
 
 func (f *frame) Unmap() {
 	f.parent.Unmap()
+	f.isMapped = false
 }
 
 func (f *frame) Geom() xrect.Rect {
 	return f.parent.Geom
+}
+
+func (f *frame) IsMapped() bool {
+	return f.isMapped
 }
 
 func (f *frame) Moving() bool {

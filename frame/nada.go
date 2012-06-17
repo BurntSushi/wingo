@@ -11,7 +11,7 @@ type Nada struct {
 }
 
 func NewNada(X *xgbutil.XUtil,
-	t *theme.Theme, p *Parent, c client) (*Nada, error) {
+	t *theme.Theme, p *Parent, c Client) (*Nada, error) {
 
 	f, err := newFrame(X, t, p, c)
 	if err != nil {
@@ -30,8 +30,14 @@ func (f *Nada) On() {
 	Reset(f)
 }
 
-func (f *Nada) Active()     {}
-func (f *Nada) Inactive()   {}
+func (f *Nada) Active() {
+	f.State = Active
+}
+
+func (f *Nada) Inactive() {
+	f.State = Inactive
+}
+
 func (f *Nada) Maximize()   {}
 func (f *Nada) Unmaximize() {}
 

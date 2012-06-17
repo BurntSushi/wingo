@@ -16,7 +16,7 @@ type Borders struct {
 }
 
 func NewBorders(X *xgbutil.XUtil,
-	t *theme.Theme, p *Parent, c client) (*Borders, error) {
+	t *theme.Theme, p *Parent, c Client) (*Borders, error) {
 
 	f, err := newFrame(X, t, p, c)
 	if err != nil {
@@ -91,6 +91,8 @@ func (f *Borders) On() {
 }
 
 func (f *Borders) Active() {
+	f.State = Active
+
 	f.topSide.Active()
 	f.bottomSide.Active()
 	f.leftSide.Active()
@@ -106,6 +108,8 @@ func (f *Borders) Active() {
 }
 
 func (f *Borders) Inactive() {
+	f.State = Inactive
+
 	f.topSide.Inactive()
 	f.bottomSide.Inactive()
 	f.leftSide.Inactive()
