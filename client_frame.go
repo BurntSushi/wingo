@@ -184,6 +184,7 @@ func (c *client) newClientFrames() clientFrames {
 
 	x, y, w, h := frame.ClientToFrame(c.frame,
 		c.win.Geom.X(), c.win.Geom.Y(), c.win.Geom.Width(), c.win.Geom.Height())
+	x, y = max(0, x), max(0, y)
 	c.frame.MoveResize(true, x, y, w, h)
 	c.frame.On()
 
