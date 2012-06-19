@@ -70,6 +70,7 @@ func (wingo *wingoState) focusFallback() {
 		case *client:
 			if client.frame.IsMapped() && client.workspace == wrk {
 				focus.Focus(client)
+				return
 			}
 		default:
 			fmt.Printf("Unsupported client type: %T", client)

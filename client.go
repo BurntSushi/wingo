@@ -70,6 +70,7 @@ func (c *client) Unmap() {
 	}
 	c.unmapIgnore++
 	c.frame.Unmap()
+	c.win.Unmap()
 	icccm.WmStateSet(c.X, c.Id(), &icccm.WmState{State: icccm.StateIconic})
 }
 
