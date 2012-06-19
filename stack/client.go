@@ -2,13 +2,15 @@ package stack
 
 import (
 	"github.com/BurntSushi/xgb/xproto"
+
+	"github.com/BurntSushi/xgbutil/xwindow"
 )
 
 type Client interface {
 	Id() xproto.Window
+	Win() *xwindow.Window
 	TopLevelId() xproto.Window
 	Layer() int
-	StackSibling(siblingWin xproto.Window, stackMode byte)
 	Transient(client Client) bool
 }
 

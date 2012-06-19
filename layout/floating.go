@@ -14,24 +14,18 @@ func NewFloating() *Floating {
 	}
 }
 
-func (f *Floating) Place(geom xrect.Rect) {
+func (f *Floating) Place(geom xrect.Rect)   {}
+func (f *Floating) Unplace(geom xrect.Rect) {}
+
+// Reposition is called when a workspace switches from a tiling layout to a
+// floating layout. It should reload the "last-floating" client state.
+func (f *Floating) Reposition(geom xrect.Rect) {
 	if geom == nil {
 		return
 	}
 	for _, c := range f.clients {
 		if _, ok := c.Layout().(*Floating); ok {
 			c.LoadState("last-floating")
-		}
-	}
-}
-
-func (f *Floating) Unplace(geom xrect.Rect) {
-	if geom == nil {
-		return
-	}
-	for _, c := range f.clients {
-		if _, ok := c.Layout().(*Floating); ok {
-			c.SaveState("last-floating")
 		}
 	}
 }
@@ -61,12 +55,15 @@ func (f *Floating) Remove(c Client) {
 
 func (f *Floating) MoveResize(c Client, x, y, width, height int) {
 	c.MoveResize(true, x, y, width, height)
+	c.SaveState("last-floating")
 }
 
 func (f *Floating) Move(c Client, x, y int) {
 	c.Move(x, y)
+	c.SaveState("last-floating")
 }
 
 func (f *Floating) Resize(c Client, width, height int) {
 	c.Resize(true, width, height)
+	c.SaveState("last-floating")
 }

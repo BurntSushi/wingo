@@ -25,6 +25,11 @@ var (
 	Clients []Client
 )
 
+func Initialize(xu *xgbutil.XUtil) {
+	X = xu
+	Clients = make([]Client, 0, 100)
+}
+
 func Raise(client Client) {
 	raise(client)
 
@@ -71,9 +76,9 @@ func realize(updateClients []Client) {
 	for i := len(Clients) - 1; i >= 0; i-- {
 		if clientIndex(Clients[i], updateClients) > -1 {
 			if i == len(Clients)-1 {
-				Clients[i].StackSibling(Clients[i-1].TopLevelId(), below)
+				Clients[i].Win().StackSibling(Clients[i-1].TopLevelId(), below)
 			} else {
-				Clients[i].StackSibling(Clients[i+1].TopLevelId(), above)
+				Clients[i].Win().StackSibling(Clients[i+1].TopLevelId(), above)
 			}
 		}
 	}

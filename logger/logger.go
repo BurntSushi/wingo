@@ -147,3 +147,42 @@ func (lg *logger) Fatalln(v ...interface{}) {
 	}
 	os.Exit(1)
 }
+
+func (lg *logger) Panic(v ...interface{}) {
+	if lg.logType&flags == 0 {
+		return
+	}
+
+	if colors {
+		lg.colored.Output(2, fmt.Sprint(v...))
+	} else {
+		lg.plain.Output(2, fmt.Sprint(v...))
+	}
+	panic("")
+}
+
+func (lg *logger) Panicf(format string, v ...interface{}) {
+	if lg.logType&flags == 0 {
+		return
+	}
+
+	if colors {
+		lg.colored.Output(2, fmt.Sprintf(format, v...))
+	} else {
+		lg.plain.Output(2, fmt.Sprintf(format, v...))
+	}
+	panic("")
+}
+
+func (lg *logger) Panicln(v ...interface{}) {
+	if lg.logType&flags == 0 {
+		return
+	}
+
+	if colors {
+		lg.colored.Output(2, fmt.Sprintln(v...))
+	} else {
+		lg.plain.Output(2, fmt.Sprintln(v...))
+	}
+	panic("")
+}

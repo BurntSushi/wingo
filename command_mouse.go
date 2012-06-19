@@ -20,8 +20,9 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 
 	"github.com/BurntSushi/wingo/cursors"
-	"github.com/BurntSushi/wingo/frame"
+	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/stack"
 )
 
 type mouseCommand struct {
@@ -64,16 +65,16 @@ func (c *client) setupMoveDrag(dragWin xproto.Window,
 
 	dStart := xgbutil.MouseDragBeginFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xproto.Cursor) {
-			frame.DragMoveBegin(c.Frame(), rx, ry, ex, ey)
+			c.dragMoveBegin(rx, ry, ex, ey)
 			return true, cursors.Fleur
 		})
 	dStep := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-			frame.DragMoveStep(c.Frame(), rx, ry, ex, ey)
+			c.dragMoveStep(rx, ry, ex, ey)
 		})
 	dEnd := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-			frame.DragMoveEnd(c.Frame(), rx, ry, ex, ey)
+			c.dragMoveEnd(rx, ry, ex, ey)
 		})
 	mousebind.Drag(X, X.Dummy(), dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
@@ -85,15 +86,15 @@ func (c *client) setupResizeDrag(dragWin xproto.Window,
 
 	dStart := xgbutil.MouseDragBeginFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xproto.Cursor) {
-			return frame.DragResizeBegin(c.Frame(), direction, rx, ry, ex, ey)
+			return c.dragResizeBegin(direction, rx, ry, ex, ey)
 		})
 	dStep := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-			frame.DragResizeStep(c.Frame(), rx, ry, ex, ey)
+			c.dragResizeStep(rx, ry, ex, ey)
 		})
 	dEnd := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-			frame.DragResizeEnd(c.Frame(), rx, ry, ex, ey)
+			c.dragResizeEnd(rx, ry, ex, ey)
 		})
 	mousebind.Drag(X, X.Dummy(), dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
@@ -133,7 +134,7 @@ func rootMouseConfig() {
 				"Undefined root mouse command: '%s'", mcmd.cmd)
 			continue
 		}
-		mcmd.attach(ROOT.Id, run, false, false)
+		mcmd.attach(wingo.root.Id, run, false, false)
 	}
 }
 
@@ -167,18 +168,18 @@ func (mcmd mouseCommand) commandFun() func(c *client) {
 	switch mcmd.cmd {
 	case "FocusRaise":
 		return func(c *client) {
-			c.Focus()
-			c.Raise()
+			focus.Focus(c)
+			stack.Raise(c)
 			xevent.ReplayPointer(X)
 		}
 	case "Focus":
 		return func(c *client) {
-			c.Focus()
+			focus.Focus(c)
 			xevent.ReplayPointer(X)
 		}
 	case "Raise":
 		return func(c *client) {
-			c.Raise()
+			stack.Raise(c)
 			xevent.ReplayPointer(X)
 		}
 	case "Close":
@@ -187,11 +188,11 @@ func (mcmd mouseCommand) commandFun() func(c *client) {
 		}
 	case "MaximizeToggle":
 		return func(c *client) {
-			c.MaximizeToggle()
+			// c.MaximizeToggle() 
 		}
 	case "Minimize":
 		return func(c *client) {
-			c.IconifyToggle()
+			c.workspace.IconifyToggle(c)
 		}
 	}
 
@@ -204,8 +205,7 @@ func getRootMouseCommand(cmd string) func() {
 	switch cmd {
 	case "Focus":
 		return func() {
-			ROOT.Focus()
-			WM.unfocusExcept(0)
+			focus.Root()
 		}
 	}
 

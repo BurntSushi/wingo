@@ -1,55 +1,74 @@
 package main
 
 import (
-	"strings"
+	"fmt"
 
 	"github.com/BurntSushi/xgb/xproto"
 
+	"github.com/BurntSushi/xgbutil/xwindow"
+
 	"github.com/BurntSushi/wingo/focus"
-	"github.com/BurntSushi/wingo/frame"
-	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/stack"
+	"github.com/BurntSushi/wingo/heads"
+	"github.com/BurntSushi/wingo/workspace"
 )
 
-type state struct {
-	clients []*client
-	heads   *heads.Heads
+type clients []*client
+
+func (cls clients) Get(i int) heads.Client {
+	return cls[i]
 }
 
-func newState() *state {
-	wingo := &state{
-		clients: make([]*client, 50),
+func (cls clients) Len() int {
+	return len(cls)
+}
+
+type wingoState struct {
+	root    *xwindow.Window
+	clients clients
+	heads   *heads.Heads
+	prompts prompts
+}
+
+func newWingoState() *wingoState {
+	wingo := &wingoState{
+		clients: make(clients, 0, 50),
 		heads:   nil,
 	}
-	wingo.heads = heads.NewHeads(X, wingo.clients, "Numero Uno")
-
 	return wingo
 }
 
-func (wingo *state) add(c *client) {
-	if cliIndex(c, wingo.clients) == -1 {
-		logger.Message.Println("Managing new client:", c)
-		wingo.clients = append(wingo.clients, c)
-	} else {
-		logger.Message.Println("Already managing client:", c)
-	}
+func (wingo *wingoState) initializeHeads() {
+	wingo.heads = heads.NewHeads(X, wingo.clients, "Numero Uno")
 }
 
-func (wingo *state) remove(c *client) {
+func (wingo *wingoState) add(c *client) {
+	if cliIndex(c, wingo.clients) != -1 {
+		panic("BUG: Cannot add client that is already managed.")
+	}
+	wingo.clients = append(wingo.clients, c)
+}
+
+func (wingo *wingoState) remove(c *client) {
 	if i := cliIndex(c, wingo.clients); i > -1 {
-		logger.Message.Println("Unmanaging client:", c)
-		wingo.clients = append(wm.clients[:i], wm.clients[i+1:]...)
-		focus.Remove(c)
-		stack.Remove(c)
+		wingo.clients = append(wingo.clients[:i], wingo.clients[i+1:]...)
 	}
 }
 
-func (wingo *state) focusFallback() {
-	wrk := wingo.heads.ActiveWorkspace()
+func (wingo *wingoState) findManagedClient(id xproto.Window) *client {
+	for _, client := range wingo.clients {
+		if client.Id() == id {
+			return client
+		}
+	}
+	return nil
+}
+
+func (wingo *wingoState) focusFallback() {
+	wrk := wingo.workspace()
 	for i := len(focus.Clients) - 1; i >= 0; i-- {
-		switch client := focus.Clients.(type) {
+		switch client := focus.Clients[i].(type) {
 		case *client:
-			if !client.Iconified() && client.Workspace() == wrk {
+			if client.frame.IsMapped() && client.workspace == wrk {
 				focus.Focus(client)
 			}
 		default:
@@ -58,4 +77,8 @@ func (wingo *state) focusFallback() {
 		}
 	}
 	focus.Root()
+}
+
+func (wingo *wingoState) workspace() *workspace.Workspace {
+	return wingo.heads.ActiveWorkspace()
 }

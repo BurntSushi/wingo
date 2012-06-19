@@ -23,12 +23,12 @@ type Heads struct {
 	visibles   []*workspace.Workspace // Slice of all visible workspaces.
 }
 
-func NewHeads(X *xgbutil.XUtil, clients workspace.Clients,
+func NewHeads(X *xgbutil.XUtil, clients Clients,
 	workspaceNames ...string) *Heads {
 
 	heads := &Heads{
 		X:      X,
-		active: -1, // Initialization value.
+		active: 0,
 	}
 	works := workspace.NewWorkspaces(X, heads, workspaceNames...)
 	heads.workspaces = works
@@ -41,7 +41,7 @@ func NewHeads(X *xgbutil.XUtil, clients workspace.Clients,
 	return heads
 }
 
-func (hds *Heads) Load(clients workspace.Clients) {
+func (hds *Heads) Load(clients Clients) {
 	hds.geom = query(hds.X)
 
 	// If the number of workspaces is less than the number of heads,
@@ -55,7 +55,7 @@ func (hds *Heads) Load(clients workspace.Clients) {
 	// where N is the number of heads.
 	// TODO: There may be a saner way of orienting workspaces when the
 	// phyiscal heads change. Implement it!
-	hds.ActivateWorkspace(clients, hds.workspaces.Wrks[0])
+	hds.ActivateWorkspace(hds.workspaces.Wrks[0])
 	hds.visibles = make([]*workspace.Workspace, len(hds.geom))
 	for i := 0; i < len(hds.geom); i++ {
 		hds.visibles[i] = hds.workspaces.Wrks[i]
@@ -68,14 +68,14 @@ func (hds *Heads) Load(clients workspace.Clients) {
 	// Now show only the visibles and hide everything else.
 	for _, wrk := range hds.workspaces.Wrks {
 		if wrk.IsVisible() {
-			wrk.Show(clients)
+			wrk.Show()
 		} else {
-			wrk.Hide(clients)
+			wrk.Hide()
 		}
 	}
 }
 
-func (hds *Heads) ApplyStruts(clients workspace.Clients) {
+func (hds *Heads) ApplyStruts(clients Clients) {
 	hds.workarea = make(xinerama.Heads, len(hds.geom))
 	for i, hd := range hds.geom {
 		hds.workarea[i] = xrect.New(hd.X(), hd.Y(), hd.Width(), hd.Height())
@@ -99,6 +99,25 @@ func (hds *Heads) ApplyStruts(clients workspace.Clients) {
 	for _, wrk := range hds.workspaces.Wrks {
 		wrk.Place()
 	}
+}
+
+// Convert takes a source and a destination rect, along with a rect
+// in the source's rectangle, and returns a new rect translated into the
+// destination rect.
+func Convert(rect, src, dest xrect.Rect) xrect.Rect {
+	nx, ny, nw, nh := xrect.Pieces(rect)
+
+	rectRatio := func(r xrect.Rect) float64 {
+		return float64(r.Width()) / float64(r.Height())
+	}
+	ratio := rectRatio(dest) / rectRatio(src)
+
+	nx = int(ratio*float64(nx-src.X())) + dest.X()
+	ny = int(ratio*float64(ny-src.Y())) + dest.Y()
+
+	// XXX: Allow window scaling as a config option.
+
+	return xrect.New(nx, ny, nw, nh)
 }
 
 func query(X *xgbutil.XUtil) xinerama.Heads {

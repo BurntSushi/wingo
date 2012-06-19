@@ -1,13 +1,13 @@
 BD=bindata
 D=data
-WINGOPKG=$(HOME)/go/me/pkg/linux_amd64/github.com/BurntSushi/wingo
 BINDATA=$(BD)/wingo.png.go \
 				$(BD)/close.png.go $(BD)/maximize.png.go $(BD)/minimize.png.go \
 				$(BD)/DejaVuSans.ttf.go $(BD)/FreeMono.ttf.go
 
-bindata: $(BINDATA)
-
-sushi-bindata: $(WINGOPKG)/bindata.a
+install: bindata
+	go install -p 6 . ./bindata ./cmdusage ./config ./cursors ./focus \
+		./frame ./heads ./layout ./logger ./misc ./prompt ./render ./stack \
+		./text ./theme ./wini ./workspace
 
 gofmt:
 	gofmt -w *.go cmdusage/*.go config/*.go cursors/*.go focus/*.go frame/*.go \
@@ -18,8 +18,7 @@ gofmt:
 cmd:
 	go install github.com/BurntSushi/wingo/wingo-cmd
 
-$(WINGOPKG)/bindata.a: $(BINDATA)
-	(cd $(BD) ; go install)
+bindata: $(BINDATA)
 
 $(BD)/%.png.go: $(D)/%.png
 	go-bindata -f `python2 -c 'print "$*".title()'`Png \

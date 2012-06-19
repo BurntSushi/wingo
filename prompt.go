@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/BurntSushi/wingo/focus"
+	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/prompt"
 )
 
@@ -19,20 +21,25 @@ func newPrompts() prompts {
 }
 
 func showPromptCycle(keyStr string, activeWrk, visible, iconified bool) {
-	items := make([]*prompt.CycleItem, 0, len(WM.focus))
-	for i := len(WM.focus) - 1; i >= 0; i-- {
-		client := WM.focus[i]
-		if activeWrk && !client.workspace.active {
-			continue
+	items := make([]*prompt.CycleItem, 0, len(focus.Clients))
+	for i := len(focus.Clients) - 1; i >= 0; i-- {
+		switch client := focus.Clients[i].(type) {
+		case *client:
+			if activeWrk && !client.workspace.IsActive() {
+				continue
+			}
+			if visible && !client.workspace.IsVisible() {
+				continue
+			}
+			if !iconified && client.iconified {
+				continue
+			}
+			items = append(items, client.prompts.cycle)
+		default:
+			logger.Error.Panicf("Client type %T not support for cycle prompt.",
+				client)
 		}
-		if visible && !client.workspace.visible() {
-			continue
-		}
-		if !iconified && client.iconified {
-			continue
-		}
-		items = append(items, client.prompts.cycle)
 	}
 
-	PROMPTS.cycle.Show(WM.headActive(), keyStr, items)
+	wingo.prompts.cycle.Show(wingo.workspace().Geom(), keyStr, items)
 }

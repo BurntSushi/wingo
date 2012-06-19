@@ -3,7 +3,9 @@ package main
 import (
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
+	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/prompt"
+	"github.com/BurntSushi/wingo/stack"
 )
 
 type clientPrompts struct {
@@ -12,11 +14,11 @@ type clientPrompts struct {
 	slct   *prompt.SelectItem
 }
 
-func newClientPrompts(c *client) *clientPrompts {
-	return &clientPrompts{
+func (c *client) newClientPrompts() clientPrompts {
+	return clientPrompts{
 		client: c,
-		cycle:  PROMPTS.cycle.AddChoice(c),
-		slct:   PROMPTS.slct.AddChoice(c),
+		cycle:  wingo.prompts.cycle.AddChoice(c),
+		slct:   wingo.prompts.slct.AddChoice(c),
 	}
 }
 
@@ -50,10 +52,10 @@ func (c *client) CycleText() string {
 
 func (c *client) CycleSelected() {
 	if c.iconified {
-		c.IconifyToggle()
+		c.workspace.IconifyToggle(c)
 	}
-	c.Focus()
-	c.Raise()
+	focus.Focus(c)
+	stack.Raise(c)
 }
 
 func (c *client) CycleHighlighted() {
@@ -66,8 +68,8 @@ func (c *client) SelectText() string {
 }
 
 func (c *client) SelectSelected() {
-	c.Focus()
-	c.Raise()
+	focus.Focus(c)
+	stack.Raise(c)
 }
 
 func (c *client) SelectHighlighted() {

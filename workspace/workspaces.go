@@ -19,8 +19,8 @@ type Heads interface {
 	IsActive(wrk *Workspace) bool
 	Geom(wrk *Workspace) xrect.Rect
 
-	ActivateWorkspace(clients Clients, wrk *Workspace)
-	SwitchWorkspaces(clients Clients, wrk1, wrk2 *Workspace)
+	ActivateWorkspace(wrk *Workspace)
+	SwitchWorkspaces(wrk1, wrk2 *Workspace)
 }
 
 type Workspaces struct {
@@ -37,7 +37,7 @@ func NewWorkspaces(X *xgbutil.XUtil, heads Heads, names ...string) *Workspaces {
 
 	workspaces := &Workspaces{
 		X:     X,
-		Wrks:  make([]*Workspace, len(names)),
+		Wrks:  make([]*Workspace, 0, len(names)),
 		heads: heads,
 	}
 	for _, name := range names {
@@ -48,6 +48,15 @@ func NewWorkspaces(X *xgbutil.XUtil, heads Heads, names ...string) *Workspaces {
 
 func (wrks *Workspaces) Add(name string) {
 	wrks.Wrks = append(wrks.Wrks, wrks.newWorkspace(name))
+}
+
+func (wrks *Workspaces) Remove(wrk *Workspace) {
+	for i, wrk2 := range wrks.Wrks {
+		if wrk == wrk2 {
+			wrks.Wrks = append(wrks.Wrks[:i], wrks.Wrks[i+1:]...)
+			return
+		}
+	}
 }
 
 func (wrks *Workspaces) Active() *Workspace {

@@ -15,8 +15,9 @@ import (
 	"github.com/BurntSushi/xgbutil/xprop"
 
 	"github.com/BurntSushi/wingo/cmdusage"
-	"github.com/BurntSushi/wingo/frame"
+	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/stack"
 )
 
 func commandFun(keyStr string, cmd string, args ...string) func() {
@@ -32,72 +33,16 @@ func commandFun(keyStr string, cmd string, args ...string) func() {
 	switch cmd {
 	case "Close":
 		return usage(cmdClose(args...))
-	case "Flash":
-		return usage(cmdFlash(args...))
 	case "Focus":
 		return usage(cmdFocus(args...))
-	case "FrameBorders":
-		return usage(cmdFrameBorders(args...))
-	case "FrameFull":
-		return usage(cmdFrameFull(args...))
-	case "FrameNada":
-		return usage(cmdFrameNada(args...))
-	case "FrameSlim":
-		return usage(cmdFrameSlim(args...))
-	case "HeadFocus":
-		return usage(cmdHeadFocus(false, args...))
-	case "HeadFocusWithClient":
-		return usage(cmdHeadFocus(true, args...))
-	case "MaximizeToggle":
-		return usage(cmdMaximizeToggle(args...))
-	case "Minimize":
-		return usage(cmdMinimize(args...))
 	case "Move":
 		return usage(cmdMove(args...))
-	case "PromptCycleNext":
-		if len(keyStr) == 0 {
-			return nil
-		}
-		return usage(cmdPromptCycleNext(keyStr, args...))
-	case "PromptCyclePrev":
-		if len(keyStr) == 0 {
-			return nil
-		}
-		return usage(cmdPromptCyclePrev(keyStr, args...))
-	// case "PromptSelect": 
-	// return usage(cmdPromptSelect(args...)) 
 	case "Quit":
 		return usage(cmdQuit())
 	case "Raise":
 		return usage(cmdRaise(args...))
 	case "Resize":
 		return usage(cmdResize(args...))
-	case "TileStart":
-		return usage(cmdTileStart(args...))
-	case "TileStop":
-		return usage(cmdTileStop(args...))
-	case "ToggleForceFloating":
-		return usage(cmdToggleForceFloating(args...))
-	case "ToggleSticky":
-		return usage(cmdToggleSticky(args...))
-	case "Workspace":
-		return usage(cmdWorkspace(false, false, args...))
-	case "WorkspacePrefix":
-		return usage(cmdWorkspacePrefix(false, args...))
-	case "WorkspaceSetClient":
-		return usage(cmdWorkspace(false, true, args...))
-	case "WorkspaceWithClient":
-		return usage(cmdWorkspace(true, false, args...))
-	case "WorkspacePrefixWithClient":
-		return usage(cmdWorkspacePrefix(true, args...))
-	case "WorkspaceLeft":
-		return usage(cmdWorkspaceLeft())
-	case "WorkspaceLeftWithClient":
-		return usage(cmdWorkspaceLeftWithClient())
-	case "WorkspaceRight":
-		return usage(cmdWorkspaceRight())
-	case "WorkspaceRightWithClient":
-		return usage(cmdWorkspaceRightWithClient())
 	}
 
 	if len(args) > 0 {
@@ -176,7 +121,7 @@ func commandArgsClient(args []string) (*client, bool) {
 		}
 
 		goodId := xproto.Window(maybeId64)
-		for _, c := range WM.clients {
+		for _, c := range wingo.clients {
 			if c.Id() == goodId {
 				return c, true
 			}
@@ -193,9 +138,11 @@ func commandArgsClient(args []string) (*client, bool) {
 // Shortcut for executing Client interface functions that have no parameters
 // and no return values on the currently focused window.
 func withFocused(f func(c *client)) {
-	focused := WM.focused()
+	focused := focus.Current()
 	if focused != nil {
-		f(focused)
+		if client, ok := focused.(*client); ok {
+			f(client)
+		}
 	}
 }
 
@@ -223,130 +170,7 @@ func cmdClose(args ...string) func() {
 func cmdFocus(args ...string) func() {
 	return func() {
 		withFocusedOrArg(args, func(c *client) {
-			c.Focus()
-		})
-	}
-}
-
-func cmdFrameBorders(args ...string) func() {
-	return func() {
-		withFocusedOrArg(args, func(c *client) {
-			c.FrameBorders()
-		})
-	}
-}
-
-func cmdFrameFull(args ...string) func() {
-	return func() {
-		withFocusedOrArg(args, func(c *client) {
-			c.FrameFull()
-		})
-	}
-}
-
-func cmdFrameNada(args ...string) func() {
-	return func() {
-		withFocusedOrArg(args, func(c *client) {
-			c.FrameNada()
-		})
-	}
-}
-
-func cmdFrameSlim(args ...string) func() {
-	return func() {
-		withFocusedOrArg(args, func(c *client) {
-			c.FrameSlim()
-		})
-	}
-}
-
-func cmdHeadFocus(withClient bool, args ...string) func() {
-	if len(args) < 1 {
-		logger.Warning.Printf("Improper use of HeadFocus command.")
-		logger.Warning.Printf("Usage: HeadFocus head_number [Greedy]")
-		return nil
-	}
-
-	headNum64, err := strconv.ParseInt(args[0], 0, 0)
-	if err != nil {
-		logger.Warning.Printf("Improper use of HeadFocus command.")
-		logger.Warning.Printf("'%s' is not a valid head number.", args[0])
-		return nil
-	}
-	headNum := int(headNum64)
-
-	return func() {
-		var wrk *workspace
-		for _, wrk2 := range WM.workspaces {
-			if wrk2.head == headNum {
-				wrk = wrk2
-				break
-			}
-		}
-
-		if wrk == nil {
-			logger.Warning.Printf("The 'HeadFocus' command could not find "+
-				"head number '%d'.", headNum)
-			return
-		}
-
-		greedy := false
-		if len(args) > 1 && args[1] == "greedy" {
-			greedy = true
-		}
-
-		if withClient {
-			withFocusedOrArg(args, func(c *client) {
-				c.Unmap() // prevent flickering
-				defer c.Map()
-
-				// If the client is tiling, then we copy its "before tiling"
-				// state to 'monitor switch'. This is so we restore its
-				// proper geometry and not its geometry while in a tiling
-				// layout.
-				if c.layout().floating() {
-					c.saveStateTransients("monitor_switch")
-				} else {
-					c.copyStateTransients(
-						"layout_before_tiling", "monitor_switch")
-				}
-				wrk.add(c)
-
-				// If the new layout is floating, then load geometry
-				// in the new monitor.
-				// Otherwise... things get tricky. We copy the monitor_switch
-				// state into "layout_before_tiling." This is because the
-				// monitor_switch state has the desirable "non-tiling" state.
-				if c.layout().floating() {
-					c.loadStateTransients("monitor_switch")
-				} else {
-					c.copyStateTransients(
-						"monitor_switch", "layout_before_tiling")
-					c.deleteStateTransients("monitor_switch")
-				}
-
-				// Finally, if this window is active, raise it.
-				if c.state == frame.Active {
-					c.Raise()
-				}
-			})
-		}
-		wrk.activate(true, greedy)
-	}
-}
-
-func cmdMaximizeToggle(args ...string) func() {
-	return func() {
-		withFocusedOrArg(args, func(c *client) {
-			c.MaximizeToggle()
-		})
-	}
-}
-
-func cmdMinimize(args ...string) func() {
-	return func() {
-		withFocusedOrArg(args, func(c *client) {
-			c.IconifyToggle()
+			focus.Focus(c)
 		})
 	}
 }
@@ -364,114 +188,10 @@ func cmdMove(args ...string) func() {
 		}
 
 		withFocusedOrArg(args, func(c *client) {
-			c.layout().move(c, x, y)
+			c.LayoutMove(x, y)
 		})
 	}
 }
-
-func cmdPromptCycleNext(keyStr string, args ...string) func() {
-	if len(args) < 1 {
-		return nil
-	}
-
-	activeWrk, visible, iconified := false, false, true
-	switch args[0] {
-	case "clientsworkspace":
-		activeWrk = true
-	case "clientsmonitors":
-		visible = true
-	default:
-		logger.Warning.Printf("Unrecognized argument '%s' for PromptCycleNext "+
-			"command", args[0])
-		return nil
-	}
-
-	return func() {
-		showPromptCycle(keyStr, activeWrk, visible, iconified)
-		PROMPTS.cycle.Next()
-	}
-}
-
-func cmdPromptCyclePrev(keyStr string, args ...string) func() {
-	if len(args) < 1 {
-		return nil
-	}
-
-	activeWrk, visible, iconified := false, false, true
-	switch args[0] {
-	case "clientsworkspace":
-		activeWrk = true
-	case "clientsmonitors":
-		visible = true
-	default:
-		logger.Warning.Printf("Unrecognized argument '%s' for PromptCyclePrev "+
-			"command", args[0])
-		return nil
-	}
-
-	return func() {
-		showPromptCycle(keyStr, activeWrk, visible, iconified)
-		PROMPTS.cycle.Prev()
-	}
-}
-
-// func cmdPromptSelect(args ...string) func() { 
-// if len(args) < 1 { 
-// return nil 
-// } 
-//  
-// prefixSearch := true 
-// if len(args) > 1 && args[1] == "substring" { 
-// prefixSearch = false 
-// } 
-//  
-// var f func() []*promptSelectGroup 
-//  
-// switch args[0] { 
-// case "clientsall": 
-// f = func() []*promptSelectGroup { 
-// return promptSelectListClients(false, false, true) 
-// } 
-// case "clientsworkspace": 
-// f = func() []*promptSelectGroup { 
-// return promptSelectListClients(true, false, true) 
-// } 
-// case "clientsmonitors": 
-// f = func() []*promptSelectGroup { 
-// return promptSelectListClients(false, true, true) 
-// } 
-// case "workspaces": 
-// f = func() []*promptSelectGroup { 
-// action := func(wrk *workspace) func() { 
-// return func() { 
-// wrk.activate(true, true) 
-// } 
-// } 
-// return promptSelectListWorkspaces(action) 
-// } 
-// case "workspaceswithclient": 
-// f = func() []*promptSelectGroup { 
-// action := func(wrk *workspace) func() { 
-// return func() { 
-// withFocused(func(c *client) { 
-// c.Raise() 
-// wrk.add(c) 
-// wrk.activate(true, true) 
-// }) 
-// } 
-// } 
-// return promptSelectListWorkspaces(action) 
-// } 
-// default: 
-// logger.Warning.Printf("Unrecognized argument '%s' for PromptSelect "+ 
-// "command", args[0]) 
-// return nil 
-// } 
-//  
-// return func() { 
-// PROMPTS.slct.show(f, prefixSearch) 
-// } 
-// } 
 
 func cmdQuit() func() {
 	return func() {
@@ -483,7 +203,7 @@ func cmdQuit() func() {
 func cmdRaise(args ...string) func() {
 	return func() {
 		withFocusedOrArg(args, func(c *client) {
-			c.Raise()
+			stack.Raise(c)
 		})
 	}
 }
@@ -501,196 +221,7 @@ func cmdResize(args ...string) func() {
 		}
 
 		withFocusedOrArg(args, func(c *client) {
-			c.layout().resize(c, w, h)
-		})
-	}
-}
-
-func cmdTileStart(args ...string) func() {
-	return func() {
-		wrk := WM.wrkActive()
-		wrk.tilingSet(true)
-	}
-}
-
-func cmdTileStop(args ...string) func() {
-	return func() {
-		wrk := WM.wrkActive()
-		wrk.tilingSet(false)
-	}
-}
-
-func cmdToggleForceFloating(args ...string) func() {
-	return func() {
-		withFocusedOrArg(args, func(c *client) {
-			c.toggleForceFloating()
-		})
-	}
-}
-
-func cmdToggleSticky(args ...string) func() {
-	return func() {
-		withFocusedOrArg(args, func(c *client) {
-			if c.workspace.id >= 0 {
-				WM.stickyWrk.add(c)
-			} else {
-				WM.wrkActive().add(c)
-			}
-		})
-	}
-}
-
-func cmdWorkspace(withClient bool, setClient bool, args ...string) func() {
-	if withClient && setClient {
-		panic("Bug in cmdWorkspace. 'withClient' and 'setClient' cannot " +
-			"both be true.")
-	}
-	if len(args) < 1 {
-		return nil
-	}
-
-	return func() {
-		wrk := WM.wrkFind(args[0])
-		if wrk == nil {
-			logger.Warning.Printf("The 'Workspace' command could not find "+
-				"workspace '%s'.", args[0])
-			return
-		}
-
-		greedy := false
-		if len(args) > 1 && args[1] == "greedy" {
-			greedy = true
-		}
-
-		if withClient {
-			withFocused(func(c *client) {
-				c.Raise()
-				wrk.add(c)
-			})
-		}
-
-		if setClient {
-			withFocusedOrArg(args, func(c *client) {
-				wrk.add(c)
-				wrk.mapOrUnmap(c)
-			})
-		} else {
-			wrk.activate(true, greedy)
-		}
-	}
-}
-
-// cmdWorkspacePrefix is actually a bit tricky.
-// The naive solution is to simply search the list of workspaces, and if any
-// of them have a prefix matching the argument, use that workspace.
-// However, this results in only being able to switch between TWO workspaces
-// with the same prefix (namely, the first two in the workspaces list).
-// We fix this by making sure we don't start our prefix search until we have
-// seen the active workspace. Also, we never choose a workspace that is
-// visible.
-// If that search turns up nothing, we run the search again, but take the
-// first non-visible workspace matching the prefix.
-// We don't choose visible workspaces, because the idea is that those can
-// be switched to more explicitly with the 'Workspace' command or with one
-// of the 'HeadFocus' commands.
-func cmdWorkspacePrefix(withClient bool, args ...string) func() {
-	if len(args) < 1 {
-		return nil
-	}
-
-	return func() {
-		var wrk *workspace
-
-		// visibles := 0 
-		pastActive := false
-		prefix := strings.ToLower(args[0])
-		for _, wrk2 := range WM.workspaces {
-			if wrk2.active {
-				pastActive = true
-				continue
-			}
-			if !pastActive {
-				continue
-			}
-			if wrk2.visible() {
-				continue
-			}
-			if strings.HasPrefix(strings.ToLower(wrk2.name), prefix) {
-				wrk = wrk2
-				break
-			}
-		}
-
-		// Try the search again, but use the first non-visible workspace
-		// with a matching prefix.
-		if wrk == nil {
-			for _, wrk2 := range WM.workspaces {
-				if !wrk2.visible() &&
-					strings.HasPrefix(strings.ToLower(wrk2.name), prefix) {
-					wrk = wrk2
-					break
-				}
-			}
-		}
-
-		if wrk == nil {
-			logger.Warning.Printf(
-				"The 'WorkspacePrefix' command could not find "+
-					"a non-visible workspace with prefix '%s'.", args[0])
-			return
-		}
-
-		greedy := false
-		if len(args) > 1 && args[1] == "greedy" {
-			greedy = true
-		}
-
-		if withClient {
-			withFocused(func(c *client) {
-				c.Raise()
-				wrk.add(c)
-			})
-		}
-		wrk.activate(true, greedy)
-	}
-}
-
-func cmdWorkspaceLeft() func() {
-	return func() {
-		wrkAct := WM.wrkActive()
-		wrkLeft := WM.workspaces[mod(wrkAct.id-1, len(WM.workspaces))]
-		wrkLeft.activate(true, false)
-	}
-}
-
-func cmdWorkspaceLeftWithClient() func() {
-	return func() {
-		withFocused(func(c *client) {
-			c.Raise()
-			wrkAct := WM.wrkActive()
-			wrkLeft := WM.workspaces[mod(wrkAct.id-1, len(WM.workspaces))]
-			wrkLeft.add(c)
-			wrkLeft.activate(true, false)
-		})
-	}
-}
-
-func cmdWorkspaceRight() func() {
-	return func() {
-		wrkAct := WM.wrkActive()
-		wrkRight := WM.workspaces[mod(wrkAct.id+1, len(WM.workspaces))]
-		wrkRight.activate(true, false)
-	}
-}
-
-func cmdWorkspaceRightWithClient() func() {
-	return func() {
-		withFocused(func(c *client) {
-			c.Raise()
-			wrkAct := WM.wrkActive()
-			wrkRight := WM.workspaces[mod(wrkAct.id+1, len(WM.workspaces))]
-			wrkRight.add(c)
-			wrkRight.activate(true, false)
+			c.LayoutResize(w, h)
 		})
 	}
 }
@@ -765,26 +296,5 @@ func commandShellFun(cmd string) func() {
 				}
 			}
 		}()
-	}
-}
-
-// This is a start, but it is not quite ready for prime-time yet.
-// This has no way to stop from some external event (like focus).
-// Solve using channels. Later.
-func cmdFlash(args ...string) func() {
-	return func() {
-		withFocusedOrArg(args, func(c *client) {
-			go func() {
-				for i := 0; i < 10; i++ {
-					if c.State() == frame.Active {
-						c.Frame().Inactive()
-					} else {
-						c.Frame().Active()
-					}
-
-					time.Sleep(time.Second)
-				}
-			}()
-		})
 	}
 }

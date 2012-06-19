@@ -6,11 +6,6 @@ import (
 	"github.com/BurntSushi/wingo/layout"
 )
 
-type Clients interface {
-	Get(i int) Client
-	Len() int
-}
-
 type Client interface {
 	Id() xproto.Window
 	String() string
@@ -19,8 +14,7 @@ type Client interface {
 	Layout() layout.Layout
 	Map()
 	Unmap()
-	UnmapFallback()
-	ForceFloating() bool
+	ShouldForceFloating() bool
 
 	Iconified() bool
 	IconifiedSet(iconified bool)

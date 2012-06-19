@@ -2,11 +2,6 @@ package main
 
 import (
 	"strconv"
-	"strings"
-
-	"github.com/BurntSushi/xgb/xproto"
-
-	"github.com/BurntSushi/xgbutil/keybind"
 
 	"github.com/BurntSushi/wingo/logger"
 )
@@ -33,13 +28,6 @@ func cliIndex(needle *client, haystack []*client) int {
 	return -1
 }
 
-// keyMatch is a utility function for comparing two keysym strings for equality.
-// It automatically converts a (mods, byte) pair to a string.
-func keyMatch(target string, mods uint16, keycode xproto.Keycode) bool {
-	guess := keybind.LookupString(X, mods, keycode)
-	return strings.ToLower(guess) == strings.ToLower(target)
-}
-
 // parsePos takes a string and parses an x or y position from it.
 // The magic here is that while a string could just be a simple integer,
 // it could also be a float greater than 0 but <= 1 in terms of the current
@@ -54,7 +42,7 @@ func parsePos(pos string, y bool) (int, bool) {
 	// Now try float
 	posf, err := strconv.ParseFloat(pos, 64)
 	if err == nil && posf > 0 && posf <= 1 {
-		headGeom := WM.headActive()
+		headGeom := wingo.workspace().Geom()
 		if y {
 			return headGeom.Y() + int(float64(headGeom.Height())*posf), true
 		} else {
@@ -80,7 +68,7 @@ func parseDim(dim string, height bool) (int, bool) {
 	// Now try float
 	dimf, err := strconv.ParseFloat(dim, 64)
 	if err == nil && dimf > 0 && dimf <= 1 {
-		headGeom := WM.headActive()
+		headGeom := wingo.workspace().Geom()
 		if height {
 			return int(float64(headGeom.Height()) * dimf), true
 		} else {

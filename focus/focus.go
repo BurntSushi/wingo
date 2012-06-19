@@ -37,12 +37,16 @@ func Remove(c Client) {
 	}
 }
 
+func InitialAdd(c Client) {
+	Clients = append([]Client{c}, Clients...)
+}
+
 func Focus(c Client) {
 	Remove(c)
-	Clients = append(Clients, c)
 
 	if c.CanFocus() || c.SendFocusNotify() {
-		c.MakeViewable()
+		Clients = append(Clients, c)
+		c.PrepareForFocus()
 		c.Focused()
 	}
 	if c.CanFocus() {

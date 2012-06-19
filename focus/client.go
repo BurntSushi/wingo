@@ -11,8 +11,7 @@ type Client interface {
 	Win() *xwindow.Window
 	Focused()
 	Unfocused()
-	SetFocus()
 	CanFocus() bool
 	SendFocusNotify() bool
-	MakeViewable()
+	PrepareForFocus()
 }

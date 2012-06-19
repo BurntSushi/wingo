@@ -57,7 +57,7 @@ func (kcmd keyCommand) attach(run func()) {
 		keybind.KeyPressFun(
 			func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 				run()
-			}).Connect(X, ROOT.Id, kcmd.keyStr, true)
+			}).Connect(X, wingo.root.Id, kcmd.keyStr, true)
 		keybind.KeyPressFun(
 			func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 				run()
@@ -67,12 +67,12 @@ func (kcmd keyCommand) attach(run func()) {
 			keybind.KeyPressFun(
 				func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 					run()
-				}).Connect(X, ROOT.Id, kcmd.keyStr, true)
+				}).Connect(X, wingo.root.Id, kcmd.keyStr, true)
 		} else {
 			keybind.KeyReleaseFun(
 				func(X *xgbutil.XUtil, ev xevent.KeyReleaseEvent) {
 					run()
-				}).Connect(X, ROOT.Id, kcmd.keyStr, true)
+				}).Connect(X, wingo.root.Id, kcmd.keyStr, true)
 		}
 	}
 }

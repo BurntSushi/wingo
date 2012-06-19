@@ -6,21 +6,21 @@ import (
 	"github.com/BurntSushi/wingo/workspace"
 )
 
+func (hds *Heads) Workspaces() []*workspace.Workspace {
+	return hds.workspaces.Wrks
+}
+
 // ActivateWorkspace will "focus" or "activate" the workspace provided.
 // This only works when "wk" is visible.
 // To activate a hidden workspace, please use SwitchWorkspaces.
-func (hds *Heads) ActivateWorkspace(clients workspace.Clients,
-	wk *workspace.Workspace) {
-
+func (hds *Heads) ActivateWorkspace(wk *workspace.Workspace) {
 	wkvi := hds.visibleIndex(wk)
 	if wkvi > -1 {
 		hds.active = wkvi
 	}
 }
 
-func (hds *Heads) SwitchWorkspaces(clients workspace.Clients,
-	wk1, wk2 *workspace.Workspace) {
-
+func (hds *Heads) SwitchWorkspaces(wk1, wk2 *workspace.Workspace) {
 	v1, v2 := hds.visibleIndex(wk1), hds.visibleIndex(wk2)
 	switch {
 	case v1 > -1 && v2 > -1:
@@ -29,12 +29,12 @@ func (hds *Heads) SwitchWorkspaces(clients workspace.Clients,
 		wk2.Place()
 	case v1 > -1 && v2 == -1:
 		hds.visibles[v1] = wk2
-		wk1.Hide(clients)
-		wk2.Show(clients)
+		wk1.Hide()
+		wk2.Show()
 	case v1 == -1 && v2 > -1:
 		hds.visibles[v2] = wk1
-		wk2.Hide(clients)
-		wk1.Show(clients)
+		wk2.Hide()
+		wk1.Show()
 	case v1 == -1 && v2 == -1:
 		// Meaningless
 	default:
@@ -42,9 +42,7 @@ func (hds *Heads) SwitchWorkspaces(clients workspace.Clients,
 	}
 }
 
-func (hds *Heads) RemoveWorkspace(clients workspace.Clients,
-	wk *workspace.Workspace) {
-
+func (hds *Heads) RemoveWorkspace(wk *workspace.Workspace) {
 	// Don't allow it if this would result in fewer workspaces than there
 	// are active physical heads.
 	if len(hds.geom) == len(hds.workspaces.Wrks) {
@@ -62,19 +60,19 @@ func (hds *Heads) RemoveWorkspace(clients workspace.Clients,
 		if moveClientsTo == wk {
 			moveClientsTo = hds.workspaces.Wrks[len(hds.workspaces.Wrks)-2]
 		}
-		wk.RemoveAllAndAdd(clients, moveClientsTo)
+		wk.RemoveAllAndAdd(moveClientsTo)
 	} else {
 		// Find the last-most hidden workspace that is not itself.
 		for i := len(hds.workspaces.Wrks) - 1; i >= 0; i-- {
 			work := hds.workspaces.Wrks[i]
 			if work != wk && !work.IsVisible() {
-				hds.SwitchWorkspaces(clients, wk, work)
-				wk.RemoveAllAndAdd(clients, work)
+				hds.SwitchWorkspaces(wk, work)
+				wk.RemoveAllAndAdd(work)
 				break
 			}
 		}
 	}
-	wk.Delete()
+	hds.workspaces.Remove(wk)
 }
 
 func (hds *Heads) ActiveWorkspace() *workspace.Workspace {

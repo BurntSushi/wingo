@@ -26,6 +26,7 @@ type Layout interface {
 
 type Floater interface {
 	Layout
+	Reposition(geom xrect.Rect)
 }
 
 type AutoTiler interface {

@@ -2,11 +2,25 @@ package main
 
 import (
 	"github.com/BurntSushi/xgbutil/icccm"
+
+	"github.com/BurntSushi/wingo/stack"
 )
 
+// Transient is a wrapper around transient that type switches an empty interface
+// to a *client type. This is used to satisfy Client interfaces is various
+// sub-packages.
+// 
+// Currently, only values that have type *client can be transient to each other.
+func (c *client) Transient(test stack.Client) bool {
+	if testClient, ok := test.(*client); ok {
+		return c.transient(testClient)
+	}
+	return false
+}
+
 // transient determines whether 'test' is a transient window of 'c'.
-// This is tricky because the logic to find the transients of a window is so
-// complex. Where C is the client we are trying find transients *for*, and
+// This is tricky because the logic to find the transients of a window is
+// convoluted. Where C is the client we are trying find transients *for*, and
 // c is any *other* client, the logic is something like this:
 // If c has WM_TRANSIENT_FOR equal to C, then c is a transient of C.
 // If c has window group (in WM_HINTS) equal to the window group in C,
@@ -22,34 +36,27 @@ func (c *client) transient(test *client) bool {
 	if c == test {
 		return false
 	}
-
-	if test.transientFor == c.Id() {
+	if test.transientFor == c {
 		return true
 	}
 
 	// If transientFor exists, then we don't look at window group stuff
-	if test.transientFor > 0 {
+	if test.transientFor != nil {
 		return false
 	}
-
 	if c.hints.Flags&icccm.HintWindowGroup > 0 &&
 		test.hints.Flags&icccm.HintWindowGroup > 0 &&
 		c.hints.WindowGroup == test.hints.WindowGroup {
+
 		return !c.transientType() && test.transientType()
 	}
-
 	return false
 }
 
-// transientTypes determines whether there is a transient type in the client.
+// transientType determines whether there is a transient type in the client.
 func (c *client) transientType() bool {
-	return strIndex("_NET_WM_WINDOW_TYPE_TOOLBAR", c.types) > -1 ||
-		strIndex("_NET_WM_WINDOW_TYPE_MENU", c.types) > -1 ||
-		strIndex("_NET_WM_WINDOW_TYPE_UTILITY", c.types) > -1 ||
-		strIndex("_NET_WM_WINDOW_TYPE_DIALOG", c.types) > -1
-}
-
-// isTransient just tests if 'transientFor' is a window id.
-func (c *client) isTransient() bool {
-	return c.transientFor > 0
+	return strIndex("_NET_WM_WINDOW_TYPE_TOOLBAR", c.winTypes) > -1 ||
+		strIndex("_NET_WM_WINDOW_TYPE_MENU", c.winTypes) > -1 ||
+		strIndex("_NET_WM_WINDOW_TYPE_UTILITY", c.winTypes) > -1 ||
+		strIndex("_NET_WM_WINDOW_TYPE_DIALOG", c.winTypes) > -1
 }
