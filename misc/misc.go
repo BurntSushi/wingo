@@ -1,14 +1,5 @@
 package misc
 
-import (
-	"strings"
-
-	"github.com/BurntSushi/xgb/xproto"
-
-	"github.com/BurntSushi/xgbutil"
-	"github.com/BurntSushi/xgbutil/keybind"
-)
-
 func Max(a, b int) int {
 	if a > b {
 		return a

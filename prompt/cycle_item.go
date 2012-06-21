@@ -7,7 +7,6 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/text"
 )
 
@@ -127,16 +126,14 @@ func (ci *CycleItem) choose() {
 func (ci *CycleItem) highlight() {
 	ci.choice.CycleHighlighted()
 	ci.text.Map()
-	ci.win.Change(xproto.CwBackPixel,
-		uint32(misc.IntFromColor(ci.cycle.theme.BorderColor)))
+	ci.win.Change(xproto.CwBackPixel, ci.cycle.theme.BorderColor.Uint32())
 	ci.win.ClearAll()
 }
 
 // unhighlight cancels any highlight associated with this choice.
 func (ci *CycleItem) unhighlight() {
 	ci.text.Unmap()
-	ci.win.Change(xproto.CwBackPixel,
-		uint32(misc.IntFromColor(ci.cycle.theme.BgColor)))
+	ci.win.Change(xproto.CwBackPixel, ci.cycle.theme.BgColor.Uint32())
 	ci.win.ClearAll()
 }
 
@@ -159,8 +156,8 @@ func (ci *CycleItem) UpdateImage() {
 
 	xgraphics.Alpha(inactive, ci.cycle.theme.IconTransparency)
 
-	xgraphics.BlendBgColor(active, ci.cycle.theme.BgColor)
-	xgraphics.BlendBgColor(inactive, ci.cycle.theme.BgColor)
+	xgraphics.BlendBgColor(active, ci.cycle.theme.BgColor.ImageColor())
+	xgraphics.BlendBgColor(inactive, ci.cycle.theme.BgColor.ImageColor())
 
 	active.XSurfaceSet(ci.active.Id)
 	active.XDraw()
@@ -179,8 +176,8 @@ func (ci *CycleItem) UpdateText() {
 	t := ci.cycle.theme
 	txt := ci.choice.CycleText()
 
-	err := text.DrawText(ci.text,
-		t.Font, t.FontSize, t.FontColor, t.BgColor, txt)
+	err := text.DrawText(ci.text, t.Font, t.FontSize, t.FontColor.ImageColor(),
+		t.BgColor.ImageColor(), txt)
 	if err != nil {
 		logger.Warning.Printf("(*CycleItem).UpdateText: "+
 			"Could not render text: %s", err)

@@ -6,7 +6,6 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/text"
 )
 
@@ -36,8 +35,7 @@ func newSelectGroupItem(slct *Select, group SelectGroup) *SelectGroupItem {
 	}
 
 	si.win = xwindow.Must(xwindow.Create(si.slct.X, si.slct.win.Id))
-	si.win.Change(xproto.CwBackPixel,
-		uint32(misc.IntFromColor(si.slct.theme.BgColor)))
+	si.win.Change(xproto.CwBackPixel, si.slct.theme.BgColor.Uint32())
 
 	// If the text overruns, make sure it's below the borders.
 	si.win.StackSibling(si.slct.bRht.Id, xproto.StackModeBelow)
@@ -65,8 +63,8 @@ func (si *SelectGroupItem) UpdateText() {
 		return
 	}
 
-	err := text.DrawText(si.win,
-		t.GroupFont, t.GroupFontSize, t.GroupFontColor, t.GroupBgColor, txt)
+	err := text.DrawText(si.win, t.GroupFont, t.GroupFontSize,
+		t.GroupFontColor.ImageColor(), t.GroupBgColor.ImageColor(), txt)
 	if err != nil {
 		logger.Warning.Printf("(*SelectGroupItem).UpdateText: "+
 			"Could not render text: %s", err)

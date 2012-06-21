@@ -82,15 +82,15 @@ func (si *SelectItem) UpdateText() {
 		si.text = "N/A"
 	}
 
-	err := text.DrawText(si.regular,
-		t.Font, t.FontSize, t.FontColor, t.BgColor, si.text)
+	err := text.DrawText(si.regular, t.Font, t.FontSize,
+		t.FontColor.ImageColor(), t.BgColor.ImageColor(), si.text)
 	if err != nil {
 		logger.Warning.Printf("(*SelectItem).UpdateText: "+
 			"Could not render text: %s", err)
 	}
 
-	err = text.DrawText(si.highlighted,
-		t.Font, t.FontSize, t.ActiveFontColor, t.ActiveBgColor, si.text)
+	err = text.DrawText(si.highlighted, t.Font, t.FontSize,
+		t.ActiveFontColor.ImageColor(), t.ActiveBgColor.ImageColor(), si.text)
 	if err != nil {
 		logger.Warning.Printf("(*SelectItem).UpdateText: "+
 			"Could not render text: %s", err)

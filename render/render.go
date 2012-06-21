@@ -7,9 +7,6 @@ import (
 import (
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xgraphics"
-
-	"github.com/BurntSushi/wingo/misc"
-	"github.com/BurntSushi/wingo/theme"
 )
 
 const (
@@ -44,19 +41,18 @@ func New(ximg *xgraphics.Image) *Image {
 	return &Image{ximg}
 }
 
-func NewSolid(X *xgbutil.XUtil, bgColor, width, height int) *Image {
+func NewSolid(X *xgbutil.XUtil, bgColor Color, width, height int) *Image {
 	img := New(xgraphics.New(X, image.Rect(0, 0, width, height)))
 
-	r, g, b := misc.RGBFromInt(bgColor)
-	r8, g8, b8 := uint8(r), uint8(g), uint8(b)
+	r, g, b := bgColor.RGB8()
 	img.ForExp(func(x, y int) (uint8, uint8, uint8, uint8) {
-		return r8, g8, b8, 0xff
+		return r, g, b, 0xff
 	})
 	return img
 }
 
-func NewBorder(X *xgbutil.XUtil, borderType, borderColor int,
-	bgColor theme.Color, width, height, gradientType, gradientDir int) *Image {
+func NewBorder(X *xgbutil.XUtil, borderType int, borderColor,
+	bgColor Color, width, height, gradientType, gradientDir int) *Image {
 
 	img := New(xgraphics.New(X, image.Rect(0, 0, width, height)))
 
@@ -64,10 +60,9 @@ func NewBorder(X *xgbutil.XUtil, borderType, borderColor int,
 	if bgColor.IsGradient() {
 		img.Gradient(gradientType, gradientDir, bgColor)
 	} else {
-		r, g, b := misc.RGBFromInt(bgColor.Start)
-		r8, g8, b8 := uint8(r), uint8(g), uint8(b)
+		r, g, b := bgColor.RGB8()
 		img.ForExp(func(x, y int) (uint8, uint8, uint8, uint8) {
-			return r8, g8, b8, 0xff
+			return r, g, b, 0xff
 		})
 	}
 
@@ -75,8 +70,8 @@ func NewBorder(X *xgbutil.XUtil, borderType, borderColor int,
 	return img
 }
 
-func NewCorner(X *xgbutil.XUtil, borderType, borderColor int,
-	bgColor theme.Color, width, height, diagonal int) *Image {
+func NewCorner(X *xgbutil.XUtil, borderType int, borderColor,
+	bgColor Color, width, height, diagonal int) *Image {
 
 	// If bgColor isn't a gradient, then we can cheat
 	if !bgColor.IsGradient() {
@@ -118,8 +113,8 @@ func NewCorner(X *xgbutil.XUtil, borderType, borderColor int,
 }
 
 // XXX: Optimize.
-func (img *Image) ThinBorder(borderType, borderColor int) {
-	borderClr := misc.ColorFromInt(borderColor)
+func (img *Image) ThinBorder(borderType int, borderColor Color) {
+	borderClr := borderColor.ImageColor()
 	width, height := img.Bounds().Dx(), img.Bounds().Dy()
 
 	// Now go through and add a "thin border."
@@ -142,13 +137,13 @@ func (img *Image) ThinBorder(borderType, borderColor int) {
 	}
 }
 
-func (img *Image) Gradient(gradientType, gradientDir int, clr theme.Color) {
+func (img *Image) Gradient(gradientType, gradientDir int, clr Color) {
 	img.GradientFunc(gradientType, gradientDir, clr,
 		func(x, y int) bool { return true })
 }
 
 // XXX: Optimize.
-func (img *Image) GradientFunc(gradientType, gradientDir int, clr theme.Color,
+func (img *Image) GradientFunc(gradientType, gradientDir int, clr Color,
 	pixel func(x, y int) bool) {
 
 	width, height := img.Bounds().Dx(), img.Bounds().Dy()

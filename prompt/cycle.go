@@ -18,6 +18,7 @@ import (
 	"github.com/BurntSushi/wingo/bindata"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/misc"
+	"github.com/BurntSushi/wingo/render"
 )
 
 // Cycle represents a single cycle prompt. A new cycle prompt can be created by:
@@ -77,8 +78,8 @@ func NewCycle(X *xgbutil.XUtil, theme CycleTheme, config CycleConfig) *Cycle {
 	cycle.win.Change(xproto.CwOverrideRedirect, 1)
 
 	// Set the colors of each window.
-	cclr := func(w *xwindow.Window, clr color.RGBA) {
-		w.Change(xproto.CwBackPixel, uint32(misc.IntFromColor(clr)))
+	cclr := func(w *xwindow.Window, clr render.Color) {
+		w.Change(xproto.CwBackPixel, uint32(clr.Int()))
 	}
 	cclr(cycle.win, cycle.theme.BgColor)
 	cclr(cycle.bTop, cycle.theme.BorderColor)
@@ -374,13 +375,13 @@ func (cycle *Cycle) highlight() {
 // for a reasonable default theme if you don't care about the particulars.
 type CycleTheme struct {
 	BorderSize  int
-	BgColor     color.RGBA
-	BorderColor color.RGBA
+	BgColor     render.Color
+	BorderColor render.Color
 	Padding     int
 
 	Font      *truetype.Font
 	FontSize  float64
-	FontColor color.RGBA
+	FontColor render.Color
 
 	IconSize         int
 	IconBorderSize   int
@@ -389,13 +390,13 @@ type CycleTheme struct {
 
 var DefaultCycleTheme = CycleTheme{
 	BorderSize:  10,
-	BgColor:     color.RGBA{0xff, 0xff, 0xff, 0xff},
-	BorderColor: color.RGBA{0x0, 0x0, 0x0, 0xff},
+	BgColor:     render.NewImageColor(color.RGBA{0xff, 0xff, 0xff, 0xff}),
+	BorderColor: render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
 	Padding:     10,
 	Font: xgraphics.MustFont(xgraphics.ParseFont(
 		bytes.NewBuffer(bindata.DejavusansTtf()))),
 	FontSize:         20.0,
-	FontColor:        color.RGBA{0x0, 0x0, 0x0, 0xff},
+	FontColor:        render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
 	IconSize:         100,
 	IconBorderSize:   5,
 	IconTransparency: 50,

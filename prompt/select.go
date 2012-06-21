@@ -81,8 +81,8 @@ func NewSelect(X *xgbutil.XUtil,
 	slct.input.StackSibling(slct.bRht.Id, xproto.StackModeBelow)
 
 	// Colorize the windows.
-	cclr := func(w *xwindow.Window, clr color.RGBA) {
-		w.Change(xproto.CwBackPixel, uint32(render.IntFromColor(clr)))
+	cclr := func(w *xwindow.Window, clr render.Color) {
+		w.Change(xproto.CwBackPixel, clr.Uint32())
 	}
 	cclr(slct.win, slct.theme.BgColor)
 	cclr(slct.bInp, slct.theme.BorderColor)
@@ -342,43 +342,43 @@ func (slct *Select) highlight() {
 
 type SelectTheme struct {
 	BorderSize  int
-	BgColor     color.RGBA
-	BorderColor color.RGBA
+	BgColor     render.Color
+	BorderColor render.Color
 	Padding     int
 
 	Font      *truetype.Font
 	FontSize  float64
-	FontColor color.RGBA
+	FontColor render.Color
 
-	ActiveBgColor   color.RGBA
-	ActiveFontColor color.RGBA
+	ActiveBgColor   render.Color
+	ActiveFontColor render.Color
 
-	GroupBgColor   color.RGBA
+	GroupBgColor   render.Color
 	GroupFont      *truetype.Font
 	GroupFontSize  float64
-	GroupFontColor color.RGBA
+	GroupFontColor render.Color
 	GroupSpacing   int
 }
 
 var DefaultSelectTheme = SelectTheme{
 	BorderSize:  10,
-	BgColor:     color.RGBA{0xff, 0xff, 0xff, 0xff},
-	BorderColor: color.RGBA{0x0, 0x0, 0x0, 0xff},
+	BgColor:     render.NewImageColor(color.RGBA{0xff, 0xff, 0xff, 0xff}),
+	BorderColor: render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
 	Padding:     20,
 
 	Font: xgraphics.MustFont(xgraphics.ParseFont(
 		bytes.NewBuffer(bindata.DejavusansTtf()))),
 	FontSize:  20.0,
-	FontColor: color.RGBA{0x0, 0x0, 0x0, 0xff},
+	FontColor: render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
 
-	ActiveBgColor:   color.RGBA{0x0, 0x0, 0x0, 0xff},
-	ActiveFontColor: color.RGBA{0xff, 0xff, 0xff, 0xff},
+	ActiveBgColor:   render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
+	ActiveFontColor: render.NewImageColor(color.RGBA{0xff, 0xff, 0xff, 0xff}),
 
-	GroupBgColor: color.RGBA{0xff, 0xff, 0xff, 0xff},
+	GroupBgColor: render.NewImageColor(color.RGBA{0xff, 0xff, 0xff, 0xff}),
 	GroupFont: xgraphics.MustFont(xgraphics.ParseFont(
 		bytes.NewBuffer(bindata.DejavusansTtf()))),
 	GroupFontSize:  25.0,
-	GroupFontColor: color.RGBA{0x33, 0x66, 0xff, 0xff},
+	GroupFontColor: render.NewImageColor(color.RGBA{0x33, 0x66, 0xff, 0xff}),
 	GroupSpacing:   15,
 }
 
