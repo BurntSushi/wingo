@@ -19,6 +19,7 @@ import (
 
 	"github.com/BurntSushi/wingo/bindata"
 	"github.com/BurntSushi/wingo/misc"
+	"github.com/BurntSushi/wingo/render"
 	"github.com/BurntSushi/wingo/text"
 )
 
@@ -81,7 +82,7 @@ func NewSelect(X *xgbutil.XUtil,
 
 	// Colorize the windows.
 	cclr := func(w *xwindow.Window, clr color.RGBA) {
-		w.Change(xproto.CwBackPixel, uint32(misc.IntFromColor(clr)))
+		w.Change(xproto.CwBackPixel, uint32(render.IntFromColor(clr)))
 	}
 	cclr(slct.win, slct.theme.BgColor)
 	cclr(slct.bInp, slct.theme.BorderColor)
@@ -156,12 +157,12 @@ func (slct *Select) keyResponse() xevent.KeyPressFun {
 		slct.input.Add(mods, kc)
 
 		switch {
-		case misc.KeyMatch(X, slct.config.BackspaceKey, mods, kc):
+		case keybind.KeyMatch(X, slct.config.BackspaceKey, mods, kc):
 			slct.input.Remove()
-		case misc.KeyMatch(X, slct.config.CancelKey, mods, kc):
+		case keybind.KeyMatch(X, slct.config.CancelKey, mods, kc):
 			slct.Hide()
 			return
-		case misc.KeyMatch(X, slct.config.ConfirmKey, mods, kc):
+		case keybind.KeyMatch(X, slct.config.ConfirmKey, mods, kc):
 			if slct.selected >= 0 && slct.selected < len(slct.items) {
 				slct.items[slct.selected].choose()
 				slct.Hide()
@@ -170,8 +171,8 @@ func (slct *Select) keyResponse() xevent.KeyPressFun {
 				slct.Hide()
 			}
 			return
-		case misc.KeyMatch(X, "Tab", mods, kc) ||
-			misc.KeyMatch(X, "ISO_Left_Tab", mods, kc):
+		case keybind.KeyMatch(X, "Tab", mods, kc) ||
+			keybind.KeyMatch(X, "ISO_Left_Tab", mods, kc):
 
 			if len(slct.items) == 0 {
 				break

@@ -152,7 +152,7 @@ func (cycle *Cycle) keyResponse() xevent.KeyReleaseFun {
 
 		// If the key release is the cancel key, quit the prompt and
 		// don't do anything.
-		if misc.KeyMatch(X, cycle.config.CancelKey, mods, kc) {
+		if keybind.KeyMatch(X, cycle.config.CancelKey, mods, kc) {
 			cycle.Hide()
 			return
 		}
