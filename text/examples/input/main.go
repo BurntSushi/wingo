@@ -22,6 +22,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/bindata"
+	"github.com/BurntSushi/wingo/render"
 	"github.com/BurntSushi/wingo/text"
 )
 
@@ -30,8 +31,8 @@ var (
 	font = xgraphics.MustFont(xgraphics.ParseFont(
 		bytes.NewBuffer(bindata.FreemonoTtf())))
 	fontSize = 30.0
-	fontColor = color.RGBA{0x0, 0x0, 0x0, 0xff}
-	bgColor = color.RGBA{0xff, 0xff, 0xff, 0xff}
+	fontColor = render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff})
+	bgColor = render.NewImageColor(color.RGBA{0xff, 0xff, 0xff, 0xff})
 	width = 800
 	padding = 10
 )

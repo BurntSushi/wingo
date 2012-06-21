@@ -2,7 +2,6 @@ package text
 
 import (
 	"image"
-	"image/color"
 
 	"code.google.com/p/freetype-go/freetype/truetype"
 
@@ -15,6 +14,7 @@ import (
 
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/misc"
+	"github.com/BurntSushi/wingo/render"
 )
 
 // Input encapsulates the information needed to construct and maintain
@@ -28,8 +28,8 @@ type Input struct {
 
 	font      *truetype.Font
 	fontSize  float64
-	fontColor color.Color
-	bgColor   color.Color
+	fontColor render.Color
+	bgColor   render.Color
 	padding   int
 }
 
@@ -46,7 +46,7 @@ type Input struct {
 // longer in used.
 func NewInput(X *xgbutil.XUtil, parent xproto.Window, width int, padding int,
 	font *truetype.Font, fontSize float64,
-	fontColor, bgColor color.RGBA) *Input {
+	fontColor, bgColor render.Color) *Input {
 
 	_, height := xgraphics.TextMaxExtents(font, fontSize, "M")
 	height += misc.TextBreathe
@@ -80,13 +80,13 @@ func NewInput(X *xgbutil.XUtil, parent xproto.Window, width int, padding int,
 // (*Input).Text manually. Otherwise, it is preferrable to use the Add, Remove
 // and Reset methods.
 func (ti *Input) Render() {
-	r, g, b, _ := misc.RGBA8FromColor(ti.bgColor)
+	r, g, b := ti.bgColor.RGB8()
 	ti.img.ForExp(func(x, y int) (uint8, uint8, uint8, uint8) {
 		return r, g, b, 0xff
 	})
 
 	ti.img.Text(ti.padding, ti.padding,
-		ti.fontColor, ti.fontSize, ti.font, string(ti.Text))
+		ti.fontColor.ImageColor(), ti.fontSize, ti.font, string(ti.Text))
 
 	ti.img.XSurfaceSet(ti.Id)
 	ti.img.XDraw()
