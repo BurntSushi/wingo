@@ -141,8 +141,8 @@ func (c *client) Win() *xwindow.Window {
 	return c.win
 }
 
-func (c *client) TopLevelId() xproto.Window {
-	return c.frame.Parent().Id
+func (c *client) TopWin() *xwindow.Window {
+	return c.frame.Parent().Window
 }
 
 func (c *client) Layer() int {
