@@ -20,7 +20,7 @@ type conf struct {
 	tabKey, revTabKey     string
 }
 
-func defaultConfig() *conf {
+func newConf() *conf {
 	return &conf{
 		mouse:          map[string][]mouseCommand{},
 		key:            map[string][]keyCommand{},
@@ -35,58 +35,50 @@ func defaultConfig() *conf {
 	}
 }
 
-func loadConfig() error {
-	CONF = defaultConfig() // globally defined in wingo.go
-
-	if err := loadMouseConfig(); err != nil {
-		return err
+func loadConfig() (*conf, error) {
+	conf = newConf() // globally defined in wingo.go
+	if err := conf.loadMouseConfig(); err != nil {
+		return nil, err
 	}
-	if err := loadKeyConfig(); err != nil {
-		return err
+	if err := conf.loadKeyConfig(); err != nil {
+		return nil, err
 	}
-	if err := loadOptionsConfig(); err != nil {
-		return err
+	if err := conf.loadOptionsConfig(); err != nil {
+		return nil, err
 	}
-
-	return nil
+	return conf, nil
 }
 
-func loadMouseConfig() error {
+func (conf *conf) loadMouseConfig() error {
 	cdata, err := loadMouseConfigFile()
 	if err != nil {
 		return err
 	}
-
 	for _, section := range cdata.Sections() {
-		loadMouseConfigSection(cdata, section)
+		conf.loadMouseConfigSection(cdata, section)
 	}
-
 	return nil
 }
 
-func loadKeyConfig() error {
+func (conf *conf) loadKeyConfig() error {
 	cdata, err := loadKeyConfigFile()
 	if err != nil {
 		return err
 	}
-
 	for _, section := range cdata.Sections() {
-		loadKeyConfigSection(cdata, section)
+		conf.loadKeyConfigSection(cdata, section)
 	}
-
 	return nil
 }
 
-func loadOptionsConfig() error {
+func (conf *conf) loadOptionsConfig() error {
 	cdata, err := loadOptionsConfigFile()
 	if err != nil {
 		return err
 	}
-
 	for _, section := range cdata.Sections() {
-		loadOptionsConfigSection(cdata, section)
+		conf.loadOptionsConfigSection(cdata, section)
 	}
-
 	return nil
 }
 
@@ -96,7 +88,7 @@ func loadOptionsConfig() error {
 // are two special cases: "MouseBorders*" turns into "borders_*" and
 // "MouseFull*" turns into "full_*".
 // 2) Constructs a "mouseCommand" for *every* value.
-func loadMouseConfigSection(cdata *wini.Data, section string) {
+func (conf *conf) loadMouseConfigSection(cdata *wini.Data, section string) {
 	ident := ""
 	switch {
 	case len(section) > 7 && section[:7] == "borders":
@@ -110,8 +102,8 @@ func loadMouseConfigSection(cdata *wini.Data, section string) {
 	for _, key := range cdata.Keys(section) {
 		mouseStr := key.Name()
 		for _, cmd := range key.Strings() {
-			if _, ok := CONF.mouse[ident]; !ok {
-				CONF.mouse[ident] = make([]mouseCommand, 0)
+			if _, ok := conf.mouse[ident]; !ok {
+				conf.mouse[ident] = make([]mouseCommand, 0)
 			}
 
 			// "mouseStr" is actually made up of a button string
@@ -147,17 +139,17 @@ func loadMouseConfigSection(cdata *wini.Data, section string) {
 				buttonStr: buttonStr,
 				direction: direction,
 			}
-			CONF.mouse[ident] = append(CONF.mouse[ident], mcmd)
+			conf.mouse[ident] = append(conf.mouse[ident], mcmd)
 		}
 	}
 }
 
-func loadKeyConfigSection(cdata *wini.Data, section string) {
+func (conf *conf) loadKeyConfigSection(cdata *wini.Data, section string) {
 	for _, key := range cdata.Keys(section) {
 		keyStr := key.Name()
 		for _, cmd := range key.Strings() {
-			if _, ok := CONF.key[section]; !ok {
-				CONF.key[section] = make([]keyCommand, 0)
+			if _, ok := conf.key[section]; !ok {
+				conf.key[section] = make([]keyCommand, 0)
 			}
 
 			// "keyStr" is actually made up of a key string
@@ -182,29 +174,29 @@ func loadKeyConfigSection(cdata *wini.Data, section string) {
 				down:   down,
 				keyStr: keyStr,
 			}
-			CONF.key[section] = append(CONF.key[section], kcmd)
+			conf.key[section] = append(conf.key[section], kcmd)
 		}
 	}
 }
 
-func loadOptionsConfigSection(cdata *wini.Data, section string) {
+func (conf *conf) loadOptionsConfigSection(cdata *wini.Data, section string) {
 	for _, key := range cdata.Keys(section) {
 		option := key.Name()
 		switch option {
 		case "workspaces":
-			if workspaces, ok := config.GetLastString(key); ok {
-				CONF.workspaces = strings.Split(workspaces, " ")
+			if workspaces, ok := getLastString(key); ok {
+				conf.workspaces = strings.Split(workspaces, " ")
 			}
 		case "always_floating":
-			if alwaysFloating, ok := config.GetLastString(key); ok {
-				CONF.alwaysFloating = strings.Split(alwaysFloating, " ")
+			if alwaysFloating, ok := getLastString(key); ok {
+				conf.alwaysFloating = strings.Split(alwaysFloating, " ")
 			}
 		case "focus_follows_mouse":
-			config.SetBool(key, &CONF.ffm)
+			setBool(key, &conf.ffm)
 		case "cancel":
-			config.SetString(key, &CONF.cancelKey)
+			setString(key, &conf.cancelKey)
 		case "confirm":
-			config.SetString(key, &CONF.confirmKey)
+			setString(key, &conf.confirmKey)
 		}
 	}
 }
