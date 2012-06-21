@@ -127,7 +127,7 @@ func (mcmd mouseCommand) attach(wid xproto.Window, run func(),
 }
 
 func rootMouseConfig() {
-	for _, mcmd := range CONF.mouse["root"] {
+	for _, mcmd := range wingo.conf.mouse["root"] {
 		run := getRootMouseCommand(mcmd.cmd)
 		if run == nil {
 			logger.Warning.Printf(
@@ -139,19 +139,19 @@ func rootMouseConfig() {
 }
 
 func (c *client) clientMouseConfig() {
-	for _, mcmd := range CONF.mouse["client"] {
+	for _, mcmd := range wingo.conf.mouse["client"] {
 		mcmd.setup(c, c.Id())
 	}
 }
 
 func (c *client) frameMouseConfig() {
-	for _, mcmd := range CONF.mouse["frame"] {
+	for _, mcmd := range wingo.conf.mouse["frame"] {
 		mcmd.setup(c, c.Frame().Parent().Id)
 	}
 }
 
 func (c *client) FramePieceMouseConfig(piece string, pieceid xproto.Window) {
-	for _, mcmd := range CONF.mouse[piece] {
+	for _, mcmd := range wingo.conf.mouse[piece] {
 		mcmd.setup(c, pieceid)
 	}
 }

@@ -30,7 +30,7 @@ type keyCommand struct {
 }
 
 func attachAllKeys() {
-	for _, kcmds := range CONF.key {
+	for _, kcmds := range wingo.conf.key {
 		for _, kcmd := range kcmds {
 			kcmd.attach(commandFun(kcmd.keyStr, kcmd.cmd, kcmd.args...))
 		}
