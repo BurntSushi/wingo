@@ -21,8 +21,8 @@ import (
 var (
 	X     *xgbutil.XUtil
 	wingo *wingoState
-	CONF  *conf
-	THEME *theme.Theme
+	conf  *conf
+	theme *theme.Theme
 )
 
 func main() {
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	// Load configuration
-	err = loadConfig()
+	wingo.conf, err = loadConfig()
 	if err != nil {
 		logger.Error.Println(err)
 		logger.Error.Println("No configuration found. Quitting...")
@@ -62,7 +62,7 @@ func main() {
 	}
 
 	// Load theme
-	THEME, err = theme.LoadTheme(X)
+	wingo.theme, err = loadTheme(X)
 	if err != nil {
 		logger.Error.Println(err)
 		logger.Error.Println("No theme configuration found. Quitting...")
