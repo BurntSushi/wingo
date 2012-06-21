@@ -9,7 +9,7 @@ import (
 type Client interface {
 	Id() xproto.Window
 	Win() *xwindow.Window
-	TopLevelId() xproto.Window
+	TopWin() *xwindow.Window
 	Layer() int
 	Transient(client Client) bool
 }

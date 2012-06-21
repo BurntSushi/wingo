@@ -76,9 +76,11 @@ func realize(updateClients []Client) {
 	for i := len(Clients) - 1; i >= 0; i-- {
 		if clientIndex(Clients[i], updateClients) > -1 {
 			if i == len(Clients)-1 {
-				Clients[i].Win().StackSibling(Clients[i-1].TopLevelId(), below)
+				Clients[i].TopWin().StackSibling(
+					Clients[i-1].TopWin().Id, below)
 			} else {
-				Clients[i].Win().StackSibling(Clients[i+1].TopLevelId(), above)
+				Clients[i].TopWin().StackSibling(
+					Clients[i+1].TopWin().Id, above)
 			}
 		}
 	}
