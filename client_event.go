@@ -22,6 +22,9 @@ func (c *client) attachEventCallbacks() {
 	c.cbDestroyNotify().Connect(c.X, c.Id())
 	c.cbConfigureRequest().Connect(c.X, c.Id())
 	c.cbPropertyNotify().Connect(c.X, c.Id())
+
+	c.clientMouseConfig()
+	c.frameMouseConfig()
 }
 
 func (c *client) cbDestroyNotify() xevent.DestroyNotifyFun {
