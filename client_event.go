@@ -72,7 +72,7 @@ func (c *client) cbConfigureRequest() xevent.ConfigureRequestFun {
 			^int(xproto.ConfigWindowSibling)
 		x, y, w, h := frame.ClientToFrame(c.frame,
 			int(ev.X), int(ev.Y), int(ev.Width), int(ev.Height))
-		c.frame.MROpt(true, flags, x, w, y, h)
+		c.frame.MROpt(true, flags, x, y, w, h)
 	}
 	return xevent.ConfigureRequestFun(f)
 }
