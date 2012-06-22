@@ -11,7 +11,6 @@ import (
 	"github.com/BurntSushi/wingo/cursors"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/render"
-	"github.com/BurntSushi/wingo/theme"
 )
 
 func (f *Full) newPieceWindow(ident string,
@@ -41,20 +40,20 @@ func (f *Full) newPieceWindow(ident string,
 }
 
 func (f *Full) newButtonClose() piece {
-	imgA := render.NewBorder(f.X, 0, 0, f.theme.Full.ATitleColor,
-		f.theme.Full.TitleSize, f.theme.Full.TitleSize,
+	imgA := render.NewBorder(f.X, 0, render.NoColor, f.theme.ATitleColor,
+		f.theme.TitleSize, f.theme.TitleSize,
 		render.GradientVert, render.GradientRegular)
-	imgI := render.NewBorder(f.X, 0, 0, f.theme.Full.ITitleColor,
-		f.theme.Full.TitleSize, f.theme.Full.TitleSize,
+	imgI := render.NewBorder(f.X, 0, render.NoColor, f.theme.ITitleColor,
+		f.theme.TitleSize, f.theme.TitleSize,
 		render.GradientVert, render.GradientRegular)
 
-	xgraphics.Blend(imgA.Image, f.theme.Full.ACloseButton, image.ZP)
-	xgraphics.Blend(imgI.Image, f.theme.Full.ICloseButton, image.ZP)
+	xgraphics.Blend(imgA.Image, f.theme.ACloseButton, image.ZP)
+	xgraphics.Blend(imgI.Image, f.theme.ICloseButton, image.ZP)
 
 	win := f.newPieceWindow("close", 0)
 	win.MROpt(fY|fW|fH,
-		0, f.theme.Full.BorderSize,
-		f.theme.Full.TitleSize, f.theme.Full.TitleSize)
+		0, f.theme.BorderSize,
+		f.theme.TitleSize, f.theme.TitleSize)
 
 	imgA.CreatePixmap()
 	imgI.CreatePixmap()
@@ -62,20 +61,20 @@ func (f *Full) newButtonClose() piece {
 }
 
 func (f *Full) newButtonMaximize() piece {
-	imgA := render.NewBorder(f.X, 0, 0, f.theme.Full.ATitleColor,
-		f.theme.Full.TitleSize, f.theme.Full.TitleSize,
+	imgA := render.NewBorder(f.X, 0, render.NoColor, f.theme.ATitleColor,
+		f.theme.TitleSize, f.theme.TitleSize,
 		render.GradientVert, render.GradientRegular)
-	imgI := render.NewBorder(f.X, 0, 0, f.theme.Full.ITitleColor,
-		f.theme.Full.TitleSize, f.theme.Full.TitleSize,
+	imgI := render.NewBorder(f.X, 0, render.NoColor, f.theme.ITitleColor,
+		f.theme.TitleSize, f.theme.TitleSize,
 		render.GradientVert, render.GradientRegular)
 
-	xgraphics.Blend(imgA.Image, f.theme.Full.AMaximizeButton, image.ZP)
-	xgraphics.Blend(imgI.Image, f.theme.Full.IMaximizeButton, image.ZP)
+	xgraphics.Blend(imgA.Image, f.theme.AMaximizeButton, image.ZP)
+	xgraphics.Blend(imgI.Image, f.theme.IMaximizeButton, image.ZP)
 
 	win := f.newPieceWindow("maximize", 0)
 	win.MROpt(fY|fW|fH,
-		0, f.theme.Full.BorderSize,
-		f.theme.Full.TitleSize, f.theme.Full.TitleSize)
+		0, f.theme.BorderSize,
+		f.theme.TitleSize, f.theme.TitleSize)
 
 	imgA.CreatePixmap()
 	imgI.CreatePixmap()
@@ -83,20 +82,20 @@ func (f *Full) newButtonMaximize() piece {
 }
 
 func (f *Full) newButtonMinimize() piece {
-	imgA := render.NewBorder(f.X, 0, 0, f.theme.Full.ATitleColor,
-		f.theme.Full.TitleSize, f.theme.Full.TitleSize,
+	imgA := render.NewBorder(f.X, 0, render.NoColor, f.theme.ATitleColor,
+		f.theme.TitleSize, f.theme.TitleSize,
 		render.GradientVert, render.GradientRegular)
-	imgI := render.NewBorder(f.X, 0, 0, f.theme.Full.ITitleColor,
-		f.theme.Full.TitleSize, f.theme.Full.TitleSize,
+	imgI := render.NewBorder(f.X, 0, render.NoColor, f.theme.ITitleColor,
+		f.theme.TitleSize, f.theme.TitleSize,
 		render.GradientVert, render.GradientRegular)
 
-	xgraphics.Blend(imgA.Image, f.theme.Full.AMinimizeButton, image.ZP)
-	xgraphics.Blend(imgI.Image, f.theme.Full.IMinimizeButton, image.ZP)
+	xgraphics.Blend(imgA.Image, f.theme.AMinimizeButton, image.ZP)
+	xgraphics.Blend(imgI.Image, f.theme.IMinimizeButton, image.ZP)
 
 	win := f.newPieceWindow("minimize", 0)
 	win.MROpt(fY|fW|fH,
-		0, f.theme.Full.BorderSize,
-		f.theme.Full.TitleSize, f.theme.Full.TitleSize)
+		0, f.theme.BorderSize,
+		f.theme.TitleSize, f.theme.TitleSize)
 
 	imgA.CreatePixmap()
 	imgI.CreatePixmap()
@@ -104,17 +103,17 @@ func (f *Full) newButtonMinimize() piece {
 }
 
 func (f *Full) newTitleBar() piece {
-	imgA := render.NewBorder(f.X, 0, 0, f.theme.Full.ATitleColor,
-		1, f.theme.Full.TitleSize,
+	imgA := render.NewBorder(f.X, 0, render.NoColor, f.theme.ATitleColor,
+		1, f.theme.TitleSize,
 		render.GradientVert, render.GradientRegular)
-	imgI := render.NewBorder(f.X, 0, 0, f.theme.Full.ITitleColor,
-		1, f.theme.Full.TitleSize,
+	imgI := render.NewBorder(f.X, 0, render.NoColor, f.theme.ITitleColor,
+		1, f.theme.TitleSize,
 		render.GradientVert, render.GradientRegular)
 
 	win := f.newPieceWindow("titlebar", 0)
 	win.MROpt(fX|fY|fH,
-		f.theme.Full.BorderSize, f.theme.Full.BorderSize,
-		0, f.theme.Full.TitleSize)
+		f.theme.BorderSize, f.theme.BorderSize,
+		0, f.theme.TitleSize)
 
 	imgA.CreatePixmap()
 	imgI.CreatePixmap()
@@ -124,9 +123,9 @@ func (f *Full) newTitleBar() piece {
 func (f *Full) newTitleText() piece {
 	win := f.newPieceWindow("titletext", 0)
 	win.MROpt(fX|fY|fH,
-		f.theme.Full.BorderSize+f.theme.Full.TitleSize,
-		f.theme.Full.BorderSize,
-		0, f.theme.Full.TitleSize)
+		f.theme.BorderSize+f.theme.TitleSize,
+		f.theme.BorderSize,
+		0, f.theme.TitleSize)
 
 	return newPiece(win, 0, 0)
 }
@@ -134,8 +133,8 @@ func (f *Full) newTitleText() piece {
 func (f *Full) newIcon() piece {
 	win := f.newPieceWindow("icon", 0)
 	win.MROpt(fX|fY|fW|fH,
-		f.theme.Full.BorderSize, f.theme.Full.BorderSize,
-		f.theme.Full.TitleSize, f.theme.Full.TitleSize)
+		f.theme.BorderSize, f.theme.BorderSize,
+		f.theme.TitleSize, f.theme.TitleSize)
 	return newPiece(win, 0, 0)
 }
 
@@ -146,10 +145,10 @@ func (f *Full) newIcon() piece {
 //
 
 func (f *Full) borderImages(width, height int) (xproto.Pixmap, xproto.Pixmap) {
-	imgA := render.NewBorder(f.X, 0, 0,
-		theme.NewColor(f.theme.Full.ABorderColor), width, height, 0, 0)
-	imgI := render.NewBorder(f.X, 0, 0,
-		theme.NewColor(f.theme.Full.IBorderColor), width, height, 0, 0)
+	imgA := render.NewBorder(f.X, 0, render.NoColor, f.theme.ABorderColor,
+		width, height, 0, 0)
+	imgI := render.NewBorder(f.X, 0, render.NoColor, f.theme.IBorderColor,
+		width, height, 0, 0)
 
 	imgA.CreatePixmap()
 	imgI.CreatePixmap()
@@ -157,71 +156,71 @@ func (f *Full) borderImages(width, height int) (xproto.Pixmap, xproto.Pixmap) {
 }
 
 func (f *Full) newTopSide() piece {
-	pixA, pixI := f.borderImages(1, f.theme.Full.BorderSize)
+	pixA, pixI := f.borderImages(1, f.theme.BorderSize)
 	win := f.newPieceWindow("top", cursors.TopSide)
-	win.MROpt(fX|fY|fH, f.theme.Full.BorderSize, 0, 0, f.theme.Full.BorderSize)
+	win.MROpt(fX|fY|fH, f.theme.BorderSize, 0, 0, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }
 
 func (f *Full) newBottomSide() piece {
-	pixA, pixI := f.borderImages(1, f.theme.Full.BorderSize)
+	pixA, pixI := f.borderImages(1, f.theme.BorderSize)
 	win := f.newPieceWindow("bottom", cursors.BottomSide)
-	win.MROpt(fX|fH, f.theme.Full.BorderSize, 0, 0, f.theme.Full.BorderSize)
+	win.MROpt(fX|fH, f.theme.BorderSize, 0, 0, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }
 
 func (f *Full) newLeftSide() piece {
-	pixA, pixI := f.borderImages(f.theme.Full.BorderSize, 1)
+	pixA, pixI := f.borderImages(f.theme.BorderSize, 1)
 	win := f.newPieceWindow("left", cursors.LeftSide)
-	win.MROpt(fX|fY|fW, 0, f.theme.Full.BorderSize, f.theme.Full.BorderSize, 0)
+	win.MROpt(fX|fY|fW, 0, f.theme.BorderSize, f.theme.BorderSize, 0)
 	return newPiece(win, pixA, pixI)
 }
 
 func (f *Full) newRightSide() piece {
-	pixA, pixI := f.borderImages(f.theme.Full.BorderSize, 1)
+	pixA, pixI := f.borderImages(f.theme.BorderSize, 1)
 	win := f.newPieceWindow("right", cursors.RightSide)
-	win.MROpt(fY|fW, 0, f.theme.Full.BorderSize, f.theme.Full.BorderSize, 0)
+	win.MROpt(fY|fW, 0, f.theme.BorderSize, f.theme.BorderSize, 0)
 	return newPiece(win, pixA, pixI)
 }
 
 func (f *Full) newTitleBottom() piece {
-	pixA, pixI := f.borderImages(1, f.theme.Full.BorderSize)
+	pixA, pixI := f.borderImages(1, f.theme.BorderSize)
 	win := f.newPieceWindow("titlebottom", 0)
 	win.MROpt(fX|fY|fH,
-		f.theme.Full.BorderSize, f.theme.Full.BorderSize+f.theme.Full.TitleSize,
-		0, f.theme.Full.BorderSize)
+		f.theme.BorderSize, f.theme.BorderSize+f.theme.TitleSize,
+		0, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }
 
 func (f *Full) newTopLeft() piece {
-	pixA, pixI := f.borderImages(f.theme.Full.BorderSize,
-		f.theme.Full.BorderSize)
+	pixA, pixI := f.borderImages(f.theme.BorderSize,
+		f.theme.BorderSize)
 	win := f.newPieceWindow("topleft", cursors.TopLeftCorner)
 	win.MROpt(fX|fY|fW|fH,
-		0, 0, f.theme.Full.BorderSize, f.theme.Full.BorderSize)
+		0, 0, f.theme.BorderSize, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }
 
 func (f *Full) newTopRight() piece {
-	pixA, pixI := f.borderImages(f.theme.Full.BorderSize,
-		f.theme.Full.BorderSize)
+	pixA, pixI := f.borderImages(f.theme.BorderSize,
+		f.theme.BorderSize)
 	win := f.newPieceWindow("topright", cursors.TopRightCorner)
-	win.MROpt(fY|fW|fH, 0, 0, f.theme.Full.BorderSize, f.theme.Full.BorderSize)
+	win.MROpt(fY|fW|fH, 0, 0, f.theme.BorderSize, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }
 
 func (f *Full) newBottomLeft() piece {
-	pixA, pixI := f.borderImages(f.theme.Full.BorderSize,
-		f.theme.Full.BorderSize)
+	pixA, pixI := f.borderImages(f.theme.BorderSize,
+		f.theme.BorderSize)
 	win := f.newPieceWindow("bottomleft", cursors.BottomLeftCorner)
-	win.MROpt(fX|fW|fH, 0, 0, f.theme.Full.BorderSize, f.theme.Full.BorderSize)
+	win.MROpt(fX|fW|fH, 0, 0, f.theme.BorderSize, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }
 
 func (f *Full) newBottomRight() piece {
-	pixA, pixI := f.borderImages(f.theme.Full.BorderSize,
-		f.theme.Full.BorderSize)
+	pixA, pixI := f.borderImages(f.theme.BorderSize,
+		f.theme.BorderSize)
 	win := f.newPieceWindow("bottomright", cursors.BottomRightCorner)
-	win.MROpt(fW|fH, 0, 0, f.theme.Full.BorderSize, f.theme.Full.BorderSize)
+	win.MROpt(fW|fH, 0, 0, f.theme.BorderSize, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }

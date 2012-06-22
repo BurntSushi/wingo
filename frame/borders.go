@@ -5,25 +5,26 @@ import (
 
 	"github.com/BurntSushi/xgbutil"
 
-	"github.com/BurntSushi/wingo/theme"
+	"github.com/BurntSushi/wingo/render"
 )
 
 type Borders struct {
 	*frame
+	theme *BordersTheme
 
 	topSide, bottomSide, leftSide, rightSide   piece
 	topLeft, topRight, bottomLeft, bottomRight piece
 }
 
 func NewBorders(X *xgbutil.XUtil,
-	t *theme.Theme, p *Parent, c Client) (*Borders, error) {
+	t *BordersTheme, p *Parent, c Client) (*Borders, error) {
 
-	f, err := newFrame(X, t, p, c)
+	f, err := newFrame(X, p, c)
 	if err != nil {
 		return nil, err
 	}
 
-	bf := &Borders{frame: f}
+	bf := &Borders{frame: f, theme: t}
 
 	bf.topSide = bf.newTopSide()
 	bf.bottomSide = bf.newBottomSide()
@@ -125,7 +126,7 @@ func (f *Borders) Inactive() {
 }
 
 func (f *Borders) Maximize() {
-	if f.theme.Full.BorderSize > 0 && f.Current() {
+	if f.theme.BorderSize > 0 && f.Current() {
 		f.topSide.Unmap()
 		f.bottomSide.Unmap()
 		f.leftSide.Unmap()
@@ -141,7 +142,7 @@ func (f *Borders) Maximize() {
 }
 
 func (f *Borders) Unmaximize() {
-	if f.theme.Full.BorderSize > 0 && f.Current() {
+	if f.theme.BorderSize > 0 && f.Current() {
 		f.topSide.Map()
 		f.bottomSide.Map()
 		f.leftSide.Map()
@@ -160,28 +161,28 @@ func (f *Borders) Top() int {
 	if f.client.Maximized() {
 		return 0
 	}
-	return f.theme.Borders.BorderSize
+	return f.theme.BorderSize
 }
 
 func (f *Borders) Bottom() int {
 	if f.client.Maximized() {
 		return 0
 	}
-	return f.theme.Borders.BorderSize
+	return f.theme.BorderSize
 }
 
 func (f *Borders) Left() int {
 	if f.client.Maximized() {
 		return 0
 	}
-	return f.theme.Borders.BorderSize
+	return f.theme.BorderSize
 }
 
 func (f *Borders) Right() int {
 	if f.client.Maximized() {
 		return 0
 	}
-	return f.theme.Borders.BorderSize
+	return f.theme.BorderSize
 }
 
 func (f *Borders) moveresizePieces() {
@@ -215,4 +216,20 @@ func (f *Borders) Move(x, y int) {
 func (f *Borders) Resize(validate bool, w, h int) {
 	resize(f, validate, w, h)
 	f.moveresizePieces()
+}
+
+type BordersTheme struct {
+	BorderSize                 int
+	AThinColor, IThinColor     render.Color
+	ABorderColor, IBorderColor render.Color
+}
+
+func DefaultBordersTheme() *BordersTheme {
+	return &BordersTheme{
+		BorderSize:   10,
+		AThinColor:   render.NewColor(0x0),
+		IThinColor:   render.NewColor(0x0),
+		ABorderColor: render.NewColor(0x3366ff),
+		IBorderColor: render.NewColor(0xdfdcdf),
+	}
 }

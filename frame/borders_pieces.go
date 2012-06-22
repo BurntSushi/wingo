@@ -40,10 +40,10 @@ func (f *Borders) pieceImages(borderTypes, gradientType, gradientDir,
 	width, height int) (xproto.Pixmap, xproto.Pixmap) {
 
 	imgA := render.NewBorder(f.X, borderTypes,
-		f.theme.Borders.AThinColor, f.theme.Borders.ABorderColor,
+		f.theme.AThinColor, f.theme.ABorderColor,
 		width, height, gradientType, gradientDir)
 	imgI := render.NewBorder(f.X, borderTypes,
-		f.theme.Borders.IThinColor, f.theme.Borders.IBorderColor,
+		f.theme.IThinColor, f.theme.IBorderColor,
 		width, height, gradientType, gradientDir)
 
 	imgA.CreatePixmap()
@@ -55,12 +55,12 @@ func (f *Borders) cornerImages(borderTypes,
 	diagonal int) (xproto.Pixmap, xproto.Pixmap) {
 
 	imgA := render.NewCorner(f.X, borderTypes,
-		f.theme.Borders.AThinColor, f.theme.Borders.ABorderColor,
-		f.theme.Borders.BorderSize, f.theme.Borders.BorderSize,
+		f.theme.AThinColor, f.theme.ABorderColor,
+		f.theme.BorderSize, f.theme.BorderSize,
 		diagonal)
 	imgI := render.NewCorner(f.X, borderTypes,
-		f.theme.Borders.IThinColor, f.theme.Borders.IBorderColor,
-		f.theme.Borders.BorderSize, f.theme.Borders.BorderSize,
+		f.theme.IThinColor, f.theme.IBorderColor,
+		f.theme.BorderSize, f.theme.BorderSize,
 		diagonal)
 
 	imgA.CreatePixmap()
@@ -71,40 +71,40 @@ func (f *Borders) cornerImages(borderTypes,
 func (f *Borders) newTopSide() piece {
 	pixA, pixI := f.pieceImages(render.BorderTop,
 		render.GradientVert, render.GradientRegular,
-		1, f.theme.Borders.BorderSize)
+		1, f.theme.BorderSize)
 	win := f.newPieceWindow("top", cursors.TopSide)
-	win.MROpt(fX|fY|fH, f.theme.Borders.BorderSize, 0,
-		0, f.theme.Borders.BorderSize)
+	win.MROpt(fX|fY|fH, f.theme.BorderSize, 0,
+		0, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }
 
 func (f *Borders) newBottomSide() piece {
 	pixA, pixI := f.pieceImages(render.BorderBottom,
 		render.GradientVert, render.GradientReverse,
-		1, f.theme.Borders.BorderSize)
+		1, f.theme.BorderSize)
 	win := f.newPieceWindow("bottom", cursors.BottomSide)
 	win.MROpt(fX|fH,
-		f.theme.Borders.BorderSize, 0, 0, f.theme.Borders.BorderSize)
+		f.theme.BorderSize, 0, 0, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }
 
 func (f *Borders) newLeftSide() piece {
 	pixA, pixI := f.pieceImages(render.BorderLeft,
 		render.GradientHorz, render.GradientRegular,
-		f.theme.Borders.BorderSize, 1)
+		f.theme.BorderSize, 1)
 	win := f.newPieceWindow("left", cursors.LeftSide)
 	win.MROpt(fX|fY|fW,
-		0, f.theme.Borders.BorderSize, f.theme.Borders.BorderSize, 0)
+		0, f.theme.BorderSize, f.theme.BorderSize, 0)
 	return newPiece(win, pixA, pixI)
 }
 
 func (f *Borders) newRightSide() piece {
 	pixA, pixI := f.pieceImages(render.BorderRight,
 		render.GradientHorz, render.GradientReverse,
-		f.theme.Borders.BorderSize, 1)
+		f.theme.BorderSize, 1)
 	win := f.newPieceWindow("right", cursors.RightSide)
 	win.MROpt(fY|fW,
-		0, f.theme.Borders.BorderSize, f.theme.Borders.BorderSize, 0)
+		0, f.theme.BorderSize, f.theme.BorderSize, 0)
 	return newPiece(win, pixA, pixI)
 }
 
@@ -113,7 +113,7 @@ func (f *Borders) newTopLeft() piece {
 		render.DiagTopLeft)
 	win := f.newPieceWindow("topleft", cursors.TopLeftCorner)
 	win.MROpt(fX|fY|fW|fH,
-		0, 0, f.theme.Borders.BorderSize, f.theme.Borders.BorderSize)
+		0, 0, f.theme.BorderSize, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }
 
@@ -122,7 +122,7 @@ func (f *Borders) newTopRight() piece {
 		render.DiagTopRight)
 	win := f.newPieceWindow("topright", cursors.TopRightCorner)
 	win.MROpt(fY|fW|fH,
-		0, 0, f.theme.Borders.BorderSize, f.theme.Borders.BorderSize)
+		0, 0, f.theme.BorderSize, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }
 
@@ -131,7 +131,7 @@ func (f *Borders) newBottomLeft() piece {
 		render.DiagBottomLeft)
 	win := f.newPieceWindow("bottomleft", cursors.BottomLeftCorner)
 	win.MROpt(fX|fW|fH,
-		0, 0, f.theme.Borders.BorderSize, f.theme.Borders.BorderSize)
+		0, 0, f.theme.BorderSize, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }
 
@@ -140,6 +140,6 @@ func (f *Borders) newBottomRight() piece {
 		render.DiagBottomRight)
 	win := f.newPieceWindow("bottomright", cursors.BottomRightCorner)
 	win.MROpt(fW|fH,
-		0, 0, f.theme.Borders.BorderSize, f.theme.Borders.BorderSize)
+		0, 0, f.theme.BorderSize, f.theme.BorderSize)
 	return newPiece(win, pixA, pixI)
 }

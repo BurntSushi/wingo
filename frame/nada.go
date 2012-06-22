@@ -2,18 +2,14 @@ package frame
 
 import (
 	"github.com/BurntSushi/xgbutil"
-
-	"github.com/BurntSushi/wingo/theme"
 )
 
 type Nada struct {
 	*frame
 }
 
-func NewNada(X *xgbutil.XUtil,
-	t *theme.Theme, p *Parent, c Client) (*Nada, error) {
-
-	f, err := newFrame(X, t, p, c)
+func NewNada(X *xgbutil.XUtil, p *Parent, c Client) (*Nada, error) {
+	f, err := newFrame(X, p, c)
 	if err != nil {
 		return nil, err
 	}

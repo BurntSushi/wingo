@@ -5,21 +5,22 @@ import (
 
 	"github.com/BurntSushi/xgbutil"
 
-	"github.com/BurntSushi/wingo/theme"
+	"github.com/BurntSushi/wingo/render"
 )
 
 type Slim struct {
 	*frame
+	theme *SlimTheme
 }
 
 func NewSlim(X *xgbutil.XUtil,
-	t *theme.Theme, p *Parent, c Client) (*Slim, error) {
+	t *SlimTheme, p *Parent, c Client) (*Slim, error) {
 
-	f, err := newFrame(X, t, p, c)
+	f, err := newFrame(X, p, c)
 	if err != nil {
 		return nil, err
 	}
-	return &Slim{f}, nil
+	return &Slim{frame: f, theme: t}, nil
 }
 
 func (f *Slim) Current() bool {
@@ -41,14 +42,14 @@ func (f *Slim) On() {
 func (f *Slim) Active() {
 	f.State = Active
 
-	f.parent.Change(xproto.CwBackPixel, uint32(f.theme.Slim.ABorderColor))
+	f.parent.Change(xproto.CwBackPixel, f.theme.ABorderColor.Uint32())
 	f.parent.ClearAll()
 }
 
 func (f *Slim) Inactive() {
 	f.State = Inactive
 
-	f.parent.Change(xproto.CwBackPixel, uint32(f.theme.Slim.IBorderColor))
+	f.parent.Change(xproto.CwBackPixel, f.theme.IBorderColor.Uint32())
 	f.parent.ClearAll()
 }
 
@@ -59,28 +60,28 @@ func (f *Slim) Top() int {
 	if f.client.Maximized() {
 		return 0
 	}
-	return f.theme.Slim.BorderSize
+	return f.theme.BorderSize
 }
 
 func (f *Slim) Bottom() int {
 	if f.client.Maximized() {
 		return 0
 	}
-	return f.theme.Slim.BorderSize
+	return f.theme.BorderSize
 }
 
 func (f *Slim) Left() int {
 	if f.client.Maximized() {
 		return 0
 	}
-	return f.theme.Slim.BorderSize
+	return f.theme.BorderSize
 }
 
 func (f *Slim) Right() int {
 	if f.client.Maximized() {
 		return 0
 	}
-	return f.theme.Slim.BorderSize
+	return f.theme.BorderSize
 }
 
 func (f *Slim) MROpt(validate bool, flags, x, y, w, h int) {
@@ -97,4 +98,17 @@ func (f *Slim) Move(x, y int) {
 
 func (f *Slim) Resize(validate bool, w, h int) {
 	resize(f, validate, w, h)
+}
+
+type SlimTheme struct {
+	BorderSize                 int
+	ABorderColor, IBorderColor render.Color
+}
+
+func DefaultSlimTheme() *SlimTheme {
+	return &SlimTheme{
+		BorderSize:   10,
+		ABorderColor: render.NewColor(0x3366ff),
+		IBorderColor: render.NewColor(0xdfdcdf),
+	}
 }

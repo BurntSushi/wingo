@@ -7,7 +7,6 @@ import (
 	"github.com/BurntSushi/xgbutil/xrect"
 
 	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/theme"
 )
 
 const (
@@ -38,8 +37,7 @@ type ResizeState struct {
 // It's appropriate to think of it as an abstract frame, as it does not
 // satisfy the Frame interface by itself.
 type frame struct {
-	X     *xgbutil.XUtil
-	theme *theme.Theme
+	X *xgbutil.XUtil
 
 	MoveState   *MoveState
 	ResizeState *ResizeState
@@ -49,8 +47,7 @@ type frame struct {
 	isMapped    bool
 }
 
-func newFrame(X *xgbutil.XUtil,
-	t *theme.Theme, p *Parent, c Client) (*frame, error) {
+func newFrame(X *xgbutil.XUtil, p *Parent, c Client) (*frame, error) {
 
 	var err error
 	if p == nil {
@@ -62,7 +59,6 @@ func newFrame(X *xgbutil.XUtil,
 
 	return &frame{
 		X:           X,
-		theme:       t,
 		parent:      p,
 		client:      c,
 		MoveState:   &MoveState{},

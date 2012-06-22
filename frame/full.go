@@ -1,21 +1,25 @@
 package frame
 
 import (
+	"bytes"
 	"image"
+
+	"code.google.com/p/freetype-go/freetype/truetype"
 
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
+	"github.com/BurntSushi/wingo/bindata"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/render"
-	"github.com/BurntSushi/wingo/theme"
 )
 
 type Full struct {
 	*frame
+	theme *FullTheme
 
 	titleBar, titleText, icon                   piece
 	buttonMinimize, buttonMaximize, buttonClose piece
@@ -25,14 +29,14 @@ type Full struct {
 }
 
 func NewFull(X *xgbutil.XUtil,
-	t *theme.Theme, p *Parent, c Client) (*Full, error) {
+	t *FullTheme, p *Parent, c Client) (*Full, error) {
 
-	f, err := newFrame(X, t, p, c)
+	f, err := newFrame(X, p, c)
 	if err != nil {
 		return nil, err
 	}
 
-	ff := &Full{frame: f}
+	ff := &Full{frame: f, theme: t}
 
 	ff.titleBar = ff.newTitleBar()
 	ff.titleText = ff.newTitleText()
@@ -41,7 +45,7 @@ func NewFull(X *xgbutil.XUtil,
 	ff.buttonMinimize = ff.newButtonMinimize()
 	ff.icon = ff.newIcon()
 
-	if f.theme.Full.BorderSize > 0 {
+	if ff.theme.BorderSize > 0 {
 		ff.topSide = ff.newTopSide()
 		ff.bottomSide = ff.newBottomSide()
 		ff.leftSide = ff.newLeftSide()
@@ -65,7 +69,7 @@ func (f *Full) Current() bool {
 }
 
 func (f *Full) Destroy() {
-	if f.theme.Full.BorderSize > 0 {
+	if f.theme.BorderSize > 0 {
 		f.topSide.Destroy()
 		f.bottomSide.Destroy()
 		f.leftSide.Destroy()
@@ -89,7 +93,7 @@ func (f *Full) Destroy() {
 }
 
 func (f *Full) Off() {
-	if f.theme.Full.BorderSize > 0 {
+	if f.theme.BorderSize > 0 {
 		f.topSide.Unmap()
 		f.bottomSide.Unmap()
 		f.leftSide.Unmap()
@@ -120,7 +124,7 @@ func (f *Full) On() {
 		f.Inactive()
 	}
 
-	if f.theme.Full.BorderSize > 0 {
+	if f.theme.BorderSize > 0 {
 		f.titleBottom.Map()
 
 		if !f.client.Maximized() {
@@ -147,7 +151,7 @@ func (f *Full) On() {
 func (f *Full) Active() {
 	f.State = Active
 
-	if f.theme.Full.BorderSize > 0 {
+	if f.theme.BorderSize > 0 {
 		f.topSide.Active()
 		f.bottomSide.Active()
 		f.leftSide.Active()
@@ -174,7 +178,7 @@ func (f *Full) Active() {
 func (f *Full) Inactive() {
 	f.State = Inactive
 
-	if f.theme.Full.BorderSize > 0 {
+	if f.theme.BorderSize > 0 {
 		f.topSide.Inactive()
 		f.bottomSide.Inactive()
 		f.leftSide.Inactive()
@@ -203,11 +207,11 @@ func (f *Full) Maximize() {
 	f.buttonMaximize.MROpt(fY, 0, 0, 0, 0)
 	f.buttonMinimize.MROpt(fY, 0, 0, 0, 0)
 	f.titleBar.MROpt(fX|fY, 0, 0, 0, 0)
-	f.titleText.MROpt(fX|fY, f.theme.Full.TitleSize, 0, 0, 0)
+	f.titleText.MROpt(fX|fY, f.theme.TitleSize, 0, 0, 0)
 	f.icon.MROpt(fX|fY, 0, 0, 0, 0)
-	f.titleBottom.MROpt(fX|fY, 0, f.theme.Full.TitleSize, 0, 0)
+	f.titleBottom.MROpt(fX|fY, 0, f.theme.TitleSize, 0, 0)
 
-	if f.theme.Full.BorderSize > 0 && f.Current() {
+	if f.theme.BorderSize > 0 && f.Current() {
 		f.topSide.Unmap()
 		f.bottomSide.Unmap()
 		f.leftSide.Unmap()
@@ -223,21 +227,21 @@ func (f *Full) Maximize() {
 }
 
 func (f *Full) Unmaximize() {
-	f.buttonClose.MROpt(fY, 0, f.theme.Full.BorderSize, 0, 0)
-	f.buttonMaximize.MROpt(fY, 0, f.theme.Full.BorderSize, 0, 0)
-	f.buttonMinimize.MROpt(fY, 0, f.theme.Full.BorderSize, 0, 0)
-	f.titleBar.MROpt(fX|fY, f.theme.Full.BorderSize,
-		f.theme.Full.BorderSize, 0, 0)
+	f.buttonClose.MROpt(fY, 0, f.theme.BorderSize, 0, 0)
+	f.buttonMaximize.MROpt(fY, 0, f.theme.BorderSize, 0, 0)
+	f.buttonMinimize.MROpt(fY, 0, f.theme.BorderSize, 0, 0)
+	f.titleBar.MROpt(fX|fY, f.theme.BorderSize,
+		f.theme.BorderSize, 0, 0)
 	f.titleText.MROpt(fX|fY,
-		f.theme.Full.BorderSize+f.theme.Full.TitleSize,
-		f.theme.Full.BorderSize, 0, 0)
-	f.icon.MROpt(fX|fY, f.theme.Full.BorderSize,
-		f.theme.Full.BorderSize, 0, 0)
-	f.titleBottom.MROpt(fX|fY, f.theme.Full.BorderSize,
-		f.theme.Full.BorderSize+f.theme.Full.TitleSize,
+		f.theme.BorderSize+f.theme.TitleSize,
+		f.theme.BorderSize, 0, 0)
+	f.icon.MROpt(fX|fY, f.theme.BorderSize,
+		f.theme.BorderSize, 0, 0)
+	f.titleBottom.MROpt(fX|fY, f.theme.BorderSize,
+		f.theme.BorderSize+f.theme.TitleSize,
 		0, 0)
 
-	if f.theme.Full.BorderSize > 0 && f.Current() {
+	if f.theme.BorderSize > 0 && f.Current() {
 		f.topSide.Map()
 		f.bottomSide.Map()
 		f.leftSide.Map()
@@ -254,36 +258,36 @@ func (f *Full) Unmaximize() {
 
 func (f *Full) Top() int {
 	if f.client.Maximized() {
-		return f.theme.Full.BorderSize + f.theme.Full.TitleSize
+		return f.theme.BorderSize + f.theme.TitleSize
 	}
-	return (f.theme.Full.BorderSize * 2) + f.theme.Full.TitleSize
+	return (f.theme.BorderSize * 2) + f.theme.TitleSize
 }
 
 func (f *Full) Bottom() int {
 	if f.client.Maximized() {
 		return 0
 	}
-	return f.theme.Full.BorderSize
+	return f.theme.BorderSize
 }
 
 func (f *Full) Left() int {
 	if f.client.Maximized() {
 		return 0
 	}
-	return f.theme.Full.BorderSize
+	return f.theme.BorderSize
 }
 
 func (f *Full) Right() int {
 	if f.client.Maximized() {
 		return 0
 	}
-	return f.theme.Full.BorderSize
+	return f.theme.BorderSize
 }
 
 func (f *Full) moveresizePieces() {
 	fg := f.Geom()
 
-	if f.theme.Full.BorderSize > 0 {
+	if f.theme.BorderSize > 0 {
 		f.topSide.MROpt(fW, 0, 0, fg.Width()-f.topLeft.w()-f.topRight.w(), 0)
 		f.bottomSide.MROpt(
 			fY|fW, 0, fg.Height()-f.bottomSide.h(), f.topSide.w(), 0)
@@ -326,10 +330,10 @@ func (f *Full) Resize(validate bool, w, h int) {
 }
 
 func (f *Full) UpdateIcon() {
-	size := f.theme.Full.TitleSize
-	imgA := render.NewBorder(f.X, 0, 0, f.theme.Full.ATitleColor,
+	size := f.theme.TitleSize
+	imgA := render.NewBorder(f.X, 0, render.NoColor, f.theme.ATitleColor,
 		size, size, render.GradientVert, render.GradientRegular)
-	imgI := render.NewBorder(f.X, 0, 0, f.theme.Full.ITitleColor,
+	imgI := render.NewBorder(f.X, 0, render.NoColor, f.theme.ITitleColor,
 		size, size, render.GradientVert, render.GradientRegular)
 
 	img := f.client.Icon(size-4, size-4)
@@ -358,22 +362,22 @@ func (f *Full) UpdateIcon() {
 
 func (f *Full) UpdateTitle() {
 	title := f.client.Name()
-	font := f.theme.Full.Font
-	fontSize := f.theme.Full.FontSize
-	aFontColor := misc.ColorFromInt(f.theme.Full.AFontColor)
-	iFontColor := misc.ColorFromInt(f.theme.Full.IFontColor)
+	font := f.theme.Font
+	fontSize := f.theme.FontSize
+	aFontColor := f.theme.AFontColor.ImageColor()
+	iFontColor := f.theme.IFontColor.ImageColor()
 
 	ew, eh := xgraphics.TextMaxExtents(font, fontSize, title)
 	eh += misc.TextBreathe
 
-	imgA := render.NewBorder(f.X, 0, 0, f.theme.Full.ATitleColor,
-		ew, f.theme.Full.TitleSize,
+	imgA := render.NewBorder(f.X, 0, render.NoColor, f.theme.ATitleColor,
+		ew, f.theme.TitleSize,
 		render.GradientVert, render.GradientRegular)
-	imgI := render.NewBorder(f.X, 0, 0, f.theme.Full.ITitleColor,
-		ew, f.theme.Full.TitleSize,
+	imgI := render.NewBorder(f.X, 0, render.NoColor, f.theme.ITitleColor,
+		ew, f.theme.TitleSize,
 		render.GradientVert, render.GradientRegular)
 
-	y := (f.theme.Full.TitleSize-eh)/2 - 1
+	y := (f.theme.TitleSize-eh)/2 - 1
 
 	x2, _, err := imgA.Text(0, y, aFontColor, fontSize, font, title)
 	if err != nil {
@@ -407,4 +411,59 @@ func (f *Full) UpdateTitle() {
 	} else {
 		f.titleText.Inactive()
 	}
+}
+
+type FullTheme struct {
+	Font                   *truetype.Font
+	FontSize               float64
+	AFontColor, IFontColor render.Color
+
+	TitleSize                int
+	ATitleColor, ITitleColor render.Color
+
+	BorderSize                 int
+	ABorderColor, IBorderColor render.Color
+
+	ACloseButton, ICloseButton       *xgraphics.Image
+	AMaximizeButton, IMaximizeButton *xgraphics.Image
+	AMinimizeButton, IMinimizeButton *xgraphics.Image
+}
+
+func DefaultFullTheme(X *xgbutil.XUtil) *FullTheme {
+	return &FullTheme{
+		Font: xgraphics.MustFont(xgraphics.ParseFont(
+			bytes.NewBuffer(bindata.DejavusansTtf()))),
+		FontSize:   15,
+		AFontColor: render.NewColor(0xffffff),
+		IFontColor: render.NewColor(0x000000),
+
+		TitleSize:   25,
+		ATitleColor: render.NewColor(0x3366ff),
+		ITitleColor: render.NewColor(0xdfdcdf),
+
+		ACloseButton: builtInButton(X, bindata.ClosePng),
+		ICloseButton: builtInButton(X, bindata.ClosePng),
+
+		AMaximizeButton: builtInButton(X, bindata.MaximizePng),
+		IMaximizeButton: builtInButton(X, bindata.MaximizePng),
+
+		AMinimizeButton: builtInButton(X, bindata.MinimizePng),
+		IMinimizeButton: builtInButton(X, bindata.MinimizePng),
+
+		BorderSize:   10,
+		ABorderColor: render.NewColor(0x3366ff),
+		IBorderColor: render.NewColor(0xdfdcdf),
+	}
+}
+
+func builtInButton(X *xgbutil.XUtil,
+	loadBuiltIn func() []byte) *xgraphics.Image {
+
+	img, err := xgraphics.NewBytes(X, loadBuiltIn())
+	if err != nil {
+		logger.Error.Printf("Could not get built in button image because: %v",
+			err)
+		panic("")
+	}
+	return img
 }
