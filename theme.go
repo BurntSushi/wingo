@@ -12,6 +12,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
 	"github.com/BurntSushi/wingo/bindata"
+	"github.com/BurntSushi/wingo/frames"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/render"
 	"github.com/BurntSushi/wingo/wini"
@@ -33,6 +34,9 @@ type themeFull struct {
 	titleSize                int
 	aTitleColor, iTitleColor render.Color
 
+	borderSize                 int
+	aBorderColor, iBorderColor render.Color
+
 	aCloseButton, iCloseButton *xgraphics.Image
 	aCloseColor, iCloseColor   render.Color
 
@@ -41,9 +45,27 @@ type themeFull struct {
 
 	aMinimizeButton, iMinimizeButton *xgraphics.Image
 	aMinimizeColor, iMinimizeColor   render.Color
+}
 
-	borderSize                 int
-	aBorderColor, iBorderColor render.Color
+func (tf themeFull) FrameTheme() *frame.FullTheme {
+	return &frames.FullTheme{
+		Font:            tf.font,
+		FontSize:        tf.fontSize,
+		AFontColor:      tf.AFontColor,
+		IFontColor:      tf.IFontColor,
+		TitleSize:       tf.titleSize,
+		ATitleColor:     tf.aTitleColor,
+		ITitleColor:     tf.iTitleColor,
+		BorderSize:      tf.borderSize,
+		ABorderColor:    tf.aBorderColor,
+		IBorderColor:    tf.iBorderColor,
+		ACloseButton:    tf.aCloseButton,
+		ICloseButton:    tf.iCloseButton,
+		AMaximizeButton: tf.aMaximizeButton,
+		IMaximizeButton: tf.iMaximizeButton,
+		AMinimizeButton: tf.aMinimizeButton,
+		IMinimizeButton: tf.iMinimizeButton,
+	}
 }
 
 type themeBorders struct {
@@ -52,9 +74,27 @@ type themeBorders struct {
 	aBorderColor, iBorderColor render.Color
 }
 
+func (tb themeBorders) FrameTheme() *frame.BordersTheme {
+	return &frames.BordersTheme{
+		BorderSize:   tb.borderSize,
+		AThinColor:   tb.aThinColor,
+		IThinColor:   tb.iThinColor,
+		ABorderColor: tb.aBorderColor,
+		IBorderColor: tb.iBorderColor,
+	}
+}
+
 type themeSlim struct {
 	borderSize                 int
 	aBorderColor, iBorderColor render.Color
+}
+
+func (ts themeSlim) FrameTheme() *frame.SlimTheme {
+	return &frames.SlimTheme{
+		BorderSize:   ts.borderSize,
+		ABorderColor: ts.aBorderColor,
+		IBorderColor: ts.iBorderColor,
+	}
 }
 
 type themePrompt struct {
@@ -71,10 +111,47 @@ type themePrompt struct {
 	cycleIconBorderSize   int
 	cycleIconTransparency int
 
-	selectActiveColor   render.Color
-	selectActiveBgColor render.Color
-	selectLabelColor    render.Color
-	selectLabelFontSize float64
+	selectActiveBgColor   render.Color
+	selectActiveFontColor render.Color
+
+	selectGroupBgColor   render.Color
+	selectGroupFont      *truetype.Font
+	selectGroupFontSize  float64
+	selectGroupFontColor render.Color
+}
+
+func (tp themePrompt) CycleTheme() *prompt.CycleTheme {
+	return &prompt.CycleTheme{
+		BorderSize:       tp.borderSize,
+		BgColor:          tp.bgColor,
+		BorderColor:      tp.borderColor,
+		Padding:          tp.padding,
+		Font:             tp.font,
+		FontSize:         tp.fontSize,
+		FontColor:        tp.fontColor,
+		IconSize:         tp.cycleIconSize,
+		IconBorderSize:   tp.cycleIconBorderSize,
+		IconTransparency: tp.cycleIconTransparency,
+	}
+}
+
+func (tp themePrompt) SelectTheme() *prompt.SelectTheme {
+	return &prompt.SelectTheme{
+		BorderSize:      tp.borderSize,
+		BgColor:         tp.bgColor,
+		BorderColor:     tp.borderColor,
+		Padding:         tp.padding,
+		Font:            tp.font,
+		FontSize:        tp.fontSize,
+		FontColor:       tp.fontColor,
+		ActiveBgColor:   tp.selectActiveBgColor,
+		ActiveFontColor: tp.selectActiveFontColor,
+		GroupBgColor:    tp.selectGroupBgColor,
+		GroupFont:       tp.selectGroupFont,
+		GroupFontSize:   tp.selectGroupFontSize,
+		GroupFontColor:  tp.selectGroupFontColor,
+		GroupSpacing:    15,
+	}
 }
 
 func newTheme(X *xgbutil.XUtil) *theme {
@@ -84,11 +161,15 @@ func newTheme(X *xgbutil.XUtil) *theme {
 			font:       builtInFont(),
 			fontSize:   15,
 			aFontColor: render.NewColor(0xffffff),
-			iFontColor: 0x000000,
+			iFontColor: render.NewColor(0x000000),
 
 			titleSize:   25,
 			aTitleColor: render.NewColor(0x3366ff),
 			iTitleColor: render.NewColor(0xdfdcdf),
+
+			borderSize:   10,
+			aBorderColor: render.NewColor(0x3366ff),
+			iBorderColor: render.NewColor(0xdfdcdf),
 
 			aCloseButton: builtInButton(X, bindata.ClosePng),
 			iCloseButton: builtInButton(X, bindata.ClosePng),
@@ -104,10 +185,6 @@ func newTheme(X *xgbutil.XUtil) *theme {
 			iMinimizeButton: builtInButton(X, bindata.MinimizePng),
 			aMinimizeColor:  render.NewColor(0xffffff),
 			iMinimizeColor:  render.NewColor(0x000000),
-
-			borderSize:   10,
-			aBorderColor: render.NewColor(0x3366ff),
-			iBorderColor: render.NewColor(0xdfdcdf),
 		},
 		themeBorders: themeBorders{
 			borderSize:   10,
@@ -127,15 +204,17 @@ func newTheme(X *xgbutil.XUtil) *theme {
 			borderSize:            10,
 			padding:               10,
 			font:                  builtInFont(),
-			fontSize:              15,
+			fontSize:              15.0,
 			fontColor:             render.NewColor(0x000000),
 			cycleIconSize:         32,
 			cycleIconBorderSize:   3,
 			cycleIconTransparency: 50,
-			selectActiveColor:     render.NewColor(0x000000),
 			selectActiveBgColor:   render.NewColor(0xffffff),
-			selectLabelColor:      render.NewColor(0xffffff),
-			selectLabelFontSize:   25,
+			selectActiveFontColor: render.NewColor(0x000000),
+			selectGroupBgColor:    render.NewColor(0xffffff),
+			selectGroupFont:       builtInFont(),
+			selectGroupFontSize:   25.0,
+			selectGroupFontColor:  render.NewColor(0x0),
 		},
 	}
 }
@@ -207,7 +286,7 @@ func loadTheme(X *xgbutil.XUtil) (*theme, error) {
 }
 
 func loadThemeFile() (*wini.Data, error) {
-	return wini.Parse("configdata/theme.wini")
+	return wini.Parse("config/theme.wini")
 }
 
 func loadMiscOption(X *xgbutil.XUtil, theme *Theme, k wini.Key) {
@@ -321,14 +400,18 @@ func loadPromptOption(X *xgbutil.XUtil, theme *theme, k wini.Key) {
 				"inclusive. Using 100 by default.")
 			theme.prompt.cycleIconTransparency = 100
 		}
-	case "select_active_color":
-		setNoGradient(k, &theme.prompt.selectActiveColor)
+	case "select_active_font_color":
+		setNoGradient(k, &theme.prompt.selectActiveFontColor)
 	case "select_active_bg_color":
 		setNoGradient(k, &theme.prompt.selectActiveBgColor)
-	case "select_label_color":
-		setNoGradient(k, &theme.prompt.selectLabelColor)
-	case "select_label_font_size":
-		setFloat(k, &theme.prompt.selectLabelFontSize)
+	case "select_group_bg_color":
+		setNoGradient(k, &theme.prompt.selectGroupBgColor)
+	case "select_group_font":
+		setFont(k, &theme.prompt.selectGroupFont)
+	case "select_group_font_size":
+		setFloat(k, &theme.prompt.selectGroupFontSize)
+	case "select_group_font_color":
+		setNoGradient(k, &theme.prompt.selectGroupFontColor)
 	}
 }
 

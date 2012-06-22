@@ -13,9 +13,9 @@ type prompts struct {
 
 func newPrompts() prompts {
 	return prompts{
-		cycle: prompt.NewCycle(X, prompt.DefaultCycleTheme,
+		cycle: prompt.NewCycle(X, wingo.theme.prompt.CycleTheme(),
 			prompt.DefaultCycleConfig),
-		slct: prompt.NewSelect(X, prompt.DefaultSelectTheme,
+		slct: prompt.NewSelect(X, wingo.theme.prompt.SelectTheme(),
 			prompt.DefaultSelectConfig),
 	}
 }

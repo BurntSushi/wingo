@@ -202,15 +202,15 @@ func (conf *conf) loadOptionsConfigSection(cdata *wini.Data, section string) {
 }
 
 func loadMouseConfigFile() (*wini.Data, error) {
-	return wini.Parse("configdata/mouse.wini")
+	return wini.Parse("config/mouse.wini")
 }
 
 func loadKeyConfigFile() (*wini.Data, error) {
-	return wini.Parse("configdata/key.wini")
+	return wini.Parse("config/key.wini")
 }
 
 func loadOptionsConfigFile() (*wini.Data, error) {
-	return wini.Parse("configdata/options.wini")
+	return wini.Parse("config/options.wini")
 }
 
 func strToDirection(s string) uint32 {
