@@ -5,12 +5,12 @@ BINDATA=$(BD)/wingo.png.go \
 				$(BD)/DejaVuSans.ttf.go $(BD)/FreeMono.ttf.go
 
 install: bindata
-	go install -p 6 . ./bindata ./cmdusage ./config ./cursors ./focus \
+	go install -p 6 . ./bindata ./cmdusage ./cursors ./focus \
 		./frame ./heads ./layout ./logger ./misc ./prompt ./render ./stack \
 		./text ./wini ./workspace
 
 gofmt:
-	gofmt -w *.go cmdusage/*.go config/*.go cursors/*.go focus/*.go frame/*.go \
+	gofmt -w *.go cmdusage/*.go cursors/*.go focus/*.go frame/*.go \
 		heads/*.go layout/*.go logger/*.go misc/*.go prompt/*.go render/*.go \
 		stack/*.go text/*.go wingo-cmd/*.go wini/*.go workspace/*.go
 	colcheck *.go */*.go
