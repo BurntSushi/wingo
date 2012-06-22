@@ -33,7 +33,7 @@ import (
 // created using the (*Cycle).AddItem method.
 type Cycle struct {
 	X      *xgbutil.XUtil // exported for no reason
-	theme  CycleTheme
+	theme  *CycleTheme
 	config CycleConfig
 
 	items      []*CycleItem
@@ -54,7 +54,7 @@ type Cycle struct {
 // CycleTheme and CycleConfig values can either use DefaultCycle{Theme,Config}
 // values found in this package, or custom ones can be created using
 // composite literals.
-func NewCycle(X *xgbutil.XUtil, theme CycleTheme, config CycleConfig) *Cycle {
+func NewCycle(X *xgbutil.XUtil, theme *CycleTheme, config CycleConfig) *Cycle {
 	cycle := &Cycle{
 		X:        X,
 		theme:    theme,
@@ -388,7 +388,7 @@ type CycleTheme struct {
 	IconTransparency int
 }
 
-var DefaultCycleTheme = CycleTheme{
+var DefaultCycleTheme = &CycleTheme{
 	BorderSize:  10,
 	BgColor:     render.NewImageColor(color.RGBA{0xff, 0xff, 0xff, 0xff}),
 	BorderColor: render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),

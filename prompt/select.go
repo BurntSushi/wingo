@@ -30,7 +30,7 @@ const (
 
 type Select struct {
 	X      *xgbutil.XUtil
-	theme  SelectTheme
+	theme  *SelectTheme
 	config SelectConfig
 
 	showing     bool
@@ -47,7 +47,7 @@ type Select struct {
 }
 
 func NewSelect(X *xgbutil.XUtil,
-	theme SelectTheme, config SelectConfig) *Select {
+	theme *SelectTheme, config SelectConfig) *Select {
 
 	slct := &Select{
 		X:           X,
@@ -360,7 +360,7 @@ type SelectTheme struct {
 	GroupSpacing   int
 }
 
-var DefaultSelectTheme = SelectTheme{
+var DefaultSelectTheme = &SelectTheme{
 	BorderSize:  10,
 	BgColor:     render.NewImageColor(color.RGBA{0xff, 0xff, 0xff, 0xff}),
 	BorderColor: render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
