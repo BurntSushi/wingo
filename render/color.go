@@ -8,6 +8,8 @@ type Color struct {
 	start, end int
 }
 
+var NoColor = Color{}
+
 func NewColor(clr int) Color {
 	return Color{start: clr, end: -1}
 }
@@ -22,6 +24,14 @@ func NewGradient(start, end int) Color {
 
 func NewImageGradient(startClr, endClr color.Color) Color {
 	return NewGradient(intFromImageColor(startClr), intFromImageColor(endClr))
+}
+
+func (c *Color) ColorSet(clr int) {
+	c.start = clr
+}
+
+func (c *Color) GradientSet(start, end int) {
+	c.start, c.end = start, end
 }
 
 func (c Color) Int() int {
