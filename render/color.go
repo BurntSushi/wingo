@@ -1,6 +1,8 @@
 package render
 
 import (
+	"fmt"
+
 	"image/color"
 )
 
@@ -24,6 +26,13 @@ func NewGradient(start, end int) Color {
 
 func NewImageGradient(startClr, endClr color.Color) Color {
 	return NewGradient(intFromImageColor(startClr), intFromImageColor(endClr))
+}
+
+func (c Color) String() string {
+	if c.IsGradient() {
+		return fmt.Sprintf("(%x, %x)", c.start, c.end)
+	}
+	return fmt.Sprintf("%x", c.start)
 }
 
 func (c *Color) ColorSet(clr int) {
