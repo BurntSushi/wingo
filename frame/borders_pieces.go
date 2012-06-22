@@ -3,6 +3,7 @@ package frame
 import (
 	"github.com/BurntSushi/xgb/xproto"
 
+	"github.com/BurntSushi/xgbutil/xgraphics"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/cursors"
@@ -37,7 +38,7 @@ func (f *Borders) newPieceWindow(ident string,
 }
 
 func (f *Borders) pieceImages(borderTypes, gradientType, gradientDir,
-	width, height int) (xproto.Pixmap, xproto.Pixmap) {
+	width, height int) (*xgraphics.Image, *xgraphics.Image) {
 
 	imgA := render.NewBorder(f.X, borderTypes,
 		f.theme.AThinColor, f.theme.ABorderColor,
@@ -45,14 +46,11 @@ func (f *Borders) pieceImages(borderTypes, gradientType, gradientDir,
 	imgI := render.NewBorder(f.X, borderTypes,
 		f.theme.IThinColor, f.theme.IBorderColor,
 		width, height, gradientType, gradientDir)
-
-	imgA.CreatePixmap()
-	imgI.CreatePixmap()
-	return imgA.Pixmap, imgI.Pixmap
+	return imgA.Image, imgI.Image
 }
 
 func (f *Borders) cornerImages(borderTypes,
-	diagonal int) (xproto.Pixmap, xproto.Pixmap) {
+	diagonal int) (*xgraphics.Image, *xgraphics.Image) {
 
 	imgA := render.NewCorner(f.X, borderTypes,
 		f.theme.AThinColor, f.theme.ABorderColor,
@@ -62,13 +60,10 @@ func (f *Borders) cornerImages(borderTypes,
 		f.theme.IThinColor, f.theme.IBorderColor,
 		f.theme.BorderSize, f.theme.BorderSize,
 		diagonal)
-
-	imgA.CreatePixmap()
-	imgI.CreatePixmap()
-	return imgA.Pixmap, imgI.Pixmap
+	return imgA.Image, imgI.Image
 }
 
-func (f *Borders) newTopSide() piece {
+func (f *Borders) newTopSide() *piece {
 	pixA, pixI := f.pieceImages(render.BorderTop,
 		render.GradientVert, render.GradientRegular,
 		1, f.theme.BorderSize)
@@ -78,7 +73,7 @@ func (f *Borders) newTopSide() piece {
 	return newPiece(win, pixA, pixI)
 }
 
-func (f *Borders) newBottomSide() piece {
+func (f *Borders) newBottomSide() *piece {
 	pixA, pixI := f.pieceImages(render.BorderBottom,
 		render.GradientVert, render.GradientReverse,
 		1, f.theme.BorderSize)
@@ -88,7 +83,7 @@ func (f *Borders) newBottomSide() piece {
 	return newPiece(win, pixA, pixI)
 }
 
-func (f *Borders) newLeftSide() piece {
+func (f *Borders) newLeftSide() *piece {
 	pixA, pixI := f.pieceImages(render.BorderLeft,
 		render.GradientHorz, render.GradientRegular,
 		f.theme.BorderSize, 1)
@@ -98,7 +93,7 @@ func (f *Borders) newLeftSide() piece {
 	return newPiece(win, pixA, pixI)
 }
 
-func (f *Borders) newRightSide() piece {
+func (f *Borders) newRightSide() *piece {
 	pixA, pixI := f.pieceImages(render.BorderRight,
 		render.GradientHorz, render.GradientReverse,
 		f.theme.BorderSize, 1)
@@ -108,7 +103,7 @@ func (f *Borders) newRightSide() piece {
 	return newPiece(win, pixA, pixI)
 }
 
-func (f *Borders) newTopLeft() piece {
+func (f *Borders) newTopLeft() *piece {
 	pixA, pixI := f.cornerImages(render.BorderTop|render.BorderLeft,
 		render.DiagTopLeft)
 	win := f.newPieceWindow("topleft", cursors.TopLeftCorner)
@@ -117,7 +112,7 @@ func (f *Borders) newTopLeft() piece {
 	return newPiece(win, pixA, pixI)
 }
 
-func (f *Borders) newTopRight() piece {
+func (f *Borders) newTopRight() *piece {
 	pixA, pixI := f.cornerImages(render.BorderTop|render.BorderRight,
 		render.DiagTopRight)
 	win := f.newPieceWindow("topright", cursors.TopRightCorner)
@@ -126,7 +121,7 @@ func (f *Borders) newTopRight() piece {
 	return newPiece(win, pixA, pixI)
 }
 
-func (f *Borders) newBottomLeft() piece {
+func (f *Borders) newBottomLeft() *piece {
 	pixA, pixI := f.cornerImages(render.BorderBottom|render.BorderLeft,
 		render.DiagBottomLeft)
 	win := f.newPieceWindow("bottomleft", cursors.BottomLeftCorner)
@@ -135,7 +130,7 @@ func (f *Borders) newBottomLeft() piece {
 	return newPiece(win, pixA, pixI)
 }
 
-func (f *Borders) newBottomRight() piece {
+func (f *Borders) newBottomRight() *piece {
 	pixA, pixI := f.cornerImages(render.BorderBottom|render.BorderRight,
 		render.DiagBottomRight)
 	win := f.newPieceWindow("bottomright", cursors.BottomRightCorner)

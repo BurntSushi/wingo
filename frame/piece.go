@@ -12,42 +12,61 @@ type piece struct {
 	active, inactive xproto.Pixmap
 }
 
-func newPiece(w *xwindow.Window, active, inactive xproto.Pixmap) piece {
-	return piece{
-		Window:   w,
-		active:   active,
-		inactive: inactive,
+func newPiece(w *xwindow.Window, active, inactive *xgraphics.Image) *piece {
+	p := &piece{Window: w}
+	p.Create(active, inactive)
+	return p
+}
+
+func (p *piece) Create(act, inact *xgraphics.Image) {
+	if act != nil {
+		if p.active > 0 {
+			xgraphics.FreePixmap(p.X, p.active)
+		}
+		act.CreatePixmap()
+		act.XDraw()
+
+		p.active = act.Pixmap
+	}
+	if inact != nil {
+		if p.inactive > 0 {
+			xgraphics.FreePixmap(p.X, p.inactive)
+		}
+		inact.CreatePixmap()
+		inact.XDraw()
+
+		p.inactive = inact.Pixmap
 	}
 }
 
-func (p piece) Destroy() {
+func (p *piece) Destroy() {
 	p.Window.Destroy() // detaches all event handlers
 	xgraphics.FreePixmap(p.X, p.active)
 	xgraphics.FreePixmap(p.X, p.inactive)
 }
 
-func (p piece) Active() {
+func (p *piece) Active() {
 	p.Change(xproto.CwBackPixmap, uint32(p.active))
 	p.ClearAll()
 }
 
-func (p piece) Inactive() {
+func (p *piece) Inactive() {
 	p.Change(xproto.CwBackPixmap, uint32(p.inactive))
 	p.ClearAll()
 }
 
-func (p piece) x() int {
+func (p *piece) x() int {
 	return p.Geom.X()
 }
 
-func (p piece) y() int {
+func (p *piece) y() int {
 	return p.Geom.Y()
 }
 
-func (p piece) w() int {
+func (p *piece) w() int {
 	return p.Geom.Width()
 }
 
-func (p piece) h() int {
+func (p *piece) h() int {
 	return p.Geom.Height()
 }

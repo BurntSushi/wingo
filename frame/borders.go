@@ -12,8 +12,8 @@ type Borders struct {
 	*frame
 	theme *BordersTheme
 
-	topSide, bottomSide, leftSide, rightSide   piece
-	topLeft, topRight, bottomLeft, bottomRight piece
+	topSide, bottomSide, leftSide, rightSide   *piece
+	topLeft, topRight, bottomLeft, bottomRight *piece
 }
 
 func NewBorders(X *xgbutil.XUtil,

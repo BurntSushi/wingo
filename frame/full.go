@@ -21,11 +21,11 @@ type Full struct {
 	*frame
 	theme *FullTheme
 
-	titleBar, titleText, icon                   piece
-	buttonMinimize, buttonMaximize, buttonClose piece
-	topSide, bottomSide, leftSide, rightSide    piece
-	topLeft, topRight, bottomLeft, bottomRight  piece
-	titleBottom                                 piece
+	titleBar, titleText, icon                   *piece
+	buttonMinimize, buttonMaximize, buttonClose *piece
+	topSide, bottomSide, leftSide, rightSide    *piece
+	topLeft, topRight, bottomLeft, bottomRight  *piece
+	titleBottom                                 *piece
 }
 
 func NewFull(X *xgbutil.XUtil,
@@ -342,16 +342,7 @@ func (f *Full) UpdateIcon() {
 	xgraphics.Blend(imgA.SubImage(sub), img, image.ZP)
 	xgraphics.Blend(imgI.SubImage(sub), img, image.ZP)
 
-	if f.icon.active > 0 {
-		xgraphics.FreePixmap(f.X, f.icon.active)
-	}
-	if f.icon.inactive > 0 {
-		xgraphics.FreePixmap(f.X, f.icon.inactive)
-	}
-
-	imgA.CreatePixmap()
-	imgI.CreatePixmap()
-	f.icon.active, f.icon.inactive = imgA.Pixmap, imgI.Pixmap
+	f.icon.Create(imgA.Image, imgI.Image)
 
 	if f.client.State() == Active {
 		f.icon.Active()
@@ -391,21 +382,11 @@ func (f *Full) UpdateTitle() {
 			"because: %v", f.client, err)
 	}
 
-	if f.titleText.active > 0 {
-		xgraphics.FreePixmap(f.X, f.titleText.active)
-	}
-	if f.titleText.inactive > 0 {
-		xgraphics.FreePixmap(f.X, f.titleText.inactive)
-	}
+	f.titleText.Create(
+		imgA.SubImage(image.Rect(0, 0, x2, imgA.Bounds().Max.Y)),
+		imgI.SubImage(image.Rect(0, 0, x2, imgI.Bounds().Max.Y)))
 
-	imgA.CreatePixmap()
-	imgI.CreatePixmap()
-	imgA.SubImage(image.Rect(0, 0, x2, imgA.Bounds().Max.Y)).XDraw()
-	imgI.SubImage(image.Rect(0, 0, x2, imgI.Bounds().Max.Y)).XDraw()
-
-	f.titleText.active, f.titleText.inactive = imgA.Pixmap, imgI.Pixmap
-
-	f.titleText.MROpt(fW, 0, 0, ew, 0)
+	f.titleText.MROpt(fW, 0, 0, x2, 0)
 	if f.client.State() == Active {
 		f.titleText.Active()
 	} else {
