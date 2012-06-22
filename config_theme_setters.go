@@ -103,12 +103,12 @@ func setNoGradient(k wini.Key, clr *render.Color) {
 	// If there are no spaces, it can't be a gradient.
 	if strings.Index(val, " ") == -1 {
 		if start, ok := getLastInt(k); ok {
-			clr.Start = start
+			clr.ColorSet(start)
 		}
 		return
 	}
 
-	logger.Warning.Printf(
+	logger.Warning.Println(
 		k.Err("Gradients are not supported for this theme option."))
 }
 
@@ -126,7 +126,7 @@ func setGradient(k wini.Key, clr *render.Color) {
 	// If there are no spaces, it can't be a gradient.
 	if strings.Index(val, " ") == -1 {
 		if start, ok := getLastInt(k); ok {
-			clr.Start = start
+			clr.ColorSet(start)
 		}
 		return
 	}
@@ -157,7 +157,7 @@ func setGradient(k wini.Key, clr *render.Color) {
 	}
 
 	// finally...
-	clr.Start, clr.End = int(start), int(end)
+	clr.GradientSet(int(start), int(end))
 }
 
 func setImage(X *xgbutil.XUtil, k wini.Key, place **xgraphics.Image) {

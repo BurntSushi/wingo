@@ -1,10 +1,6 @@
-package theme
+package main
 
 import (
-	"io/ioutil"
-	"strconv"
-	"strings"
-
 	"code.google.com/p/freetype-go/freetype"
 	"code.google.com/p/freetype-go/freetype/truetype"
 
@@ -12,8 +8,9 @@ import (
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
 	"github.com/BurntSushi/wingo/bindata"
-	"github.com/BurntSushi/wingo/frames"
+	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/prompt"
 	"github.com/BurntSushi/wingo/render"
 	"github.com/BurntSushi/wingo/wini"
 )
@@ -48,11 +45,11 @@ type themeFull struct {
 }
 
 func (tf themeFull) FrameTheme() *frame.FullTheme {
-	return &frames.FullTheme{
+	return &frame.FullTheme{
 		Font:            tf.font,
 		FontSize:        tf.fontSize,
-		AFontColor:      tf.AFontColor,
-		IFontColor:      tf.IFontColor,
+		AFontColor:      tf.aFontColor,
+		IFontColor:      tf.iFontColor,
 		TitleSize:       tf.titleSize,
 		ATitleColor:     tf.aTitleColor,
 		ITitleColor:     tf.iTitleColor,
@@ -75,7 +72,7 @@ type themeBorders struct {
 }
 
 func (tb themeBorders) FrameTheme() *frame.BordersTheme {
-	return &frames.BordersTheme{
+	return &frame.BordersTheme{
 		BorderSize:   tb.borderSize,
 		AThinColor:   tb.aThinColor,
 		IThinColor:   tb.iThinColor,
@@ -90,7 +87,7 @@ type themeSlim struct {
 }
 
 func (ts themeSlim) FrameTheme() *frame.SlimTheme {
-	return &frames.SlimTheme{
+	return &frame.SlimTheme{
 		BorderSize:   ts.borderSize,
 		ABorderColor: ts.aBorderColor,
 		IBorderColor: ts.iBorderColor,
@@ -186,19 +183,19 @@ func newTheme(X *xgbutil.XUtil) *theme {
 			aMinimizeColor:  render.NewColor(0xffffff),
 			iMinimizeColor:  render.NewColor(0x000000),
 		},
-		themeBorders: themeBorders{
+		borders: themeBorders{
 			borderSize:   10,
 			aThinColor:   render.NewColor(0x0),
 			iThinColor:   render.NewColor(0x0),
 			aBorderColor: render.NewColor(0x3366ff),
 			iBorderColor: render.NewColor(0xdfdcdf),
 		},
-		themeSlim: themeSlim{
+		slim: themeSlim{
 			borderSize:   10,
 			aBorderColor: render.NewColor(0x3366ff),
 			iBorderColor: render.NewColor(0xdfdcdf),
 		},
-		themePrompt: themePrompt{
+		prompt: themePrompt{
 			bgColor:               render.NewColor(0xffffff),
 			borderColor:           render.NewColor(0x585a5d),
 			borderSize:            10,
@@ -255,7 +252,7 @@ func loadTheme(X *xgbutil.XUtil) (*theme, error) {
 	// re-color some images
 	colorize := func(im *xgraphics.Image, clr render.Color) {
 		var i int
-		r, g, b, _ := render.RGBAFromColor(clr)
+		r, g, b := clr.RGB8()
 		im.ForExp(func(x, y int) (uint8, uint8, uint8, uint8) {
 			i = im.PixOffset(x, y)
 			return r, g, b, im.Pix[i+3]
@@ -289,10 +286,10 @@ func loadThemeFile() (*wini.Data, error) {
 	return wini.Parse("config/theme.wini")
 }
 
-func loadMiscOption(X *xgbutil.XUtil, theme *Theme, k wini.Key) {
+func loadMiscOption(X *xgbutil.XUtil, theme *theme, k wini.Key) {
 	switch k.Name() {
 	case "default_icon":
-		setImage(X, k, &theme.DefaultIcon)
+		setImage(X, k, &theme.defaultIcon)
 	}
 }
 

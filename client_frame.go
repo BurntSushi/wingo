@@ -202,16 +202,19 @@ func createFrames(c *client) clientFrames {
 	}
 	cf := clientFrames{client: c}
 
-	cf.nada, err = frame.NewNada(X, THEME, nil, c)
+	cf.nada, err = frame.NewNada(X, nil, c)
 	errHandle(err)
 
-	cf.slim, err = frame.NewSlim(X, THEME, cf.nada.Parent(), c)
+	cf.slim, err = frame.NewSlim(X, wingo.theme.slim.FrameTheme(),
+		cf.nada.Parent(), c)
 	errHandle(err)
 
-	cf.borders, err = frame.NewBorders(X, THEME, cf.nada.Parent(), c)
+	cf.borders, err = frame.NewBorders(X, wingo.theme.borders.FrameTheme(),
+		cf.nada.Parent(), c)
 	errHandle(err)
 
-	cf.full, err = frame.NewFull(X, THEME, cf.nada.Parent(), c)
+	cf.full, err = frame.NewFull(X, wingo.theme.full.FrameTheme(),
+		cf.nada.Parent(), c)
 	errHandle(err)
 
 	return cf

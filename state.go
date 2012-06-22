@@ -27,6 +27,8 @@ type wingoState struct {
 	clients clients
 	heads   *heads.Heads
 	prompts prompts
+	conf    *conf
+	theme   *theme
 }
 
 func newWingoState() *wingoState {

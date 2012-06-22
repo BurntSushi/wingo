@@ -5,7 +5,6 @@ import (
 
 	"github.com/BurntSushi/xgbutil/ewmh"
 
-	"github.com/BurntSushi/wingo/config"
 	"github.com/BurntSushi/wingo/wini"
 )
 
@@ -36,7 +35,7 @@ func newConf() *conf {
 }
 
 func loadConfig() (*conf, error) {
-	conf = newConf() // globally defined in wingo.go
+	conf := newConf() // globally defined in wingo.go
 	if err := conf.loadMouseConfig(); err != nil {
 		return nil, err
 	}

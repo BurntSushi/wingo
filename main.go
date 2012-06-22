@@ -14,15 +14,12 @@ import (
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/stack"
-	"github.com/BurntSushi/wingo/theme"
 )
 
 // global variables!
 var (
 	X     *xgbutil.XUtil
 	wingo *wingoState
-	conf  *conf
-	theme *theme.Theme
 )
 
 func main() {
