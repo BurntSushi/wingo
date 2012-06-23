@@ -72,6 +72,10 @@ func (v *Vertical) Remove(c Client) {
 	v.store.remove(c)
 }
 
+func (v *Vertical) MROpt(c Client, flags, x, y, width, height int) {
+	c.MROpt(true, flags, x, y, width, height)
+}
+
 func (v *Vertical) MoveResize(c Client, x, y, width, height int) {
 	c.MoveResize(true, x, y, width, height)
 }

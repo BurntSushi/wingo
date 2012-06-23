@@ -53,6 +53,11 @@ func (f *Floating) Remove(c Client) {
 	}
 }
 
+func (f *Floating) MROpt(c Client, flags, x, y, width, height int) {
+	c.MROpt(true, flags, x, y, width, height)
+	c.SaveState("last-floating")
+}
+
 func (f *Floating) MoveResize(c Client, x, y, width, height int) {
 	c.MoveResize(true, x, y, width, height)
 	c.SaveState("last-floating")

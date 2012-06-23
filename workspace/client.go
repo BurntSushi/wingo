@@ -24,6 +24,7 @@ type Client interface {
 	LoadState(name string)
 	DeleteState(name string)
 
+	MROpt(validate bool, flags, x, y, width, height int)
 	MoveResize(validate bool, x, y, width, height int)
 	Move(x, y int)
 	Resize(validate bool, width, height int)

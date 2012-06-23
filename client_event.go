@@ -64,6 +64,10 @@ func (c *client) cbConfigureRequest() xevent.ConfigureRequestFun {
 			logger.Lots.Printf("Denying ConfigureRequest from client because " +
 				"the client is in the processing of moving/resizing, or is " +
 				"maximized.")
+
+			// As per ICCCM 4.1.5, a window that has not been moved or resized
+			// must receive a synthetic ConfigureNotify event.
+			c.sendConfigureNotify()
 			return
 		}
 
@@ -72,9 +76,26 @@ func (c *client) cbConfigureRequest() xevent.ConfigureRequestFun {
 			^int(xproto.ConfigWindowSibling)
 		x, y, w, h := frame.ClientToFrame(c.frame,
 			int(ev.X), int(ev.Y), int(ev.Width), int(ev.Height))
-		c.frame.MROpt(true, flags, x, y, w, h)
+		c.LayoutMROpt(flags, x, y, w, h)
 	}
 	return xevent.ConfigureRequestFun(f)
+}
+
+func (c *client) sendConfigureNotify() {
+	geom := c.Frame().Geom()
+	ev := xproto.ConfigureNotifyEvent{
+		Event:            c.Id(),
+		Window:           c.Id(),
+		AboveSibling:     0,
+		X:                int16(geom.X()),
+		Y:                int16(geom.Y()),
+		Width:            uint16(c.win.Geom.Width()),
+		Height:           uint16(c.win.Geom.Height()),
+		BorderWidth:      0,
+		OverrideRedirect: false,
+	}
+	xproto.SendEvent(c.X.Conn(), false, c.Id(),
+		xproto.EventMaskStructureNotify, string(ev.Bytes()))
 }
 
 func (c *client) cbPropertyNotify() xevent.PropertyNotifyFun {

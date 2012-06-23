@@ -19,6 +19,7 @@ type Layout interface {
 	Remove(c Client)
 	Exists(c Client) bool
 
+	MROpt(c Client, flags, x, y, width, height int)
 	MoveResize(c Client, x, y, width, height int)
 	Move(c Client, x, y int)
 	Resize(c Client, width, height int)
