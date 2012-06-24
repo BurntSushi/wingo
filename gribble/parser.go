@@ -119,6 +119,7 @@ func (p *parser) params() []param {
 }
 
 func main() {
+	// cmd := `(Workspace '\p50' (Move 5.0))` 
 	cmd := `(Workspace (Move 5.0))`
 	c, err := parse(strings.NewReader(cmd))
 	if err != nil {
