@@ -17,7 +17,7 @@ import (
 
 type theme struct {
 	defaultIcon *xgraphics.Image
-	full        themeFull
+	full themeFull
 	borders     themeBorders
 	slim        themeSlim
 	prompt      themePrompt
