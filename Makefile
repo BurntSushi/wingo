@@ -9,6 +9,9 @@ install: bindata
 		./frame ./gribble ./heads ./layout ./logger ./misc ./prompt ./render \
 		./stack ./text ./wini ./workspace
 
+git-hooks:
+	cp git-hook-pre-commit ./.git/hooks/pre-commit
+
 gofmt:
 	gofmt -w *.go cmdusage/*.go cursors/*.go focus/*.go frame/*.go gribble/*.go \
 		heads/*.go layout/*.go logger/*.go misc/*.go prompt/*.go render/*.go \
