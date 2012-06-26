@@ -1,4 +1,4 @@
-package main
+package gribble
 
 import (
 	"fmt"
@@ -167,15 +167,4 @@ func (p *parser) params() []param {
 		tok = p.Scan()
 	}
 	return params
-}
-
-// temporary. for testing/debugging only.
-func main() {
-	// cmd := `(Workspace '\p50' (Move 5.0))` 
-	cmd := `(Workspace (Move 5 (Refresh)))`
-	c, err := parse(cmd, true)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(c)
 }
