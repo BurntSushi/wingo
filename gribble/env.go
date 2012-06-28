@@ -52,6 +52,11 @@ func (env *Environment) Command(cmd string) (Command, error) {
 	return filledCommand, nil
 }
 
+func (env *Environment) CommandName(cmd string) string {
+	parsedCmd, _ := parse(cmd, false)
+	return parsedCmd.name
+}
+
 func (env *Environment) findCommand(parsedCmd *command) *commandStruct {
 	if cmd, ok := env.commands[parsedCmd.name]; ok {
 		return cmd
@@ -85,7 +90,7 @@ func (env *Environment) usage(cmdName string,
 	for i, field := range cmdStruct.params {
 		params[i] = fieldTrans(field)
 	}
-	return fmt.Sprintf("%s: %s", cmdStruct.name, strings.Join(params, " "))
+	return fmt.Sprintf("%s %s", cmdStruct.name, strings.Join(params, " "))
 }
 
 func (env *Environment) String() string {

@@ -51,8 +51,8 @@ func (p *parser) verboseError(pos scanner.Position, msg string) error {
 			caret[i] = ' '
 		}
 	}
-	return e("Line %d, Column %d: %s\n%s",
-		pos.Line, pos.Column, msg, line+"\n"+string(caret)+"\n")
+	return e("Line %d, Column %d: %s\n%s\n%s\n",
+		pos.Line, pos.Column, msg, line, string(caret))
 }
 
 // parseError can be called at any point during parsing and an error will be

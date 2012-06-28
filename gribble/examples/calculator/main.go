@@ -76,6 +76,7 @@ func testRun(env *gribble.Environment, cmd string) {
 	val, err := env.Run(cmd)
 	if err != nil {
 		fmt.Println("ERROR:", err)
+		fmt.Printf("USAGE: %s\n", env.UsageTypes(env.CommandName(cmd)))
 		return
 	}
 	fmt.Printf("SUCCESS: (%T) %v\n", val, val)
@@ -93,7 +94,7 @@ func main() {
 	fmt.Println(env.StringTypes())
 
 	testRun(env, "sub 1 (div 26 (add 5 (mul 2 4)))")
-	testRun(env, "div \"7\" 10")
+	testRun(env, "div 7 10")
 	testRun(env, "mul 500 (Const)")
 }
 

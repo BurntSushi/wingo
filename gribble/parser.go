@@ -58,6 +58,10 @@ func (cmd *command) String() string {
 // representing it. Note that even when an error is returned, the command
 // value is also returned since parsing doesn't stop on an error.
 func parse(invocation string, verbose bool) (*command, error) {
+	if len(strings.TrimSpace(invocation)) == 0 {
+		return &command{}, fmt.Errorf("Empty strings are not valid commands.")
+	}
+
 	p := newParser(invocation, verbose)
 	cmd := p.command()
 	if len(p.errors) == 0 && p.tok != scanner.EOF {
@@ -122,7 +126,7 @@ func (p *parser) command() *command {
 		return cmd
 	}
 	p.parseError("command")
-	return nil
+	return &command{}
 }
 
 // params parses a list of parameters to a command invocation. A parameter
@@ -136,6 +140,9 @@ func (p *parser) params() []Value {
 		switch tok {
 		case '(':
 			params = append(params, p.command())
+			p.demands(')')
+			tok = p.tok
+			continue
 		case scanner.String:
 			params = append(params, p.TokenText())
 		case scanner.Int:
