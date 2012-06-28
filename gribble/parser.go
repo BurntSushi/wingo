@@ -27,7 +27,7 @@ type parser struct {
 // a list of arguments.
 type command struct {
 	name   string
-	params []param
+	params []Value
 }
 
 // String returns a recursively formatted command, Lisp style.
@@ -54,13 +54,6 @@ func (cmd *command) String() string {
 	return fmt.Sprintf("(%s %s)", cmd.name, strings.Join(params, " "))
 }
 
-// param is either a string, int, float64 or a command.
-// It might be wise to actually make special int, float64, and string types,
-// but that seems a bit much at the moment. (Their only common function would
-// be to return a String method, which is only used for debugging purposes
-// anyway.)
-type param interface{}
-
 // parse takes a command invocation string and returns its a command value
 // representing it. Note that even when an error is returned, the command
 // value is also returned since parsing doesn't stop on an error.
@@ -75,7 +68,7 @@ func parse(invocation string, verbose bool) (*command, error) {
 		for i, err := range p.errors {
 			reterrs[i] = err.Error()
 		}
-		return cmd, fmt.Errorf(strings.Join(reterrs, "\n"))
+		return cmd, e(strings.Join(reterrs, "\n"))
 	}
 	return cmd, nil
 }
@@ -136,8 +129,8 @@ func (p *parser) command() *command {
 // can be either a string, an integer, a float or a command (surrounded by
 // parantheses). If a ')' or an EOF is found, parameter parsing stops.
 // If anything else is found, an error is reported.
-func (p *parser) params() []param {
-	params := make([]param, 0, 4)
+func (p *parser) params() []Value {
+	params := make([]Value, 0, 4)
 	tok := p.Scan()
 	for tok != scanner.EOF {
 		switch tok {

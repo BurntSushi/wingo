@@ -5,6 +5,17 @@ import (
 	"reflect"
 )
 
+func e(format string, v ...interface{}) error {
+	return fmt.Errorf(format, v...)
+}
+
+func concrete(v reflect.Value) reflect.Value {
+	if v.Kind() == reflect.Ptr {
+		return concrete(reflect.Indirect(v))
+	}
+	return v
+}
+
 func panicf(format string, v ...interface{}) {
 	panic(fmt.Sprintf(format, v...))
 }

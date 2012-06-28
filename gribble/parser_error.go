@@ -18,7 +18,7 @@ func (p *parser) error(pos scanner.Position, msg string) error {
 // simpleError takes a position and returns a string with the line and column
 // number, along with the error message.
 func (p *parser) simpleError(pos scanner.Position, msg string) error {
-	return fmt.Errorf("Line %d, Column %d: %s", pos.Line, pos.Column, msg)
+	return e("Line %d, Column %d: %s", pos.Line, pos.Column, msg)
 }
 
 // verboseError takes a position and returns a string with the line that 
@@ -51,7 +51,7 @@ func (p *parser) verboseError(pos scanner.Position, msg string) error {
 			caret[i] = ' '
 		}
 	}
-	return fmt.Errorf("Line %d, Column %d: %s\n%s",
+	return e("Line %d, Column %d: %s\n%s",
 		pos.Line, pos.Column, msg, line+"\n"+string(caret)+"\n")
 }
 
