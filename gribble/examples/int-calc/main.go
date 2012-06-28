@@ -4,10 +4,18 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/BurntSushi/wingo/gribble"
 )
+
+var env *gribble.Environment = gribble.New([]gribble.Command{
+	&Add{},
+	&Subtract{},
+	&Multiply{},
+	&Divide{},
+})
 
 type Add struct {
 	name string `add`
@@ -49,16 +57,19 @@ func (c *Divide) Run() gribble.Value {
 	return c.Op1 / c.Op2
 }
 
+func usage() {
+	fmt.Fprintf(os.Stderr, "Usage: %s command\n", path.Base(os.Args[0]))
+	flag.PrintDefaults()
+
+	fmt.Fprintln(os.Stderr, "\nAvailable commands:")
+	fmt.Fprintln(os.Stderr, env.StringTypes())
+	os.Exit(1)
+}
+
 func main() {
+	flag.Usage = usage
 	flag.Parse()
 	cmd := strings.Join(flag.Args(), " ")
-
-	env := gribble.New([]gribble.Command{
-		&Add{},
-		&Subtract{},
-		&Multiply{},
-		&Divide{},
-	})
 
 	val, err := env.Run(cmd)
 	if err != nil {
