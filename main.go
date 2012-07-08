@@ -44,7 +44,7 @@ func main() {
 	wingo.root = xwindow.New(X, X.RootWin())
 	_, err = wingo.root.Geometry()
 	if err != nil {
-		logger.Error.Println("Could not get ROOT window geometry because: %v",
+		logger.Error.Printf("Could not get ROOT window geometry because: %v\n",
 			err)
 		logger.Error.Println("Cannot continue. Quitting...")
 		return
