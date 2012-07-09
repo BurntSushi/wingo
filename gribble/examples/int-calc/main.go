@@ -19,8 +19,8 @@ var env *gribble.Environment = gribble.New([]gribble.Command{
 
 type Add struct {
 	name string `add`
-	Op1 int `param:"1"`
-	Op2 int `param:"2"`
+	Op1  int    `param:"1"`
+	Op2  int    `param:"2"`
 }
 
 func (c *Add) Run() gribble.Value {
@@ -29,8 +29,8 @@ func (c *Add) Run() gribble.Value {
 
 type Subtract struct {
 	name string `sub`
-	Op1 int `param:"1"`
-	Op2 int `param:"2"`
+	Op1  int    `param:"1"`
+	Op2  int    `param:"2"`
 }
 
 func (c *Subtract) Run() gribble.Value {
@@ -39,8 +39,8 @@ func (c *Subtract) Run() gribble.Value {
 
 type Multiply struct {
 	name string `mul`
-	Op1 int `param:"1"`
-	Op2 int `param:"2"`
+	Op1  int    `param:"1"`
+	Op2  int    `param:"2"`
 }
 
 func (c *Multiply) Run() gribble.Value {
@@ -49,8 +49,8 @@ func (c *Multiply) Run() gribble.Value {
 
 type Divide struct {
 	name string `div`
-	Op1 int `param:"1"`
-	Op2 int `param:"2"`
+	Op1  int    `param:"1"`
+	Op2  int    `param:"2"`
 }
 
 func (c *Divide) Run() gribble.Value {
@@ -82,4 +82,3 @@ func main() {
 	}
 	fmt.Println(val)
 }
-

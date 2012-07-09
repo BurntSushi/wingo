@@ -18,9 +18,9 @@ var env *gribble.Environment = gribble.New([]gribble.Command{
 })
 
 type Add struct {
-	name string `add`
-	Op1 interface{} `param:"1" types:"int,float"`
-	Op2 interface{} `param:"2" types:"int,float"`
+	name string      `add`
+	Op1  gribble.Any `param:"1" types:"int,float"`
+	Op2  gribble.Any `param:"2" types:"int,float"`
 }
 
 func (c *Add) Run() gribble.Value {
@@ -28,9 +28,9 @@ func (c *Add) Run() gribble.Value {
 }
 
 type Subtract struct {
-	name string `sub`
-	Op1 interface{} `param:"1" types:"int,float"`
-	Op2 interface{} `param:"2" types:"int,float"`
+	name string      `sub`
+	Op1  gribble.Any `param:"1" types:"int,float"`
+	Op2  gribble.Any `param:"2" types:"int,float"`
 }
 
 func (c *Subtract) Run() gribble.Value {
@@ -38,9 +38,9 @@ func (c *Subtract) Run() gribble.Value {
 }
 
 type Multiply struct {
-	name string `mul`
-	Op1 interface{} `param:"1" types:"int,float"`
-	Op2 interface{} `param:"2" types:"int,float"`
+	name string      `mul`
+	Op1  gribble.Any `param:"1" types:"int,float"`
+	Op2  gribble.Any `param:"2" types:"int,float"`
 }
 
 func (c *Multiply) Run() gribble.Value {
@@ -48,9 +48,9 @@ func (c *Multiply) Run() gribble.Value {
 }
 
 type Divide struct {
-	name string `div`
-	Op1 interface{} `param:"1" types:"int,float"`
-	Op2 interface{} `param:"2" types:"int,float"`
+	name string      `div`
+	Op1  gribble.Any `param:"1" types:"int,float"`
+	Op2  gribble.Any `param:"2" types:"int,float"`
 }
 
 func (c *Divide) Run() gribble.Value {
@@ -95,4 +95,3 @@ func main() {
 	}
 	fmt.Println(val)
 }
-

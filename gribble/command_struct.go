@@ -5,12 +5,22 @@ import (
 	"reflect"
 )
 
+// commandStruct embeds a reflect.Value of a Command interface's concrete
+// value, as well as the name of the command and its parameter list.
+//
+// A list of commandStruct constitutes a Gribble environment.
 type commandStruct struct {
 	reflect.Value
 	name   string
 	params []*gparam
 }
 
+// newCommandStruct constructs new commandStruct values from user supplied
+// values that both implement the Command interface *and* are structs.
+//
+// The struct itself is scanned for a valid listing of parameters.
+// newCommandStruct will panic if a supplied value does not have a valid
+// parameter list.
 func newCommandStruct(cmd Command) *commandStruct {
 	concreteCmd := concrete(reflect.ValueOf(cmd))
 	mustBeStruct(concreteCmd)
@@ -23,6 +33,9 @@ func newCommandStruct(cmd Command) *commandStruct {
 	return cmdStruct
 }
 
+// cmdName uses a reflect.Value of a Command to find a command's name.
+// A command name can either be specified in a struct tag of a 'name' field,
+// or if that is absent, the name of the struct type itself is used.
 func cmdName(val reflect.Value) string {
 	mustBeStruct(val)
 	typ := val.Type()
@@ -39,6 +52,13 @@ func cmdName(val reflect.Value) string {
 	return typ.Name()
 }
 
+// paramFields returns a list of all parameters for the given command struct
+// in the form of a slice of gparam values.
+//
+// paramFields panics if a new parameter cannot be constructed, or if there
+// are more parameters than expected or if there are multiple parameters 
+// labeled with the same parameter number or if there are non-contiguous
+// parameter numbers.
 func paramFields(cmdStruct *commandStruct) []*gparam {
 	typ := cmdStruct.Type()
 	maxParams := typ.NumField()
@@ -63,6 +83,9 @@ func paramFields(cmdStruct *commandStruct) []*gparam {
 			}
 
 			pFields[ind] = p
+
+			// We keep track of the last parameter number so that we know when
+			// the contiguous block of parameters *should* stop.
 			if ind > lastParam {
 				lastParam = ind
 			}
