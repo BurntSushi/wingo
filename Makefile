@@ -6,14 +6,14 @@ BINDATA=$(BD)/wingo.png.go \
 
 install: bindata
 	go install -p 6 . ./bindata ./cmdusage ./cursors ./focus \
-		./frame ./gribble ./heads ./layout ./logger ./misc ./prompt ./render \
+		./frame ./heads ./layout ./logger ./misc ./prompt ./render \
 		./stack ./text ./wini ./workspace
 
 git-hooks:
 	cp git-hook-pre-commit ./.git/hooks/pre-commit
 
 gofmt:
-	gofmt -w *.go cmdusage/*.go cursors/*.go focus/*.go frame/*.go gribble/*.go \
+	gofmt -w *.go cmdusage/*.go cursors/*.go focus/*.go frame/*.go \
 		heads/*.go layout/*.go logger/*.go misc/*.go prompt/*.go render/*.go \
 		stack/*.go text/*.go wingo-cmd/*.go wini/*.go workspace/*.go
 	colcheck *.go */*.go

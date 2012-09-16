@@ -3,7 +3,7 @@
 # Redirect output to stderr.
 exec 1>&2
 
-files="*.go cmdusage/*.go cursors/*.go focus/*.go frame/*.go gribble/*.go heads/*.go layout/*.go logger/*.go misc/*.go prompt/*.go render/*.go stack/*.go text/*.go wingo-cmd/*.go wini/*.go workspace/*.go"
+files="*.go cmdusage/*.go cursors/*.go focus/*.go frame/*.go heads/*.go layout/*.go logger/*.go misc/*.go prompt/*.go render/*.go stack/*.go text/*.go wingo-cmd/*.go wini/*.go workspace/*.go"
 
 nofmted=$(gofmt -l $files)
 if [ $(echo "$nofmted" | wc -w) != 0 ]; then
