@@ -3,12 +3,16 @@ package main
 import (
 	"strings"
 
+	"github.com/BurntSushi/gribble"
+
 	"github.com/BurntSushi/xgbutil/ewmh"
 
+	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/wini"
 )
 
 type conf struct {
+	cmdEnv                *gribble.Environment
 	mouse                 map[string][]mouseCommand
 	key                   map[string][]keyCommand
 	ffm                   bool
@@ -20,7 +24,17 @@ type conf struct {
 }
 
 func newConf() *conf {
+	cmdEnv := gribble.New([]gribble.Command{
+		&CmdClose{},
+		&CmdFocus{},
+		&CmdMove{},
+		&CmdRaise{},
+		&CmdResize{},
+		&CmdQuit{},
+		&CmdShell{},
+	})
 	return &conf{
+		cmdEnv:         cmdEnv,
 		mouse:          map[string][]mouseCommand{},
 		key:            map[string][]keyCommand{},
 		ffm:            false,
@@ -164,16 +178,19 @@ func (conf *conf) loadKeyConfigSection(cdata *wini.Data, section string) {
 				keyStr = keyStr[:spacei]
 			}
 
-			// 'cmd' might have space separated parameters
-			cmdName, args := commandParse(cmd)
-
-			kcmd := keyCommand{
-				cmd:    cmdName,
-				args:   args,
-				down:   down,
-				keyStr: keyStr,
+			gribbleCmd, err := conf.cmdEnv.Command(cmd)
+			if err == nil {
+				kcmd := keyCommand{
+					cmd:     gribbleCmd,
+					cmdName: conf.cmdEnv.CommandName(cmd),
+					down:    down,
+					keyStr:  keyStr,
+				}
+				conf.key[section] = append(conf.key[section], kcmd)
+			} else {
+				logger.Warning.Printf(
+					"Could not parse command '%s' because: %s", cmd, err)
 			}
-			conf.key[section] = append(conf.key[section], kcmd)
 		}
 	}
 }

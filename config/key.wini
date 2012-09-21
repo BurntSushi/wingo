@@ -1,8 +1,8 @@
 [Global]
 Mod1-Mod4-f := Flash
-Mod4-c := Close
+Mod4-c := Close 0
 Mod1-Shift-c := Quit
-Mod4-j := `chromium`
+Mod4-j := Shell "chromium"
 Mod4-x := MaximizeToggle
 Mod4-i := Minimize
 Mod1-Shift-t := Move 0.25 0.25

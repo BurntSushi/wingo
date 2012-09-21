@@ -109,7 +109,7 @@ func main() {
 	// Listen to Root client message events.
 	// We satisfy EWMH with these AND it also provides a mechanism
 	// to issue commands using wingo-cmd.
-	xevent.ClientMessageFun(commandHandler).Connect(X, wingo.root.Id)
+	// xevent.ClientMessageFun(commandHandler).Connect(X, wingo.root.Id) 
 
 	xevent.Main(X)
 }

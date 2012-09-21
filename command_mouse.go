@@ -157,13 +157,13 @@ func (c *client) FramePieceMouseConfig(piece string, pieceid xproto.Window) {
 }
 
 func (mcmd mouseCommand) commandFun() func(c *client) {
-	tryShellFun := commandShellFun(mcmd.cmd)
-	if tryShellFun != nil {
-		return func(c *client) {
-			tryShellFun()
-			xevent.ReplayPointer(X)
-		}
-	}
+	// tryShellFun := commandShellFun(mcmd.cmd) 
+	// if tryShellFun != nil { 
+	// return func(c *client) { 
+	// tryShellFun() 
+	// xevent.ReplayPointer(X) 
+	// } 
+	// } 
 
 	switch mcmd.cmd {
 	case "FocusRaise":
