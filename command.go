@@ -67,19 +67,6 @@ func withFocused(f func(c *client)) {
 	}
 }
 
-func withFocusedOrArg(args []string, f func(c *client)) {
-	client, ok := commandArgsClient(args)
-	if !ok {
-		return
-	}
-
-	if client == nil {
-		withFocused(f)
-	} else {
-		f(client)
-	}
-}
-
 func withClient(clientArg gribble.Any, f func(c *client)) {
 	switch c := clientArg.(type) {
 	case int:
@@ -95,7 +82,15 @@ func withClient(clientArg gribble.Any, f func(c *client)) {
 		}
 		return
 	case string:
-		panic("Not implemented.")
+		switch c {
+		case ":mouse:":
+			f(mouseClientClicked)
+		case ":active:":
+			withFocused(f)
+		default:
+			panic("Client name Not implemented: " + c)
+		}
+		return
 	}
 	panic("unreachable")
 }
@@ -112,6 +107,20 @@ func (cmd CmdClose) Run() gribble.Value {
 	return nil
 }
 
+type CmdFocusRaise struct {
+	name   string      `FocusRaise`
+	Client gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd CmdFocusRaise) Run() gribble.Value {
+	withClient(cmd.Client, func(c *client) {
+		focus.Focus(c)
+		stack.Raise(c)
+		xevent.ReplayPointer(X)
+	})
+	return nil
+}
+
 type CmdFocus struct {
 	name   string      `Focus`
 	Client gribble.Any `param:"1" types:"int,string"`
@@ -119,10 +128,40 @@ type CmdFocus struct {
 
 func (cmd CmdFocus) Run() gribble.Value {
 	withClient(cmd.Client, func(c *client) {
-		focus.Focus(c)
+		if c == nil {
+			focus.Root()
+		} else {
+			focus.Focus(c)
+			xevent.ReplayPointer(X)
+		}
 	})
 	return nil
 }
+
+type CmdIconifyToggle struct {
+	name   string      `IconifyToggle`
+	Client gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd CmdIconifyToggle) Run() gribble.Value {
+	withClient(cmd.Client, func(c *client) {
+		c.workspace.IconifyToggle(c)
+	})
+	return nil
+}
+
+type CmdMouseMove struct {
+	name string `MouseMove`
+}
+
+func (cmd CmdMouseMove) Run() gribble.Value { return nil }
+
+type CmdMouseResize struct {
+	name      string `MouseResize`
+	Direction string `param:"1"`
+}
+
+func (cmd CmdMouseResize) Run() gribble.Value { return nil }
 
 type CmdRaise struct {
 	name   string      `Raise`
@@ -132,6 +171,7 @@ type CmdRaise struct {
 func (cmd CmdRaise) Run() gribble.Value {
 	withClient(cmd.Client, func(c *client) {
 		stack.Raise(c)
+		xevent.ReplayPointer(X)
 	})
 	return nil
 }
@@ -194,10 +234,10 @@ type CmdShell struct {
 	Command string `param:"1"`
 }
 
-func (c CmdShell) Run() gribble.Value {
+func (cmd CmdShell) Run() gribble.Value {
 	var stderr bytes.Buffer
 
-	splitCmdName := strings.SplitN(c.Command, " ", 2)
+	splitCmdName := strings.SplitN(cmd.Command, " ", 2)
 	cmdName := splitCmdName[0]
 	args := make([]string, 0)
 	addArg := func(start, end int) {
@@ -240,15 +280,15 @@ func (c CmdShell) Run() gribble.Value {
 	// change behavior.)
 	go func() {
 		time.Sleep(time.Microsecond)
-		cmd := exec.Command(cmdName, args...)
-		cmd.Stderr = &stderr
+		shellCmd := exec.Command(cmdName, args...)
+		shellCmd.Stderr = &stderr
 
-		err := cmd.Run()
+		err := shellCmd.Run()
 		if err != nil {
-			logger.Warning.Printf("Error running '%s': %s", c.Command, err)
+			logger.Warning.Printf("Error running '%s': %s", cmd.Command, err)
 			if stderr.Len() > 0 {
 				logger.Warning.Printf("Error running '%s': %s",
-					c.Command, stderr.String())
+					cmd.Command, stderr.String())
 			}
 		}
 	}()

@@ -13,6 +13,8 @@ package main
 */
 
 import (
+	"github.com/BurntSushi/gribble"
+
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
@@ -20,41 +22,49 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 
 	"github.com/BurntSushi/wingo/cursors"
-	"github.com/BurntSushi/wingo/focus"
-	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/stack"
 )
 
+// mouseClientClicked is a terrible hack to inject state into commands.
+// Basically, if a command is given with "::mouse::" as the argument for
+// a client parameter, this variable will be checked and its value will
+// be used.
+var mouseClientClicked *client
+
 type mouseCommand struct {
-	cmd       string
+	cmd       gribble.Command
+	cmdName   string
 	down      bool // 'up' when false
 	buttonStr string
-	direction uint32 // only used by Resize command
 }
 
 func (mcmd mouseCommand) setup(c *client, wid xproto.Window) {
 	// Check if this command is a drag... If it is, it needs special attention.
-	if mcmd.cmd == "Move" {
+	if mcmd.cmdName == "MouseMove" {
 		c.setupMoveDrag(wid, mcmd.buttonStr, true)
 		return
 	}
-	if mcmd.cmd == "Resize" {
-		c.setupResizeDrag(wid, mcmd.buttonStr, true, mcmd.direction)
+	if mcmd.cmdName == "MouseResize" {
+		direction := strToDirection(mcmd.cmd.(*CmdMouseResize).Direction)
+		c.setupResizeDrag(wid, mcmd.buttonStr, true, direction)
 		return
 	}
 
 	// If we're putting this on the client or frame window, we need to propagate
 	// the events (i.e., grab synchronously).
 	// Otherwise, we don't need to grab at all!
-	run := mcmd.commandFun()
+	run := func() {
+		mouseClientClicked = c
+		mcmd.cmd.Run()
+		mouseClientClicked = nil
+	}
 	if wid == c.Id() || (c.Frame() != nil && wid == c.Frame().Parent().Id) {
 		if mcmd.down {
-			mcmd.attach(wid, func() { run(c) }, true, true)
+			mcmd.attach(wid, run, true, true)
 		} else { // we have to handle release grabs specially!
-			mcmd.attachClick(wid, func() { run(c) })
+			mcmd.attachClick(wid, run)
 		}
 	} else {
-		mcmd.attach(wid, func() { run(c) }, false, false)
+		mcmd.attach(wid, run, false, false)
 	}
 }
 
@@ -128,12 +138,7 @@ func (mcmd mouseCommand) attach(wid xproto.Window, run func(),
 
 func rootMouseConfig() {
 	for _, mcmd := range wingo.conf.mouse["root"] {
-		run := getRootMouseCommand(mcmd.cmd)
-		if run == nil {
-			logger.Warning.Printf(
-				"Undefined root mouse command: '%s'", mcmd.cmd)
-			continue
-		}
+		run := func() { mcmd.cmd.Run() }
 		mcmd.attach(wingo.root.Id, run, false, false)
 	}
 }
@@ -154,60 +159,4 @@ func (c *client) FramePieceMouseConfig(piece string, pieceid xproto.Window) {
 	for _, mcmd := range wingo.conf.mouse[piece] {
 		mcmd.setup(c, pieceid)
 	}
-}
-
-func (mcmd mouseCommand) commandFun() func(c *client) {
-	// tryShellFun := commandShellFun(mcmd.cmd) 
-	// if tryShellFun != nil { 
-	// return func(c *client) { 
-	// tryShellFun() 
-	// xevent.ReplayPointer(X) 
-	// } 
-	// } 
-
-	switch mcmd.cmd {
-	case "FocusRaise":
-		return func(c *client) {
-			focus.Focus(c)
-			stack.Raise(c)
-			xevent.ReplayPointer(X)
-		}
-	case "Focus":
-		return func(c *client) {
-			focus.Focus(c)
-			xevent.ReplayPointer(X)
-		}
-	case "Raise":
-		return func(c *client) {
-			stack.Raise(c)
-			xevent.ReplayPointer(X)
-		}
-	case "Close":
-		return func(c *client) {
-			c.Close()
-		}
-	case "MaximizeToggle":
-		return func(c *client) {
-			// c.MaximizeToggle() 
-		}
-	case "Minimize":
-		return func(c *client) {
-			c.workspace.IconifyToggle(c)
-		}
-	}
-
-	logger.Warning.Printf("Undefined mouse command: '%s'", mcmd.cmd)
-
-	return nil
-}
-
-func getRootMouseCommand(cmd string) func() {
-	switch cmd {
-	case "Focus":
-		return func() {
-			focus.Root()
-		}
-	}
-
-	return nil
 }

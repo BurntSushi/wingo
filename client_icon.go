@@ -11,6 +11,7 @@ func (c *client) Icon(width, height int) *xgraphics.Image {
 	if err != nil {
 		logger.Message.Printf("Could not find icon for '%s': %s", c, err)
 		ximg = xgraphics.NewConvert(X, wingo.theme.defaultIcon)
+		ximg = ximg.Scale(width, height)
 	}
 
 	return ximg

@@ -1,12 +1,11 @@
 [Global]
-Mod1-Mod4-f := Flash
-Mod4-c := Close 0
+Mod4-c := Close ":active:"
 Mod1-Shift-c := Quit
 Mod4-j := Shell "chromium"
 Mod4-x := MaximizeToggle
 Mod4-i := Minimize
-Mod1-Shift-t := Move 0.25 0.25
-Mod1-Shift-t := Resize 0.5 0.5
+Mod1-Shift-t := Move ":active:" 0.25 0.25
+Mod1-Shift-t := Resize ":active:" 0.5 0.5
 
 Mod1-a := TileStart
 Mod1-u := TileStop
@@ -26,26 +25,26 @@ Mod4-right := WorkspaceRight
 Mod4-Shift-left := WorkspaceLeftWithClient
 Mod4-Shift-right := WorkspaceRightWithClient
 
-Control-Mod1-a := WorkspacePrefix a
-Control-Mod1-Shift-a := WorkspacePrefixWithClient a
+Control-Mod1-a := WorkspacePrefix "a"
+Control-Mod1-Shift-a := WorkspacePrefixWithClient "a"
 
-Mod4-1 := Workspace A1
-Mod4-Shift-1 := WorkspaceSetClient A1
-Mod4-2 := Workspace A2
-Mod4-3 := Workspace A3
-Mod4-4 := Workspace A4
-Mod4-5 := Workspace A5
-Mod4-6 := Workspace A6
+Mod4-1 := Workspace "A1"
+Mod4-Shift-1 := WorkspaceSetClient "A1"
+Mod4-2 := Workspace "A2"
+Mod4-3 := Workspace "A3"
+Mod4-4 := Workspace "A4"
+Mod4-5 := Workspace "A5"
+Mod4-6 := Workspace "A6"
 
 Mod1-1 := FrameNada
 Mod1-2 := FrameSlim
 Mod1-3 := FrameBorders
 Mod1-4 := FrameFull
 
-Mod1-Tab := PromptCycleNext ClientsWorkspace
-Mod1-Shift-Tab := PromptCyclePrev ClientsWorkspace
+Mod1-Tab := PromptCycleNext "ClientsWorkspace"
+Mod1-Shift-Tab := PromptCyclePrev "ClientsWorkspace"
 
-Mod4-space := PromptSelect ClientsWorkspace Substring
-Mod4-return := PromptSelect Workspaces Prefix
-Mod4-Shift-return := PromptSelect WorkspacesWithClient Substring
+Mod4-space := PromptSelect "ClientsWorkspace" "Substring"
+Mod4-return := PromptSelect "Workspaces" "Prefix"
+Mod4-Shift-return := PromptSelect "WorkspacesWithClient" "Substring"
 

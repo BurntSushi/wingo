@@ -27,6 +27,10 @@ func newConf() *conf {
 	cmdEnv := gribble.New([]gribble.Command{
 		&CmdClose{},
 		&CmdFocus{},
+		&CmdFocusRaise{},
+		&CmdIconifyToggle{},
+		&CmdMouseMove{},
+		&CmdMouseResize{},
 		&CmdMove{},
 		&CmdRaise{},
 		&CmdResize{},
@@ -133,26 +137,19 @@ func (conf *conf) loadMouseConfigSection(cdata *wini.Data, section string) {
 				}
 			}
 
-			// 'cmd' can sometimes take parameters. For mouse commands,
-			// only one such command does so: Resize. Check for that.
-			// (The parameter is which way to resize. If it's absent, default
-			// to "Infer".)
-			var direction uint32 = ewmh.Infer
-			if len(cmd) > 6 && strings.ToLower(cmd[:6]) == "resize" {
-				spacei := strings.Index(cmd, " ")
-				if spacei > -1 {
-					direction = strToDirection(cmd[spacei+1:])
-					cmd = cmd[:spacei]
+			gribbleCmd, err := conf.cmdEnv.Command(cmd)
+			if err == nil {
+				mcmd := mouseCommand{
+					cmd:       gribbleCmd,
+					cmdName:   conf.cmdEnv.CommandName(cmd),
+					down:      down,
+					buttonStr: buttonStr,
 				}
+				conf.mouse[ident] = append(conf.mouse[ident], mcmd)
+			} else {
+				logger.Warning.Printf(
+					"Could not parse command '%s' because: %s", cmd, err)
 			}
-
-			mcmd := mouseCommand{
-				cmd:       cmd,
-				down:      down,
-				buttonStr: buttonStr,
-				direction: direction,
-			}
-			conf.mouse[ident] = append(conf.mouse[ident], mcmd)
 		}
 	}
 }
