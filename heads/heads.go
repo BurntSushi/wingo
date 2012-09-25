@@ -23,31 +23,30 @@ type Heads struct {
 	visibles   []*workspace.Workspace // Slice of all visible workspaces.
 }
 
-func NewHeads(X *xgbutil.XUtil, clients Clients,
-	workspaceNames ...string) *Heads {
-
-	heads := &Heads{
+func NewHeads(X *xgbutil.XUtil) *Heads {
+	hds := &Heads{
 		X:      X,
 		active: 0,
 	}
-	works := workspace.NewWorkspaces(X, heads, workspaceNames...)
-	heads.workspaces = works
+	hds.workspaces = workspace.NewWorkspaces(X, hds)
+	return hds
+}
 
+func (hds *Heads) Initialize(clients Clients) {
 	// Now workarea, geom, active and visible will be set.
 	// Indeed, they are always set in keeping with the invariants when Load
 	// is called.
-	heads.Load(clients)
-
-	return heads
+	hds.Load(clients)
 }
 
 func (hds *Heads) Load(clients Clients) {
 	hds.geom = query(hds.X)
 
-	// If the number of workspaces is less than the number of heads,
-	// add workspaces until number of workspaces equals number of heads.
-	for i := len(hds.workspaces.Wrks); i < len(hds.geom); i++ {
-		hds.workspaces.Add(fmt.Sprintf("Workspace %d", i))
+	// Check if the number of workspaces is less than the number of heads.
+	if len(hds.workspaces.Wrks) < len(hds.geom) {
+		panic(fmt.Sprintf(
+			"There must be at least %d workspaces (one for each head.",
+			len(hds.geom)))
 	}
 
 	// To make things simple, set the first workspace to be the

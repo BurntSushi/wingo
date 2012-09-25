@@ -42,6 +42,14 @@ func (hds *Heads) SwitchWorkspaces(wk1, wk2 *workspace.Workspace) {
 	}
 }
 
+func (hds *Heads) NewWorkspace(name string) *workspace.Workspace {
+	return hds.workspaces.NewWorkspace(name)
+}
+
+func (hds *Heads) AddWorkspace(wk *workspace.Workspace) {
+	hds.workspaces.Add(wk)
+}
+
 func (hds *Heads) RemoveWorkspace(wk *workspace.Workspace) {
 	// Don't allow it if this would result in fewer workspaces than there
 	// are active physical heads.

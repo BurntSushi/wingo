@@ -3,58 +3,19 @@ package main
 import (
 	"bytes"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 	"unicode"
 
 	"github.com/BurntSushi/gribble"
 
-	"github.com/BurntSushi/xgb/xproto"
-
 	"github.com/BurntSushi/xgbutil/xevent"
 
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/prompt"
 	"github.com/BurntSushi/wingo/stack"
 )
-
-// commandArgsClient scans an argument list for a window id.
-// A window id has the form 'win:WINDOW-ID_NUMBER'.
-// Both 'win:0x0001' and 'win:1' are valid thanks to Go's ParseInt.
-// Finally, if the window id corresponds to managed client, return that
-// client. Otherwise, return nil and emit an error if we have an invalid ID.
-// We also return a bool as a second argument which should be interpreted
-// as whether or not to continue the current operation.
-// i.e., not finding anything that looks like a window id is safe to ignore,
-// but if we find something like an ID and error out, we should stop the
-// command entirely.
-func commandArgsClient(args []string) (*client, bool) {
-	for _, arg := range args {
-		if len(arg) < 5 || arg[0:4] != "win:" {
-			continue
-		}
-
-		maybeId64, err := strconv.ParseInt(arg[4:], 0, 0)
-		if err != nil {
-			logger.Warning.Printf("'%s' is not a valid window id.", arg[4:])
-			return nil, false
-		}
-
-		goodId := xproto.Window(maybeId64)
-		for _, c := range wingo.clients {
-			if c.Id() == goodId {
-				return c, true
-			}
-		}
-
-		logger.Warning.Printf(
-			"'%s' is a valid window ID, but does not match any managed "+
-				"window ID by Wingo.", arg[4:])
-		return nil, false
-	}
-	return nil, true
-}
 
 // stringBool takes a string and returns true if the string corresponds
 // to a "true" value. i.e., "Yes", "Y", "y", "YES", "yEs", etc.
@@ -114,6 +75,24 @@ func (cmd CmdClose) Run() gribble.Value {
 	return nil
 }
 
+type CmdCycleClientChoose struct {
+	name string `CycleClientChoose`
+}
+
+func (cmd CmdCycleClientChoose) Run() gribble.Value {
+	wingo.prompts.cycle.Choose()
+	return nil
+}
+
+type CmdCycleClientHide struct {
+	name string `CycleClientHide`
+}
+
+func (cmd CmdCycleClientHide) Run() gribble.Value {
+	wingo.prompts.cycle.Hide()
+	return nil
+}
+
 type CmdCycleClientNext struct {
 	name                string `CycleClientNext`
 	OnlyActiveWorkspace string `param:"1"`
@@ -127,7 +106,7 @@ func (cmd CmdCycleClientNext) Run() gribble.Value {
 }
 
 func (cmd CmdCycleClientNext) RunWithKeyStr(keyStr string) {
-	showPromptCycle(keyStr,
+	showCycleClient(keyStr,
 		stringBool(cmd.OnlyActiveWorkspace),
 		stringBool(cmd.OnlyVisible),
 		stringBool(cmd.ShowIconified))
@@ -147,7 +126,7 @@ func (cmd CmdCycleClientPrev) Run() gribble.Value {
 }
 
 func (cmd CmdCycleClientPrev) RunWithKeyStr(keyStr string) {
-	showPromptCycle(keyStr,
+	showCycleClient(keyStr,
 		stringBool(cmd.OnlyActiveWorkspace),
 		stringBool(cmd.OnlyVisible),
 		stringBool(cmd.ShowIconified))
@@ -268,6 +247,33 @@ type CmdQuit struct {
 func (cmd CmdQuit) Run() gribble.Value {
 	logger.Message.Println("The User has told us to quit.")
 	xevent.Quit(X)
+	return nil
+}
+
+type CmdSelectClient struct {
+	name                string `SelectClient`
+	TabCompletion       string `param:"1"`
+	OnlyActiveWorkspace string `param:"2"`
+	OnlyVisible         string `param:"3"`
+	ShowIconified       string `param:"4"`
+}
+
+func (cmd CmdSelectClient) Run() gribble.Value {
+	tabComp := prompt.TabCompletePrefix
+	switch cmd.TabCompletion {
+	case "Prefix":
+		tabComp = prompt.TabCompletePrefix
+	case "Any":
+		tabComp = prompt.TabCompleteAny
+	default:
+		logger.Warning.Printf(
+			"Tab completion mode '%s' not supported.", cmd.TabCompletion)
+	}
+	showSelectClient(
+		tabComp,
+		stringBool(cmd.OnlyActiveWorkspace),
+		stringBool(cmd.OnlyVisible),
+		stringBool(cmd.ShowIconified))
 	return nil
 }
 

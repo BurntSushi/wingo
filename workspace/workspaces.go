@@ -29,25 +29,16 @@ type Workspaces struct {
 	heads Heads
 }
 
-func NewWorkspaces(X *xgbutil.XUtil, heads Heads, names ...string) *Workspaces {
-	if len(names) < 1 {
-		panic("NewWorkspaces requires at least one name to create " +
-			"the first workspace.")
-	}
-
-	workspaces := &Workspaces{
+func NewWorkspaces(X *xgbutil.XUtil, heads Heads) *Workspaces {
+	return &Workspaces{
 		X:     X,
-		Wrks:  make([]*Workspace, 0, len(names)),
+		Wrks:  make([]*Workspace, 0, 1),
 		heads: heads,
 	}
-	for _, name := range names {
-		workspaces.Add(name)
-	}
-	return workspaces
 }
 
-func (wrks *Workspaces) Add(name string) {
-	wrks.Wrks = append(wrks.Wrks, wrks.newWorkspace(name))
+func (wrks *Workspaces) Add(wrk *Workspace) {
+	wrks.Wrks = append(wrks.Wrks, wrk)
 }
 
 func (wrks *Workspaces) Remove(wrk *Workspace) {

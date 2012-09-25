@@ -37,6 +37,7 @@ func newConf() *conf {
 		&CmdRaise{},
 		&CmdResize{},
 		&CmdQuit{},
+		&CmdSelectClient{},
 		&CmdShell{},
 	})
 	return &conf{

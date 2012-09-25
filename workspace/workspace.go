@@ -5,6 +5,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xrect"
 
 	"github.com/BurntSushi/wingo/layout"
+	"github.com/BurntSushi/wingo/prompt"
 )
 
 type Workspace struct {
@@ -20,9 +21,11 @@ type Workspace struct {
 
 	autoTilers   []layout.AutoTiler
 	curAutoTiler int
+
+	PromptSlctGroup *prompt.SelectGroupItem
 }
 
-func (wrks *Workspaces) newWorkspace(name string) *Workspace {
+func (wrks *Workspaces) NewWorkspace(name string) *Workspace {
 	wrk := &Workspace{
 		X:       wrks.X,
 		all:     wrks,
@@ -306,4 +309,8 @@ func (wrk *Workspace) LayoutStateSet(state int) {
 	default:
 		panic("Layout state not implemented.")
 	}
+}
+
+func (wrk *Workspace) SelectGroupText() string {
+	return wrk.String()
 }

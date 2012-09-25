@@ -40,7 +40,9 @@ func newWingoState() *wingoState {
 }
 
 func (wingo *wingoState) initializeHeads() {
-	wingo.heads = heads.NewHeads(X, wingo.clients, "Numero Uno")
+	wingo.heads = heads.NewHeads(X)
+	wingo.addWorkspace("Numero Uno")
+	wingo.heads.Initialize(wingo.clients)
 }
 
 func (wingo *wingoState) add(c *client) {
@@ -84,4 +86,11 @@ func (wingo *wingoState) focusFallback() {
 
 func (wingo *wingoState) workspace() *workspace.Workspace {
 	return wingo.heads.ActiveWorkspace()
+}
+
+func (wingo *wingoState) addWorkspace(name string) {
+	wrk := wingo.heads.NewWorkspace(name)
+	wrk.PromptSlctGroup = wingo.prompts.slct.AddGroup(wrk)
+
+	wingo.heads.AddWorkspace(wrk)
 }
