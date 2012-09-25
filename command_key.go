@@ -15,6 +15,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/BurntSushi/gribble"
 
 	"github.com/BurntSushi/xgbutil"
@@ -41,7 +43,7 @@ func attachAllKeys() {
 }
 
 func (kcmd keyCommand) attach() {
-	if kcmd.cmdName == "PromptCyclePrev" || kcmd.cmdName == "PromptCycleNext" {
+	if kcmd.cmdName == "CycleClientPrev" || kcmd.cmdName == "CycleClientNext" {
 		// We've got to parse the key string first and make sure
 		// there are some modifiers; otherwise this utterly fails!
 		mods, _, _ := keybind.ParseString(X, kcmd.keyStr)
@@ -53,13 +55,23 @@ func (kcmd keyCommand) attach() {
 			return
 		}
 
+		var run func() = nil
+		switch t := kcmd.cmd.(type) {
+		case *CmdCycleClientNext:
+			run = func() { t.RunWithKeyStr(kcmd.keyStr) }
+		case *CmdCycleClientPrev:
+			run = func() { t.RunWithKeyStr(kcmd.keyStr) }
+		default:
+			panic(fmt.Sprintf("bug: unknown type %T", t))
+		}
+
 		keybind.KeyPressFun(
 			func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
-				kcmd.cmd.Run()
+				run()
 			}).Connect(X, wingo.root.Id, kcmd.keyStr, true)
 		keybind.KeyPressFun(
 			func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
-				kcmd.cmd.Run()
+				run()
 			}).Connect(X, X.Dummy(), kcmd.keyStr, true)
 	} else {
 		if kcmd.down {

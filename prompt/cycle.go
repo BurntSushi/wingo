@@ -159,8 +159,14 @@ func (cycle *Cycle) keyResponse() xevent.KeyReleaseFun {
 		}
 
 		mods &= ^keybind.ModGet(X, ev.Detail)
-		if cycle.grabMods > 0 && mods&cycle.grabMods == 0 {
-			cycle.Choose()
+		if cycle.grabMods > 0 {
+			if mods&cycle.grabMods == 0 {
+				cycle.Choose()
+			}
+		} else {
+			if keybind.KeyMatch(X, cycle.config.ConfirmKey, mods, kc) {
+				cycle.Choose()
+			}
 		}
 	}
 	return xevent.KeyReleaseFun(f)
@@ -409,11 +415,13 @@ var DefaultCycleTheme = &CycleTheme{
 // For a reasonable default configuration, use DefaultCycleConfig. It will
 // set "Escape" as the cancel key and issue a grab.
 type CycleConfig struct {
-	Grab      bool
-	CancelKey string
+	Grab       bool
+	CancelKey  string
+	ConfirmKey string
 }
 
 var DefaultCycleConfig = CycleConfig{
-	Grab:      true,
-	CancelKey: "Escape",
+	Grab:       true,
+	CancelKey:  "Escape",
+	ConfirmKey: "Return",
 }

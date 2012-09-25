@@ -32,6 +32,9 @@ func (p *clientPrompts) updateIcon() {
 }
 
 func (p *clientPrompts) updateName() {
+	if p.cycle == nil || p.slct == nil {
+		return
+	}
 	p.cycle.UpdateText()
 	p.slct.UpdateText()
 }
@@ -43,7 +46,8 @@ func (c *client) CycleIsActive() bool {
 }
 
 func (c *client) CycleImage() *xgraphics.Image {
-	return c.Icon(100, 100)
+	theme := wingo.theme.prompt.CycleTheme()
+	return c.Icon(theme.IconSize, theme.IconSize)
 }
 
 func (c *client) CycleText() string {

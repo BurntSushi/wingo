@@ -12,9 +12,14 @@ type prompts struct {
 }
 
 func newPrompts() prompts {
+	cycleConfig := prompt.CycleConfig{
+		Grab:       true,
+		CancelKey:  wingo.conf.cancelKey,
+		ConfirmKey: wingo.conf.confirmKey,
+	}
 	return prompts{
 		cycle: prompt.NewCycle(X, wingo.theme.prompt.CycleTheme(),
-			prompt.DefaultCycleConfig),
+			cycleConfig),
 		slct: prompt.NewSelect(X, wingo.theme.prompt.SelectTheme(),
 			prompt.DefaultSelectConfig),
 	}

@@ -352,6 +352,10 @@ func (f *Full) UpdateIcon() {
 }
 
 func (f *Full) UpdateTitle() {
+	if f == nil {
+		return
+	}
+
 	title := f.client.Name()
 	font := f.theme.Font
 	fontSize := f.theme.FontSize

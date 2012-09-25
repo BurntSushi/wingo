@@ -16,14 +16,14 @@ fi
 # we have to create a temporary xauth file to get XGB to connect.
 # echo "add :10 . $(mcookie)" | xauth -f /tmp/xeph.auth 
 
-Xephyr :10 -ac -screen 1920x1080 \
+Xephyr :11 -ac -screen 1920x1080 \
        -br -once -reset -terminate -zap &
 xemu=$!
 
 sleep 0.5
-export DISPLAY=:10
+export DISPLAY=:11
 
-DISPLAY=:10 ./wingo &
+DISPLAY=:11 ./wingo &
 # DISPLAY=:10 wingo & 
 # DISPLAY=:10 openbox & 
 # go run $PWD/wingo.go & 

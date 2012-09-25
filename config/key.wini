@@ -1,7 +1,9 @@
 [Global]
+Mod4-b := Shell "chromium"
+Mod4-t := Shell "lxterminal"
+
 Mod4-c := Close ":active:"
 Mod1-Shift-c := Quit
-Mod4-j := Shell "chromium"
 Mod4-x := MaximizeToggle
 Mod4-i := IconifyToggle ":active:"
 Mod1-Shift-t := Move ":active:" 0.25 0.25
@@ -41,8 +43,8 @@ Mod1-2 := FrameSlim
 Mod1-3 := FrameBorders
 Mod1-4 := FrameFull
 
-Mod1-Tab := PromptCycleNext "ClientsWorkspace"
-Mod1-Shift-Tab := PromptCyclePrev "ClientsWorkspace"
+Mod1-Tab := CycleClientNext "yes" "no" "yes"
+Mod1-Shift-Tab := CycleClientPrev "yes" "no" "yes"
 
 Mod4-space := PromptSelect "ClientsWorkspace" "Substring"
 Mod4-return := PromptSelect "Workspaces" "Prefix"

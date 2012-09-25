@@ -48,7 +48,6 @@ type frame struct {
 }
 
 func newFrame(X *xgbutil.XUtil, p *Parent, c Client) (*frame, error) {
-
 	var err error
 	if p == nil {
 		p, err = newParent(X, c.Id())

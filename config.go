@@ -26,13 +26,14 @@ type conf struct {
 func newConf() *conf {
 	cmdEnv := gribble.New([]gribble.Command{
 		&CmdClose{},
+		&CmdCycleClientNext{},
+		&CmdCycleClientPrev{},
 		&CmdFocus{},
 		&CmdFocusRaise{},
 		&CmdIconifyToggle{},
 		&CmdMouseMove{},
 		&CmdMouseResize{},
 		&CmdMove{},
-		&CmdPromptCycleNext{},
 		&CmdRaise{},
 		&CmdResize{},
 		&CmdQuit{},

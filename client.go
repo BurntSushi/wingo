@@ -107,6 +107,11 @@ func (c *client) Close() {
 }
 
 func (c *client) refreshName() {
+	defer func() {
+		c.frames.full.UpdateTitle()
+		c.prompts.updateName()
+	}()
+
 	c.name, _ = ewmh.WmVisibleNameGet(c.X, c.Id())
 	if len(c.name) > 0 {
 		return

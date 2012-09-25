@@ -56,6 +56,13 @@ func commandArgsClient(args []string) (*client, bool) {
 	return nil, true
 }
 
+// stringBool takes a string and returns true if the string corresponds
+// to a "true" value. i.e., "Yes", "Y", "y", "YES", "yEs", etc.
+func stringBool(s string) bool {
+	sl := strings.ToLower(s)
+	return sl == "yes" || sl == "y"
+}
+
 // Shortcut for executing Client interface functions that have no parameters
 // and no return values on the currently focused window.
 func withFocused(f func(c *client)) {
@@ -105,6 +112,46 @@ func (cmd CmdClose) Run() gribble.Value {
 		c.Close()
 	})
 	return nil
+}
+
+type CmdCycleClientNext struct {
+	name                string `CycleClientNext`
+	OnlyActiveWorkspace string `param:"1"`
+	OnlyVisible         string `param:"2"`
+	ShowIconified       string `param:"3"`
+}
+
+func (cmd CmdCycleClientNext) Run() gribble.Value {
+	cmd.RunWithKeyStr("")
+	return nil
+}
+
+func (cmd CmdCycleClientNext) RunWithKeyStr(keyStr string) {
+	showPromptCycle(keyStr,
+		stringBool(cmd.OnlyActiveWorkspace),
+		stringBool(cmd.OnlyVisible),
+		stringBool(cmd.ShowIconified))
+	wingo.prompts.cycle.Next()
+}
+
+type CmdCycleClientPrev struct {
+	name                string `CycleClientPrev`
+	OnlyActiveWorkspace string `param:"1"`
+	OnlyVisible         string `param:"2"`
+	ShowIconified       string `param:"3"`
+}
+
+func (cmd CmdCycleClientPrev) Run() gribble.Value {
+	cmd.RunWithKeyStr("")
+	return nil
+}
+
+func (cmd CmdCycleClientPrev) RunWithKeyStr(keyStr string) {
+	showPromptCycle(keyStr,
+		stringBool(cmd.OnlyActiveWorkspace),
+		stringBool(cmd.OnlyVisible),
+		stringBool(cmd.ShowIconified))
+	wingo.prompts.cycle.Prev()
 }
 
 type CmdFocusRaise struct {
@@ -162,27 +209,6 @@ type CmdMouseResize struct {
 }
 
 func (cmd CmdMouseResize) Run() gribble.Value { return nil }
-
-type CmdPromptCycleNext struct {
-	name string `PromptCycleNext`
-	Kind string `param:"1"`
-}
-
-func (cmd CmdPromptCycleNext) Run() gribble.Value {
-	activeWrk, visible, iconified := false, false, true
-	switch cmd.Kind {
-	case "ClientsWorkspace":
-		activeWrk = true
-	default:
-		logger.Warning.Printf(
-			"PromptCycleNext command does not support the '%s' mode.", cmd.Kind)
-		return nil
-	}
-
-	showPromptCycle("Mod1-tab", activeWrk, visible, iconified)
-	wingo.prompts.cycle.Next()
-	return nil
-}
 
 type CmdRaise struct {
 	name   string      `Raise`
