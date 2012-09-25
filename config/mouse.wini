@@ -45,7 +45,7 @@ Mod4-4 up := $OPACITY_UP
 Mod4-5 up := $OPACITY_DOWN
 
 [FullMinimize]
-1 up := Minimize
+1 up := IconifyToggle ":mouse:"
 Mod4-4 up := $OPACITY_UP
 Mod4-5 up := $OPACITY_DOWN
 

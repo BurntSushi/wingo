@@ -163,6 +163,27 @@ type CmdMouseResize struct {
 
 func (cmd CmdMouseResize) Run() gribble.Value { return nil }
 
+type CmdPromptCycleNext struct {
+	name string `PromptCycleNext`
+	Kind string `param:"1"`
+}
+
+func (cmd CmdPromptCycleNext) Run() gribble.Value {
+	activeWrk, visible, iconified := false, false, true
+	switch cmd.Kind {
+	case "ClientsWorkspace":
+		activeWrk = true
+	default:
+		logger.Warning.Printf(
+			"PromptCycleNext command does not support the '%s' mode.", cmd.Kind)
+		return nil
+	}
+
+	showPromptCycle("Mod1-tab", activeWrk, visible, iconified)
+	wingo.prompts.cycle.Next()
+	return nil
+}
+
 type CmdRaise struct {
 	name   string      `Raise`
 	Client gribble.Any `param:"1" types:"int,string"`

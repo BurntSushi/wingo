@@ -32,6 +32,7 @@ func newConf() *conf {
 		&CmdMouseMove{},
 		&CmdMouseResize{},
 		&CmdMove{},
+		&CmdPromptCycleNext{},
 		&CmdRaise{},
 		&CmdResize{},
 		&CmdQuit{},
