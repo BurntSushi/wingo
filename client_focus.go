@@ -22,6 +22,9 @@ func (c *client) Focused() {
 }
 
 func (c *client) Unfocused() {
+	if c.state == frame.Inactive {
+		return
+	}
 	c.frame.Inactive()
 	c.state = frame.Inactive
 }
