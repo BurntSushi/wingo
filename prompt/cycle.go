@@ -160,7 +160,6 @@ func (cycle *Cycle) keyResponse() xevent.KeyReleaseFun {
 
 		mods &= ^keybind.ModGet(X, ev.Detail)
 		if cycle.grabMods > 0 && mods&cycle.grabMods == 0 {
-
 			cycle.Choose()
 		}
 	}

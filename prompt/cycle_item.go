@@ -31,11 +31,11 @@ type CycleChoice interface {
 	// CycleText returns the text representing this choice. It can be empty.
 	CycleText() string
 
-	// CycleSelected is hook and is called when this choice is chosen in the 
+	// CycleSelected is a hook that is called when this choice is chosen in the 
 	// cycle prompt.
 	CycleSelected()
 
-	// CycleHighlighted is a hook and is called when this choice is highlighted 
+	// CycleHighlighted is a hook that is called when this choice is highlighted
 	// in the cycle prompt.
 	CycleHighlighted()
 }
