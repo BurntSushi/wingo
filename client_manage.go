@@ -48,6 +48,14 @@ func newClient(X *xgbutil.XUtil, id xproto.Window) *client {
 			focus.Focus(c)
 		}
 	}
+
+	// I have no idea why this works, but for some clients, this nudges them
+	// into displaying their window contents (which are otherwise blank).
+	// I am 100% certain there is a proper solution here. (I am probably
+	// not following a particular protocol correctly. No idea which one.)
+	go func() {
+		frame.Reset(c.Frame())
+	}()
 	return c
 }
 
@@ -68,7 +76,7 @@ func (c *client) manage() {
 	c.states = c.newClientStates()
 	c.prompts = c.newClientPrompts()
 
-	wingo.add(c)
+	wingo.addClient(c)
 	focus.InitialAdd(c)
 	stack.Raise(c)
 	wingo.workspace().Add(c)

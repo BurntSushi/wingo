@@ -45,14 +45,14 @@ func (wingo *wingoState) initializeHeads() {
 	wingo.heads.Initialize(wingo.clients)
 }
 
-func (wingo *wingoState) add(c *client) {
+func (wingo *wingoState) addClient(c *client) {
 	if cliIndex(c, wingo.clients) != -1 {
 		panic("BUG: Cannot add client that is already managed.")
 	}
 	wingo.clients = append(wingo.clients, c)
 }
 
-func (wingo *wingoState) remove(c *client) {
+func (wingo *wingoState) removeClient(c *client) {
 	if i := cliIndex(c, wingo.clients); i > -1 {
 		wingo.clients = append(wingo.clients[:i], wingo.clients[i+1:]...)
 	}

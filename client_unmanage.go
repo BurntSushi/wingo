@@ -20,6 +20,6 @@ func (c *client) unmanage() {
 
 	focus.Remove(c)
 	stack.Remove(c)
-	wingo.remove(c)
+	wingo.removeClient(c)
 	wingo.focusFallback()
 }

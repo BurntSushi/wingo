@@ -14,14 +14,42 @@ import (
 	"github.com/BurntSushi/wingo/logger"
 )
 
+var (
+	modes = map[byte]string{
+		xproto.NotifyModeNormal:       "NotifyNormal",
+		xproto.NotifyModeGrab:         "NotifyGrab",
+		xproto.NotifyModeUngrab:       "NotifyUngrab",
+		xproto.NotifyModeWhileGrabbed: "NotifyWhileGrabbed",
+	}
+
+	details = map[byte]string{
+		xproto.NotifyDetailAncestor:         "NotifyAncestor",
+		xproto.NotifyDetailVirtual:          "NotifyVirtual",
+		xproto.NotifyDetailInferior:         "NotifyInferior",
+		xproto.NotifyDetailNonlinear:        "NotifyNonlinear",
+		xproto.NotifyDetailNonlinearVirtual: "NotifyNonlinearVirtual",
+		xproto.NotifyDetailPointer:          "NotifyPointer",
+		xproto.NotifyDetailPointerRoot:      "NotifyPointerRoot",
+		xproto.NotifyDetailNone:             "NotifyNone",
+	}
+)
+
 func (c *client) attachEventCallbacks() {
-	c.win.Listen(xproto.EventMaskPropertyChange |
-		xproto.EventMaskStructureNotify)
+	c.win.Listen(
+		xproto.EventMaskPropertyChange |
+			xproto.EventMaskStructureNotify)
+
+	c.Frame().Parent().Listen(
+		xproto.EventMaskFocusChange |
+			xproto.EventMaskSubstructureRedirect)
 
 	c.cbUnmapNotify().Connect(c.X, c.Id())
 	c.cbDestroyNotify().Connect(c.X, c.Id())
 	c.cbConfigureRequest().Connect(c.X, c.Id())
 	c.cbPropertyNotify().Connect(c.X, c.Id())
+
+	c.handleFocusIn().Connect(c.X, c.Frame().Parent().Id)
+	c.handleFocusOut().Connect(c.X, c.Frame().Parent().Id)
 
 	c.clientMouseConfig()
 	c.frameMouseConfig()
@@ -144,4 +172,78 @@ func (c *client) cbPropertyNotify() xevent.PropertyNotifyFun {
 
 	}
 	return xevent.PropertyNotifyFun(f)
+}
+
+func ignoreFocus(modeByte, detailByte byte) bool {
+	mode, detail := modes[modeByte], details[detailByte]
+
+	if mode == "NotifyGrab" || mode == "NotifyUngrab" {
+		return true
+	}
+	if detail == "NotifyAncestor" ||
+		detail == "NotifyInferior" ||
+		detail == "NotifyNonlinear" ||
+		detail == "NotifyPointer" ||
+		detail == "NotifyPointerRoot" ||
+		detail == "NotifyNone" {
+
+		return true
+	}
+	// Only accept modes: NotifyNormal and NotifyWhileGrabbed
+	// Only accept details: NotifyVirtual, NotifyNonlinearVirtual
+	return false
+}
+
+func ignoreRootFocus(modeByte, detailByte byte) bool {
+	mode, detail := modes[modeByte], details[detailByte]
+
+	if mode == "NotifyGrab" || mode == "NotifyUngrab" {
+		return true
+	}
+	if detail == "NotifyAncestor" ||
+		detail == "NotifyInferior" ||
+		detail == "NotifyVirtual" ||
+		detail == "NotifyNonlinear" ||
+		detail == "NotifyNonlinearVirtual" ||
+		detail == "NotifyPointer" {
+
+		return true
+	}
+	// Only accept modes: NotifyNormal and NotifyWhileGrabbed
+	// Only accept details: NotifyPointerRoot, NotifyNone
+	return false
+}
+
+func (c *client) handleFocusIn() xevent.FocusInFun {
+	f := func(X *xgbutil.XUtil, ev xevent.FocusInEvent) {
+		if ignoreFocus(ev.Mode, ev.Detail) {
+			return
+		}
+
+		c.Focused()
+		// logger.Debug.Println("---------------------------------------------")
+		// logger.Debug.Println("Focus In") 
+		// logger.Debug.Printf("Window: %s", c.Name()) 
+		// logger.Debug.Printf("Mode: %s", modes[ev.Mode]) 
+		// logger.Debug.Printf("Detail: %s", details[ev.Detail]) 
+		// logger.Debug.Println("---------------------------------------------")
+	}
+	return xevent.FocusInFun(f)
+}
+
+func (c *client) handleFocusOut() xevent.FocusOutFun {
+	f := func(X *xgbutil.XUtil, ev xevent.FocusOutEvent) {
+		if ignoreFocus(ev.Mode, ev.Detail) {
+			return
+		}
+
+		c.Unfocused()
+		// logger.Debug.Println("---------------------------------------------")
+		// logger.Debug.Println("Focus Out") 
+		// logger.Debug.Printf("Window: %s", c.Name()) 
+		// logger.Debug.Printf("Mode: %s", modes[ev.Mode]) 
+		// logger.Debug.Printf("Detail: %s", details[ev.Detail]) 
+		// logger.Debug.Println("---------------------------------------------")
+	}
+	return xevent.FocusOutFun(f)
 }

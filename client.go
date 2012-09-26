@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
@@ -135,7 +137,8 @@ func (c *client) hasType(atom string) bool {
 }
 
 func (c *client) String() string {
-	return c.name
+	// return c.name 
+	return fmt.Sprintf("%d :: %s", c.Id(), c.name)
 }
 
 func (c *client) Id() xproto.Window {

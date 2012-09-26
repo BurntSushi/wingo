@@ -41,13 +41,21 @@ func InitialAdd(c Client) {
 	Clients = append([]Client{c}, Clients...)
 }
 
+// SetFocus moves the given client to the top of the focus stack and does
+// nothing else. This is a way to force the focus stack into a state that
+// has been discovered via Focus{In,Out} events.
+func SetFocus(c Client) {
+	Remove(c)
+	Clients = append(Clients, c)
+}
+
 func Focus(c Client) {
 	Remove(c)
 
 	if c.CanFocus() || c.SendFocusNotify() {
 		Clients = append(Clients, c)
 		c.PrepareForFocus()
-		c.Focused()
+		// c.Focused() 
 	}
 	if c.CanFocus() {
 		c.Win().Focus()

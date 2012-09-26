@@ -18,13 +18,10 @@ func (c *client) SendFocusNotify() bool {
 func (c *client) Focused() {
 	c.frame.Active()
 	c.state = frame.Active
-	focus.UnfocusExcept(c)
+	focus.SetFocus(c)
 }
 
 func (c *client) Unfocused() {
-	if c.state == frame.Inactive {
-		return
-	}
 	c.frame.Inactive()
 	c.state = frame.Inactive
 }
