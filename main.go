@@ -117,7 +117,7 @@ func main() {
 			if len(wingo.workspace().Clients) == 0 {
 				return
 			}
-			// wingo.focusFallback() 
+			wingo.focusFallback()
 		}).Connect(X, wingo.root.Id)
 
 	// Listen to Root client message events.
