@@ -35,13 +35,11 @@ var (
 )
 
 func (c *client) attachEventCallbacks() {
-	c.win.Listen(
-		xproto.EventMaskPropertyChange |
-			xproto.EventMaskStructureNotify)
+	c.win.Listen(xproto.EventMaskPropertyChange |
+		xproto.EventMaskStructureNotify)
 
-	c.Frame().Parent().Listen(
-		xproto.EventMaskFocusChange |
-			xproto.EventMaskSubstructureRedirect)
+	c.Frame().Parent().Listen(xproto.EventMaskFocusChange |
+		xproto.EventMaskSubstructureRedirect)
 
 	c.cbUnmapNotify().Connect(c.X, c.Id())
 	c.cbDestroyNotify().Connect(c.X, c.Id())

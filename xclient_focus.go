@@ -15,6 +15,10 @@ func (c *client) SendFocusNotify() bool {
 	return strIndex("WM_TAKE_FOCUS", c.protocols) > -1
 }
 
+func (c *client) IsActive() bool {
+	return c.state == frame.Active
+}
+
 func (c *client) Focused() {
 	c.frame.Active()
 	c.state = frame.Active

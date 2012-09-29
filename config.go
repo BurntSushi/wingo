@@ -11,7 +11,7 @@ import (
 	"github.com/BurntSushi/wingo/wini"
 )
 
-type conf struct {
+type config struct {
 	cmdEnv                *gribble.Environment
 	mouse                 map[string][]mouseCommand
 	key                   map[string][]keyCommand
@@ -23,25 +23,10 @@ type conf struct {
 	tabKey, revTabKey     string
 }
 
-func newConf() *conf {
-	cmdEnv := gribble.New([]gribble.Command{
-		&CmdClose{},
-		&CmdCycleClientNext{},
-		&CmdCycleClientPrev{},
-		&CmdFocus{},
-		&CmdFocusRaise{},
-		&CmdIconifyToggle{},
-		&CmdMouseMove{},
-		&CmdMouseResize{},
-		&CmdMove{},
-		&CmdRaise{},
-		&CmdResize{},
-		&CmdQuit{},
-		&CmdSelectClient{},
-		&CmdShell{},
-	})
-	return &conf{
-		cmdEnv:         cmdEnv,
+// newConfig
+func newConfig() *config {
+	return &config{
+		cmdEnv:         gribbleCommandEnv, // see command.go
 		mouse:          map[string][]mouseCommand{},
 		key:            map[string][]keyCommand{},
 		ffm:            false,
@@ -55,51 +40,32 @@ func newConf() *conf {
 	}
 }
 
-func loadConfig() (*conf, error) {
-	conf := newConf() // globally defined in wingo.go
-	if err := conf.loadMouseConfig(); err != nil {
-		return nil, err
+// loadConfig reads all configuration files and loads them into the
+// a single config value.
+//
+// Most of this code is incredibly boring.
+func loadConfig() (*config, error) {
+	conf := newConfig() // globally defined in wingo.go
+
+	type confFile struct {
+		fpath       string
+		loadSection func(*config, *wini.Data, string)
 	}
-	if err := conf.loadKeyConfig(); err != nil {
-		return nil, err
+	cfiles := []confFile{
+		{"config/mouse.wini", (*config).loadMouseConfigSection},
+		{"config/key.wini", (*config).loadKeyConfigSection},
+		{"config/options.wini", (*config).loadOptionsConfigSection},
 	}
-	if err := conf.loadOptionsConfig(); err != nil {
-		return nil, err
+	for _, cfile := range cfiles {
+		cdata, err := wini.Parse(cfile.fpath)
+		if err != nil {
+			return nil, err
+		}
+		for _, section := range cdata.Sections() {
+			cfile.loadSection(conf, cdata, section)
+		}
 	}
 	return conf, nil
-}
-
-func (conf *conf) loadMouseConfig() error {
-	cdata, err := loadMouseConfigFile()
-	if err != nil {
-		return err
-	}
-	for _, section := range cdata.Sections() {
-		conf.loadMouseConfigSection(cdata, section)
-	}
-	return nil
-}
-
-func (conf *conf) loadKeyConfig() error {
-	cdata, err := loadKeyConfigFile()
-	if err != nil {
-		return err
-	}
-	for _, section := range cdata.Sections() {
-		conf.loadKeyConfigSection(cdata, section)
-	}
-	return nil
-}
-
-func (conf *conf) loadOptionsConfig() error {
-	cdata, err := loadOptionsConfigFile()
-	if err != nil {
-		return err
-	}
-	for _, section := range cdata.Sections() {
-		conf.loadOptionsConfigSection(cdata, section)
-	}
-	return nil
 }
 
 // loadMouseConfigSection does two things:
@@ -108,7 +74,10 @@ func (conf *conf) loadOptionsConfig() error {
 // are two special cases: "MouseBorders*" turns into "borders_*" and
 // "MouseFull*" turns into "full_*".
 // 2) Constructs a "mouseCommand" for *every* value.
-func (conf *conf) loadMouseConfigSection(cdata *wini.Data, section string) {
+//
+// The idents are used for attaching mouse commands to the corresponding
+// frames. (See the mouseCommand methods.)
+func (conf *config) loadMouseConfigSection(cdata *wini.Data, section string) {
 	ident := ""
 	switch {
 	case len(section) > 7 && section[:7] == "borders":
@@ -126,38 +95,25 @@ func (conf *conf) loadMouseConfigSection(cdata *wini.Data, section string) {
 				conf.mouse[ident] = make([]mouseCommand, 0)
 			}
 
-			// "mouseStr" is actually made up of a button string
-			// and a toggle of "down" or "up" corresponding to a button press
-			// or a button release, respectively. Look for that.
-			// If it isn't there, assume 'down'
-			spacei := strings.Index(mouseStr, " ")
-			down := true
-			buttonStr := mouseStr
-			if spacei > -1 {
-				buttonStr = mouseStr[:spacei]
-				if mouseStr[spacei+1:] == "up" {
-					down = false
-				}
-			}
-
 			gribbleCmd, err := conf.cmdEnv.Command(cmd)
-			if err == nil {
+			if err != nil {
+				logger.Warning.Printf(
+					"Could not parse command '%s' because: %s", cmd, err)
+			} else {
+				down, justMouseStr := isDown(mouseStr)
 				mcmd := mouseCommand{
 					cmd:       gribbleCmd,
 					cmdName:   conf.cmdEnv.CommandName(cmd),
 					down:      down,
-					buttonStr: buttonStr,
+					buttonStr: justMouseStr,
 				}
 				conf.mouse[ident] = append(conf.mouse[ident], mcmd)
-			} else {
-				logger.Warning.Printf(
-					"Could not parse command '%s' because: %s", cmd, err)
 			}
 		}
 	}
 }
 
-func (conf *conf) loadKeyConfigSection(cdata *wini.Data, section string) {
+func (conf *config) loadKeyConfigSection(cdata *wini.Data, section string) {
 	for _, key := range cdata.Keys(section) {
 		keyStr := key.Name()
 		for _, cmd := range key.Strings() {
@@ -165,37 +121,25 @@ func (conf *conf) loadKeyConfigSection(cdata *wini.Data, section string) {
 				conf.key[section] = make([]keyCommand, 0)
 			}
 
-			// "keyStr" is actually made up of a key string
-			// and a toggle of "down" or "up" corresponding to a key press
-			// or a key release, respectively. Look for that.
-			// If it isn't there, assume 'down'
-			spacei := strings.Index(keyStr, " ")
-			down := true
-			if spacei > -1 {
-				if keyStr[spacei+1:] == "up" {
-					down = false
-				}
-				keyStr = keyStr[:spacei]
-			}
-
 			gribbleCmd, err := conf.cmdEnv.Command(cmd)
-			if err == nil {
+			if err != nil {
+				logger.Warning.Printf(
+					"Could not parse command '%s' because: %s", cmd, err)
+			} else {
+				down, justKeyStr := isDown(keyStr)
 				kcmd := keyCommand{
 					cmd:     gribbleCmd,
 					cmdName: conf.cmdEnv.CommandName(cmd),
 					down:    down,
-					keyStr:  keyStr,
+					keyStr:  justKeyStr,
 				}
 				conf.key[section] = append(conf.key[section], kcmd)
-			} else {
-				logger.Warning.Printf(
-					"Could not parse command '%s' because: %s", cmd, err)
 			}
 		}
 	}
 }
 
-func (conf *conf) loadOptionsConfigSection(cdata *wini.Data, section string) {
+func (conf *config) loadOptionsConfigSection(cdata *wini.Data, section string) {
 	for _, key := range cdata.Keys(section) {
 		option := key.Name()
 		switch option {
@@ -217,18 +161,8 @@ func (conf *conf) loadOptionsConfigSection(cdata *wini.Data, section string) {
 	}
 }
 
-func loadMouseConfigFile() (*wini.Data, error) {
-	return wini.Parse("config/mouse.wini")
-}
-
-func loadKeyConfigFile() (*wini.Data, error) {
-	return wini.Parse("config/key.wini")
-}
-
-func loadOptionsConfigFile() (*wini.Data, error) {
-	return wini.Parse("config/options.wini")
-}
-
+// strToDirection converts a string representation of a mouse direction
+// to an xgbutil.ewmh constant value. It is case insensitive.
 func strToDirection(s string) uint32 {
 	switch strings.ToLower(s) {
 	case "top":
@@ -248,6 +182,20 @@ func strToDirection(s string) uint32 {
 	case "bottomright":
 		return ewmh.SizeBottomRight
 	}
-
 	return ewmh.Infer
+}
+
+// isDown takes a key/mouse combination, and looks for the keyword "up".
+// If "up" exists, isDown returns false. Otherwise, true.
+// It also returns the key/mouse string without "up" or "down".
+func isDown(keyStr string) (bool, string) {
+	spacei := strings.Index(keyStr, " ")
+	down := true
+	if spacei > -1 {
+		if strings.ToLower(keyStr[spacei+1:]) == "up" {
+			down = false
+		}
+		keyStr = keyStr[:spacei]
+	}
+	return down, keyStr
 }

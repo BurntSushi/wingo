@@ -27,7 +27,7 @@ type wingoState struct {
 	clients clients
 	heads   *heads.Heads
 	prompts prompts
-	conf    *conf
+	conf    *config
 	theme   *theme
 }
 

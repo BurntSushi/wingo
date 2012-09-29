@@ -61,7 +61,7 @@ func (mcmd mouseCommand) setup(c *client, wid xproto.Window) {
 		if mcmd.down {
 			mcmd.attach(wid, run, true, true)
 		} else { // we have to handle release grabs specially!
-			mcmd.attachClick(wid, run)
+			mcmd.attachGrabRelease(wid, run)
 		}
 	} else {
 		mcmd.attach(wid, run, false, false)
@@ -109,17 +109,7 @@ func (c *client) setupResizeDrag(dragWin xproto.Window,
 	mousebind.Drag(X, X.Dummy(), dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
 
-func (mcmd mouseCommand) attachClick(wid xproto.Window, run func()) {
-	mousebind.ButtonPressFun(
-		func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
-			// empty
-		}).Connect(X, wid, mcmd.buttonStr, false, true)
-	mousebind.ButtonReleaseFun(
-		func(X *xgbutil.XUtil, ev xevent.ButtonReleaseEvent) {
-			run()
-		}).Connect(X, wid, mcmd.buttonStr, false, false)
-}
-
+// attach sets up the event handlers for a mouse button press OR release.
 func (mcmd mouseCommand) attach(wid xproto.Window, run func(),
 	propagate, grab bool) {
 
@@ -136,10 +126,24 @@ func (mcmd mouseCommand) attach(wid xproto.Window, run func(),
 	}
 }
 
+// attachGrabRelease is a special case of 'attach' that is necessary when
+// attaching a mouse release event to either the client or frame window.
+//
+// TODO: Recall and document *why* this is needed.
+func (mcmd mouseCommand) attachGrabRelease(wid xproto.Window, run func()) {
+	mousebind.ButtonPressFun(
+		func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
+			// empty
+		}).Connect(X, wid, mcmd.buttonStr, false, true)
+	mousebind.ButtonReleaseFun(
+		func(X *xgbutil.XUtil, ev xevent.ButtonReleaseEvent) {
+			run()
+		}).Connect(X, wid, mcmd.buttonStr, false, false)
+}
+
 func rootMouseConfig() {
 	for _, mcmd := range wingo.conf.mouse["root"] {
-		run := func() { mcmd.cmd.Run() }
-		mcmd.attach(wingo.root.Id, run, false, false)
+		mcmd.attach(wingo.root.Id, func() { mcmd.cmd.Run() }, false, false)
 	}
 }
 

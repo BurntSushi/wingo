@@ -25,7 +25,13 @@ func Current() Client {
 	if len(Clients) == 0 {
 		return nil
 	}
-	return Clients[len(Clients)-1]
+
+	// It's technically possible for no client to have focus.
+	possible := Clients[len(Clients)-1]
+	if possible.IsActive() {
+		return possible
+	}
+	return nil
 }
 
 func Remove(c Client) {
@@ -85,11 +91,10 @@ func Focus(c Client) {
 }
 
 func Root() {
-	rwin := xwindow.New(X, X.RootWin())
 	for _, c := range Clients {
 		c.Unfocused()
 	}
-	rwin.Focus()
+	xwindow.New(X, X.Dummy()).Focus()
 }
 
 func UnfocusExcept(c Client) {

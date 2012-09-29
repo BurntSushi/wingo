@@ -17,51 +17,24 @@ import (
 	"github.com/BurntSushi/wingo/stack"
 )
 
-// stringBool takes a string and returns true if the string corresponds
-// to a "true" value. i.e., "Yes", "Y", "y", "YES", "yEs", etc.
-func stringBool(s string) bool {
-	sl := strings.ToLower(s)
-	return sl == "yes" || sl == "y"
-}
-
-// Shortcut for executing Client interface functions that have no parameters
-// and no return values on the currently focused window.
-func withFocused(f func(c *client)) {
-	focused := focus.Current()
-	if focused != nil {
-		if client, ok := focused.(*client); ok {
-			f(client)
-		}
-	}
-}
-
-func withClient(clientArg gribble.Any, f func(c *client)) {
-	switch c := clientArg.(type) {
-	case int:
-		if c == 0 {
-			withFocused(f)
-			return
-		}
-		for _, client := range wingo.clients {
-			if int(client.win.Id) == c {
-				f(client)
-				return
-			}
-		}
-		return
-	case string:
-		switch c {
-		case ":mouse:":
-			f(mouseClientClicked)
-		case ":active:":
-			withFocused(f)
-		default:
-			panic("Client name Not implemented: " + c)
-		}
-		return
-	}
-	panic("unreachable")
-}
+// gribbleCommandEnv declares all available commands. Any command not in
+// this list cannot be executed.
+var gribbleCommandEnv = gribble.New([]gribble.Command{
+	&CmdClose{},
+	&CmdCycleClientNext{},
+	&CmdCycleClientPrev{},
+	&CmdFocus{},
+	&CmdFocusRaise{},
+	&CmdIconifyToggle{},
+	&CmdMouseMove{},
+	&CmdMouseResize{},
+	&CmdMove{},
+	&CmdRaise{},
+	&CmdResize{},
+	&CmdQuit{},
+	&CmdSelectClient{},
+	&CmdShell{},
+})
 
 type CmdClose struct {
 	name   string      `Close`
@@ -347,4 +320,50 @@ func (cmd CmdShell) Run() gribble.Value {
 	}()
 
 	return nil
+}
+
+// stringBool takes a string and returns true if the string corresponds
+// to a "true" value. i.e., "Yes", "Y", "y", "YES", "yEs", etc.
+func stringBool(s string) bool {
+	sl := strings.ToLower(s)
+	return sl == "yes" || sl == "y"
+}
+
+// Shortcut for executing Client interface functions that have no parameters
+// and no return values on the currently focused window.
+func withFocused(f func(c *client)) {
+	focused := focus.Current()
+	if focused != nil {
+		if client, ok := focused.(*client); ok {
+			f(client)
+		}
+	}
+}
+
+func withClient(clientArg gribble.Any, f func(c *client)) {
+	switch c := clientArg.(type) {
+	case int:
+		if c == 0 {
+			withFocused(f)
+			return
+		}
+		for _, client := range wingo.clients {
+			if int(client.win.Id) == c {
+				f(client)
+				return
+			}
+		}
+		return
+	case string:
+		switch c {
+		case ":mouse:":
+			f(mouseClientClicked)
+		case ":active:":
+			withFocused(f)
+		default:
+			panic("Client name Not implemented: " + c)
+		}
+		return
+	}
+	panic("unreachable")
 }

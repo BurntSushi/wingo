@@ -14,4 +14,5 @@ type Client interface {
 	CanFocus() bool
 	SendFocusNotify() bool
 	PrepareForFocus()
+	IsActive() bool
 }

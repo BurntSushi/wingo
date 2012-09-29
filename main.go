@@ -83,6 +83,8 @@ func main() {
 	// Listen to Root. It is all-important.
 	wingo.root.Listen(xproto.EventMaskPropertyChange |
 		xproto.EventMaskFocusChange |
+		xproto.EventMaskButtonPress |
+		xproto.EventMaskButtonRelease |
 		xproto.EventMaskStructureNotify |
 		xproto.EventMaskSubstructureNotify |
 		xproto.EventMaskSubstructureRedirect)
@@ -115,7 +117,7 @@ func main() {
 			if len(wingo.workspace().Clients) == 0 {
 				return
 			}
-			wingo.focusFallback()
+			// wingo.focusFallback() 
 		}).Connect(X, wingo.root.Id)
 
 	// Listen to Root client message events.
