@@ -91,6 +91,7 @@ func (wingo *wingoState) workspace() *workspace.Workspace {
 func (wingo *wingoState) addWorkspace(name string) {
 	wrk := wingo.heads.NewWorkspace(name)
 	wrk.PromptSlctGroup = wingo.prompts.slct.AddGroup(wrk)
+	wrk.PromptSlctItem = wingo.prompts.slct.AddChoice(wrk)
 
 	wingo.heads.AddWorkspace(wrk)
 }

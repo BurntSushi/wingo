@@ -34,6 +34,7 @@ type Select struct {
 	config SelectConfig
 
 	showing     bool
+	data        interface{}
 	selected    int
 	tabComplete int
 
@@ -199,7 +200,7 @@ func (slct *Select) keyResponse() xevent.KeyPressFun {
 }
 
 func (slct *Select) Show(workarea xrect.Rect, tabCompleteType int,
-	groups []*SelectShowGroup) bool {
+	groups []*SelectShowGroup, data interface{}) bool {
 
 	if slct.showing {
 		return false
@@ -207,6 +208,18 @@ func (slct *Select) Show(workarea xrect.Rect, tabCompleteType int,
 
 	// if there aren't any groups, we obviously don't need to show anything.
 	if len(groups) == 0 {
+		return false
+	}
+
+	// So maybe there are groups, but there aren't any items...
+	foundItem := false
+	for _, group := range groups {
+		if len(group.items) > 0 {
+			foundItem = true
+			break
+		}
+	}
+	if !foundItem {
 		return false
 	}
 
@@ -259,6 +272,7 @@ func (slct *Select) Show(workarea xrect.Rect, tabCompleteType int,
 	slct.bRht.MoveResize(width-bs, 0, bs, height)
 
 	slct.showing = true
+	slct.data = data
 	slct.selected = -1
 	slct.win.Map()
 	slct.win.Focus()
@@ -324,6 +338,7 @@ func (slct *Select) Hide() {
 		group.hide()
 	}
 	slct.showing = false
+	slct.data = nil
 	slct.selected = -1
 	slct.groups = nil
 	slct.items = nil

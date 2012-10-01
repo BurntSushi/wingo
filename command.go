@@ -33,6 +33,7 @@ var gribbleCommandEnv = gribble.New([]gribble.Command{
 	&CmdResize{},
 	&CmdQuit{},
 	&CmdSelectClient{},
+	&CmdSelectWorkspace{},
 	&CmdShell{},
 })
 
@@ -232,21 +233,21 @@ type CmdSelectClient struct {
 }
 
 func (cmd CmdSelectClient) Run() gribble.Value {
-	tabComp := prompt.TabCompletePrefix
-	switch cmd.TabCompletion {
-	case "Prefix":
-		tabComp = prompt.TabCompletePrefix
-	case "Any":
-		tabComp = prompt.TabCompleteAny
-	default:
-		logger.Warning.Printf(
-			"Tab completion mode '%s' not supported.", cmd.TabCompletion)
-	}
 	showSelectClient(
-		tabComp,
+		stringTabComp(cmd.TabCompletion),
 		stringBool(cmd.OnlyActiveWorkspace),
 		stringBool(cmd.OnlyVisible),
 		stringBool(cmd.ShowIconified))
+	return nil
+}
+
+type CmdSelectWorkspace struct {
+	name          string `SelectWorkspace`
+	TabCompletion string `param:"1"`
+}
+
+func (cmd CmdSelectWorkspace) Run() gribble.Value {
+	showSelectWorkspace(stringTabComp(cmd.TabCompletion))
 	return nil
 }
 
@@ -327,6 +328,21 @@ func (cmd CmdShell) Run() gribble.Value {
 func stringBool(s string) bool {
 	sl := strings.ToLower(s)
 	return sl == "yes" || sl == "y"
+}
+
+// stringTabComp takes a string and converts it to a tab completion constant
+// defined in the prompt package. Valid values are "Prefix" and "Any."
+func stringTabComp(s string) int {
+	switch s {
+	case "Prefix":
+		return prompt.TabCompletePrefix
+	case "Any":
+		return prompt.TabCompleteAny
+	default:
+		logger.Warning.Printf(
+			"Tab completion mode '%s' not supported.", s)
+	}
+	return prompt.TabCompletePrefix
 }
 
 // Shortcut for executing Client interface functions that have no parameters

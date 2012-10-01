@@ -11,8 +11,8 @@ import (
 
 type SelectChoice interface {
 	SelectText() string
-	SelectSelected()
-	SelectHighlighted()
+	SelectSelected(data interface{})
+	SelectHighlighted(data interface{})
 }
 
 type SelectItem struct {
@@ -37,7 +37,6 @@ func newSelectItem(slct *Select, choice SelectChoice) *SelectItem {
 	si.highlighted.StackSibling(si.slct.bRht.Id, xproto.StackModeBelow)
 
 	si.UpdateText()
-	si.unhighlight()
 
 	return si
 }
@@ -54,11 +53,11 @@ func (si *SelectItem) hide() {
 }
 
 func (si *SelectItem) choose() {
-	si.choice.SelectSelected()
+	si.choice.SelectSelected(si.slct.data)
 }
 
 func (si *SelectItem) highlight() {
-	si.choice.SelectHighlighted()
+	si.choice.SelectHighlighted(si.slct.data)
 	si.highlighted.Map()
 	si.regular.Unmap()
 }

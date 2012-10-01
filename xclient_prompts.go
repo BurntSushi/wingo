@@ -71,10 +71,10 @@ func (c *client) SelectText() string {
 	return c.String()
 }
 
-func (c *client) SelectSelected() {
+func (c *client) SelectSelected(data interface{}) {
 	focus.Focus(c)
 	stack.Raise(c)
 }
 
-func (c *client) SelectHighlighted() {
+func (c *client) SelectHighlighted(data interface{}) {
 }

@@ -9,6 +9,8 @@ import (
 type prompts struct {
 	cycle *prompt.Cycle
 	slct  *prompt.Select
+
+	slctVisible, slctHidden *prompt.SelectGroupItem
 }
 
 func newPrompts() prompts {
@@ -23,12 +25,15 @@ func newPrompts() prompts {
 		ConfirmKey:   wingo.conf.confirmKey,
 		TabKey:       wingo.conf.tabKey,
 	}
-	return prompts{
+	ps := prompts{
 		cycle: prompt.NewCycle(X, wingo.theme.prompt.CycleTheme(),
 			cycleConfig),
 		slct: prompt.NewSelect(X, wingo.theme.prompt.SelectTheme(),
 			selectConfig),
 	}
+	ps.slctVisible = ps.slct.AddGroup(ps.slct.NewStaticGroup("Visible"))
+	ps.slctHidden = ps.slct.AddGroup(ps.slct.NewStaticGroup("Hidden"))
+	return ps
 }
 
 func filterClient(client *client, activeWrk, visible, iconified bool) bool {
@@ -84,5 +89,28 @@ func showSelectClient(tabComp int, activeWrk, visible, iconified bool) {
 		groups[i] = wrk.PromptSlctGroup.ShowGroup(items)
 	}
 
-	wingo.prompts.slct.Show(wingo.workspace().Geom(), tabComp, groups)
+	wingo.prompts.slct.Show(wingo.workspace().Geom(), tabComp, groups, nil)
+}
+
+func showSelectWorkspace(tabComp int) {
+	allWrks := wingo.heads.Workspaces()
+	wrksVisible := make([]*prompt.SelectItem, 0, len(allWrks))
+	wrksHidden := make([]*prompt.SelectItem, 0, len(allWrks))
+	for _, wrk := range allWrks {
+		if wrk.IsVisible() {
+			wrksVisible = append(wrksVisible, wrk.PromptSlctItem)
+		} else {
+			wrksHidden = append(wrksHidden, wrk.PromptSlctItem)
+		}
+	}
+
+	groups := []*prompt.SelectShowGroup{
+		wingo.prompts.slctVisible.ShowGroup(wrksVisible),
+		wingo.prompts.slctHidden.ShowGroup(wrksHidden),
+	}
+
+	f := func() {
+		println("whoop whoop")
+	}
+	wingo.prompts.slct.Show(wingo.workspace().Geom(), tabComp, groups, f)
 }

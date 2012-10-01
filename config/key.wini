@@ -47,6 +47,6 @@ Mod1-Tab := CycleClientNext "yes" "no" "yes"
 Mod1-Shift-Tab := CycleClientPrev "yes" "no" "yes"
 
 Mod4-space := SelectClient "Any" "yes" "no" "yes"
-Mod4-return := PromptSelect "Workspaces" "Prefix"
-Mod4-Shift-return := PromptSelect "WorkspacesWithClient" "Substring"
+Mod4-return := SelectWorkspace "Prefix"
+Mod4-Shift-return := SelectWorkspaceWithClient "Prefix"
 

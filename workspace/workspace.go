@@ -23,6 +23,7 @@ type Workspace struct {
 	curAutoTiler int
 
 	PromptSlctGroup *prompt.SelectGroupItem
+	PromptSlctItem  *prompt.SelectItem
 }
 
 func (wrks *Workspaces) NewWorkspace(name string) *Workspace {
@@ -313,4 +314,16 @@ func (wrk *Workspace) LayoutStateSet(state int) {
 
 func (wrk *Workspace) SelectGroupText() string {
 	return wrk.String()
+}
+
+func (wrk *Workspace) SelectText() string {
+	return wrk.String()
+}
+
+func (wrk *Workspace) SelectSelected(data interface{}) {
+	data.(func())()
+}
+
+func (wrk *Workspace) SelectHighlighted(data interface{}) {
+	data.(func())()
 }
