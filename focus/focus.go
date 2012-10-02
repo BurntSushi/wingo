@@ -61,7 +61,6 @@ func Focus(c Client) {
 	if c.CanFocus() || c.SendFocusNotify() {
 		Clients = append(Clients, c)
 		c.PrepareForFocus()
-		// c.Focused() 
 	}
 	if c.CanFocus() {
 		c.Win().Focus()
@@ -95,13 +94,4 @@ func Root() {
 		c.Unfocused()
 	}
 	xwindow.New(X, X.Dummy()).Focus()
-}
-
-func UnfocusExcept(c Client) {
-	id := c.Id()
-	for i := len(Clients) - 1; i >= 0; i-- {
-		if Clients[i].Id() != id {
-			Clients[i].Unfocused()
-		}
-	}
 }

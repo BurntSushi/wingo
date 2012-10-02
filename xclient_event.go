@@ -9,7 +9,6 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xprop"
 
-	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
 )
@@ -62,13 +61,6 @@ func (c *client) cbDestroyNotify() xevent.DestroyNotifyFun {
 
 func (c *client) cbUnmapNotify() xevent.UnmapNotifyFun {
 	f := func(X *xgbutil.XUtil, ev xevent.UnmapNotifyEvent) {
-		// If a client has "iconified" set to true and we get an UnmapNotify
-		// event, then that means we need to switch focus to the next window
-		// in the focus stack.
-		if c.iconified && focus.Current().Id() == c.Id() {
-			wingo.focusFallback()
-		}
-
 		// When a client issues an Unmap request, the window manager should
 		// unmanage it. However, when wingo unmaps the window, we shouldn't
 		// unmanage it. Thus, every time wingo unmaps the window, the
@@ -234,8 +226,8 @@ func (c *client) handleFocusOut() xevent.FocusOutFun {
 		if ignoreFocus(ev.Mode, ev.Detail) {
 			return
 		}
-
 		c.Unfocused()
+
 		// logger.Debug.Println("---------------------------------------------")
 		// logger.Debug.Println("Focus Out") 
 		// logger.Debug.Printf("Window: %s", c.Name()) 

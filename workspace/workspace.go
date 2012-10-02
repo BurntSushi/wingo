@@ -320,10 +320,19 @@ func (wrk *Workspace) SelectText() string {
 	return wrk.String()
 }
 
+type SelectData struct {
+	Selected    func(wrk *Workspace)
+	Highlighted func(wrk *Workspace)
+}
+
 func (wrk *Workspace) SelectSelected(data interface{}) {
-	data.(func())()
+	if f := data.(SelectData).Selected; f != nil {
+		f(wrk)
+	}
 }
 
 func (wrk *Workspace) SelectHighlighted(data interface{}) {
-	data.(func())()
+	if f := data.(SelectData).Highlighted; f != nil {
+		f(wrk)
+	}
 }

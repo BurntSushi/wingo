@@ -15,12 +15,22 @@ Mod1-f := ToggleForceFloating
 Mod1-s := ToggleSticky
 
 Mod1-w := HeadFocus 0
-Mod1-e := HeadFocus 1
-Mod1-r := HeadFocus 2
+Mod1-w := MovePointerRelative 0 0
 
-Mod1-Shift-w := HeadFocusWithClient 0
-Mod1-Shift-e := HeadFocusWithClient 1
-Mod1-Shift-r := HeadFocusWithClient 2
+Mod1-e := HeadFocus 1
+Mod1-e := MovePointerRelative 0 0
+
+Mod1-r := HeadFocus 2
+Mod1-r := MovePointerRelative 0 0
+
+Mod1-Shift-w := HeadFocusWithClient 0 ":active:"
+Mod1-Shift-w := MovePointerRelative 0 0
+
+Mod1-Shift-e := HeadFocusWithClient 1 ":active:"
+Mod1-Shift-e := MovePointerRelative 0 0
+
+Mod1-Shift-r := HeadFocusWithClient 2 ":active:"
+Mod1-Shift-r := MovePointerRelative 0 0
 
 Mod4-left := WorkspaceLeft
 Mod4-right := WorkspaceRight
@@ -46,7 +56,7 @@ Mod1-4 := FrameFull
 Mod1-Tab := CycleClientNext "yes" "no" "yes"
 Mod1-Shift-Tab := CycleClientPrev "yes" "no" "yes"
 
-Mod4-space := SelectClient "Any" "yes" "no" "yes"
+Mod4-space := SelectClient "Any" "no" "no" "yes"
 Mod4-return := SelectWorkspace "Prefix"
-Mod4-Shift-return := SelectWorkspaceWithClient "Prefix"
+Mod4-Shift-return := SelectWorkspaceWithClient "Prefix" ":active:"
 

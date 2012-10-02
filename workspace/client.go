@@ -3,6 +3,8 @@ package workspace
 import (
 	"github.com/BurntSushi/xgb/xproto"
 
+	"github.com/BurntSushi/xgbutil/xrect"
+
 	"github.com/BurntSushi/wingo/layout"
 )
 
@@ -15,6 +17,7 @@ type Client interface {
 	Map()
 	Unmap()
 	ShouldForceFloating() bool
+	Geom() xrect.Rect
 
 	Iconified() bool
 	IconifiedSet(iconified bool)

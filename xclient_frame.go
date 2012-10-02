@@ -36,7 +36,7 @@ func (c *client) Frame() frame.Frame {
 }
 
 // Geom returns the geometry of the client window (not the frame window).
-func (c *client) Geom() xrect.Rect {
+func (c *client) ClientGeom() xrect.Rect {
 	return c.win.Geom
 }
 

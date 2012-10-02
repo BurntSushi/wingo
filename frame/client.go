@@ -14,7 +14,7 @@ type Client interface {
 	Maximized() bool
 	Icon(width, height int) *xgraphics.Image
 	Name() string
-	Geom() xrect.Rect
+	ClientGeom() xrect.Rect
 	ValidateHeight(height int) int
 	ValidateWidth(width int) int
 	GravitizeX(x, gravity int) int

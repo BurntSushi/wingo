@@ -2,6 +2,8 @@ package layout
 
 import (
 	"github.com/BurntSushi/xgb/xproto"
+
+	"github.com/BurntSushi/xgbutil/xrect"
 )
 
 // Client is the method set required for a particular client to be used by
@@ -14,6 +16,7 @@ type Client interface {
 	Id() xproto.Window
 	String() string
 	Layout() Layout
+	Geom() xrect.Rect
 
 	MROpt(validate bool, flags, x, y, width, height int)
 	MoveResize(validate bool, x, y, width, height int)

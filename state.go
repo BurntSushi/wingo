@@ -41,7 +41,9 @@ func newWingoState() *wingoState {
 
 func (wingo *wingoState) initializeHeads() {
 	wingo.heads = heads.NewHeads(X)
-	wingo.addWorkspace("Numero Uno")
+	for _, wrkName := range wingo.conf.workspaces {
+		wingo.addWorkspace(wrkName)
+	}
 	wingo.heads.Initialize(wingo.clients)
 }
 

@@ -38,3 +38,11 @@ func newParent(X *xgbutil.XUtil, cid xproto.Window) (*Parent, error) {
 
 	return &Parent{parent}, nil
 }
+
+func (par *Parent) Deparent(cid xproto.Window) {
+	err := xproto.ReparentWindowChecked(
+		par.X.Conn(), cid, par.X.RootWin(), 0, 0).Check()
+	if err != nil {
+		logger.Warning.Printf("Could not deparent client window: %s", err)
+	}
+}

@@ -1,6 +1,9 @@
 package layout
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/BurntSushi/xgbutil/xrect"
 )
 
@@ -12,6 +15,22 @@ func NewFloating() *Floating {
 	return &Floating{
 		clients: make([]Client, 0),
 	}
+}
+
+func (f *Floating) InitialPlacement(geom xrect.Rect, c Client) {
+	rand.Seed(time.Now().UnixNano())
+	cgeom := c.Geom()
+
+	x, y := geom.X(), geom.Y()
+	xlimit := geom.Width() - cgeom.Width()
+	ylimit := geom.Height() - cgeom.Height()
+	if xlimit > 0 {
+		x = rand.Intn(xlimit)
+	}
+	if ylimit > 0 {
+		y = rand.Intn(ylimit)
+	}
+	f.Move(c, x, y)
 }
 
 func (f *Floating) Place(geom xrect.Rect)   {}

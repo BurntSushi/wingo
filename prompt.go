@@ -4,6 +4,7 @@ import (
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/prompt"
+	"github.com/BurntSushi/wingo/workspace"
 )
 
 type prompts struct {
@@ -92,14 +93,17 @@ func showSelectClient(tabComp int, activeWrk, visible, iconified bool) {
 	wingo.prompts.slct.Show(wingo.workspace().Geom(), tabComp, groups, nil)
 }
 
-func showSelectWorkspace(tabComp int) {
+func showSelectWorkspace(tabComp int, data workspace.SelectData) {
 	allWrks := wingo.heads.Workspaces()
+	visibles := wingo.heads.VisibleWorkspaces()
+
 	wrksVisible := make([]*prompt.SelectItem, 0, len(allWrks))
 	wrksHidden := make([]*prompt.SelectItem, 0, len(allWrks))
+	for _, wrk := range visibles {
+		wrksVisible = append(wrksVisible, wrk.PromptSlctItem)
+	}
 	for _, wrk := range allWrks {
-		if wrk.IsVisible() {
-			wrksVisible = append(wrksVisible, wrk.PromptSlctItem)
-		} else {
+		if !wrk.IsVisible() {
 			wrksHidden = append(wrksHidden, wrk.PromptSlctItem)
 		}
 	}
@@ -108,9 +112,5 @@ func showSelectWorkspace(tabComp int) {
 		wingo.prompts.slctVisible.ShowGroup(wrksVisible),
 		wingo.prompts.slctHidden.ShowGroup(wrksHidden),
 	}
-
-	f := func() {
-		println("whoop whoop")
-	}
-	wingo.prompts.slct.Show(wingo.workspace().Geom(), tabComp, groups, f)
+	wingo.prompts.slct.Show(wingo.workspace().Geom(), tabComp, groups, data)
 }

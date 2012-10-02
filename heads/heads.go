@@ -1,8 +1,6 @@
 package heads
 
 import (
-	"fmt"
-
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xinerama"
@@ -44,9 +42,9 @@ func (hds *Heads) Load(clients Clients) {
 
 	// Check if the number of workspaces is less than the number of heads.
 	if len(hds.workspaces.Wrks) < len(hds.geom) {
-		panic(fmt.Sprintf(
-			"There must be at least %d workspaces (one for each head.",
-			len(hds.geom)))
+		logger.Error.Fatalf(
+			"There must be at least %d workspaces (one for each head).",
+			len(hds.geom))
 	}
 
 	// To make things simple, set the first workspace to be the

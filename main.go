@@ -1,6 +1,8 @@
 package main
 
 import (
+	"runtime"
+
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
@@ -24,6 +26,9 @@ var (
 
 func main() {
 	var err error
+
+	// giggity
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	X, err = xgbutil.NewConn()
 	if err != nil {

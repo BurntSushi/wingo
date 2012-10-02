@@ -1,8 +1,12 @@
 package heads
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/BurntSushi/xgbutil/xrect"
 
+	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/workspace"
 )
 
@@ -24,16 +28,20 @@ func (hds *Heads) SwitchWorkspaces(wk1, wk2 *workspace.Workspace) {
 	v1, v2 := hds.visibleIndex(wk1), hds.visibleIndex(wk2)
 	switch {
 	case v1 > -1 && v2 > -1:
+		wk1.Hide()
+		wk2.Hide()
 		hds.visibles[v1], hds.visibles[v2] = hds.visibles[v2], hds.visibles[v1]
 		wk1.Place()
 		wk2.Place()
+		wk1.Show()
+		wk2.Show()
 	case v1 > -1 && v2 == -1:
-		hds.visibles[v1] = wk2
 		wk1.Hide()
+		hds.visibles[v1] = wk2
 		wk2.Show()
 	case v1 == -1 && v2 > -1:
-		hds.visibles[v2] = wk1
 		wk2.Hide()
+		hds.visibles[v2] = wk1
 		wk1.Show()
 	case v1 == -1 && v2 == -1:
 		// Meaningless
@@ -89,6 +97,38 @@ func (hds *Heads) ActiveWorkspace() *workspace.Workspace {
 
 func (hds *Heads) VisibleWorkspaces() []*workspace.Workspace {
 	return hds.visibles
+}
+
+// WithVisibleWorkspace takes a head number and a closure and executes
+// the closure safely with the workspace corresponding to head number i.
+//
+// This approach is necessary for safety, since the user can send commands
+// with arbitrary head numbers. We need to make sure we don't crash if we
+// get an invalid head number.
+func (hds *Heads) WithVisibleWorkspace(i int, f func(w *workspace.Workspace)) {
+	if i < 0 || i >= len(hds.visibles) {
+		headNums := make([]string, len(hds.visibles))
+		for j := range headNums {
+			headNums[j] = fmt.Sprintf("%d", j)
+		}
+		logger.Warning.Printf("Head index %d is not valid. "+
+			"Valid heads are: [%s].", i, strings.Join(headNums, ", "))
+		return
+	}
+	f(hds.visibles[i])
+}
+
+func (hds *Heads) FindMostOverlap(needle xrect.Rect) *workspace.Workspace {
+	haystack := make([]xrect.Rect, len(hds.geom))
+	for i := range haystack {
+		haystack[i] = hds.geom[i]
+	}
+
+	index := xrect.LargestOverlap(needle, haystack)
+	if index == -1 {
+		return nil
+	}
+	return hds.visibles[index]
 }
 
 func (hds *Heads) IsActive(wrk *workspace.Workspace) bool {

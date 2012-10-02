@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/BurntSushi/xgb/xproto"
 
+	"github.com/BurntSushi/xgbutil/xrect"
+
 	"github.com/BurntSushi/wingo/layout"
 )
 
@@ -24,6 +26,10 @@ func (c *client) LayoutMove(x, y int) {
 
 func (c *client) LayoutResize(width, height int) {
 	c.Layout().Resize(c, width, height)
+}
+
+func (c *client) Geom() xrect.Rect {
+	return c.frame.Geom()
 }
 
 func (c *client) FrameTile() {

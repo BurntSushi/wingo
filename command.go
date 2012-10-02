@@ -9,12 +9,16 @@ import (
 
 	"github.com/BurntSushi/gribble"
 
+	"github.com/BurntSushi/xgb/xproto"
+
 	"github.com/BurntSushi/xgbutil/xevent"
+	"github.com/BurntSushi/xgbutil/xrect"
 
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/prompt"
 	"github.com/BurntSushi/wingo/stack"
+	"github.com/BurntSushi/wingo/workspace"
 )
 
 // gribbleCommandEnv declares all available commands. Any command not in
@@ -25,15 +29,20 @@ var gribbleCommandEnv = gribble.New([]gribble.Command{
 	&CmdCycleClientPrev{},
 	&CmdFocus{},
 	&CmdFocusRaise{},
+	&CmdHeadFocus{},
+	&CmdHeadFocusWithClient{},
 	&CmdIconifyToggle{},
 	&CmdMouseMove{},
 	&CmdMouseResize{},
 	&CmdMove{},
+	&CmdMovePointerAbsolute{},
+	&CmdMovePointerRelative{},
 	&CmdRaise{},
 	&CmdResize{},
 	&CmdQuit{},
 	&CmdSelectClient{},
 	&CmdSelectWorkspace{},
+	&CmdSelectWorkspaceWithClient{},
 	&CmdShell{},
 })
 
@@ -107,6 +116,37 @@ func (cmd CmdCycleClientPrev) RunWithKeyStr(keyStr string) {
 	wingo.prompts.cycle.Prev()
 }
 
+type CmdFocus struct {
+	name   string      `Focus`
+	Client gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd CmdFocus) Run() gribble.Value {
+	withClient(cmd.Client, func(c *client) {
+		if c == nil {
+			focus.Root()
+
+			// Use the mouse coordinates to find which workspace it was
+			// clicked in. If a workspace can be found (i.e., no clicks in
+			// dead areas), then activate it.
+			qp, err := xproto.QueryPointer(X.Conn(), X.RootWin()).Reply()
+			if err != nil {
+				logger.Warning.Printf("Could not query pointer: %s", err)
+				return
+			}
+
+			geom := xrect.New(int(qp.RootX), int(qp.RootY), 1, 1)
+			if wrk := wingo.heads.FindMostOverlap(geom); wrk != nil {
+				wrk.Activate(false)
+			}
+		} else {
+			focus.Focus(c)
+			xevent.ReplayPointer(X)
+		}
+	})
+	return nil
+}
+
 type CmdFocusRaise struct {
 	name   string      `FocusRaise`
 	Client gribble.Any `param:"1" types:"int,string"`
@@ -121,19 +161,35 @@ func (cmd CmdFocusRaise) Run() gribble.Value {
 	return nil
 }
 
-type CmdFocus struct {
-	name   string      `Focus`
-	Client gribble.Any `param:"1" types:"int,string"`
+type CmdHeadFocus struct {
+	name string `HeadFocus`
+	Head int    `param:"1"`
 }
 
-func (cmd CmdFocus) Run() gribble.Value {
+func (cmd CmdHeadFocus) Run() gribble.Value {
+	wingo.heads.WithVisibleWorkspace(cmd.Head,
+		func(wrk *workspace.Workspace) {
+			wrk.Activate(false)
+		})
+	wingo.focusFallback()
+	return nil
+}
+
+type CmdHeadFocusWithClient struct {
+	name   string      `HeadFocusWithClient`
+	Head   int         `param:"1"`
+	Client gribble.Any `param:"2" types:"int,string"`
+}
+
+func (cmd CmdHeadFocusWithClient) Run() gribble.Value {
 	withClient(cmd.Client, func(c *client) {
-		if c == nil {
-			focus.Root()
-		} else {
-			focus.Focus(c)
-			xevent.ReplayPointer(X)
-		}
+		wingo.heads.WithVisibleWorkspace(cmd.Head,
+			func(wrk *workspace.Workspace) {
+				wrk.Activate(false)
+				c.SaveState("temp")
+				wrk.Add(c)
+				c.LoadState("temp")
+			})
 	})
 	return nil
 }
@@ -195,6 +251,31 @@ func (cmd CmdMove) Run() gribble.Value {
 	return nil
 }
 
+type CmdMovePointerAbsolute struct {
+	name string `MovePointerAbsolute`
+	X    int    `param:"1"`
+	Y    int    `param:"2"`
+}
+
+func (cmd CmdMovePointerAbsolute) Run() gribble.Value {
+	xproto.WarpPointer(X.Conn(), 0, X.RootWin(), 0, 0, 0, 0,
+		int16(cmd.X), int16(cmd.Y))
+	return nil
+}
+
+type CmdMovePointerRelative struct {
+	name string `MovePointerRelative`
+	X    int    `param:"1"`
+	Y    int    `param:"2"`
+}
+
+func (cmd CmdMovePointerRelative) Run() gribble.Value {
+	geom := wingo.workspace().Geom()
+	xproto.WarpPointer(X.Conn(), 0, X.RootWin(), 0, 0, 0, 0,
+		int16(geom.X()+cmd.X), int16(geom.Y()+cmd.Y))
+	return nil
+}
+
 type CmdResize struct {
 	name   string      `Resize`
 	Client gribble.Any `param:"1" types:"int,string"`
@@ -247,7 +328,33 @@ type CmdSelectWorkspace struct {
 }
 
 func (cmd CmdSelectWorkspace) Run() gribble.Value {
-	showSelectWorkspace(stringTabComp(cmd.TabCompletion))
+	data := workspace.SelectData{
+		Selected: func(wrk *workspace.Workspace) {
+			wrk.Activate(true)
+		},
+		Highlighted: nil,
+	}
+	showSelectWorkspace(stringTabComp(cmd.TabCompletion), data)
+	return nil
+}
+
+type CmdSelectWorkspaceWithClient struct {
+	name          string      `SelectWorkspaceWithClient`
+	TabCompletion string      `param:"1"`
+	Client        gribble.Any `param:"2" types:"int,string"`
+}
+
+func (cmd CmdSelectWorkspaceWithClient) Run() gribble.Value {
+	withClient(cmd.Client, func(c *client) {
+		data := workspace.SelectData{
+			Selected: func(wrk *workspace.Workspace) {
+				wrk.Add(c)
+				wrk.Activate(true)
+			},
+			Highlighted: nil,
+		}
+		showSelectWorkspace(stringTabComp(cmd.TabCompletion), data)
+	})
 	return nil
 }
 

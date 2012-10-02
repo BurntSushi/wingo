@@ -10,6 +10,8 @@ import (
 
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/frame"
+	"github.com/BurntSushi/wingo/heads"
+	"github.com/BurntSushi/wingo/layout"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/stack"
 )
@@ -76,11 +78,54 @@ func (c *client) manage() {
 	c.states = c.newClientStates()
 	c.prompts = c.newClientPrompts()
 
+	// Before adding the client into our data structures, we should first
+	// make sure it's located on the right head. We do this by finding where
+	// it *is* place and convert it into the coordinate space of where it
+	// *should* be placed.
+	oughtHeadGeom := wingo.workspace().Geom()
+	cgeom := c.frame.Geom()
+	if wrk := wingo.heads.FindMostOverlap(cgeom); wrk != nil {
+		isHeadGeom := wrk.Geom()
+		ngeom := heads.Convert(cgeom, isHeadGeom, oughtHeadGeom)
+		c.MoveResize(true, ngeom.X(), ngeom.Y(), ngeom.Width(), ngeom.Height())
+	} else {
+		c.Move(oughtHeadGeom.X(), oughtHeadGeom.Y())
+	}
+
 	wingo.addClient(c)
 	focus.InitialAdd(c)
 	stack.Raise(c)
 	wingo.workspace().Add(c)
 	c.attachEventCallbacks()
+	c.maybeInitPlace()
+}
+
+func (c *client) maybeInitPlace() {
+	floater, ok := c.Layout().(layout.Floater)
+	if !ok {
+		return
+	}
+
+	// Any client that isn't normal doesn't get placed.
+	// Let it do what it do, baby.
+	if c.primaryType != clientTypeNormal {
+		return
+	}
+
+	// Transients never get placed.
+	if c.transientFor != nil {
+		return
+	}
+
+	// If a user/program position is specified, do not place.
+	if c.nhints.Flags&icccm.SizeHintUSPosition > 0 ||
+		c.nhints.Flags&icccm.SizeHintPPosition > 0 {
+
+		return
+	}
+
+	// We're good, do a placement.
+	floater.InitialPlacement(c.Workspace().Geom(), c)
 }
 
 func (c *client) fetchXProperties() {
