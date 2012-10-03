@@ -12,11 +12,9 @@
    separately. We can just bind them to the root window and let the commands
    infer state and act appropriately.
 */
-package main
+package wm
 
 import (
-	"fmt"
-
 	"github.com/BurntSushi/gribble"
 
 	"github.com/BurntSushi/xgbutil"
@@ -34,8 +32,8 @@ type keyCommand struct {
 	keyStr  string
 }
 
-func attachAllKeys() {
-	for _, kcmds := range wingo.conf.key {
+func keybindings() {
+	for _, kcmds := range Config.key {
 		for _, kcmd := range kcmds {
 			kcmd.attach()
 		}
@@ -55,20 +53,11 @@ func (kcmd keyCommand) attach() {
 			return
 		}
 
-		var run func() = nil
-		switch t := kcmd.cmd.(type) {
-		case *CmdCycleClientNext:
-			run = func() { t.RunWithKeyStr(kcmd.keyStr) }
-		case *CmdCycleClientPrev:
-			run = func() { t.RunWithKeyStr(kcmd.keyStr) }
-		default:
-			panic(fmt.Sprintf("bug: unknown type %T", t))
-		}
-
+		run := cmdHacks.CycleClientRunWithKeyStr(kcmd.keyStr, kcmd.cmd)
 		keybind.KeyPressFun(
 			func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 				run()
-			}).Connect(X, wingo.root.Id, kcmd.keyStr, true)
+			}).Connect(X, Root.Id, kcmd.keyStr, true)
 		keybind.KeyPressFun(
 			func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 				run()
@@ -78,12 +67,12 @@ func (kcmd keyCommand) attach() {
 			keybind.KeyPressFun(
 				func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 					kcmd.cmd.Run()
-				}).Connect(X, wingo.root.Id, kcmd.keyStr, true)
+				}).Connect(X, Root.Id, kcmd.keyStr, true)
 		} else {
 			keybind.KeyReleaseFun(
 				func(X *xgbutil.XUtil, ev xevent.KeyReleaseEvent) {
 					kcmd.cmd.Run()
-				}).Connect(X, wingo.root.Id, kcmd.keyStr, true)
+				}).Connect(X, Root.Id, kcmd.keyStr, true)
 		}
 	}
 }

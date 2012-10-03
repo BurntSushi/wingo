@@ -32,7 +32,7 @@ func (f *Borders) newPieceWindow(ident string,
 		logger.Warning.Println(err)
 	}
 
-	f.client.FramePieceMouseConfig("borders_"+ident, win.Id)
+	f.client.FramePieceMouseSetup("borders_"+ident, win.Id)
 
 	return win
 }

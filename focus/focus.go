@@ -9,6 +9,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/workspace"
 )
 
 var (
@@ -94,4 +95,15 @@ func Root() {
 		c.Unfocused()
 	}
 	xwindow.New(X, X.Dummy()).Focus()
+}
+
+func Fallback(wrk *workspace.Workspace) {
+	for i := len(Clients) - 1; i >= 0; i-- {
+		c := Clients[i]
+		if c.IsMapped() && c.Workspace() == wrk && !c.ImminentDestruction() {
+			Focus(c)
+			return
+		}
+	}
+	Root()
 }

@@ -1,4 +1,4 @@
-package main
+package xclient
 
 import (
 	"github.com/BurntSushi/xgbutil/icccm"
@@ -7,12 +7,12 @@ import (
 )
 
 // Transient is a wrapper around transient that type switches an empty interface
-// to a *client type. This is used to satisfy Client interfaces is various
+// to a *Client type. This is used to satisfy Client interfaces is various
 // sub-packages.
 // 
-// Currently, only values that have type *client can be transient to each other.
-func (c *client) Transient(test stack.Client) bool {
-	if testClient, ok := test.(*client); ok {
+// Currently, only values that have type *Client can be transient to each other.
+func (c *Client) Transient(test stack.Client) bool {
+	if testClient, ok := test.(*Client); ok {
 		return c.transient(testClient)
 	}
 	return false
@@ -32,7 +32,7 @@ func (c *client) Transient(test stack.Client) bool {
 // then c is a transient of C.
 // There is one exception: if c and C are both transients in the same group,
 // then they cannot be transient to each other.
-func (c *client) transient(test *client) bool {
+func (c *Client) transient(test *Client) bool {
 	if c == test {
 		return false
 	}
@@ -54,7 +54,7 @@ func (c *client) transient(test *client) bool {
 }
 
 // transientType determines whether there is a transient type in the client.
-func (c *client) transientType() bool {
+func (c *Client) transientType() bool {
 	return strIndex("_NET_WM_WINDOW_TYPE_TOOLBAR", c.winTypes) > -1 ||
 		strIndex("_NET_WM_WINDOW_TYPE_MENU", c.winTypes) > -1 ||
 		strIndex("_NET_WM_WINDOW_TYPE_UTILITY", c.winTypes) > -1 ||

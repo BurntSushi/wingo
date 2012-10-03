@@ -17,6 +17,8 @@ func NewFloating() *Floating {
 	}
 }
 
+func (f *Floating) Floater() {}
+
 func (f *Floating) InitialPlacement(geom xrect.Rect, c Client) {
 	rand.Seed(time.Now().UnixNano())
 	cgeom := c.Geom()
@@ -25,10 +27,10 @@ func (f *Floating) InitialPlacement(geom xrect.Rect, c Client) {
 	xlimit := geom.Width() - cgeom.Width()
 	ylimit := geom.Height() - cgeom.Height()
 	if xlimit > 0 {
-		x = rand.Intn(xlimit)
+		x += rand.Intn(xlimit)
 	}
 	if ylimit > 0 {
-		y = rand.Intn(ylimit)
+		y += rand.Intn(ylimit)
 	}
 	f.Move(c, x, y)
 }

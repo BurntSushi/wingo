@@ -1,16 +1,17 @@
-package main
+package xclient
 
 import (
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/wm"
 )
 
-func (c *client) Icon(width, height int) *xgraphics.Image {
-	ximg, err := xgraphics.FindIcon(X, c.Id(), width, height)
+func (c *Client) Icon(width, height int) *xgraphics.Image {
+	ximg, err := xgraphics.FindIcon(wm.X, c.Id(), width, height)
 	if err != nil {
 		logger.Message.Printf("Could not find icon for '%s': %s", c, err)
-		ximg = xgraphics.NewConvert(X, wingo.theme.defaultIcon)
+		ximg = xgraphics.NewConvert(wm.X, wm.Theme.DefaultIcon)
 		ximg = ximg.Scale(width, height)
 	}
 

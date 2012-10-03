@@ -1,4 +1,4 @@
-package main
+package xclient
 
 import (
 	"github.com/BurntSushi/xgb/xproto"
@@ -9,7 +9,7 @@ import (
 	"github.com/BurntSushi/wingo/frame"
 )
 
-func (c *client) dragMoveBegin(rx, ry, ex, ey int) {
+func (c *Client) DragMoveBegin(rx, ry, ex, ey int) {
 	f := c.frame
 	moving := f.MovingState()
 	moving.Moving = true
@@ -22,7 +22,7 @@ func (c *client) dragMoveBegin(rx, ry, ex, ey int) {
 	c.EnsureUnmax()
 }
 
-func (c *client) dragMoveStep(rx, ry, ex, ey int) {
+func (c *Client) DragMoveStep(rx, ry, ex, ey int) {
 	f := c.frame
 	moving := f.MovingState()
 	newx := f.Geom().X() + rx - moving.RootX
@@ -32,7 +32,7 @@ func (c *client) dragMoveStep(rx, ry, ex, ey int) {
 	c.LayoutMove(newx, newy)
 }
 
-func (c *client) dragMoveEnd(rx, ry, ex, ey int) {
+func (c *Client) DragMoveEnd(rx, ry, ex, ey int) {
 	f := c.frame
 	frame.Reset(f)
 	// WM.headChoose(f.Client(), f.Geom()) 
@@ -42,7 +42,7 @@ func (c *client) dragMoveEnd(rx, ry, ex, ey int) {
 	moving.RootX, moving.RootY = 0, 0
 }
 
-func (c *client) dragResizeBegin(direction uint32,
+func (c *Client) DragResizeBegin(direction uint32,
 	rx, ry, ex, ey int) (bool, xproto.Cursor) {
 
 	f := c.frame
@@ -158,7 +158,7 @@ func (c *client) dragResizeBegin(direction uint32,
 	return true, cursor
 }
 
-func (c *client) dragResizeStep(rx, ry, ex, ey int) {
+func (c *Client) DragResizeStep(rx, ry, ex, ey int) {
 	f := c.frame
 	resizing := f.ResizingState()
 
@@ -209,7 +209,7 @@ func (c *client) dragResizeStep(rx, ry, ex, ey int) {
 	c.LayoutMoveResize(newx, newy, validw, validh)
 }
 
-func (c *client) dragResizeEnd(rx, ry, ex, ey int) {
+func (c *Client) DragResizeEnd(rx, ry, ex, ey int) {
 	f := c.frame
 
 	// If windows are really slow to respond/resize, this may be necessary.

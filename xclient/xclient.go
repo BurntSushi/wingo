@@ -1,11 +1,10 @@
-package main
+package xclient
 
 import (
 	"fmt"
 
 	"github.com/BurntSushi/xgb/xproto"
 
-	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xevent"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/wm"
 	"github.com/BurntSushi/wingo/workspace"
 )
 
@@ -23,9 +23,7 @@ const (
 	clientTypeDock
 )
 
-type client struct {
-	X *xgbutil.XUtil
-
+type Client struct {
 	win       *xwindow.Window
 	frame     frame.Frame
 	workspace *workspace.Workspace
@@ -46,7 +44,7 @@ type client struct {
 	nhints       *icccm.NormalHints
 	protocols    []string
 	class        *icccm.WmClass
-	transientFor *client
+	transientFor *Client
 	time         xproto.Timestamp
 
 	// unmapIgnore is the number of UnmapNotify events to ignore.
@@ -57,34 +55,38 @@ type client struct {
 	floating bool
 }
 
-func (c *client) Map() {
-	if c.frame.IsMapped() {
+func (c *Client) IsMapped() bool {
+	return c.frame.IsMapped()
+}
+
+func (c *Client) Map() {
+	if c.IsMapped() {
 		return
 	}
 	c.win.Map()
 	c.frame.Map()
-	icccm.WmStateSet(c.X, c.Id(), &icccm.WmState{State: icccm.StateNormal})
+	icccm.WmStateSet(wm.X, c.Id(), &icccm.WmState{State: icccm.StateNormal})
 }
 
-func (c *client) Unmap() {
-	if !c.frame.IsMapped() {
+func (c *Client) Unmap() {
+	if !c.IsMapped() {
 		return
 	}
 	c.unmapIgnore++
 	c.frame.Unmap()
 	c.win.Unmap()
-	icccm.WmStateSet(c.X, c.Id(), &icccm.WmState{State: icccm.StateIconic})
+	icccm.WmStateSet(wm.X, c.Id(), &icccm.WmState{State: icccm.StateIconic})
 }
 
-func (c *client) Close() {
+func (c *Client) Close() {
 	if strIndex("WM_DELETE_WINDOW", c.protocols) > -1 {
-		wm_protocols, err := xprop.Atm(X, "WM_PROTOCOLS")
+		wm_protocols, err := xprop.Atm(wm.X, "WM_PROTOCOLS")
 		if err != nil {
 			logger.Warning.Println(err)
 			return
 		}
 
-		wm_del_win, err := xprop.Atm(X, "WM_DELETE_WINDOW")
+		wm_del_win, err := xprop.Atm(wm.X, "WM_DELETE_WINDOW")
 		if err != nil {
 			logger.Warning.Println(err)
 			return
@@ -97,7 +99,7 @@ func (c *client) Close() {
 			return
 		}
 
-		err = xproto.SendEventChecked(X.Conn(), false, c.Id(), 0,
+		err = xproto.SendEventChecked(wm.X.Conn(), false, c.Id(), 0,
 			string(cm.Bytes())).Check()
 		if err != nil {
 			logger.Message.Printf("Could not send WM_DELETE_WINDOW "+
@@ -108,23 +110,23 @@ func (c *client) Close() {
 	}
 }
 
-func (c *client) refreshName() {
+func (c *Client) refreshName() {
 	defer func() {
 		c.frames.full.UpdateTitle()
 		c.prompts.updateName()
 	}()
 
-	c.name, _ = ewmh.WmVisibleNameGet(c.X, c.Id())
+	c.name, _ = ewmh.WmVisibleNameGet(wm.X, c.Id())
 	if len(c.name) > 0 {
 		return
 	}
 
-	c.name, _ = ewmh.WmNameGet(c.X, c.Id())
+	c.name, _ = ewmh.WmNameGet(wm.X, c.Id())
 	if len(c.name) > 0 {
 		return
 	}
 
-	c.name, _ = icccm.WmNameGet(c.X, c.Id())
+	c.name, _ = icccm.WmNameGet(wm.X, c.Id())
 	if len(c.name) > 0 {
 		return
 	}
@@ -132,39 +134,39 @@ func (c *client) refreshName() {
 	c.name = "Unnamed Window"
 }
 
-func (c *client) hasType(atom string) bool {
+func (c *Client) hasType(atom string) bool {
 	return strIndex(atom, c.winTypes) > -1
 }
 
-func (c *client) String() string {
+func (c *Client) String() string {
 	// return c.name 
 	return fmt.Sprintf("%d :: %s", c.Id(), c.name)
 }
 
-func (c *client) Id() xproto.Window {
+func (c *Client) Id() xproto.Window {
 	return c.win.Id
 }
 
-func (c *client) Win() *xwindow.Window {
+func (c *Client) Win() *xwindow.Window {
 	return c.win
 }
 
-func (c *client) TopWin() *xwindow.Window {
+func (c *Client) TopWin() *xwindow.Window {
 	return c.frame.Parent().Window
 }
 
-func (c *client) Layer() int {
+func (c *Client) Layer() int {
 	return c.layer
 }
 
-func (c *client) Maximized() bool {
+func (c *Client) Maximized() bool {
 	return c.maximized
 }
 
-func (c *client) Name() string {
+func (c *Client) Name() string {
 	return c.String()
 }
 
-func (c *client) State() int {
+func (c *Client) State() int {
 	return c.state
 }

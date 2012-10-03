@@ -16,6 +16,8 @@ func NewVertical() *Vertical {
 	}
 }
 
+func (v *Vertical) AutoTiler() {}
+
 func (v *Vertical) Place(geom xrect.Rect) {
 	if geom == nil {
 		return

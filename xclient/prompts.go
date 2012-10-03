@@ -1,4 +1,4 @@
-package main
+package xclient
 
 import (
 	"github.com/BurntSushi/xgbutil/xgraphics"
@@ -6,19 +6,28 @@ import (
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/prompt"
 	"github.com/BurntSushi/wingo/stack"
+	"github.com/BurntSushi/wingo/wm"
 )
 
 type clientPrompts struct {
-	client *client
+	client *Client
 	cycle  *prompt.CycleItem
 	slct   *prompt.SelectItem
 }
 
-func (c *client) newClientPrompts() clientPrompts {
+func (c *Client) CycleItem() *prompt.CycleItem {
+	return c.prompts.cycle
+}
+
+func (c *Client) SelectItem() *prompt.SelectItem {
+	return c.prompts.slct
+}
+
+func (c *Client) newClientPrompts() clientPrompts {
 	return clientPrompts{
 		client: c,
-		cycle:  wingo.prompts.cycle.AddChoice(c),
-		slct:   wingo.prompts.slct.AddChoice(c),
+		cycle:  wm.Prompts.Cycle.AddChoice(c),
+		slct:   wm.Prompts.Slct.AddChoice(c),
 	}
 }
 
@@ -41,20 +50,20 @@ func (p *clientPrompts) updateName() {
 
 // Satisfy the prompt.CycleChoice interface.
 
-func (c *client) CycleIsActive() bool {
+func (c *Client) CycleIsActive() bool {
 	return !c.iconified
 }
 
-func (c *client) CycleImage() *xgraphics.Image {
-	theme := wingo.theme.prompt.CycleTheme()
+func (c *Client) CycleImage() *xgraphics.Image {
+	theme := wm.Theme.Prompt.CycleTheme()
 	return c.Icon(theme.IconSize, theme.IconSize)
 }
 
-func (c *client) CycleText() string {
+func (c *Client) CycleText() string {
 	return c.String()
 }
 
-func (c *client) CycleSelected() {
+func (c *Client) CycleSelected() {
 	if c.iconified {
 		c.workspace.IconifyToggle(c)
 	}
@@ -62,19 +71,19 @@ func (c *client) CycleSelected() {
 	stack.Raise(c)
 }
 
-func (c *client) CycleHighlighted() {
+func (c *Client) CycleHighlighted() {
 }
 
 // Satisfy the prompt.SelectChoice interface.
 
-func (c *client) SelectText() string {
+func (c *Client) SelectText() string {
 	return c.String()
 }
 
-func (c *client) SelectSelected(data interface{}) {
+func (c *Client) SelectSelected(data interface{}) {
 	focus.Focus(c)
 	stack.Raise(c)
 }
 
-func (c *client) SelectHighlighted(data interface{}) {
+func (c *Client) SelectHighlighted(data interface{}) {
 }

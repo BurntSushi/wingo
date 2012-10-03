@@ -12,25 +12,21 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
+	"github.com/BurntSushi/wingo/commands"
 	"github.com/BurntSushi/wingo/cursors"
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/stack"
-)
-
-// global variables!
-var (
-	X     *xgbutil.XUtil
-	wingo *wingoState
+	"github.com/BurntSushi/wingo/wm"
+	"github.com/BurntSushi/wingo/xclient"
 )
 
 func main() {
-	var err error
-
 	// giggity
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	// runtime.GOMAXPROCS(runtime.NumCPU()) 
+	runtime.GOMAXPROCS(1)
 
-	X, err = xgbutil.NewConn()
+	X, err := xgbutil.NewConn()
 	if err != nil {
 		logger.Error.Println(err)
 		logger.Error.Println("Error connecting to X, quitting...")
@@ -43,50 +39,13 @@ func main() {
 	focus.Initialize(X)
 	stack.Initialize(X)
 
-	wingo = newWingoState()
-
-	// Create a root window abstraction and load its geometry
-	wingo.root = xwindow.New(X, X.RootWin())
-	_, err = wingo.root.Geometry()
-	if err != nil {
-		logger.Error.Printf("Could not get ROOT window geometry because: %v\n",
-			err)
-		logger.Error.Println("Cannot continue. Quitting...")
-		return
-	}
-
-	// Load configuration
-	wingo.conf, err = loadConfig()
-	if err != nil {
-		logger.Error.Println(err)
-		logger.Error.Println("No configuration found. Quitting...")
-		return
-	}
-
-	// Load theme
-	wingo.theme, err = loadTheme(X)
-	if err != nil {
-		logger.Error.Println(err)
-		logger.Error.Println("No theme configuration found. Quitting...")
-		return
-	}
-
-	// Initialize prompts
-	wingo.prompts = newPrompts()
-
-	wingo.initializeHeads()
-
-	// Attach all global key bindings
-	attachAllKeys()
-
-	// Attach all root mouse bindings
-	rootMouseConfig()
+	wm.Init(X, commands.Env, newHacks())
 
 	// Setup some cursors we use
 	cursors.Setup(X)
 
 	// Listen to Root. It is all-important.
-	wingo.root.Listen(xproto.EventMaskPropertyChange |
+	wm.Root.Listen(xproto.EventMaskPropertyChange |
 		xproto.EventMaskFocusChange |
 		xproto.EventMaskButtonPress |
 		xproto.EventMaskButtonRelease |
@@ -95,13 +54,13 @@ func main() {
 		xproto.EventMaskSubstructureRedirect)
 
 	// Update state when the root window changes size
-	// xevent.ConfigureNotifyFun(rootGeometryChange).Connect(X, wingo.root.Id) 
+	// xevent.ConfigureNotifyFun(rootGeometryChange).Connect(X, wm.Root.Id) 
 
 	// Oblige map request events
 	xevent.MapRequestFun(
 		func(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
-			newClient(X, ev.Window)
-		}).Connect(X, wingo.root.Id)
+			xclient.New(ev.Window)
+		}).Connect(X, wm.Root.Id)
 
 	// Oblige configure requests from windows we don't manage.
 	xevent.ConfigureRequestFun(
@@ -112,28 +71,28 @@ func main() {
 			xwindow.New(X, ev.Window).Configure(flags,
 				int(ev.X), int(ev.Y), int(ev.Width), int(ev.Height),
 				ev.Sibling, ev.StackMode)
-		}).Connect(X, wingo.root.Id)
+		}).Connect(X, wm.Root.Id)
 
 	xevent.FocusInFun(
 		func(X *xgbutil.XUtil, ev xevent.FocusInEvent) {
 			if ignoreRootFocus(ev.Mode, ev.Detail) {
 				return
 			}
-			if len(wingo.workspace().Clients) == 0 {
+			if len(wm.Workspace().Clients) == 0 {
 				return
 			}
-			wingo.focusFallback()
-		}).Connect(X, wingo.root.Id)
+			wm.FocusFallback()
+		}).Connect(X, wm.Root.Id)
 
 	// Listen to Root client message events.
 	// We satisfy EWMH with these AND it also provides a mechanism
 	// to issue commands using wingo-cmd.
-	// xevent.ClientMessageFun(commandHandler).Connect(X, wingo.root.Id) 
+	// xevent.ClientMessageFun(commandHandler).Connect(X, wm.Root.Id) 
 
 	xevent.Main(X)
 }
 
-func set_supported() {
+func setSupported() {
 	// Purposefully NOT supported
 	// _NET_DESKTOP_GEOMETRY, _NET_DESKTOP_VIEWPORT, _NET_VIRTUAL_ROOTS
 	// _NET_WORKAREA
@@ -158,5 +117,5 @@ func set_supported() {
 		"_NET_WM_ICON",
 	}
 	// Set supported atoms
-	ewmh.SupportedSet(X, supported)
+	ewmh.SupportedSet(wm.X, supported)
 }

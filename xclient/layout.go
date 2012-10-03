@@ -1,4 +1,4 @@
-package main
+package xclient
 
 import (
 	"github.com/BurntSushi/xgb/xproto"
@@ -8,35 +8,35 @@ import (
 	"github.com/BurntSushi/wingo/layout"
 )
 
-func (c *client) Layout() layout.Layout {
+func (c *Client) Layout() layout.Layout {
 	return c.workspace.Layout(c)
 }
 
-func (c *client) LayoutMROpt(flags, x, y, width, height int) {
+func (c *Client) LayoutMROpt(flags, x, y, width, height int) {
 	c.Layout().MROpt(c, flags, x, y, width, height)
 }
 
-func (c *client) LayoutMoveResize(x, y, width, height int) {
+func (c *Client) LayoutMoveResize(x, y, width, height int) {
 	c.Layout().MoveResize(c, x, y, width, height)
 }
 
-func (c *client) LayoutMove(x, y int) {
+func (c *Client) LayoutMove(x, y int) {
 	c.Layout().Move(c, x, y)
 }
 
-func (c *client) LayoutResize(width, height int) {
+func (c *Client) LayoutResize(width, height int) {
 	c.Layout().Resize(c, width, height)
 }
 
-func (c *client) Geom() xrect.Rect {
+func (c *Client) Geom() xrect.Rect {
 	return c.frame.Geom()
 }
 
-func (c *client) FrameTile() {
+func (c *Client) FrameTile() {
 	c.FrameBorders()
 }
 
-func (c *client) MROpt(validate bool, flags, x, y, w, h int) {
+func (c *Client) MROpt(validate bool, flags, x, y, w, h int) {
 	c.frame.MROpt(validate, flags, x, y, w, h)
 
 	// As per ICCCM 4.1.5, a window that has been moved but not resized must
@@ -48,11 +48,11 @@ func (c *client) MROpt(validate bool, flags, x, y, w, h int) {
 	}
 }
 
-func (c *client) MoveResize(validate bool, x, y, width, height int) {
+func (c *Client) MoveResize(validate bool, x, y, width, height int) {
 	c.frame.MoveResize(validate, x, y, width, height)
 }
 
-func (c *client) Move(x, y int) {
+func (c *Client) Move(x, y int) {
 	c.frame.Move(x, y)
 
 	// As per ICCCM 4.1.5, a window that has been moved but not resized must
@@ -60,6 +60,6 @@ func (c *client) Move(x, y int) {
 	c.sendConfigureNotify()
 }
 
-func (c *client) Resize(validate bool, width, height int) {
+func (c *Client) Resize(validate bool, width, height int) {
 	c.frame.Resize(validate, width, height)
 }

@@ -34,7 +34,7 @@ func (f *Full) newPieceWindow(ident string,
 		logger.Warning.Println(err)
 	}
 
-	f.client.FramePieceMouseConfig("full_"+ident, win.Id)
+	f.client.FramePieceMouseSetup("full_"+ident, win.Id)
 
 	return win
 }

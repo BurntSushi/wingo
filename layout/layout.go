@@ -26,11 +26,13 @@ type Layout interface {
 }
 
 type Floater interface {
+	Floater()
 	Layout
 	InitialPlacement(geom xrect.Rect, c Client)
 	Reposition(geom xrect.Rect)
 }
 
 type AutoTiler interface {
+	AutoTiler()
 	Layout
 }

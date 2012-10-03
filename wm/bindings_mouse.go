@@ -1,4 +1,4 @@
-package main
+package wm
 
 /*
 	I haven't thought of a way to reconcile Mouse commands with the rest
@@ -24,11 +24,11 @@ import (
 	"github.com/BurntSushi/wingo/cursors"
 )
 
-// mouseClientClicked is a terrible hack to inject state into commands.
+// MouseClientClicked is a terrible hack to inject state into commands.
 // Basically, if a command is given with "::mouse::" as the argument for
 // a client parameter, this variable will be checked and its value will
 // be used.
-var mouseClientClicked *client
+var MouseClientClicked xproto.Window
 
 type mouseCommand struct {
 	cmd       gribble.Command
@@ -37,15 +37,15 @@ type mouseCommand struct {
 	buttonStr string
 }
 
-func (mcmd mouseCommand) setup(c *client, wid xproto.Window) {
+func (mcmd mouseCommand) setup(c Client, wid xproto.Window) {
 	// Check if this command is a drag... If it is, it needs special attention.
 	if mcmd.cmdName == "MouseMove" {
-		c.setupMoveDrag(wid, mcmd.buttonStr, true)
+		setupMoveDrag(c, wid, mcmd.buttonStr, true)
 		return
 	}
 	if mcmd.cmdName == "MouseResize" {
-		direction := strToDirection(mcmd.cmd.(*CmdMouseResize).Direction)
-		c.setupResizeDrag(wid, mcmd.buttonStr, true, direction)
+		direction := strToDirection(cmdHacks.MouseResizeDirection(mcmd.cmd))
+		setupResizeDrag(c, wid, mcmd.buttonStr, true, direction)
 		return
 	}
 
@@ -53,9 +53,9 @@ func (mcmd mouseCommand) setup(c *client, wid xproto.Window) {
 	// the events (i.e., grab synchronously).
 	// Otherwise, we don't need to grab at all!
 	run := func() {
-		mouseClientClicked = c
+		MouseClientClicked = c.Id()
 		mcmd.cmd.Run()
-		mouseClientClicked = nil
+		MouseClientClicked = 0
 	}
 	if wid == c.Id() || (c.Frame() != nil && wid == c.Frame().Parent().Id) {
 		if mcmd.down {
@@ -70,41 +70,41 @@ func (mcmd mouseCommand) setup(c *client, wid xproto.Window) {
 
 // setupMoveDrag does the boiler plate for registering this client's
 // "move" drag.
-func (c *client) setupMoveDrag(dragWin xproto.Window,
+func setupMoveDrag(c Client, dragWin xproto.Window,
 	buttonStr string, grab bool) {
 
 	dStart := xgbutil.MouseDragBeginFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xproto.Cursor) {
-			c.dragMoveBegin(rx, ry, ex, ey)
+			c.DragMoveBegin(rx, ry, ex, ey)
 			return true, cursors.Fleur
 		})
 	dStep := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-			c.dragMoveStep(rx, ry, ex, ey)
+			c.DragMoveStep(rx, ry, ex, ey)
 		})
 	dEnd := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-			c.dragMoveEnd(rx, ry, ex, ey)
+			c.DragMoveEnd(rx, ry, ex, ey)
 		})
 	mousebind.Drag(X, X.Dummy(), dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
 
 // setupResizeDrag does the boiler plate for registering this client's
 // "resize" drag.
-func (c *client) setupResizeDrag(dragWin xproto.Window,
+func setupResizeDrag(c Client, dragWin xproto.Window,
 	buttonStr string, grab bool, direction uint32) {
 
 	dStart := xgbutil.MouseDragBeginFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xproto.Cursor) {
-			return c.dragResizeBegin(direction, rx, ry, ex, ey)
+			return c.DragResizeBegin(direction, rx, ry, ex, ey)
 		})
 	dStep := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-			c.dragResizeStep(rx, ry, ex, ey)
+			c.DragResizeStep(rx, ry, ex, ey)
 		})
 	dEnd := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {
-			c.dragResizeEnd(rx, ry, ex, ey)
+			c.DragResizeEnd(rx, ry, ex, ey)
 		})
 	mousebind.Drag(X, X.Dummy(), dragWin, buttonStr, grab, dStart, dStep, dEnd)
 }
@@ -141,26 +141,26 @@ func (mcmd mouseCommand) attachGrabRelease(wid xproto.Window, run func()) {
 		}).Connect(X, wid, mcmd.buttonStr, false, false)
 }
 
-func rootMouseConfig() {
-	for _, mcmd := range wingo.conf.mouse["root"] {
-		mcmd.attach(wingo.root.Id, func() { mcmd.cmd.Run() }, false, false)
+func rootMouseSetup() {
+	for _, mcmd := range Config.mouse["root"] {
+		mcmd.attach(Root.Id, func() { mcmd.cmd.Run() }, false, false)
 	}
 }
 
-func (c *client) clientMouseConfig() {
-	for _, mcmd := range wingo.conf.mouse["client"] {
+func ClientMouseSetup(c Client) {
+	for _, mcmd := range Config.mouse["client"] {
 		mcmd.setup(c, c.Id())
 	}
 }
 
-func (c *client) frameMouseConfig() {
-	for _, mcmd := range wingo.conf.mouse["frame"] {
-		mcmd.setup(c, c.Frame().Parent().Id)
+func FrameMouseSetup(c Client, frameId xproto.Window) {
+	for _, mcmd := range Config.mouse["frame"] {
+		mcmd.setup(c, frameId)
 	}
 }
 
-func (c *client) FramePieceMouseConfig(piece string, pieceid xproto.Window) {
-	for _, mcmd := range wingo.conf.mouse[piece] {
+func FramePieceMouseSetup(c Client, piece string, pieceid xproto.Window) {
+	for _, mcmd := range Config.mouse[piece] {
 		mcmd.setup(c, pieceid)
 	}
 }

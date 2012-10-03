@@ -86,10 +86,9 @@ func (wrk *Workspace) Add(c Client) {
 
 	// When a client transitions from a workspace that is tiling to a workspace
 	// that is floating, its last floating state needs to be refreshed.
-	isTiled := false
 	if current != nil {
-		if _, ok := c.Layout().(layout.AutoTiler); ok {
-			isTiled = true
+		if _, ok := c.Layout().(layout.Floater); ok {
+			c.SaveState("last-floating")
 		}
 	}
 
@@ -102,10 +101,10 @@ func (wrk *Workspace) Add(c Client) {
 	if !c.Iconified() {
 		wrk.addToFloaters(c)
 		wrk.addToTilers(c)
-		if _, ok := c.Layout().(layout.Floater); isTiled && ok {
-			c.LoadState("last-floating")
-		}
 		wrk.Place()
+	}
+	if _, ok := c.Layout().(layout.Floater); ok {
+		c.LoadState("last-floating")
 	}
 }
 

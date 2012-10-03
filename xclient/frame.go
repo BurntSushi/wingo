@@ -1,4 +1,4 @@
-package main
+package xclient
 
 import (
 	"github.com/BurntSushi/xgb/xproto"
@@ -8,53 +8,58 @@ import (
 
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/wm"
 )
 
 // FrameFull switches this client's frame to the 'Full' frame.
-func (c *client) FrameFull() {
+func (c *Client) FrameFull() {
 	c.frames.set(c.frames.full)
 }
 
 // FrameBorders switches this client's frame to the 'Borders' frame.
-func (c *client) FrameBorders() {
+func (c *Client) FrameBorders() {
 	c.frames.set(c.frames.borders)
 }
 
 // FrameSlim switches this client's frame to the 'Slim' frame.
-func (c *client) FrameSlim() {
+func (c *Client) FrameSlim() {
 	c.frames.set(c.frames.slim)
 }
 
 // FrameNada switches this client's frame to the 'Nada' frame.
-func (c *client) FrameNada() {
+func (c *Client) FrameNada() {
 	c.frames.set(c.frames.nada)
 }
 
 // Frame returns the current frame in use by the client.
-func (c *client) Frame() frame.Frame {
+func (c *Client) Frame() frame.Frame {
 	return c.frame
 }
 
 // Geom returns the geometry of the client window (not the frame window).
-func (c *client) ClientGeom() xrect.Rect {
+func (c *Client) ClientGeom() xrect.Rect {
 	return c.win.Geom
 }
 
 // EnsureUnmax makes sure the client is not in a maximized state.
 // It's useful when a particular operation that doesn't work in maximized mode
 // overrides a client's maximized state. (Like issuing a tiling request.)
-func (c *client) EnsureUnmax() {
+func (c *Client) EnsureUnmax() {
 }
 
-func (c *client) HeadGeom() xrect.Rect {
+func (c *Client) HeadGeom() xrect.Rect {
 	return c.workspace.Geom()
+}
+
+func (c *Client) FramePieceMouseSetup(piece string, pieceid xproto.Window) {
+	wm.FramePieceMouseSetup(c, piece, pieceid)
 }
 
 // GravitizeX adjusts the x coordinate of a window's position using the gravity
 // value set. Gravity refers to the way (x, y) coordinates are interpreted with
 // respect to a client's decorations. See Section 4.1.2.3 of the ICCCM for more
 // details.
-func (c *client) GravitizeX(x int, gravity int) int {
+func (c *Client) GravitizeX(x int, gravity int) int {
 	// Don't do anything if there's no gravity options set and we're
 	// trying to infer gravity.
 	// This is equivalent to setting NorthWest gravity
@@ -90,7 +95,7 @@ func (c *client) GravitizeX(x int, gravity int) int {
 // value set. Gravity refers to the way (x, y) coordinates are interpreted with
 // respect to a client's decorations. See Section 4.1.2.3 of the ICCCM for more
 // details.
-func (c *client) GravitizeY(y int, gravity int) int {
+func (c *Client) GravitizeY(y int, gravity int) int {
 	// Don't do anything if there's no gravity options set and we're
 	// trying to infer gravity.
 	// This is equivalent to setting NorthWest gravity
@@ -125,7 +130,7 @@ func (c *client) GravitizeY(y int, gravity int) int {
 // ValidateHeight use's a clients min/max height and height increment values
 // from the WM_NORMAL_HINTS property to change 'height' to a valid height.
 // See Section 4.1.2.3 of the ICCCM for more details.
-func (c *client) ValidateHeight(height int) int {
+func (c *Client) ValidateHeight(height int) int {
 	return c.validateSize(height, c.nhints.HeightInc, c.nhints.BaseHeight,
 		c.nhints.MinHeight, c.nhints.MaxHeight)
 }
@@ -133,13 +138,13 @@ func (c *client) ValidateHeight(height int) int {
 // ValidateWidth use's a clients min/max width and width increment values
 // from the WM_NORMAL_HINTS property to change 'width' to a valid width.
 // See Section 4.1.2.3 of the ICCCM for more details.
-func (c *client) ValidateWidth(width int) int {
+func (c *Client) ValidateWidth(width int) int {
 	return c.validateSize(width, c.nhints.WidthInc, c.nhints.BaseWidth,
 		c.nhints.MinWidth, c.nhints.MaxWidth)
 }
 
 // validateSize is does the math for ValidateWidth and ValidateHeight.
-func (c *client) validateSize(size, inc, base, min, max int) int {
+func (c *Client) validateSize(size, inc, base, min, max int) int {
 	if size < min && c.nhints.Flags&icccm.SizeHintPMinSize > 0 {
 		return min
 	}
@@ -166,7 +171,7 @@ func (c *client) validateSize(size, inc, base, min, max int) int {
 // clientFrames represents the group of all possible frames that the client
 // can switch to at any point in time.
 type clientFrames struct {
-	client  *client
+	client  *Client
 	full    *frame.Full
 	borders *frame.Borders
 	slim    *frame.Slim
@@ -175,7 +180,7 @@ type clientFrames struct {
 
 // newClientFrames constructs a clientFrames value, initializes all possible
 // frames for this client, and sets up and activates the initial frame.
-func (c *client) newClientFrames() clientFrames {
+func (c *Client) newClientFrames() clientFrames {
 	// When reparenting, an UnmapNotify is generated. We must ignore it!
 	c.unmapIgnore++
 	cf := createFrames(c)
@@ -193,7 +198,7 @@ func (c *client) newClientFrames() clientFrames {
 
 // createFrames constructs each individual frame for a clientFrames value.
 // At present, Wingo will die if there are any errors.
-func createFrames(c *client) clientFrames {
+func createFrames(c *Client) clientFrames {
 	var err error
 	errHandle := func(err error) {
 		if err != nil {
@@ -202,18 +207,18 @@ func createFrames(c *client) clientFrames {
 	}
 	cf := clientFrames{client: c}
 
-	cf.nada, err = frame.NewNada(X, nil, c)
+	cf.nada, err = frame.NewNada(wm.X, nil, c)
 	errHandle(err)
 
-	cf.slim, err = frame.NewSlim(X, wingo.theme.slim.FrameTheme(),
+	cf.slim, err = frame.NewSlim(wm.X, wm.Theme.Slim.FrameTheme(),
 		cf.nada.Parent(), c)
 	errHandle(err)
 
-	cf.borders, err = frame.NewBorders(X, wingo.theme.borders.FrameTheme(),
+	cf.borders, err = frame.NewBorders(wm.X, wm.Theme.Borders.FrameTheme(),
 		cf.nada.Parent(), c)
 	errHandle(err)
 
-	cf.full, err = frame.NewFull(X, wingo.theme.full.FrameTheme(),
+	cf.full, err = frame.NewFull(wm.X, wm.Theme.Full.FrameTheme(),
 		cf.nada.Parent(), c)
 	errHandle(err)
 

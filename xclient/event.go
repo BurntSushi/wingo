@@ -1,4 +1,4 @@
-package main
+package xclient
 
 import (
 	"github.com/BurntSushi/xgb/xproto"
@@ -9,57 +9,39 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xprop"
 
+	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/wm"
 )
 
-var (
-	modes = map[byte]string{
-		xproto.NotifyModeNormal:       "NotifyNormal",
-		xproto.NotifyModeGrab:         "NotifyGrab",
-		xproto.NotifyModeUngrab:       "NotifyUngrab",
-		xproto.NotifyModeWhileGrabbed: "NotifyWhileGrabbed",
-	}
-
-	details = map[byte]string{
-		xproto.NotifyDetailAncestor:         "NotifyAncestor",
-		xproto.NotifyDetailVirtual:          "NotifyVirtual",
-		xproto.NotifyDetailInferior:         "NotifyInferior",
-		xproto.NotifyDetailNonlinear:        "NotifyNonlinear",
-		xproto.NotifyDetailNonlinearVirtual: "NotifyNonlinearVirtual",
-		xproto.NotifyDetailPointer:          "NotifyPointer",
-		xproto.NotifyDetailPointerRoot:      "NotifyPointerRoot",
-		xproto.NotifyDetailNone:             "NotifyNone",
-	}
-)
-
-func (c *client) attachEventCallbacks() {
+func (c *Client) attachEventCallbacks() {
 	c.win.Listen(xproto.EventMaskPropertyChange |
 		xproto.EventMaskStructureNotify)
 
 	c.Frame().Parent().Listen(xproto.EventMaskFocusChange |
 		xproto.EventMaskSubstructureRedirect)
 
-	c.cbUnmapNotify().Connect(c.X, c.Id())
-	c.cbDestroyNotify().Connect(c.X, c.Id())
-	c.cbConfigureRequest().Connect(c.X, c.Id())
-	c.cbPropertyNotify().Connect(c.X, c.Id())
+	c.cbUnmapNotify().Connect(wm.X, c.Id())
+	c.cbDestroyNotify().Connect(wm.X, c.Id())
+	c.cbConfigureRequest().Connect(wm.X, c.Id())
+	c.cbPropertyNotify().Connect(wm.X, c.Id())
 
-	c.handleFocusIn().Connect(c.X, c.Frame().Parent().Id)
-	c.handleFocusOut().Connect(c.X, c.Frame().Parent().Id)
+	c.handleFocusIn().Connect(wm.X, c.Frame().Parent().Id)
+	c.handleFocusOut().Connect(wm.X, c.Frame().Parent().Id)
 
-	c.clientMouseConfig()
-	c.frameMouseConfig()
+	wm.ClientMouseSetup(c)
+	wm.FrameMouseSetup(c, c.frame.Parent().Id)
 }
 
-func (c *client) cbDestroyNotify() xevent.DestroyNotifyFun {
+func (c *Client) cbDestroyNotify() xevent.DestroyNotifyFun {
 	f := func(X *xgbutil.XUtil, ev xevent.DestroyNotifyEvent) {
 		c.unmanage()
 	}
 	return xevent.DestroyNotifyFun(f)
 }
 
-func (c *client) cbUnmapNotify() xevent.UnmapNotifyFun {
+func (c *Client) cbUnmapNotify() xevent.UnmapNotifyFun {
 	f := func(X *xgbutil.XUtil, ev xevent.UnmapNotifyEvent) {
 		// When a client issues an Unmap request, the window manager should
 		// unmanage it. However, when wingo unmaps the window, we shouldn't
@@ -76,7 +58,7 @@ func (c *client) cbUnmapNotify() xevent.UnmapNotifyFun {
 	return xevent.UnmapNotifyFun(f)
 }
 
-func (c *client) cbConfigureRequest() xevent.ConfigureRequestFun {
+func (c *Client) cbConfigureRequest() xevent.ConfigureRequestFun {
 	f := func(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
 		if c.frame.Moving() || c.frame.Resizing() || c.maximized {
 			logger.Lots.Printf("Denying ConfigureRequest from client because " +
@@ -99,7 +81,7 @@ func (c *client) cbConfigureRequest() xevent.ConfigureRequestFun {
 	return xevent.ConfigureRequestFun(f)
 }
 
-func (c *client) sendConfigureNotify() {
+func (c *Client) sendConfigureNotify() {
 	geom := c.Frame().Geom()
 	ev := xproto.ConfigureNotifyEvent{
 		Event:            c.Id(),
@@ -112,17 +94,17 @@ func (c *client) sendConfigureNotify() {
 		BorderWidth:      0,
 		OverrideRedirect: false,
 	}
-	xproto.SendEvent(c.X.Conn(), false, c.Id(),
+	xproto.SendEvent(wm.X.Conn(), false, c.Id(),
 		xproto.EventMaskStructureNotify, string(ev.Bytes()))
 }
 
-func (c *client) cbPropertyNotify() xevent.PropertyNotifyFun {
+func (c *Client) cbPropertyNotify() xevent.PropertyNotifyFun {
 	// helper function to log property vals
 	showVals := func(o, n interface{}) {
 		logger.Lots.Printf("\tOld value: '%s', new value: '%s'", o, n)
 	}
 	f := func(X *xgbutil.XUtil, ev xevent.PropertyNotifyEvent) {
-		name, err := xprop.AtomName(c.X, ev.Atom)
+		name, err := xprop.AtomName(wm.X, ev.Atom)
 		if err != nil {
 			logger.Warning.Printf("Could not get property atom name for '%s' "+
 				"because: %s.", ev, err)
@@ -148,8 +130,8 @@ func (c *client) cbPropertyNotify() xevent.PropertyNotifyFun {
 			}
 		case "WM_TRANSIENT_FOR":
 			if trans, err := icccm.WmTransientForGet(X, c.Id()); err == nil {
-				if transCli := wingo.findManagedClient(trans); transCli != nil {
-					c.transientFor = transCli
+				if transCli := wm.FindManagedClient(trans); transCli != nil {
+					c.transientFor = transCli.(*Client)
 				}
 			}
 		case "_NET_WM_USER_TIME":
@@ -165,7 +147,7 @@ func (c *client) cbPropertyNotify() xevent.PropertyNotifyFun {
 }
 
 func ignoreFocus(modeByte, detailByte byte) bool {
-	mode, detail := modes[modeByte], details[detailByte]
+	mode, detail := focus.Modes[modeByte], focus.Details[detailByte]
 
 	if mode == "NotifyGrab" || mode == "NotifyUngrab" {
 		return true
@@ -184,27 +166,7 @@ func ignoreFocus(modeByte, detailByte byte) bool {
 	return false
 }
 
-func ignoreRootFocus(modeByte, detailByte byte) bool {
-	mode, detail := modes[modeByte], details[detailByte]
-
-	if mode == "NotifyGrab" || mode == "NotifyUngrab" {
-		return true
-	}
-	if detail == "NotifyAncestor" ||
-		detail == "NotifyInferior" ||
-		detail == "NotifyVirtual" ||
-		detail == "NotifyNonlinear" ||
-		detail == "NotifyNonlinearVirtual" ||
-		detail == "NotifyPointer" {
-
-		return true
-	}
-	// Only accept modes: NotifyNormal and NotifyWhileGrabbed
-	// Only accept details: NotifyPointerRoot, NotifyNone
-	return false
-}
-
-func (c *client) handleFocusIn() xevent.FocusInFun {
+func (c *Client) handleFocusIn() xevent.FocusInFun {
 	f := func(X *xgbutil.XUtil, ev xevent.FocusInEvent) {
 		if ignoreFocus(ev.Mode, ev.Detail) {
 			return
@@ -221,7 +183,7 @@ func (c *client) handleFocusIn() xevent.FocusInFun {
 	return xevent.FocusInFun(f)
 }
 
-func (c *client) handleFocusOut() xevent.FocusOutFun {
+func (c *Client) handleFocusOut() xevent.FocusOutFun {
 	f := func(X *xgbutil.XUtil, ev xevent.FocusOutEvent) {
 		if ignoreFocus(ev.Mode, ev.Detail) {
 			return

@@ -22,7 +22,7 @@ type Client interface {
 	Win() *xwindow.Window
 	Id() xproto.Window
 	EnsureUnmax()
-	FramePieceMouseConfig(ident string, wid xproto.Window)
+	FramePieceMouseSetup(ident string, wid xproto.Window)
 	String() string
 	HeadGeom() xrect.Rect
 }

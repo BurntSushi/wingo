@@ -1,4 +1,4 @@
-package main
+package wm
 
 import (
 	"io/ioutil"
@@ -8,7 +8,6 @@ import (
 	"code.google.com/p/freetype-go/freetype"
 	"code.google.com/p/freetype-go/freetype/truetype"
 
-	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
 	"github.com/BurntSushi/wingo/logger"
@@ -160,7 +159,7 @@ func setGradient(k wini.Key, clr *render.Color) {
 	clr.GradientSet(int(start), int(end))
 }
 
-func setImage(X *xgbutil.XUtil, k wini.Key, place **xgraphics.Image) {
+func setImage(k wini.Key, place **xgraphics.Image) {
 	if v, ok := getLastString(k); ok {
 		img, err := xgraphics.NewFileName(X, v)
 		if err != nil {

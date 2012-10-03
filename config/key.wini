@@ -50,8 +50,8 @@ Mod4-6 := Workspace "A6"
 
 Mod1-1 := FrameNada
 Mod1-2 := FrameSlim
-Mod1-3 := FrameBorders
-Mod1-4 := FrameFull
+Mod1-3 := FrameBorders ":active:"
+Mod1-4 := FrameFull ":active:"
 
 Mod1-Tab := CycleClientNext "yes" "no" "yes"
 Mod1-Shift-Tab := CycleClientPrev "yes" "no" "yes"

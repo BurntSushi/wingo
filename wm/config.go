@@ -1,9 +1,7 @@
-package main
+package wm
 
 import (
 	"strings"
-
-	"github.com/BurntSushi/gribble"
 
 	"github.com/BurntSushi/xgbutil/ewmh"
 
@@ -11,32 +9,30 @@ import (
 	"github.com/BurntSushi/wingo/wini"
 )
 
-type config struct {
-	cmdEnv                *gribble.Environment
+type Configuration struct {
 	mouse                 map[string][]mouseCommand
 	key                   map[string][]keyCommand
-	ffm                   bool
-	workspaces            []string
-	alwaysFloating        []string
-	confirmKey, cancelKey string
-	backspaceKey          string
-	tabKey, revTabKey     string
+	Ffm                   bool
+	Workspaces            []string
+	AlwaysFloating        []string
+	ConfirmKey, CancelKey string
+	BackspaceKey          string
+	TabKey, RevTabKey     string
 }
 
 // newConfig
-func newConfig() *config {
-	return &config{
-		cmdEnv:         gribbleCommandEnv, // see command.go
+func newConfig() *Configuration {
+	return &Configuration{
 		mouse:          map[string][]mouseCommand{},
 		key:            map[string][]keyCommand{},
-		ffm:            false,
-		workspaces:     []string{"1", "2", "3", "4"},
-		alwaysFloating: []string{},
-		confirmKey:     "Return",
-		cancelKey:      "Escape",
-		backspaceKey:   "BackSpace",
-		tabKey:         "Tab",
-		revTabKey:      "ISO_Left_Tab",
+		Ffm:            false,
+		Workspaces:     []string{"1", "2", "3", "4"},
+		AlwaysFloating: []string{},
+		ConfirmKey:     "Return",
+		CancelKey:      "Escape",
+		BackspaceKey:   "BackSpace",
+		TabKey:         "Tab",
+		RevTabKey:      "ISO_Left_Tab",
 	}
 }
 
@@ -44,17 +40,17 @@ func newConfig() *config {
 // a single config value.
 //
 // Most of this code is incredibly boring.
-func loadConfig() (*config, error) {
+func loadConfig() (*Configuration, error) {
 	conf := newConfig() // globally defined in wingo.go
 
 	type confFile struct {
 		fpath       string
-		loadSection func(*config, *wini.Data, string)
+		loadSection func(*Configuration, *wini.Data, string)
 	}
 	cfiles := []confFile{
-		{"config/mouse.wini", (*config).loadMouseConfigSection},
-		{"config/key.wini", (*config).loadKeyConfigSection},
-		{"config/options.wini", (*config).loadOptionsConfigSection},
+		{"config/mouse.wini", (*Configuration).loadMouseConfigSection},
+		{"config/key.wini", (*Configuration).loadKeyConfigSection},
+		{"config/options.wini", (*Configuration).loadOptionsConfigSection},
 	}
 	for _, cfile := range cfiles {
 		cdata, err := wini.Parse(cfile.fpath)
@@ -77,7 +73,9 @@ func loadConfig() (*config, error) {
 //
 // The idents are used for attaching mouse commands to the corresponding
 // frames. (See the mouseCommand methods.)
-func (conf *config) loadMouseConfigSection(cdata *wini.Data, section string) {
+func (conf *Configuration) loadMouseConfigSection(
+	cdata *wini.Data, section string) {
+
 	ident := ""
 	switch {
 	case len(section) > 7 && section[:7] == "borders":
@@ -95,7 +93,7 @@ func (conf *config) loadMouseConfigSection(cdata *wini.Data, section string) {
 				conf.mouse[ident] = make([]mouseCommand, 0)
 			}
 
-			gribbleCmd, err := conf.cmdEnv.Command(cmd)
+			gribbleCmd, err := gribbleEnv.Command(cmd)
 			if err != nil {
 				logger.Warning.Printf(
 					"Could not parse command '%s' because: %s", cmd, err)
@@ -103,7 +101,7 @@ func (conf *config) loadMouseConfigSection(cdata *wini.Data, section string) {
 				down, justMouseStr := isDown(mouseStr)
 				mcmd := mouseCommand{
 					cmd:       gribbleCmd,
-					cmdName:   conf.cmdEnv.CommandName(cmd),
+					cmdName:   gribbleEnv.CommandName(cmd),
 					down:      down,
 					buttonStr: justMouseStr,
 				}
@@ -113,7 +111,9 @@ func (conf *config) loadMouseConfigSection(cdata *wini.Data, section string) {
 	}
 }
 
-func (conf *config) loadKeyConfigSection(cdata *wini.Data, section string) {
+func (conf *Configuration) loadKeyConfigSection(
+	cdata *wini.Data, section string) {
+
 	for _, key := range cdata.Keys(section) {
 		keyStr := key.Name()
 		for _, cmd := range key.Strings() {
@@ -121,7 +121,7 @@ func (conf *config) loadKeyConfigSection(cdata *wini.Data, section string) {
 				conf.key[section] = make([]keyCommand, 0)
 			}
 
-			gribbleCmd, err := conf.cmdEnv.Command(cmd)
+			gribbleCmd, err := gribbleEnv.Command(cmd)
 			if err != nil {
 				logger.Warning.Printf(
 					"Could not parse command '%s' because: %s", cmd, err)
@@ -129,7 +129,7 @@ func (conf *config) loadKeyConfigSection(cdata *wini.Data, section string) {
 				down, justKeyStr := isDown(keyStr)
 				kcmd := keyCommand{
 					cmd:     gribbleCmd,
-					cmdName: conf.cmdEnv.CommandName(cmd),
+					cmdName: gribbleEnv.CommandName(cmd),
 					down:    down,
 					keyStr:  justKeyStr,
 				}
@@ -139,24 +139,26 @@ func (conf *config) loadKeyConfigSection(cdata *wini.Data, section string) {
 	}
 }
 
-func (conf *config) loadOptionsConfigSection(cdata *wini.Data, section string) {
+func (conf *Configuration) loadOptionsConfigSection(
+	cdata *wini.Data, section string) {
+
 	for _, key := range cdata.Keys(section) {
 		option := key.Name()
 		switch option {
 		case "workspaces":
 			if workspaces, ok := getLastString(key); ok {
-				conf.workspaces = strings.Split(workspaces, " ")
+				conf.Workspaces = strings.Split(workspaces, " ")
 			}
 		case "always_floating":
 			if alwaysFloating, ok := getLastString(key); ok {
-				conf.alwaysFloating = strings.Split(alwaysFloating, " ")
+				conf.AlwaysFloating = strings.Split(alwaysFloating, " ")
 			}
 		case "focus_follows_mouse":
-			setBool(key, &conf.ffm)
+			setBool(key, &conf.Ffm)
 		case "cancel":
-			setString(key, &conf.cancelKey)
+			setString(key, &conf.CancelKey)
 		case "confirm":
-			setString(key, &conf.confirmKey)
+			setString(key, &conf.ConfirmKey)
 		}
 	}
 }

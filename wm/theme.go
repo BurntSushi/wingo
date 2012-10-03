@@ -1,10 +1,9 @@
-package main
+package wm
 
 import (
 	"code.google.com/p/freetype-go/freetype"
 	"code.google.com/p/freetype-go/freetype/truetype"
 
-	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
 	"github.com/BurntSushi/wingo/bindata"
@@ -15,15 +14,15 @@ import (
 	"github.com/BurntSushi/wingo/wini"
 )
 
-type theme struct {
-	defaultIcon *xgraphics.Image
-	full        themeFull
-	borders     themeBorders
-	slim        themeSlim
-	prompt      themePrompt
+type ThemeConfig struct {
+	DefaultIcon *xgraphics.Image
+	Full        ThemeFull
+	Borders     ThemeBorders
+	Slim        ThemeSlim
+	Prompt      ThemePrompt
 }
 
-type themeFull struct {
+type ThemeFull struct {
 	font                   *truetype.Font
 	fontSize               float64
 	aFontColor, iFontColor render.Color
@@ -44,7 +43,7 @@ type themeFull struct {
 	aMinimizeColor, iMinimizeColor   render.Color
 }
 
-func (tf themeFull) FrameTheme() *frame.FullTheme {
+func (tf ThemeFull) FrameTheme() *frame.FullTheme {
 	return &frame.FullTheme{
 		Font:            tf.font,
 		FontSize:        tf.fontSize,
@@ -65,13 +64,13 @@ func (tf themeFull) FrameTheme() *frame.FullTheme {
 	}
 }
 
-type themeBorders struct {
+type ThemeBorders struct {
 	borderSize                 int
 	aThinColor, iThinColor     render.Color
 	aBorderColor, iBorderColor render.Color
 }
 
-func (tb themeBorders) FrameTheme() *frame.BordersTheme {
+func (tb ThemeBorders) FrameTheme() *frame.BordersTheme {
 	return &frame.BordersTheme{
 		BorderSize:   tb.borderSize,
 		AThinColor:   tb.aThinColor,
@@ -81,12 +80,12 @@ func (tb themeBorders) FrameTheme() *frame.BordersTheme {
 	}
 }
 
-type themeSlim struct {
+type ThemeSlim struct {
 	borderSize                 int
 	aBorderColor, iBorderColor render.Color
 }
 
-func (ts themeSlim) FrameTheme() *frame.SlimTheme {
+func (ts ThemeSlim) FrameTheme() *frame.SlimTheme {
 	return &frame.SlimTheme{
 		BorderSize:   ts.borderSize,
 		ABorderColor: ts.aBorderColor,
@@ -94,7 +93,7 @@ func (ts themeSlim) FrameTheme() *frame.SlimTheme {
 	}
 }
 
-type themePrompt struct {
+type ThemePrompt struct {
 	bgColor     render.Color
 	borderColor render.Color
 	borderSize  int
@@ -117,7 +116,7 @@ type themePrompt struct {
 	selectGroupFontColor render.Color
 }
 
-func (tp themePrompt) CycleTheme() *prompt.CycleTheme {
+func (tp ThemePrompt) CycleTheme() *prompt.CycleTheme {
 	return &prompt.CycleTheme{
 		BorderSize:       tp.borderSize,
 		BgColor:          tp.bgColor,
@@ -132,7 +131,7 @@ func (tp themePrompt) CycleTheme() *prompt.CycleTheme {
 	}
 }
 
-func (tp themePrompt) SelectTheme() *prompt.SelectTheme {
+func (tp ThemePrompt) SelectTheme() *prompt.SelectTheme {
 	return &prompt.SelectTheme{
 		BorderSize:      tp.borderSize,
 		BgColor:         tp.bgColor,
@@ -151,10 +150,10 @@ func (tp themePrompt) SelectTheme() *prompt.SelectTheme {
 	}
 }
 
-func newTheme(X *xgbutil.XUtil) *theme {
-	return &theme{
-		defaultIcon: builtInIcon(X),
-		full: themeFull{
+func newTheme() *ThemeConfig {
+	return &ThemeConfig{
+		DefaultIcon: builtInIcon(),
+		Full: ThemeFull{
 			font:       builtInFont(),
 			fontSize:   15,
 			aFontColor: render.NewColor(0xffffff),
@@ -168,34 +167,34 @@ func newTheme(X *xgbutil.XUtil) *theme {
 			aBorderColor: render.NewColor(0x3366ff),
 			iBorderColor: render.NewColor(0xdfdcdf),
 
-			aCloseButton: builtInButton(X, bindata.ClosePng),
-			iCloseButton: builtInButton(X, bindata.ClosePng),
+			aCloseButton: builtInButton(bindata.ClosePng),
+			iCloseButton: builtInButton(bindata.ClosePng),
 			aCloseColor:  render.NewColor(0xffffff),
 			iCloseColor:  render.NewColor(0x000000),
 
-			aMaximizeButton: builtInButton(X, bindata.MaximizePng),
-			iMaximizeButton: builtInButton(X, bindata.MaximizePng),
+			aMaximizeButton: builtInButton(bindata.MaximizePng),
+			iMaximizeButton: builtInButton(bindata.MaximizePng),
 			aMaximizeColor:  render.NewColor(0xffffff),
 			iMaximizeColor:  render.NewColor(0x000000),
 
-			aMinimizeButton: builtInButton(X, bindata.MinimizePng),
-			iMinimizeButton: builtInButton(X, bindata.MinimizePng),
+			aMinimizeButton: builtInButton(bindata.MinimizePng),
+			iMinimizeButton: builtInButton(bindata.MinimizePng),
 			aMinimizeColor:  render.NewColor(0xffffff),
 			iMinimizeColor:  render.NewColor(0x000000),
 		},
-		borders: themeBorders{
+		Borders: ThemeBorders{
 			borderSize:   10,
 			aThinColor:   render.NewColor(0x0),
 			iThinColor:   render.NewColor(0x0),
 			aBorderColor: render.NewColor(0x3366ff),
 			iBorderColor: render.NewColor(0xdfdcdf),
 		},
-		slim: themeSlim{
+		Slim: ThemeSlim{
 			borderSize:   10,
 			aBorderColor: render.NewColor(0x3366ff),
 			iBorderColor: render.NewColor(0xdfdcdf),
 		},
-		prompt: themePrompt{
+		Prompt: ThemePrompt{
 			bgColor:               render.NewColor(0xffffff),
 			borderColor:           render.NewColor(0x585a5d),
 			borderSize:            10,
@@ -216,8 +215,8 @@ func newTheme(X *xgbutil.XUtil) *theme {
 	}
 }
 
-func loadTheme(X *xgbutil.XUtil) (*theme, error) {
-	theme := newTheme(X)
+func loadTheme() (*ThemeConfig, error) {
+	theme := newTheme()
 
 	tdata, err := loadThemeFile()
 	if err != nil {
@@ -228,23 +227,23 @@ func loadTheme(X *xgbutil.XUtil) (*theme, error) {
 		switch section {
 		case "misc":
 			for _, key := range tdata.Keys(section) {
-				loadMiscOption(X, theme, key)
+				loadMiscOption(theme, key)
 			}
 		case "full":
 			for _, key := range tdata.Keys(section) {
-				loadFullOption(X, theme, key)
+				loadFullOption(theme, key)
 			}
 		case "borders":
 			for _, key := range tdata.Keys(section) {
-				loadBorderOption(X, theme, key)
+				loadBorderOption(theme, key)
 			}
 		case "slim":
 			for _, key := range tdata.Keys(section) {
-				loadSlimOption(X, theme, key)
+				loadSlimOption(theme, key)
 			}
 		case "prompt":
 			for _, key := range tdata.Keys(section) {
-				loadPromptOption(X, theme, key)
+				loadPromptOption(theme, key)
 			}
 		}
 	}
@@ -258,26 +257,26 @@ func loadTheme(X *xgbutil.XUtil) (*theme, error) {
 			return r, g, b, im.Pix[i+3]
 		})
 	}
-	colorize(theme.full.aCloseButton, theme.full.aCloseColor)
-	colorize(theme.full.iCloseButton, theme.full.iCloseColor)
-	colorize(theme.full.aMaximizeButton, theme.full.aMaximizeColor)
-	colorize(theme.full.iMaximizeButton, theme.full.iMaximizeColor)
-	colorize(theme.full.aMinimizeButton, theme.full.aMinimizeColor)
-	colorize(theme.full.iMinimizeButton, theme.full.iMinimizeColor)
+	colorize(theme.Full.aCloseButton, theme.Full.aCloseColor)
+	colorize(theme.Full.iCloseButton, theme.Full.iCloseColor)
+	colorize(theme.Full.aMaximizeButton, theme.Full.aMaximizeColor)
+	colorize(theme.Full.iMaximizeButton, theme.Full.iMaximizeColor)
+	colorize(theme.Full.aMinimizeButton, theme.Full.aMinimizeColor)
+	colorize(theme.Full.iMinimizeButton, theme.Full.iMinimizeColor)
 
 	// Scale some images...
-	theme.full.aCloseButton = theme.full.aCloseButton.Scale(
-		theme.full.titleSize, theme.full.titleSize)
-	theme.full.iCloseButton = theme.full.iCloseButton.Scale(
-		theme.full.titleSize, theme.full.titleSize)
-	theme.full.aMaximizeButton = theme.full.aMaximizeButton.Scale(
-		theme.full.titleSize, theme.full.titleSize)
-	theme.full.iMaximizeButton = theme.full.iMaximizeButton.Scale(
-		theme.full.titleSize, theme.full.titleSize)
-	theme.full.aMinimizeButton = theme.full.aMinimizeButton.Scale(
-		theme.full.titleSize, theme.full.titleSize)
-	theme.full.iMinimizeButton = theme.full.iMinimizeButton.Scale(
-		theme.full.titleSize, theme.full.titleSize)
+	theme.Full.aCloseButton = theme.Full.aCloseButton.Scale(
+		theme.Full.titleSize, theme.Full.titleSize)
+	theme.Full.iCloseButton = theme.Full.iCloseButton.Scale(
+		theme.Full.titleSize, theme.Full.titleSize)
+	theme.Full.aMaximizeButton = theme.Full.aMaximizeButton.Scale(
+		theme.Full.titleSize, theme.Full.titleSize)
+	theme.Full.iMaximizeButton = theme.Full.iMaximizeButton.Scale(
+		theme.Full.titleSize, theme.Full.titleSize)
+	theme.Full.aMinimizeButton = theme.Full.aMinimizeButton.Scale(
+		theme.Full.titleSize, theme.Full.titleSize)
+	theme.Full.iMinimizeButton = theme.Full.iMinimizeButton.Scale(
+		theme.Full.titleSize, theme.Full.titleSize)
 
 	return theme, nil
 }
@@ -286,133 +285,133 @@ func loadThemeFile() (*wini.Data, error) {
 	return wini.Parse("config/theme.wini")
 }
 
-func loadMiscOption(X *xgbutil.XUtil, theme *theme, k wini.Key) {
+func loadMiscOption(theme *ThemeConfig, k wini.Key) {
 	switch k.Name() {
 	case "default_icon":
-		setImage(X, k, &theme.defaultIcon)
+		setImage(k, &theme.DefaultIcon)
 	}
 }
 
-func loadFullOption(X *xgbutil.XUtil, theme *theme, k wini.Key) {
+func loadFullOption(theme *ThemeConfig, k wini.Key) {
 	switch k.Name() {
 	case "font":
-		setFont(k, &theme.full.font)
+		setFont(k, &theme.Full.font)
 	case "font_size":
-		setFloat(k, &theme.full.fontSize)
+		setFloat(k, &theme.Full.fontSize)
 	case "a_font_color":
-		setNoGradient(k, &theme.full.aFontColor)
+		setNoGradient(k, &theme.Full.aFontColor)
 	case "i_font_color":
-		setNoGradient(k, &theme.full.iFontColor)
+		setNoGradient(k, &theme.Full.iFontColor)
 	case "title_size":
-		setInt(k, &theme.full.titleSize)
+		setInt(k, &theme.Full.titleSize)
 	case "a_title_color":
-		setGradient(k, &theme.full.aTitleColor)
+		setGradient(k, &theme.Full.aTitleColor)
 	case "i_title_color":
-		setGradient(k, &theme.full.iTitleColor)
+		setGradient(k, &theme.Full.iTitleColor)
 	case "close":
-		setImage(X, k, &theme.full.aCloseButton)
-		setImage(X, k, &theme.full.iCloseButton)
+		setImage(k, &theme.Full.aCloseButton)
+		setImage(k, &theme.Full.iCloseButton)
 	case "a_close_color":
-		setNoGradient(k, &theme.full.aCloseColor)
+		setNoGradient(k, &theme.Full.aCloseColor)
 	case "i_close_color":
-		setNoGradient(k, &theme.full.iCloseColor)
+		setNoGradient(k, &theme.Full.iCloseColor)
 	case "maximize":
-		setImage(X, k, &theme.full.aMaximizeButton)
-		setImage(X, k, &theme.full.iMaximizeButton)
+		setImage(k, &theme.Full.aMaximizeButton)
+		setImage(k, &theme.Full.iMaximizeButton)
 	case "a_maximize_color":
-		setNoGradient(k, &theme.full.aMaximizeColor)
+		setNoGradient(k, &theme.Full.aMaximizeColor)
 	case "i_maximize_color":
-		setNoGradient(k, &theme.full.iMaximizeColor)
+		setNoGradient(k, &theme.Full.iMaximizeColor)
 	case "minimize":
-		setImage(X, k, &theme.full.aMinimizeButton)
-		setImage(X, k, &theme.full.iMinimizeButton)
+		setImage(k, &theme.Full.aMinimizeButton)
+		setImage(k, &theme.Full.iMinimizeButton)
 	case "a_minimize_color":
-		setNoGradient(k, &theme.full.aMinimizeColor)
+		setNoGradient(k, &theme.Full.aMinimizeColor)
 	case "i_minimize_color":
-		setNoGradient(k, &theme.full.iMinimizeColor)
+		setNoGradient(k, &theme.Full.iMinimizeColor)
 	case "border_size":
-		setInt(k, &theme.full.borderSize)
+		setInt(k, &theme.Full.borderSize)
 	case "a_border_color":
-		setNoGradient(k, &theme.full.aBorderColor)
+		setNoGradient(k, &theme.Full.aBorderColor)
 	case "i_border_color":
-		setNoGradient(k, &theme.full.iBorderColor)
+		setNoGradient(k, &theme.Full.iBorderColor)
 	}
 }
 
-func loadBorderOption(X *xgbutil.XUtil, theme *theme, k wini.Key) {
+func loadBorderOption(theme *ThemeConfig, k wini.Key) {
 	switch k.Name() {
 	case "border_size":
-		setInt(k, &theme.borders.borderSize)
+		setInt(k, &theme.Borders.borderSize)
 	case "a_thin_color":
-		setNoGradient(k, &theme.borders.aThinColor)
+		setNoGradient(k, &theme.Borders.aThinColor)
 	case "i_thin_color":
-		setNoGradient(k, &theme.borders.iThinColor)
+		setNoGradient(k, &theme.Borders.iThinColor)
 	case "a_border_color":
-		setGradient(k, &theme.borders.aBorderColor)
+		setGradient(k, &theme.Borders.aBorderColor)
 	case "i_border_color":
-		setGradient(k, &theme.borders.iBorderColor)
+		setGradient(k, &theme.Borders.iBorderColor)
 	}
 }
 
-func loadSlimOption(X *xgbutil.XUtil, theme *theme, k wini.Key) {
+func loadSlimOption(theme *ThemeConfig, k wini.Key) {
 	switch k.Name() {
 	case "border_size":
-		setInt(k, &theme.slim.borderSize)
+		setInt(k, &theme.Slim.borderSize)
 	case "a_border_color":
-		setNoGradient(k, &theme.slim.aBorderColor)
+		setNoGradient(k, &theme.Slim.aBorderColor)
 	case "i_border_color":
-		setNoGradient(k, &theme.slim.iBorderColor)
+		setNoGradient(k, &theme.Slim.iBorderColor)
 	}
 }
 
-func loadPromptOption(X *xgbutil.XUtil, theme *theme, k wini.Key) {
+func loadPromptOption(theme *ThemeConfig, k wini.Key) {
 	switch k.Name() {
 	case "bg_color":
-		setNoGradient(k, &theme.prompt.bgColor)
+		setNoGradient(k, &theme.Prompt.bgColor)
 	case "border_color":
-		setNoGradient(k, &theme.prompt.borderColor)
+		setNoGradient(k, &theme.Prompt.borderColor)
 	case "border_size":
-		setInt(k, &theme.prompt.borderSize)
+		setInt(k, &theme.Prompt.borderSize)
 	case "padding":
-		setInt(k, &theme.prompt.padding)
+		setInt(k, &theme.Prompt.padding)
 	case "font":
-		setFont(k, &theme.prompt.font)
+		setFont(k, &theme.Prompt.font)
 	case "font_size":
-		setFloat(k, &theme.prompt.fontSize)
+		setFloat(k, &theme.Prompt.fontSize)
 	case "font_color":
-		setNoGradient(k, &theme.prompt.fontColor)
+		setNoGradient(k, &theme.Prompt.fontColor)
 	case "cycle_icon_size":
-		setInt(k, &theme.prompt.cycleIconSize)
+		setInt(k, &theme.Prompt.cycleIconSize)
 	case "cycle_icon_border_size":
-		setInt(k, &theme.prompt.cycleIconBorderSize)
+		setInt(k, &theme.Prompt.cycleIconBorderSize)
 	case "cycle_icon_transparency":
-		setInt(k, &theme.prompt.cycleIconTransparency)
+		setInt(k, &theme.Prompt.cycleIconTransparency)
 
 		// naughty!
-		if theme.prompt.cycleIconTransparency < 0 ||
-			theme.prompt.cycleIconTransparency > 100 {
+		if theme.Prompt.cycleIconTransparency < 0 ||
+			theme.Prompt.cycleIconTransparency > 100 {
 			logger.Warning.Printf("Illegal value '%s' provided for " +
 				"'cycle_icon_transparency'. Transparency " +
 				"values must be in the range [0, 100], " +
 				"inclusive. Using 100 by default.")
-			theme.prompt.cycleIconTransparency = 100
+			theme.Prompt.cycleIconTransparency = 100
 		}
 	case "select_active_font_color":
-		setNoGradient(k, &theme.prompt.selectActiveFontColor)
+		setNoGradient(k, &theme.Prompt.selectActiveFontColor)
 	case "select_active_bg_color":
-		setNoGradient(k, &theme.prompt.selectActiveBgColor)
+		setNoGradient(k, &theme.Prompt.selectActiveBgColor)
 	case "select_group_bg_color":
-		setNoGradient(k, &theme.prompt.selectGroupBgColor)
+		setNoGradient(k, &theme.Prompt.selectGroupBgColor)
 	case "select_group_font":
-		setFont(k, &theme.prompt.selectGroupFont)
+		setFont(k, &theme.Prompt.selectGroupFont)
 	case "select_group_font_size":
-		setFloat(k, &theme.prompt.selectGroupFontSize)
+		setFloat(k, &theme.Prompt.selectGroupFontSize)
 	case "select_group_font_color":
-		setNoGradient(k, &theme.prompt.selectGroupFontColor)
+		setNoGradient(k, &theme.Prompt.selectGroupFontColor)
 	}
 }
 
-func builtInIcon(X *xgbutil.XUtil) *xgraphics.Image {
+func builtInIcon() *xgraphics.Image {
 	img, err := xgraphics.NewBytes(X, bindata.WingoPng())
 	if err != nil {
 		logger.Warning.Printf("Could not get built in icon image because: %v",
@@ -422,8 +421,7 @@ func builtInIcon(X *xgbutil.XUtil) *xgraphics.Image {
 	return img
 }
 
-func builtInButton(X *xgbutil.XUtil,
-	loadBuiltIn func() []byte) *xgraphics.Image {
+func builtInButton(loadBuiltIn func() []byte) *xgraphics.Image {
 
 	img, err := xgraphics.NewBytes(X, loadBuiltIn())
 	if err != nil {

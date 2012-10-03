@@ -1,9 +1,8 @@
-package main
+package xclient
 
 import (
 	"github.com/BurntSushi/xgb/xproto"
 
-	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xwindow"
@@ -14,25 +13,25 @@ import (
 	"github.com/BurntSushi/wingo/layout"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/stack"
+	"github.com/BurntSushi/wingo/wm"
 )
 
-func newClient(X *xgbutil.XUtil, id xproto.Window) *client {
-	X.Grab()
-	defer X.Ungrab()
+func New(id xproto.Window) *Client {
+	wm.X.Grab()
+	defer wm.X.Ungrab()
 
-	if client := wingo.findManagedClient(id); client != nil {
+	if client := wm.FindManagedClient(id); client != nil {
 		logger.Message.Printf("Already managing client: %s", client)
 		return nil
 	}
 
-	win := xwindow.New(X, id)
+	win := xwindow.New(wm.X, id)
 	if _, err := win.Geometry(); err != nil {
 		logger.Warning.Printf("Could not manage client %d because: %s", id, err)
 		return nil
 	}
 
-	c := &client{
-		X:           X,
+	c := &Client{
 		win:         win,
 		name:        "N/A",
 		state:       frame.Inactive,
@@ -61,7 +60,7 @@ func newClient(X *xgbutil.XUtil, id xproto.Window) *client {
 	return c
 }
 
-func (c *client) manage() {
+func (c *Client) manage() {
 	c.refreshName()
 	logger.Message.Printf("Managing new client: %s", c)
 
@@ -82,9 +81,9 @@ func (c *client) manage() {
 	// make sure it's located on the right head. We do this by finding where
 	// it *is* place and convert it into the coordinate space of where it
 	// *should* be placed.
-	oughtHeadGeom := wingo.workspace().Geom()
+	oughtHeadGeom := wm.Workspace().Geom()
 	cgeom := c.frame.Geom()
-	if wrk := wingo.heads.FindMostOverlap(cgeom); wrk != nil {
+	if wrk := wm.Heads.FindMostOverlap(cgeom); wrk != nil {
 		isHeadGeom := wrk.Geom()
 		ngeom := heads.Convert(cgeom, isHeadGeom, oughtHeadGeom)
 		c.MoveResize(true, ngeom.X(), ngeom.Y(), ngeom.Width(), ngeom.Height())
@@ -92,15 +91,15 @@ func (c *client) manage() {
 		c.Move(oughtHeadGeom.X(), oughtHeadGeom.Y())
 	}
 
-	wingo.addClient(c)
+	wm.AddClient(c)
 	focus.InitialAdd(c)
 	stack.Raise(c)
-	wingo.workspace().Add(c)
+	wm.Workspace().Add(c)
 	c.attachEventCallbacks()
 	c.maybeInitPlace()
 }
 
-func (c *client) maybeInitPlace() {
+func (c *Client) maybeInitPlace() {
 	floater, ok := c.Layout().(layout.Floater)
 	if !ok {
 		return
@@ -128,10 +127,10 @@ func (c *client) maybeInitPlace() {
 	floater.InitialPlacement(c.Workspace().Geom(), c)
 }
 
-func (c *client) fetchXProperties() {
+func (c *Client) fetchXProperties() {
 	var err error
 
-	c.hints, err = icccm.WmHintsGet(c.X, c.Id())
+	c.hints, err = icccm.WmHintsGet(wm.X, c.Id())
 	if err != nil {
 		logger.Warning.Println(err)
 		logger.Message.Printf("Using reasonable defaults for WM_HINTS for %X",
@@ -143,7 +142,7 @@ func (c *client) fetchXProperties() {
 		}
 	}
 
-	c.nhints, err = icccm.WmNormalHintsGet(c.X, c.Id())
+	c.nhints, err = icccm.WmNormalHintsGet(wm.X, c.Id())
 	if err != nil {
 		logger.Warning.Println(err)
 		logger.Message.Printf("Using reasonable defaults for WM_NORMAL_HINTS "+
@@ -151,33 +150,34 @@ func (c *client) fetchXProperties() {
 		c.nhints = &icccm.NormalHints{}
 	}
 
-	c.protocols, err = icccm.WmProtocolsGet(c.X, c.Id())
+	c.protocols, err = icccm.WmProtocolsGet(wm.X, c.Id())
 	if err != nil {
 		logger.Warning.Printf(
 			"Window %X does not have WM_PROTOCOLS set.", c.Id())
 	}
 
-	c.winTypes, err = ewmh.WmWindowTypeGet(c.X, c.Id())
+	c.winTypes, err = ewmh.WmWindowTypeGet(wm.X, c.Id())
 	if err != nil {
 		logger.Warning.Printf("Could not find window type for window %X, "+
 			"using 'normal'.", c.Id())
 		c.winTypes = []string{"_NET_WM_WINDOW_TYPE_NORMAL"}
 	}
 
-	trans, _ := icccm.WmTransientForGet(c.X, c.Id())
+	trans, _ := icccm.WmTransientForGet(wm.X, c.Id())
 	if trans == 0 {
-		for _, c2 := range wingo.clients {
+		for _, c2_ := range wm.Clients {
+			c2 := c2_.(*Client)
 			if c2.transient(c) {
 				c.transientFor = c2
 				break
 			}
 		}
-	} else if transCli := wingo.findManagedClient(trans); transCli != nil {
-		c.transientFor = transCli
+	} else if transCli := wm.FindManagedClient(trans); transCli != nil {
+		c.transientFor = transCli.(*Client)
 	}
 }
 
-func (c *client) setPrimaryType() {
+func (c *Client) setPrimaryType() {
 	switch {
 	case c.hasType("_NET_WM_WINDOW_TYPE_DESKTOP"):
 		c.primaryType = clientTypeDesktop
@@ -188,7 +188,7 @@ func (c *client) setPrimaryType() {
 	}
 }
 
-func (c *client) setInitialLayer() {
+func (c *Client) setInitialLayer() {
 	switch c.primaryType {
 	case clientTypeDesktop:
 		c.layer = stack.LayerDesktop

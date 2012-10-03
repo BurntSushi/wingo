@@ -1,4 +1,4 @@
-package main
+package xclient
 
 import (
 	"github.com/BurntSushi/xgbutil/xrect"
@@ -7,7 +7,7 @@ import (
 	"github.com/BurntSushi/wingo/heads"
 )
 
-func (c *client) newClientStates() map[string]clientState {
+func (c *Client) newClientStates() map[string]clientState {
 	return make(map[string]clientState, 10)
 }
 
@@ -18,7 +18,7 @@ type clientState struct {
 	maximized bool
 }
 
-func (c *client) newClientState() clientState {
+func (c *Client) newClientState() clientState {
 	s := clientState{
 		geom:      xrect.New(xrect.Pieces(c.frame.Geom())),
 		headGeom:  nil,
@@ -31,14 +31,14 @@ func (c *client) newClientState() clientState {
 	return s
 }
 
-func (c *client) HasState(name string) bool {
+func (c *Client) HasState(name string) bool {
 	_, ok := c.states[name]
 	return ok
 }
 
 // Don't save when moving or resizing.
 // Also don't save when client's workspace isn't visible.
-func (c *client) SaveState(name string) {
+func (c *Client) SaveState(name string) {
 	if !c.workspace.IsVisible() || c.frame.Moving() || c.frame.Resizing() {
 		return
 	}
@@ -48,7 +48,7 @@ func (c *client) SaveState(name string) {
 // Don't revert to regular geometry when moving/resizing. We can still revert
 // the frame or the maximized state, though.
 // Also don't load *ever* when client's workspace isn't visible.
-func (c *client) LoadState(name string) {
+func (c *Client) LoadState(name string) {
 	if !c.workspace.IsVisible() {
 		return
 	}
@@ -87,7 +87,7 @@ func (c *client) LoadState(name string) {
 	}
 }
 
-func (c *client) DeleteState(name string) {
+func (c *Client) DeleteState(name string) {
 	if _, ok := c.states[name]; ok {
 		delete(c.states, name)
 	}
