@@ -479,11 +479,10 @@ func (cmd SelectWorkspace) Run() gribble.Value {
 		select {
 		case wrkName := <-selected:
 			return wrkName
-		case <-time.After(5 * time.Second):
+		case <-time.After(10 * time.Second):
 			if !wm.Prompts.Slct.Showing() {
 				return ""
 			}
-			println("continuing...")
 		}
 	}
 	panic("unreachable")
