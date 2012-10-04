@@ -18,6 +18,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/bindata"
+	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/render"
 	"github.com/BurntSushi/wingo/text"
@@ -72,7 +73,8 @@ func NewSelect(X *xgbutil.XUtil,
 	// Make the top-level window override redirect so the window manager
 	// doesn't mess with us.
 	slct.win.Change(xproto.CwOverrideRedirect, 1)
-	slct.win.Listen(xproto.EventMaskKeyPress)
+	slct.win.Listen(xproto.EventMaskFocusChange)
+	slct.bInp.Listen(xproto.EventMaskKeyPress)
 
 	// Create the text input window.
 	slct.input = text.NewInput(X, slct.win.Id, 1000, 10,
@@ -104,7 +106,8 @@ func NewSelect(X *xgbutil.XUtil,
 	// Connect the key response handler.
 	// The handler is responsible for tab completion and quitting if the
 	// cancel key has been pressed.
-	slct.keyResponse().Connect(X, slct.win.Id)
+	slct.keyResponse().Connect(X, slct.bInp.Id)
+	slct.focusResponse().Connect(X, slct.win.Id)
 
 	// Attach a mouse handler so the user can re-focus the prompt window.
 	mousebind.ButtonReleaseFun(
@@ -144,6 +147,35 @@ func (slct *Select) AddGroup(group SelectGroup) *SelectGroupItem {
 
 func (slct *Select) AddChoice(choice SelectChoice) *SelectItem {
 	return newSelectItem(slct, choice)
+}
+
+func (slct *Select) focusResponse() xevent.FocusOutFun {
+	f := func(X *xgbutil.XUtil, ev xevent.FocusOutEvent) {
+		if !ignoreFocus(ev.Mode, ev.Detail) {
+			slct.Hide()
+		}
+	}
+	return xevent.FocusOutFun(f)
+}
+
+func ignoreFocus(modeByte, detailByte byte) bool {
+	mode, detail := focus.Modes[modeByte], focus.Details[detailByte]
+
+	if mode == "NotifyGrab" || mode == "NotifyUngrab" {
+		return true
+	}
+	if detail == "NotifyAncestor" ||
+		detail == "NotifyInferior" ||
+		detail == "NotifyNonlinear" ||
+		detail == "NotifyPointer" ||
+		detail == "NotifyPointerRoot" ||
+		detail == "NotifyNone" {
+
+		return true
+	}
+	// Only accept modes: NotifyNormal and NotifyWhileGrabbed
+	// Only accept details: NotifyVirtual, NotifyNonlinearVirtual
+	return false
 }
 
 func (slct *Select) keyResponse() xevent.KeyPressFun {
@@ -275,7 +307,7 @@ func (slct *Select) Show(workarea xrect.Rect, tabCompleteType int,
 	slct.data = data
 	slct.selected = -1
 	slct.win.Map()
-	slct.win.Focus()
+	slct.bInp.Focus()
 
 	return true
 }

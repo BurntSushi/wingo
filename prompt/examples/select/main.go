@@ -39,11 +39,11 @@ func (item *item) SelectText() string {
 	return item.text
 }
 
-func (item *item) SelectHighlighted() {
+func (item *item) SelectHighlighted(data interface{}) {
 	log.Printf("highlighted: %s", item.text)
 }
 
-func (item *item) SelectSelected() {
+func (item *item) SelectSelected(data interface{}) {
 	log.Printf("selected: %s", item.text)
 }
 
@@ -95,7 +95,7 @@ func main() {
 	keybind.KeyPressFun(
 		func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 			showGroups := newGroups(groups, items)
-			slct.Show(geom, prompt.TabCompletePrefix, showGroups)
+			slct.Show(geom, prompt.TabCompletePrefix, showGroups, nil)
 		}).Connect(X, X.RootWin(), selectActivate, true)
 
 	println("Loaded...")
