@@ -6,7 +6,30 @@ import (
 	"github.com/BurntSushi/xgbutil/xrect"
 
 	"github.com/BurntSushi/wingo/layout"
+	"github.com/BurntSushi/wingo/wm"
+	"github.com/BurntSushi/wingo/workspace"
 )
+
+func (c *Client) CheckNewWorkspace() {
+	var newWrk *workspace.Workspace = nil
+	curWrk := c.Workspace()
+
+	if dragGeom := c.DragGeom(); dragGeom != nil {
+		newWrk = wm.Heads.FindMostOverlap(dragGeom)
+	} else {
+		newWrk = wm.Heads.FindMostOverlap(c.frame.Geom())
+	}
+	if newWrk == nil || curWrk == newWrk {
+		return
+	}
+
+	newWrk.Add(c)
+
+	// If this is the active window, switch to this workspace too.
+	if c.IsActive() {
+		newWrk.Activate(false)
+	}
+}
 
 func (c *Client) Layout() layout.Layout {
 	return c.workspace.Layout(c)
@@ -14,18 +37,22 @@ func (c *Client) Layout() layout.Layout {
 
 func (c *Client) LayoutMROpt(flags, x, y, width, height int) {
 	c.Layout().MROpt(c, flags, x, y, width, height)
+	c.CheckNewWorkspace()
 }
 
 func (c *Client) LayoutMoveResize(x, y, width, height int) {
 	c.Layout().MoveResize(c, x, y, width, height)
+	c.CheckNewWorkspace()
 }
 
 func (c *Client) LayoutMove(x, y int) {
 	c.Layout().Move(c, x, y)
+	c.CheckNewWorkspace()
 }
 
 func (c *Client) LayoutResize(width, height int) {
 	c.Layout().Resize(c, width, height)
+	c.CheckNewWorkspace()
 }
 
 func (c *Client) Geom() xrect.Rect {
@@ -33,6 +60,7 @@ func (c *Client) Geom() xrect.Rect {
 }
 
 func (c *Client) FrameTile() {
+	c.EnsureUnmax()
 	c.FrameBorders()
 }
 

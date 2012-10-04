@@ -11,6 +11,7 @@ import (
 
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/frame"
+	"github.com/BurntSushi/wingo/layout"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/wm"
 )
@@ -64,6 +65,15 @@ func (c *Client) cbConfigureRequest() xevent.ConfigureRequestFun {
 			logger.Lots.Printf("Denying ConfigureRequest from client because " +
 				"the client is in the processing of moving/resizing, or is " +
 				"maximized.")
+
+			// As per ICCCM 4.1.5, a window that has not been moved or resized
+			// must receive a synthetic ConfigureNotify event.
+			c.sendConfigureNotify()
+			return
+		}
+		if _, ok := c.Layout().(layout.Floater); !ok {
+			logger.Lots.Printf("Denying ConfigureRequest from client because " +
+				"the client is not in a floating layout.")
 
 			// As per ICCCM 4.1.5, a window that has not been moved or resized
 			// must receive a synthetic ConfigureNotify event.

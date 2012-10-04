@@ -113,8 +113,9 @@ func withClient(clientArg gribble.Any, f func(c *xclient.Client)) {
 			wid := xproto.Window(wm.MouseClientClicked)
 			if client := wm.FindManagedClient(wid); client != nil {
 				f(client.(*xclient.Client))
+			} else {
+				f(nil)
 			}
-			return
 		case ":active:":
 			withFocused(f)
 		default:

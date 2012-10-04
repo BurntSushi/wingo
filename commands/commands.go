@@ -35,6 +35,7 @@ var Env = gribble.New([]gribble.Command{
 	&HeadFocus{},
 	&HeadFocusWithClient{},
 	&IconifyToggle{},
+	&MaximizeToggle{},
 	&MouseMove{},
 	&MouseResize{},
 	&Move{},
@@ -203,6 +204,7 @@ func (cmd HeadFocusWithClient) Run() gribble.Value {
 			func(wrk *workspace.Workspace) {
 				wrk.Activate(false)
 				wrk.Add(c)
+				stack.Raise(c)
 			})
 	})
 	return nil
@@ -215,6 +217,17 @@ type IconifyToggle struct {
 func (cmd IconifyToggle) Run() gribble.Value {
 	withClient(cmd.Client, func(c *xclient.Client) {
 		c.Workspace().IconifyToggle(c)
+	})
+	return nil
+}
+
+type MaximizeToggle struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd MaximizeToggle) Run() gribble.Value {
+	withClient(cmd.Client, func(c *xclient.Client) {
+		c.MaximizeToggle()
 	})
 	return nil
 }

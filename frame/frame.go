@@ -21,30 +21,15 @@ const (
 	fH = xproto.ConfigWindowHeight
 )
 
-type MoveState struct {
-	Moving       bool
-	RootX, RootY int
-}
-
-type ResizeState struct {
-	Resizing            bool
-	RootX, RootY        int
-	X, Y, Width, Height int
-	Xs, Ys, Ws, Hs      bool
-}
-
 // frame is a type that provides mostly boiler-plate methods to all frames.
 // It's appropriate to think of it as an abstract frame, as it does not
 // satisfy the Frame interface by itself.
 type frame struct {
 	X *xgbutil.XUtil
 
-	MoveState   *MoveState
-	ResizeState *ResizeState
-	State       int
-	parent      *Parent
-	client      Client
-	isMapped    bool
+	State  int
+	parent *Parent
+	client Client
 }
 
 func newFrame(X *xgbutil.XUtil, p *Parent, c Client) (*frame, error) {
@@ -57,13 +42,10 @@ func newFrame(X *xgbutil.XUtil, p *Parent, c Client) (*frame, error) {
 	}
 
 	return &frame{
-		X:           X,
-		parent:      p,
-		client:      c,
-		MoveState:   &MoveState{},
-		ResizeState: &ResizeState{},
-		State:       Inactive,
-		isMapped:    false,
+		X:      X,
+		parent: p,
+		client: c,
+		State:  Inactive,
 	}, nil
 }
 
@@ -98,12 +80,10 @@ func (f *frame) Destroy() {
 
 func (f *frame) Map() {
 	f.parent.Map()
-	f.isMapped = true
 }
 
 func (f *frame) Unmap() {
 	f.parent.Unmap()
-	f.isMapped = false
 }
 
 func (f *frame) Geom() xrect.Rect {
@@ -111,21 +91,21 @@ func (f *frame) Geom() xrect.Rect {
 }
 
 func (f *frame) IsMapped() bool {
-	return f.isMapped
+	return f.parent.isMapped
 }
 
 func (f *frame) Moving() bool {
-	return f.MoveState.Moving
+	return f.parent.MoveState.Moving
 }
 
 func (f *frame) MovingState() *MoveState {
-	return f.MoveState
+	return f.parent.MoveState
 }
 
 func (f *frame) Resizing() bool {
-	return f.ResizeState.Resizing
+	return f.parent.ResizeState.Resizing
 }
 
 func (f *frame) ResizingState() *ResizeState {
-	return f.ResizeState
+	return f.parent.ResizeState
 }

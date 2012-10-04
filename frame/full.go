@@ -221,9 +221,8 @@ func (f *Full) Maximize() {
 		f.topRight.Unmap()
 		f.bottomLeft.Unmap()
 		f.bottomRight.Unmap()
-
-		Reset(f)
 	}
+	Reset(f)
 }
 
 func (f *Full) Unmaximize() {
@@ -251,9 +250,9 @@ func (f *Full) Unmaximize() {
 		f.topRight.Map()
 		f.bottomLeft.Map()
 		f.bottomRight.Map()
-
-		Reset(f)
 	}
+
+	Reset(f)
 }
 
 func (f *Full) Top() int {

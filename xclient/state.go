@@ -39,10 +39,19 @@ func (c *Client) HasState(name string) bool {
 // Don't save when moving or resizing.
 // Also don't save when client's workspace isn't visible.
 func (c *Client) SaveState(name string) {
-	if !c.workspace.IsVisible() || c.frame.Moving() || c.frame.Resizing() {
+	if c.workspace == nil {
+		return
+	}
+	if !c.workspace.IsVisible() {
 		return
 	}
 	c.states[name] = c.newClientState()
+}
+
+func (c *Client) CopyState(src, dest string) {
+	if from, ok := c.states[src]; ok {
+		c.states[dest] = from
+	}
 }
 
 // Don't revert to regular geometry when moving/resizing. We can still revert
@@ -71,7 +80,7 @@ func (c *Client) LoadState(name string) {
 
 	// If the state calls for maximization, maximize the client and be done.
 	if s.maximized {
-		panic("NOT YET IMPLEMENTED")
+		c.maximize()
 		return
 	}
 

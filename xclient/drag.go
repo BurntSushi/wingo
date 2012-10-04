@@ -4,10 +4,15 @@ import (
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/ewmh"
+	"github.com/BurntSushi/xgbutil/xrect"
 
 	"github.com/BurntSushi/wingo/cursors"
 	"github.com/BurntSushi/wingo/frame"
 )
+
+func (c *Client) DragGeom() xrect.Rect {
+	return c.dragGeom
+}
 
 func (c *Client) DragMoveBegin(rx, ry, ex, ey int) {
 	f := c.frame
@@ -20,26 +25,30 @@ func (c *Client) DragMoveBegin(rx, ry, ex, ey int) {
 
 	// unmax!
 	c.EnsureUnmax()
+
+	c.dragGeom = xrect.New(xrect.Pieces(f.Geom()))
 }
 
 func (c *Client) DragMoveStep(rx, ry, ex, ey int) {
 	f := c.frame
 	moving := f.MovingState()
-	newx := f.Geom().X() + rx - moving.RootX
-	newy := f.Geom().Y() + ry - moving.RootY
+	newx := c.dragGeom.X() + rx - moving.RootX
+	newy := c.dragGeom.Y() + ry - moving.RootY
 	moving.RootX, moving.RootY = rx, ry
 
+	c.dragGeom.XSet(newx)
+	c.dragGeom.YSet(newy)
 	c.LayoutMove(newx, newy)
 }
 
 func (c *Client) DragMoveEnd(rx, ry, ex, ey int) {
 	f := c.frame
 	frame.Reset(f)
-	// WM.headChoose(f.Client(), f.Geom()) 
 
 	moving := f.MovingState()
 	moving.Moving = false
 	moving.RootX, moving.RootY = 0, 0
+	c.dragGeom = nil
 }
 
 func (c *Client) DragResizeBegin(direction uint32,
@@ -154,6 +163,7 @@ func (c *Client) DragResizeBegin(direction uint32,
 
 	// unmax!
 	c.EnsureUnmax()
+	c.dragGeom = xrect.New(xrect.Pieces(f.Geom()))
 
 	return true, cursor
 }
@@ -163,8 +173,8 @@ func (c *Client) DragResizeStep(rx, ry, ex, ey int) {
 	resizing := f.ResizingState()
 
 	diffx, diffy := rx-resizing.RootX, ry-resizing.RootY
-	newx, newy := f.Geom().X(), f.Geom().Y()
-	neww, newh := f.Geom().Width(), f.Geom().Height()
+	newx, newy := c.dragGeom.X(), c.dragGeom.Y()
+	neww, newh := c.dragGeom.Width(), c.dragGeom.Height()
 	validw, validh := neww, newh
 
 	if resizing.Xs {
@@ -206,6 +216,10 @@ func (c *Client) DragResizeStep(rx, ry, ex, ey int) {
 		}
 	}
 
+	c.dragGeom.XSet(newx)
+	c.dragGeom.YSet(newy)
+	c.dragGeom.WidthSet(validw)
+	c.dragGeom.HeightSet(validh)
 	c.LayoutMoveResize(newx, newy, validw, validh)
 }
 
@@ -218,7 +232,6 @@ func (c *Client) DragResizeEnd(rx, ry, ex, ey int) {
 	// Example: Libreoffice in Xephyr. Try resizing it with the mouse and
 	// releasing the mouse button really quickly.
 	frame.Reset(f)
-	// WM.headChoose(f.Client(), f.Geom()) 
 
 	// just zero out the resizing state
 	resizing := f.ResizingState()
@@ -228,4 +241,5 @@ func (c *Client) DragResizeEnd(rx, ry, ex, ey int) {
 	resizing.Width, resizing.Height = 0, 0
 	resizing.Xs, resizing.Ys = false, false
 	resizing.Ws, resizing.Hs = false, false
+	c.dragGeom = nil
 }

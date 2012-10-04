@@ -9,6 +9,7 @@ import (
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xprop"
+	"github.com/BurntSushi/xgbutil/xrect"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/frame"
@@ -53,6 +54,8 @@ type Client struct {
 
 	// floating, when true, this client will *always* be in the floating layer.
 	floating bool
+
+	dragGeom xrect.Rect
 }
 
 func (c *Client) IsMapped() bool {

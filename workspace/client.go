@@ -18,12 +18,14 @@ type Client interface {
 	Unmap()
 	ShouldForceFloating() bool
 	Geom() xrect.Rect
+	DragGeom() xrect.Rect
 
 	Iconified() bool
 	IconifiedSet(iconified bool)
 
 	HasState(name string) bool
 	SaveState(name string)
+	CopyState(src, dest string)
 	LoadState(name string)
 	DeleteState(name string)
 

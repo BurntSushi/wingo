@@ -11,6 +11,21 @@ import (
 
 type Parent struct {
 	*xwindow.Window
+	isMapped    bool
+	MoveState   *MoveState
+	ResizeState *ResizeState
+}
+
+type MoveState struct {
+	Moving       bool
+	RootX, RootY int
+}
+
+type ResizeState struct {
+	Resizing            bool
+	RootX, RootY        int
+	X, Y, Width, Height int
+	Xs, Ys, Ws, Hs      bool
 }
 
 func newParent(X *xgbutil.XUtil, cid xproto.Window) (*Parent, error) {
@@ -36,7 +51,12 @@ func newParent(X *xgbutil.XUtil, cid xproto.Window) (*Parent, error) {
 		return nil, err
 	}
 
-	return &Parent{parent}, nil
+	return &Parent{
+		Window:      parent,
+		MoveState:   &MoveState{},
+		ResizeState: &ResizeState{},
+		isMapped:    false,
+	}, nil
 }
 
 func (par *Parent) Deparent(cid xproto.Window) {
@@ -45,4 +65,14 @@ func (par *Parent) Deparent(cid xproto.Window) {
 	if err != nil {
 		logger.Warning.Printf("Could not deparent client window: %s", err)
 	}
+}
+
+func (par *Parent) Map() {
+	par.Window.Map()
+	par.isMapped = true
+}
+
+func (par *Parent) Unmap() {
+	par.Window.Unmap()
+	par.isMapped = false
 }

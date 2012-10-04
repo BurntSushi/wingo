@@ -4,7 +4,7 @@ Mod4-t := Shell "lxterminal"
 
 Mod4-c := Close ":active:"
 Mod1-Shift-c := Quit
-Mod4-x := MaximizeToggle
+Mod4-x := MaximizeToggle ":active:"
 Mod4-i := IconifyToggle ":active:"
 Mod1-Shift-t := Move ":active:" 0.25 0.25
 Mod1-Shift-t := Resize ":active:" 0.5 0.5

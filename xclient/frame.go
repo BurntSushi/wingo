@@ -45,6 +45,37 @@ func (c *Client) ClientGeom() xrect.Rect {
 // It's useful when a particular operation that doesn't work in maximized mode
 // overrides a client's maximized state. (Like issuing a tiling request.)
 func (c *Client) EnsureUnmax() {
+	c.unmaximize()
+}
+
+func (c *Client) MaximizeToggle() {
+	if c.Workspace() == nil || !c.Workspace().IsVisible() {
+		return
+	}
+
+	if c.Maximized() {
+		c.unmaximize()
+		c.LoadState("before-maximize")
+	} else {
+		c.SaveState("before-maximize")
+		c.maximize()
+	}
+}
+
+func (c *Client) maximize() {
+	c.maximized = true
+	c.frames.maximize()
+
+	// Resize outside of the constraints of a layout.
+	g := c.Workspace().Geom()
+	c.MoveResize(false, g.X(), g.Y(), g.Width()-1, g.Height()-1)
+}
+
+func (c *Client) unmaximize() {
+	if c.maximized {
+		c.maximized = false
+		c.frames.unmaximize()
+	}
 }
 
 func (c *Client) HeadGeom() xrect.Rect {
@@ -232,6 +263,7 @@ func (cf clientFrames) set(f frame.Frame) {
 	if current == f {
 		return
 	}
+	cf.client.frame.Off()
 	cf.client.frame = f
 	cf.client.frame.On()
 	frame.Reset(cf.client.frame)
@@ -248,6 +280,20 @@ func (cf clientFrames) destroy() {
 	// Since a single parent window is shared between all frames, we only need
 	// to pick a parent window from one of the frames, and destroy that.
 	cf.full.Parent().Destroy()
+}
+
+func (cf clientFrames) maximize() {
+	cf.full.Maximize()
+	cf.borders.Maximize()
+	cf.slim.Maximize()
+	cf.nada.Maximize()
+}
+
+func (cf clientFrames) unmaximize() {
+	cf.full.Unmaximize()
+	cf.borders.Unmaximize()
+	cf.slim.Unmaximize()
+	cf.nada.Unmaximize()
 }
 
 // updateIcon updates any frames that use a client's icon.

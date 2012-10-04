@@ -37,4 +37,3 @@ func (cls ClientList) Get(i int) heads.Client {
 func (cls ClientList) Len() int {
 	return len(cls)
 }
-

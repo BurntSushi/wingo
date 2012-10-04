@@ -65,10 +65,12 @@ func main() {
 	// Oblige configure requests from windows we don't manage.
 	xevent.ConfigureRequestFun(
 		func(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
-			flags := int(ev.ValueMask) &
-				^int(xproto.ConfigWindowSibling) &
-				^int(xproto.ConfigWindowStackMode)
-			xwindow.New(X, ev.Window).Configure(flags,
+			// Make sure we aren't managing this client.
+			if wm.FindManagedClient(ev.Window) != nil {
+				return
+			}
+
+			xwindow.New(X, ev.Window).Configure(int(ev.ValueMask),
 				int(ev.X), int(ev.Y), int(ev.Width), int(ev.Height),
 				ev.Sibling, ev.StackMode)
 		}).Connect(X, wm.Root.Id)

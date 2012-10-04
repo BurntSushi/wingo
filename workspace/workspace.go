@@ -97,14 +97,21 @@ func (wrk *Workspace) Add(c Client) {
 
 	if current != nil {
 		current.Remove(c)
+	} else {
+		c.SaveState("last-floating")
 	}
+
 	if !c.Iconified() {
 		wrk.addToFloaters(c)
 		wrk.addToTilers(c)
 		wrk.Place()
 	}
 	if _, ok := c.Layout().(layout.Floater); ok {
-		c.LoadState("last-floating")
+		if !wrk.IsVisible() {
+			c.CopyState("last-floating", "workspace-switch")
+		} else {
+			c.LoadState("last-floating")
+		}
 	}
 }
 
@@ -171,7 +178,7 @@ func (wrk *Workspace) Hide() {
 
 func (wrk *Workspace) Place() {
 	// Floater layouts always get placed.
-	wrk.layoutFloater().Place(wrk.Geom())
+	wrk.LayoutFloater().Place(wrk.Geom())
 
 	// Tiling layouts are only "placed" when the workspace is in the
 	// appropriate layout mode.
@@ -179,7 +186,7 @@ func (wrk *Workspace) Place() {
 	case Floating:
 		// Nada nada limonada
 	case AutoTiling:
-		wrk.layoutAutoTiler().Place(wrk.Geom())
+		wrk.LayoutAutoTiler().Place(wrk.Geom())
 	default:
 		panic("Layout mode not implemented.")
 	}
@@ -222,7 +229,7 @@ func (wrk *Workspace) IconifyToggle(c Client) {
 // the workspace will add the client to its list of tilable clients and re-tile.
 func (wrk *Workspace) CheckFloatingStatus(c Client) {
 	// If it's in one tiler, it's in them all.
-	tilable := wrk.layoutAutoTiler().Exists(c)
+	tilable := wrk.LayoutAutoTiler().Exists(c)
 	if tilable && c.ShouldForceFloating() {
 		wrk.removeFromTilers(c)
 		if wrk.State != Floating {
@@ -235,11 +242,11 @@ func (wrk *Workspace) CheckFloatingStatus(c Client) {
 	}
 }
 
-func (wrk *Workspace) layoutFloater() layout.Floater {
+func (wrk *Workspace) LayoutFloater() layout.Floater {
 	return wrk.floaters[wrk.curFloater]
 }
 
-func (wrk *Workspace) layoutAutoTiler() layout.AutoTiler {
+func (wrk *Workspace) LayoutAutoTiler() layout.AutoTiler {
 	return wrk.autoTilers[wrk.curAutoTiler]
 }
 
@@ -273,9 +280,9 @@ func (wrk *Workspace) removeFromTilers(c Client) {
 func (wrk *Workspace) Layout(c Client) layout.Layout {
 	switch {
 	case wrk.State == Floating || c.ShouldForceFloating():
-		return wrk.layoutFloater()
+		return wrk.LayoutFloater()
 	case wrk.State == AutoTiling:
-		return wrk.layoutAutoTiler()
+		return wrk.LayoutAutoTiler()
 	default:
 		panic("Layout state not implemented.")
 	}
@@ -284,15 +291,20 @@ func (wrk *Workspace) Layout(c Client) layout.Layout {
 
 func (wrk *Workspace) LayoutStateSet(state int) {
 	if state == wrk.State {
+		// If it's an AutoTiler, then just call Place again.
+		if wrk.State == AutoTiling {
+			wrk.LayoutAutoTiler().Place(wrk.Geom())
+		}
 		return
 	}
 
 	// First undo the current layout.
 	switch wrk.State {
 	case Floating:
-		wrk.layoutFloater().Unplace(wrk.Geom())
+		wrk.LayoutFloater().Save()
+		wrk.LayoutFloater().Unplace(wrk.Geom())
 	case AutoTiling:
-		wrk.layoutAutoTiler().Unplace(wrk.Geom())
+		wrk.LayoutAutoTiler().Unplace(wrk.Geom())
 	default:
 		panic("Layout state not implemented.")
 	}
@@ -301,11 +313,11 @@ func (wrk *Workspace) LayoutStateSet(state int) {
 	switch state {
 	case Floating:
 		wrk.State = state
-		wrk.layoutFloater().Place(wrk.Geom())
-		wrk.layoutFloater().Reposition(wrk.Geom())
+		wrk.LayoutFloater().Place(wrk.Geom())
+		wrk.LayoutFloater().Reposition(wrk.Geom())
 	case AutoTiling:
 		wrk.State = state
-		wrk.layoutAutoTiler().Place(wrk.Geom())
+		wrk.LayoutAutoTiler().Place(wrk.Geom())
 	default:
 		panic("Layout state not implemented.")
 	}

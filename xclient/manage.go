@@ -10,7 +10,6 @@ import (
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/heads"
-	"github.com/BurntSushi/wingo/layout"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/stack"
 	"github.com/BurntSushi/wingo/wm"
@@ -50,13 +49,6 @@ func New(id xproto.Window) *Client {
 		}
 	}
 
-	// I have no idea why this works, but for some clients, this nudges them
-	// into displaying their window contents (which are otherwise blank).
-	// I am 100% certain there is a proper solution here. (I am probably
-	// not following a particular protocol correctly. No idea which one.)
-	go func() {
-		frame.Reset(c.Frame())
-	}()
 	return c
 }
 
@@ -91,20 +83,15 @@ func (c *Client) manage() {
 		c.Move(oughtHeadGeom.X(), oughtHeadGeom.Y())
 	}
 
+	c.maybeInitPlace()
 	wm.AddClient(c)
 	focus.InitialAdd(c)
 	stack.Raise(c)
 	wm.Workspace().Add(c)
 	c.attachEventCallbacks()
-	c.maybeInitPlace()
 }
 
 func (c *Client) maybeInitPlace() {
-	floater, ok := c.Layout().(layout.Floater)
-	if !ok {
-		return
-	}
-
 	// Any client that isn't normal doesn't get placed.
 	// Let it do what it do, baby.
 	if c.primaryType != clientTypeNormal {
@@ -124,7 +111,7 @@ func (c *Client) maybeInitPlace() {
 	}
 
 	// We're good, do a placement.
-	floater.InitialPlacement(c.Workspace().Geom(), c)
+	wm.Workspace().LayoutFloater().InitialPlacement(wm.Workspace().Geom(), c)
 }
 
 func (c *Client) fetchXProperties() {

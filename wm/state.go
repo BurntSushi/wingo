@@ -15,15 +15,15 @@ import (
 )
 
 var (
-	X *xgbutil.XUtil
-	Root *xwindow.Window
-	Clients ClientList
-	Heads *heads.Heads
-	Prompts AllPrompts
-	Config *Configuration
-	Theme *ThemeConfig
+	X          *xgbutil.XUtil
+	Root       *xwindow.Window
+	Clients    ClientList
+	Heads      *heads.Heads
+	Prompts    AllPrompts
+	Config     *Configuration
+	Theme      *ThemeConfig
 	gribbleEnv *gribble.Environment
-	cmdHacks CommandHacks
+	cmdHacks   CommandHacks
 )
 
 func Init(x *xgbutil.XUtil, cmdEnv *gribble.Environment, hacks CommandHacks) {

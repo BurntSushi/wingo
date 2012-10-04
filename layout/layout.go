@@ -29,6 +29,7 @@ type Floater interface {
 	Floater()
 	Layout
 	InitialPlacement(geom xrect.Rect, c Client)
+	Save()
 	Reposition(geom xrect.Rect)
 }
 

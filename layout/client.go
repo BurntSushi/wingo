@@ -17,6 +17,7 @@ type Client interface {
 	String() string
 	Layout() Layout
 	Geom() xrect.Rect
+	DragGeom() xrect.Rect
 
 	MROpt(validate bool, flags, x, y, width, height int)
 	MoveResize(validate bool, x, y, width, height int)

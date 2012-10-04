@@ -38,6 +38,17 @@ func (f *Floating) InitialPlacement(geom xrect.Rect, c Client) {
 func (f *Floating) Place(geom xrect.Rect)   {}
 func (f *Floating) Unplace(geom xrect.Rect) {}
 
+// Save is called when a workspace switches from a floating layout to a
+// tiling layout. It should save the "last-floating" state for all floating
+// clients.
+func (f *Floating) Save() {
+	for _, c := range f.clients {
+		if _, ok := c.Layout().(*Floating); ok {
+			c.SaveState("last-floating")
+		}
+	}
+}
+
 // Reposition is called when a workspace switches from a tiling layout to a
 // floating layout. It should reload the "last-floating" client state.
 func (f *Floating) Reposition(geom xrect.Rect) {

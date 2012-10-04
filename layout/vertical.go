@@ -75,17 +75,17 @@ func (v *Vertical) Remove(c Client) {
 }
 
 func (v *Vertical) MROpt(c Client, flags, x, y, width, height int) {
-	c.MROpt(true, flags, x, y, width, height)
+	// c.MROpt(true, flags, x, y, width, height) 
 }
 
 func (v *Vertical) MoveResize(c Client, x, y, width, height int) {
-	c.MoveResize(true, x, y, width, height)
+	// c.MoveResize(true, x, y, width, height) 
 }
 
 func (v *Vertical) Move(c Client, x, y int) {
-	c.Move(x, y)
+	// c.Move(x, y) 
 }
 
 func (v *Vertical) Resize(c Client, width, height int) {
-	c.Resize(true, width, height)
+	// c.Resize(true, width, height) 
 }
