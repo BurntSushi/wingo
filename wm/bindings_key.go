@@ -15,8 +15,6 @@
 package wm
 
 import (
-	"github.com/BurntSushi/gribble"
-
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/keybind"
 	"github.com/BurntSushi/xgbutil/xevent"
@@ -25,7 +23,7 @@ import (
 )
 
 type keyCommand struct {
-	cmd     gribble.Command
+	cmdStr  string
 	cmdName string
 	args    []string
 	down    bool // 'up' when false
@@ -53,25 +51,38 @@ func (kcmd keyCommand) attach() {
 			return
 		}
 
-		run := cmdHacks.CycleClientRunWithKeyStr(kcmd.keyStr, kcmd.cmd)
+		run, err := cmdHacks.CycleClientRunWithKeyStr(kcmd.keyStr, kcmd.cmdStr)
+		if err != nil {
+			logger.Warning.Printf("Could not setup %s: %s", kcmd.cmdName, err)
+			return
+		}
+
 		keybind.KeyPressFun(
 			func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
-				run()
+				go run()
 			}).Connect(X, Root.Id, kcmd.keyStr, true)
 		keybind.KeyPressFun(
 			func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
-				run()
+				go run()
 			}).Connect(X, X.Dummy(), kcmd.keyStr, true)
 	} else {
+		run := func() {
+			go func() {
+				_, err := gribbleEnv.Run(kcmd.cmdStr)
+				if err != nil {
+					logger.Warning.Println(err)
+				}
+			}()
+		}
 		if kcmd.down {
 			keybind.KeyPressFun(
 				func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
-					kcmd.cmd.Run()
+					run()
 				}).Connect(X, Root.Id, kcmd.keyStr, true)
 		} else {
 			keybind.KeyReleaseFun(
 				func(X *xgbutil.XUtil, ev xevent.KeyReleaseEvent) {
-					kcmd.cmd.Run()
+					run()
 				}).Connect(X, Root.Id, kcmd.keyStr, true)
 		}
 	}

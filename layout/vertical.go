@@ -56,11 +56,7 @@ func (v *Vertical) Place(geom xrect.Rect) {
 	}
 }
 
-func (v *Vertical) Unplace(geom xrect.Rect) {
-	if geom == nil {
-		return
-	}
-}
+func (v *Vertical) Unplace(geom xrect.Rect) {}
 
 func (v *Vertical) Exists(c Client) bool {
 	return v.store.mFindClient(c) >= 0 || v.store.sFindClient(c) >= 0

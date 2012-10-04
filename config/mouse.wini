@@ -40,12 +40,12 @@ Mod4-4 up := $OPACITY_UP
 Mod4-5 up := $OPACITY_DOWN
 
 [FullMaximize]
-1 up := MaximizeToggle ":mouse:"
+1 up := ToggleMaximize ":mouse:"
 Mod4-4 up := $OPACITY_UP
 Mod4-5 up := $OPACITY_DOWN
 
 [FullMinimize]
-1 up := IconifyToggle ":mouse:"
+1 up := ToggleIconify ":mouse:"
 Mod4-4 up := $OPACITY_UP
 Mod4-5 up := $OPACITY_DOWN
 

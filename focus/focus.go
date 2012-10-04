@@ -9,7 +9,6 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/workspace"
 )
 
 var (
@@ -97,10 +96,10 @@ func Root() {
 	xwindow.New(X, X.Dummy()).Focus()
 }
 
-func Fallback(wrk *workspace.Workspace) {
+func Fallback(focusable func(c Client) bool) {
 	for i := len(Clients) - 1; i >= 0; i-- {
 		c := Clients[i]
-		if c.IsMapped() && c.Workspace() == wrk && !c.ImminentDestruction() {
+		if focusable(c) {
 			Focus(c)
 			return
 		}

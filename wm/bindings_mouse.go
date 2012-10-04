@@ -13,7 +13,7 @@ package wm
 */
 
 import (
-	"github.com/BurntSushi/gribble"
+	"sync"
 
 	"github.com/BurntSushi/xgb/xproto"
 
@@ -22,16 +22,20 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 
 	"github.com/BurntSushi/wingo/cursors"
+	"github.com/BurntSushi/wingo/logger"
 )
 
 // MouseClientClicked is a terrible hack to inject state into commands.
 // Basically, if a command is given with "::mouse::" as the argument for
 // a client parameter, this variable will be checked and its value will
 // be used.
-var MouseClientClicked xproto.Window
+var (
+	MouseClientClicked xproto.Window
+	mouseClientLock    = &sync.Mutex{}
+)
 
 type mouseCommand struct {
-	cmd       gribble.Command
+	cmdStr    string
 	cmdName   string
 	down      bool // 'up' when false
 	buttonStr string
@@ -44,8 +48,12 @@ func (mcmd mouseCommand) setup(c Client, wid xproto.Window) {
 		return
 	}
 	if mcmd.cmdName == "MouseResize" {
-		direction := strToDirection(cmdHacks.MouseResizeDirection(mcmd.cmd))
-		setupResizeDrag(c, wid, mcmd.buttonStr, true, direction)
+		direction, err := cmdHacks.MouseResizeDirection(mcmd.cmdStr)
+		if err != nil {
+			logger.Warning.Println("Could not setup MouseResize: %s", err)
+			return
+		}
+		setupResizeDrag(c, wid, mcmd.buttonStr, true, strToDirection(direction))
 		return
 	}
 
@@ -53,9 +61,14 @@ func (mcmd mouseCommand) setup(c Client, wid xproto.Window) {
 	// the events (i.e., grab synchronously).
 	// Otherwise, we don't need to grab at all!
 	run := func() {
-		MouseClientClicked = c.Id()
-		mcmd.cmd.Run()
-		MouseClientClicked = 0
+		go func() {
+			mouseClientLock.Lock()
+			defer mouseClientLock.Unlock()
+
+			MouseClientClicked = c.Id()
+			gribbleEnv.Run(mcmd.cmdStr)
+			MouseClientClicked = 0
+		}()
 	}
 	if wid == c.Id() || (c.Frame() != nil && wid == c.Frame().Parent().Id) {
 		if mcmd.down {
@@ -143,7 +156,8 @@ func (mcmd mouseCommand) attachGrabRelease(wid xproto.Window, run func()) {
 
 func rootMouseSetup() {
 	for _, mcmd := range Config.mouse["root"] {
-		mcmd.attach(Root.Id, func() { mcmd.cmd.Run() }, false, false)
+		run := func() { gribbleEnv.Run(mcmd.cmdStr) }
+		mcmd.attach(Root.Id, run, false, false)
 	}
 }
 

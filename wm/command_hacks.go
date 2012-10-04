@@ -1,8 +1,6 @@
 package wm
 
-import "github.com/BurntSushi/gribble"
-
 type CommandHacks struct {
-	MouseResizeDirection     func(cmd gribble.Command) string
-	CycleClientRunWithKeyStr func(keyStr string, cmd gribble.Command) func()
+	MouseResizeDirection     func(cmdStr string) (string, error)
+	CycleClientRunWithKeyStr func(keyStr, cmdStr string) (func(), error)
 }

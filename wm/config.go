@@ -93,14 +93,13 @@ func (conf *Configuration) loadMouseConfigSection(
 				conf.mouse[ident] = make([]mouseCommand, 0)
 			}
 
-			gribbleCmd, err := gribbleEnv.Command(cmd)
-			if err != nil {
+			if err := gribbleEnv.Check(cmd); err != nil {
 				logger.Warning.Printf(
 					"Could not parse command '%s' because: %s", cmd, err)
 			} else {
 				down, justMouseStr := isDown(mouseStr)
 				mcmd := mouseCommand{
-					cmd:       gribbleCmd,
+					cmdStr:    cmd,
 					cmdName:   gribbleEnv.CommandName(cmd),
 					down:      down,
 					buttonStr: justMouseStr,
@@ -121,14 +120,13 @@ func (conf *Configuration) loadKeyConfigSection(
 				conf.key[section] = make([]keyCommand, 0)
 			}
 
-			gribbleCmd, err := gribbleEnv.Command(cmd)
-			if err != nil {
+			if err := gribbleEnv.Check(cmd); err != nil {
 				logger.Warning.Printf(
 					"Could not parse command '%s' because: %s", cmd, err)
 			} else {
 				down, justKeyStr := isDown(keyStr)
 				kcmd := keyCommand{
-					cmd:     gribbleCmd,
+					cmdStr:  cmd,
 					cmdName: gribbleEnv.CommandName(cmd),
 					down:    down,
 					keyStr:  justKeyStr,

@@ -17,7 +17,7 @@ type Heads struct {
 	geom     xinerama.Heads // Raw geometry of heads.
 	active   int            // Index in workarea/geom/visibles of active head.
 
-	workspaces *workspace.Workspaces  // Slice of all available workspaces.
+	Workspaces *workspace.Workspaces  // Slice of all available workspaces.
 	visibles   []*workspace.Workspace // Slice of all visible workspaces.
 }
 
@@ -26,7 +26,7 @@ func NewHeads(X *xgbutil.XUtil) *Heads {
 		X:      X,
 		active: 0,
 	}
-	hds.workspaces = workspace.NewWorkspaces(X, hds)
+	hds.Workspaces = workspace.NewWorkspaces(X, hds)
 	return hds
 }
 
@@ -41,7 +41,7 @@ func (hds *Heads) Load(clients Clients) {
 	hds.geom = query(hds.X)
 
 	// Check if the number of workspaces is less than the number of heads.
-	if len(hds.workspaces.Wrks) < len(hds.geom) {
+	if len(hds.Workspaces.Wrks) < len(hds.geom) {
 		logger.Error.Fatalf(
 			"There must be at least %d workspaces (one for each head).",
 			len(hds.geom))
@@ -52,10 +52,10 @@ func (hds *Heads) Load(clients Clients) {
 	// where N is the number of heads.
 	// TODO: There may be a saner way of orienting workspaces when the
 	// phyiscal heads change. Implement it!
-	hds.ActivateWorkspace(hds.workspaces.Wrks[0])
+	hds.ActivateWorkspace(hds.Workspaces.Wrks[0])
 	hds.visibles = make([]*workspace.Workspace, len(hds.geom))
 	for i := 0; i < len(hds.geom); i++ {
-		hds.visibles[i] = hds.workspaces.Wrks[i]
+		hds.visibles[i] = hds.Workspaces.Wrks[i]
 	}
 
 	// Apply the struts set by clients to the workarea geometries.
@@ -63,7 +63,7 @@ func (hds *Heads) Load(clients Clients) {
 	hds.ApplyStruts(clients)
 
 	// Now show only the visibles and hide everything else.
-	for _, wrk := range hds.workspaces.Wrks {
+	for _, wrk := range hds.Workspaces.Wrks {
 		if wrk.IsVisible() {
 			wrk.Show()
 		} else {
@@ -93,7 +93,7 @@ func (hds *Heads) ApplyStruts(clients Clients) {
 			strut.TopStartX, strut.TopEndX,
 			strut.BottomStartX, strut.BottomEndX)
 	}
-	for _, wrk := range hds.workspaces.Wrks {
+	for _, wrk := range hds.Workspaces.Wrks {
 		wrk.Place()
 	}
 }

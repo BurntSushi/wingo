@@ -67,12 +67,8 @@ func (c *Client) LoadState(name string) {
 		return
 	}
 
-	// We're committed now to at least reverting frame. We do this last
-	// to make sure we haven't switched to a frame that has improper state.
-	// (i.e., a different frame won't think a client is moving/resizing.)
-	defer func() {
-		c.frames.set(s.frame)
-	}()
+	// We're committed now to at least reverting frame.
+	c.frames.set(s.frame)
 
 	// Delete the state entry here. We do this because this state may be
 	// re-added when maximizing or moving the window. (Like "last-floating".)

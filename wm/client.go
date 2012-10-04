@@ -15,6 +15,7 @@ type Client interface {
 	IsMapped() bool
 	Iconified() bool
 	Workspace() *workspace.Workspace
+	ImminentDestruction() bool
 
 	CycleItem() *prompt.CycleItem
 	SelectItem() *prompt.SelectItem

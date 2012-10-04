@@ -23,8 +23,8 @@ import (
 
 func main() {
 	// giggity
-	// runtime.GOMAXPROCS(runtime.NumCPU()) 
-	runtime.GOMAXPROCS(1)
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	// runtime.GOMAXPROCS(1) 
 
 	X, err := xgbutil.NewConn()
 	if err != nil {
@@ -91,7 +91,18 @@ func main() {
 	// to issue commands using wingo-cmd.
 	// xevent.ClientMessageFun(commandHandler).Connect(X, wm.Root.Id) 
 
-	xevent.Main(X)
+	pingBefore, pingAfter, pingQuit := xevent.MainPing(X)
+	for {
+		select {
+		case <-pingBefore:
+			// Wait for the event to finish processing.
+			<-pingAfter
+		case f := <-commands.SafeExec:
+			commands.SafeReturn <- f()
+		case <-pingQuit:
+			return
+		}
+	}
 }
 
 func setSupported() {

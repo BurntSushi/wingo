@@ -97,8 +97,6 @@ func (wrk *Workspace) Add(c Client) {
 
 	if current != nil {
 		current.Remove(c)
-	} else {
-		c.SaveState("last-floating")
 	}
 
 	if !c.Iconified() {
@@ -106,11 +104,19 @@ func (wrk *Workspace) Add(c Client) {
 		wrk.addToTilers(c)
 		wrk.Place()
 	}
-	if _, ok := c.Layout().(layout.Floater); ok {
-		if !wrk.IsVisible() {
-			c.CopyState("last-floating", "workspace-switch")
-		} else {
-			c.LoadState("last-floating")
+	if _, ok := c.Layout().(layout.Floater); ok && wrk.IsVisible() {
+		c.LoadState("last-floating")
+	}
+
+	// If the old and new workspace have never visibilities, adjust the
+	// client appropriately.
+	if current != nil {
+		if current.IsVisible() && !wrk.IsVisible() {
+			c.SaveState("workspace-switch")
+			c.Unmap()
+		} else if !current.IsVisible() && wrk.IsVisible() {
+			c.LoadState("workspace-switch")
+			c.Map()
 		}
 	}
 }

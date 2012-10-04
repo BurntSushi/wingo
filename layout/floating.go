@@ -56,6 +56,10 @@ func (f *Floating) Reposition(geom xrect.Rect) {
 		return
 	}
 	for _, c := range f.clients {
+		// Don't reposition windows that are already in the floating layout.
+		if c.ShouldForceFloating() {
+			continue
+		}
 		if _, ok := c.Layout().(*Floating); ok {
 			c.LoadState("last-floating")
 		}

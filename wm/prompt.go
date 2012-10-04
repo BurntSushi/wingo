@@ -62,7 +62,7 @@ func ShowCycleClient(keyStr string, activeWrk, visible, iconified bool) {
 }
 
 func ShowSelectClient(tabComp int, activeWrk, visible, iconified bool) {
-	allWrks := Heads.Workspaces()
+	allWrks := Heads.Workspaces.Wrks
 
 	groups := make([]*prompt.SelectShowGroup, len(allWrks))
 	for i, wrk := range allWrks {
@@ -84,7 +84,7 @@ func ShowSelectClient(tabComp int, activeWrk, visible, iconified bool) {
 }
 
 func ShowSelectWorkspace(tabComp int, data workspace.SelectData) {
-	allWrks := Heads.Workspaces()
+	allWrks := Heads.Workspaces.Wrks
 	visibles := Heads.VisibleWorkspaces()
 
 	wrksVisible := make([]*prompt.SelectItem, 0, len(allWrks))

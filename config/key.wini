@@ -4,15 +4,14 @@ Mod4-t := Shell "lxterminal"
 
 Mod4-c := Close ":active:"
 Mod1-Shift-c := Quit
-Mod4-x := MaximizeToggle ":active:"
-Mod4-i := IconifyToggle ":active:"
+Mod4-x := ToggleMaximize ":active:"
+Mod4-i := ToggleIconify ":active:"
 Mod1-Shift-t := Move ":active:" 0.25 0.25
 Mod1-Shift-t := Resize ":active:" 0.5 0.5
 
 Mod1-a := TileStart
 Mod1-u := TileStop
-Mod1-f := ToggleForceFloating
-Mod1-s := ToggleSticky
+Mod1-f := ToggleFloating ":active:"
 
 Mod1-w := HeadFocus 0
 Mod1-w := MovePointerRelative 0 0
@@ -48,8 +47,8 @@ Mod4-4 := Workspace "A4"
 Mod4-5 := Workspace "A5"
 Mod4-6 := Workspace "A6"
 
-Mod1-1 := FrameNada
-Mod1-2 := FrameSlim
+Mod1-1 := FrameNada ":active:"
+Mod1-2 := FrameSlim ":active:"
 Mod1-3 := FrameBorders ":active:"
 Mod1-4 := FrameFull ":active:"
 
@@ -57,6 +56,8 @@ Mod1-Tab := CycleClientNext "yes" "no" "yes"
 Mod1-Shift-Tab := CycleClientPrev "yes" "no" "yes"
 
 Mod4-space := SelectClient "Any" "no" "no" "yes"
-Mod4-return := SelectWorkspace "Prefix"
+# Mod4-return := SelectWorkspace "Prefix" 
+Mod4-return := Workspace (SelectWorkspace "Prefix")
 Mod4-Shift-return := SelectWorkspaceWithClient "Prefix" ":active:"
+Mod4-Shift-s := SelectWorkspaceSendClient "Prefix" ":active:"
 

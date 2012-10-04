@@ -10,6 +10,11 @@ func (c *Client) ShouldForceFloating() bool {
 		c.primaryType != clientTypeNormal
 }
 
+func (c *Client) FloatingToggle() {
+	c.floating = !c.floating
+	c.Workspace().CheckFloatingStatus(c)
+}
+
 func (c *Client) Workspace() *workspace.Workspace {
 	return c.workspace
 }

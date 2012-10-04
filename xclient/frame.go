@@ -7,6 +7,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xrect"
 
 	"github.com/BurntSushi/wingo/frame"
+	"github.com/BurntSushi/wingo/layout"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/wm"
 )
@@ -49,20 +50,38 @@ func (c *Client) EnsureUnmax() {
 }
 
 func (c *Client) MaximizeToggle() {
-	if c.Workspace() == nil || !c.Workspace().IsVisible() {
+	if c.Maximized() {
+		c.Unmaximize()
+	} else {
+		c.Maximize()
+	}
+}
+
+func (c *Client) Maximize() {
+	if !c.canMaxUnmax() {
 		return
 	}
-
-	if c.Maximized() {
-		c.unmaximize()
-		c.LoadState("before-maximize")
-	} else {
+	if !c.Maximized() {
 		c.SaveState("before-maximize")
 		c.maximize()
 	}
 }
 
+func (c *Client) Unmaximize() {
+	if !c.canMaxUnmax() {
+		return
+	}
+	if c.Maximized() {
+		c.unmaximize()
+		c.LoadState("before-maximize")
+	}
+}
+
 func (c *Client) maximize() {
+	if !c.canMaxUnmax() {
+		return
+	}
+
 	c.maximized = true
 	c.frames.maximize()
 
@@ -72,10 +91,23 @@ func (c *Client) maximize() {
 }
 
 func (c *Client) unmaximize() {
+	if c.Workspace() == nil || !c.Workspace().IsVisible() {
+		return
+	}
 	if c.maximized {
 		c.maximized = false
 		c.frames.unmaximize()
 	}
+}
+
+func (c *Client) canMaxUnmax() bool {
+	if c.Workspace() == nil || !c.Workspace().IsVisible() {
+		return false
+	}
+	if _, ok := c.Layout().(layout.Floater); !ok {
+		return false
+	}
+	return true
 }
 
 func (c *Client) HeadGeom() xrect.Rect {

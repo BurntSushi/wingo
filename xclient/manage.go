@@ -5,6 +5,7 @@ import (
 
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
+	"github.com/BurntSushi/xgbutil/xrect"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/focus"
@@ -112,6 +113,18 @@ func (c *Client) maybeInitPlace() {
 
 	// We're good, do a placement.
 	wm.Workspace().LayoutFloater().InitialPlacement(wm.Workspace().Geom(), c)
+
+	// This is a hack. Before a client gets sucked into some layout, we
+	// always want to have some floating state to fall back on to. However,
+	// by the time we're "allowed" to save the client's state, it will have
+	// already been placed in the hands of some layout---which may or may not
+	// be floating. So we inject our own state forcefully here.
+	c.states["last-floating"] = clientState{
+		geom:      xrect.New(xrect.Pieces(c.frame.Geom())),
+		headGeom:  xrect.New(xrect.Pieces(wm.Workspace().Geom())),
+		frame:     c.frame,
+		maximized: c.maximized,
+	}
 }
 
 func (c *Client) fetchXProperties() {

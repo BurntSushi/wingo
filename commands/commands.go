@@ -32,10 +32,14 @@ var Env = gribble.New([]gribble.Command{
 	&FocusRaise{},
 	&FrameBorders{},
 	&FrameFull{},
+	&FrameNada{},
+	&FrameSlim{},
 	&HeadFocus{},
 	&HeadFocusWithClient{},
-	&IconifyToggle{},
-	&MaximizeToggle{},
+	&ToggleFloating{},
+	&ToggleIconify{},
+	&ToggleMaximize{},
+	&Maximize{},
 	&MouseMove{},
 	&MouseResize{},
 	&Move{},
@@ -46,35 +50,54 @@ var Env = gribble.New([]gribble.Command{
 	&Quit{},
 	&SelectClient{},
 	&SelectWorkspace{},
+	&SelectWorkspaceSendClient{},
 	&SelectWorkspaceWithClient{},
 	&Shell{},
 	&TileStart{},
 	&TileStop{},
+	&Unmaximize{},
+	&Workspace{},
 })
+
+var (
+	SafeExec = make(chan func() gribble.Value, 1)
+	SafeReturn = make(chan gribble.Value, 0)
+)
+
+func syncRun(f func() gribble.Value) gribble.Value {
+	SafeExec <- f
+	return <-SafeReturn
+}
 
 type Close struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 }
 
 func (cmd Close) Run() gribble.Value {
-	withClient(cmd.Client, func(c *xclient.Client) {
-		c.Close()
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.Close()
+		})
+		return nil
 	})
-	return nil
 }
 
 type CycleClientChoose struct{}
 
 func (cmd CycleClientChoose) Run() gribble.Value {
-	wm.Prompts.Cycle.Choose()
-	return nil
+	return syncRun(func() gribble.Value {
+		wm.Prompts.Cycle.Choose()
+		return nil
+	})
 }
 
-type CycleClientHide struct {}
+type CycleClientHide struct{}
 
 func (cmd CycleClientHide) Run() gribble.Value {
-	wm.Prompts.Cycle.Hide()
-	return nil
+	return syncRun(func() gribble.Value {
+		wm.Prompts.Cycle.Hide()
+		return nil
+	})
 }
 
 type CycleClientNext struct {
@@ -89,11 +112,14 @@ func (cmd CycleClientNext) Run() gribble.Value {
 }
 
 func (cmd CycleClientNext) RunWithKeyStr(keyStr string) {
-	wm.ShowCycleClient(keyStr,
-		stringBool(cmd.OnlyActiveWorkspace),
-		stringBool(cmd.OnlyVisible),
-		stringBool(cmd.ShowIconified))
-	wm.Prompts.Cycle.Next()
+	syncRun(func() gribble.Value {
+		wm.ShowCycleClient(keyStr,
+			stringBool(cmd.OnlyActiveWorkspace),
+			stringBool(cmd.OnlyVisible),
+			stringBool(cmd.ShowIconified))
+		wm.Prompts.Cycle.Next()
+		return nil
+	})
 }
 
 type CycleClientPrev struct {
@@ -108,11 +134,14 @@ func (cmd CycleClientPrev) Run() gribble.Value {
 }
 
 func (cmd CycleClientPrev) RunWithKeyStr(keyStr string) {
-	wm.ShowCycleClient(keyStr,
-		stringBool(cmd.OnlyActiveWorkspace),
-		stringBool(cmd.OnlyVisible),
-		stringBool(cmd.ShowIconified))
-	wm.Prompts.Cycle.Prev()
+	syncRun(func() gribble.Value {
+		wm.ShowCycleClient(keyStr,
+			stringBool(cmd.OnlyActiveWorkspace),
+			stringBool(cmd.OnlyVisible),
+			stringBool(cmd.ShowIconified))
+		wm.Prompts.Cycle.Prev()
+		return nil
+	})
 }
 
 type Focus struct {
@@ -120,29 +149,32 @@ type Focus struct {
 }
 
 func (cmd Focus) Run() gribble.Value {
-	withClient(cmd.Client, func(c *xclient.Client) {
-		if c == nil {
-			focus.Root()
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			if c == nil {
+				focus.Root()
 
-			// Use the mouse coordinates to find which workspace it was
-			// clicked in. If a workspace can be found (i.e., no clicks in
-			// dead areas), then activate it.
-			qp, err := xproto.QueryPointer(wm.X.Conn(), wm.X.RootWin()).Reply()
-			if err != nil {
-				logger.Warning.Printf("Could not query pointer: %s", err)
-				return
-			}
+				// Use the mouse coordinates to find which workspace it was
+				// clicked in. If a workspace can be found (i.e., no clicks in
+				// dead areas), then activate it.
+				xc, rw := wm.X.Conn(), wm.X.RootWin()
+				qp, err := xproto.QueryPointer(xc, rw).Reply()
+				if err != nil {
+					logger.Warning.Printf("Could not query pointer: %s", err)
+					return
+				}
 
-			geom := xrect.New(int(qp.RootX), int(qp.RootY), 1, 1)
-			if wrk := wm.Heads.FindMostOverlap(geom); wrk != nil {
-				wrk.Activate(false)
+				geom := xrect.New(int(qp.RootX), int(qp.RootY), 1, 1)
+				if wrk := wm.Heads.FindMostOverlap(geom); wrk != nil {
+					wrk.Activate(false)
+				}
+			} else {
+				focus.Focus(c)
+				xevent.ReplayPointer(wm.X)
 			}
-		} else {
-			focus.Focus(c)
-			xevent.ReplayPointer(wm.X)
-		}
+		})
+		return nil
 	})
-	return nil
 }
 
 type FocusRaise struct {
@@ -150,12 +182,14 @@ type FocusRaise struct {
 }
 
 func (cmd FocusRaise) Run() gribble.Value {
-	withClient(cmd.Client, func(c *xclient.Client) {
-		focus.Focus(c)
-		stack.Raise(c)
-		xevent.ReplayPointer(wm.X)
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			focus.Focus(c)
+			stack.Raise(c)
+			xevent.ReplayPointer(wm.X)
+		})
+		return nil
 	})
-	return nil
 }
 
 type FrameBorders struct {
@@ -163,10 +197,12 @@ type FrameBorders struct {
 }
 
 func (cmd FrameBorders) Run() gribble.Value {
-	withClient(cmd.Client, func(c *xclient.Client) {
-		c.FrameBorders()
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.FrameBorders()
+		})
+		return nil
 	})
-	return nil
 }
 
 type FrameFull struct {
@@ -174,23 +210,53 @@ type FrameFull struct {
 }
 
 func (cmd FrameFull) Run() gribble.Value {
-	withClient(cmd.Client, func(c *xclient.Client) {
-		c.FrameFull()
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.FrameFull()
+		})
+		return nil
 	})
-	return nil
+}
+
+type FrameNada struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd FrameNada) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.FrameNada()
+		})
+		return nil
+	})
+}
+
+type FrameSlim struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd FrameSlim) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.FrameSlim()
+		})
+		return nil
+	})
 }
 
 type HeadFocus struct {
-	Head int    `param:"1"`
+	Head int `param:"1"`
 }
 
 func (cmd HeadFocus) Run() gribble.Value {
-	wm.Heads.WithVisibleWorkspace(cmd.Head,
-		func(wrk *workspace.Workspace) {
-			wrk.Activate(false)
-		})
-	wm.FocusFallback()
-	return nil
+	return syncRun(func() gribble.Value {
+		wm.Heads.WithVisibleWorkspace(cmd.Head,
+			func(wrk *workspace.Workspace) {
+				wrk.Activate(false)
+			})
+		wm.FocusFallback()
+		return nil
+	})
 }
 
 type HeadFocusWithClient struct {
@@ -199,40 +265,72 @@ type HeadFocusWithClient struct {
 }
 
 func (cmd HeadFocusWithClient) Run() gribble.Value {
-	withClient(cmd.Client, func(c *xclient.Client) {
-		wm.Heads.WithVisibleWorkspace(cmd.Head,
-			func(wrk *workspace.Workspace) {
-				wrk.Activate(false)
-				wrk.Add(c)
-				stack.Raise(c)
-			})
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			wm.Heads.WithVisibleWorkspace(cmd.Head,
+				func(wrk *workspace.Workspace) {
+					wrk.Activate(false)
+					wrk.Add(c)
+					stack.Raise(c)
+				})
+		})
+		return nil
 	})
-	return nil
 }
 
-type IconifyToggle struct {
+type ToggleFloating struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 }
 
-func (cmd IconifyToggle) Run() gribble.Value {
-	withClient(cmd.Client, func(c *xclient.Client) {
-		c.Workspace().IconifyToggle(c)
+func (cmd ToggleFloating) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.FloatingToggle()
+		})
+		return nil
 	})
-	return nil
 }
 
-type MaximizeToggle struct {
+type ToggleIconify struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 }
 
-func (cmd MaximizeToggle) Run() gribble.Value {
-	withClient(cmd.Client, func(c *xclient.Client) {
-		c.MaximizeToggle()
+func (cmd ToggleIconify) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.Workspace().IconifyToggle(c)
+		})
+		return nil
 	})
-	return nil
 }
 
-type MouseMove struct {}
+type ToggleMaximize struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd ToggleMaximize) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.MaximizeToggle()
+		})
+		return nil
+	})
+}
+
+type Maximize struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd Maximize) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.Maximize()
+		})
+		return nil
+	})
+}
+
+type MouseMove struct{}
 
 func (cmd MouseMove) Run() gribble.Value { return nil }
 
@@ -247,11 +345,13 @@ type Raise struct {
 }
 
 func (cmd Raise) Run() gribble.Value {
-	withClient(cmd.Client, func(c *xclient.Client) {
-		stack.Raise(c)
-		xevent.ReplayPointer(wm.X)
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			stack.Raise(c)
+			xevent.ReplayPointer(wm.X)
+		})
+		return nil
 	})
-	return nil
 }
 
 type Move struct {
@@ -261,38 +361,44 @@ type Move struct {
 }
 
 func (cmd Move) Run() gribble.Value {
-	x, xok := parsePos(cmd.X, false)
-	y, yok := parsePos(cmd.Y, true)
-	if !xok || !yok {
+	return syncRun(func() gribble.Value {
+		x, xok := parsePos(cmd.X, false)
+		y, yok := parsePos(cmd.Y, true)
+		if !xok || !yok {
+			return nil
+		}
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.LayoutMove(x, y)
+		})
 		return nil
-	}
-	withClient(cmd.Client, func(c *xclient.Client) {
-		c.LayoutMove(x, y)
 	})
-	return nil
 }
 
 type MovePointerAbsolute struct {
-	X    int    `param:"1"`
-	Y    int    `param:"2"`
+	X int `param:"1"`
+	Y int `param:"2"`
 }
 
 func (cmd MovePointerAbsolute) Run() gribble.Value {
-	xproto.WarpPointer(wm.X.Conn(), 0, wm.X.RootWin(), 0, 0, 0, 0,
-		int16(cmd.X), int16(cmd.Y))
-	return nil
+	return syncRun(func() gribble.Value {
+		xproto.WarpPointer(wm.X.Conn(), 0, wm.X.RootWin(), 0, 0, 0, 0,
+			int16(cmd.X), int16(cmd.Y))
+		return nil
+	})
 }
 
 type MovePointerRelative struct {
-	X    int    `param:"1"`
-	Y    int    `param:"2"`
+	X int `param:"1"`
+	Y int `param:"2"`
 }
 
 func (cmd MovePointerRelative) Run() gribble.Value {
-	geom := wm.Workspace().Geom()
-	xproto.WarpPointer(wm.X.Conn(), 0, wm.X.RootWin(), 0, 0, 0, 0,
-		int16(geom.X()+cmd.X), int16(geom.Y()+cmd.Y))
-	return nil
+	return syncRun(func() gribble.Value {
+		geom := wm.Workspace().Geom()
+		xproto.WarpPointer(wm.X.Conn(), 0, wm.X.RootWin(), 0, 0, 0, 0,
+			int16(geom.X()+cmd.X), int16(geom.Y()+cmd.Y))
+		return nil
+	})
 }
 
 type Resize struct {
@@ -302,23 +408,27 @@ type Resize struct {
 }
 
 func (cmd Resize) Run() gribble.Value {
-	w, wok := parseDim(cmd.Width, false)
-	h, hok := parseDim(cmd.Height, true)
-	if !wok || !hok {
+	return syncRun(func() gribble.Value {
+		w, wok := parseDim(cmd.Width, false)
+		h, hok := parseDim(cmd.Height, true)
+		if !wok || !hok {
+			return nil
+		}
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.LayoutResize(w, h)
+		})
 		return nil
-	}
-	withClient(cmd.Client, func(c *xclient.Client) {
-		c.LayoutResize(w, h)
 	})
-	return nil
 }
 
-type Quit struct {}
+type Quit struct{}
 
 func (cmd Quit) Run() gribble.Value {
-	logger.Message.Println("The User has told us to quit.")
-	xevent.Quit(wm.X)
-	return nil
+	return syncRun(func() gribble.Value {
+		logger.Message.Println("The User has told us to quit.")
+		xevent.Quit(wm.X)
+		return nil
+	})
 }
 
 type SelectClient struct {
@@ -337,18 +447,63 @@ func (cmd SelectClient) Run() gribble.Value {
 	return nil
 }
 
+type Workspace struct {
+	Name string `param:"1"`
+}
+
+func (cmd Workspace) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		if wrk := wm.Heads.Workspaces.Find(cmd.Name); wrk != nil {
+			wrk.Activate(false)
+		}
+		return nil
+	})
+}
+
 type SelectWorkspace struct {
 	TabCompletion string `param:"1"`
 }
 
 func (cmd SelectWorkspace) Run() gribble.Value {
+	selected := make(chan string, 1)
+
 	data := workspace.SelectData{
 		Selected: func(wrk *workspace.Workspace) {
-			wrk.Activate(true)
+			selected <- wrk.Name
 		},
 		Highlighted: nil,
 	}
 	wm.ShowSelectWorkspace(stringTabComp(cmd.TabCompletion), data)
+
+	for {
+		select {
+		case wrkName := <-selected:
+			return wrkName
+		case <-time.After(5 * time.Second):
+			if !wm.Prompts.Slct.Showing() {
+				return ""
+			}
+			println("continuing...")
+		}
+	}
+	panic("unreachable")
+}
+
+type SelectWorkspaceSendClient struct {
+	TabCompletion string      `param:"1"`
+	Client        gribble.Any `param:"2" types:"int,string"`
+}
+
+func (cmd SelectWorkspaceSendClient) Run() gribble.Value {
+	withClient(cmd.Client, func(c *xclient.Client) {
+		data := workspace.SelectData{
+			Selected: func(wrk *workspace.Workspace) {
+				wrk.Add(c)
+			},
+			Highlighted: nil,
+		}
+		wm.ShowSelectWorkspace(stringTabComp(cmd.TabCompletion), data)
+	})
 	return nil
 }
 
@@ -442,16 +597,33 @@ func (cmd Shell) Run() gribble.Value {
 	return nil
 }
 
-type TileStart struct {}
+type TileStart struct{}
 
 func (cmd TileStart) Run() gribble.Value {
-	wm.Workspace().LayoutStateSet(workspace.AutoTiling)
-	return nil
+	return syncRun(func() gribble.Value {
+		wm.Workspace().LayoutStateSet(workspace.AutoTiling)
+		return nil
+	})
 }
 
-type TileStop struct {}
+type TileStop struct{}
 
 func (cmd TileStop) Run() gribble.Value {
-	wm.Workspace().LayoutStateSet(workspace.Floating)
-	return nil
+	return syncRun(func() gribble.Value {
+		wm.Workspace().LayoutStateSet(workspace.Floating)
+		return nil
+	})
+}
+
+type Unmaximize struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd Unmaximize) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.Unmaximize()
+		})
+		return nil
+	})
 }

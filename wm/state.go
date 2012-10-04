@@ -82,7 +82,13 @@ func FindManagedClient(id xproto.Window) Client {
 }
 
 func FocusFallback() {
-	focus.Fallback(Workspace())
+	focus.Fallback(focusable)
+}
+
+func focusable(client focus.Client) bool {
+	c := client.(Client)
+	wrk := Workspace()
+	return c.IsMapped() && c.Workspace() == wrk && !c.ImminentDestruction()
 }
 
 func Workspace() *workspace.Workspace {

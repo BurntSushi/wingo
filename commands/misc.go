@@ -109,6 +109,8 @@ func withClient(clientArg gribble.Any, f func(c *xclient.Client)) {
 		return
 	case string:
 		switch c {
+		case ":void:":
+			return
 		case ":mouse:":
 			wid := xproto.Window(wm.MouseClientClicked)
 			if client := wm.FindManagedClient(wid); client != nil {

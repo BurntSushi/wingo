@@ -118,6 +118,10 @@ func NewSelect(X *xgbutil.XUtil,
 	return slct
 }
 
+func (slct *Select) Showing() bool {
+	return slct.showing
+}
+
 func (slct *Select) Destroy() {
 	slct.input.Destroy()
 	slct.bInp.Destroy()
