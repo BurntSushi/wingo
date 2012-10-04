@@ -156,7 +156,7 @@ func (mcmd mouseCommand) attachGrabRelease(wid xproto.Window, run func()) {
 
 func rootMouseSetup() {
 	for _, mcmd := range Config.mouse["root"] {
-		run := func() { gribbleEnv.Run(mcmd.cmdStr) }
+		run := func() { go gribbleEnv.Run(mcmd.cmdStr) }
 		mcmd.attach(Root.Id, run, false, false)
 	}
 }
