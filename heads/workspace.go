@@ -7,6 +7,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xrect"
 
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/workspace"
 )
 
@@ -148,12 +149,8 @@ func (hds *Heads) NextWorkspace() *workspace.Workspace {
 
 func (hds *Heads) PrevWorkspace() *workspace.Workspace {
 	if cur := hds.globalIndex(hds.ActiveWorkspace()); cur > -1 {
-		// I fucking hate Go's module operator. WTF.
-		prev := (cur - 1) % len(hds.Workspaces.Wrks)
-		if cur == 0 {
-			prev = len(hds.Workspaces.Wrks) - 1
-		}
-		return hds.Workspaces.Get(prev)
+		// I fucking hate Go's modulo operator. WTF.
+		return hds.Workspaces.Get(misc.Mod(cur-1, len(hds.Workspaces.Wrks)))
 	}
 	panic("bug")
 }
