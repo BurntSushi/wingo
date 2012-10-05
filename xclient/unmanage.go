@@ -31,6 +31,10 @@ func (c *Client) unmanage() {
 	stack.Remove(c)
 	c.workspace.Remove(c)
 	wm.RemoveClient(c)
+
+	if c.hadStruts {
+		wm.Heads.ApplyStruts(wm.Clients)
+	}
 }
 
 func (c *Client) ImminentDestruction() bool {

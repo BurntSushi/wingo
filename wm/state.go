@@ -22,6 +22,7 @@ var (
 	Prompts    AllPrompts
 	Config     *Configuration
 	Theme      *ThemeConfig
+	StickyWrk  *workspace.Sticky
 	gribbleEnv *gribble.Environment
 	cmdHacks   CommandHacks
 )
@@ -57,6 +58,8 @@ func Init(x *xgbutil.XUtil, cmdEnv *gribble.Environment, hacks CommandHacks) {
 
 	keybindings()
 	rootMouseSetup()
+
+	StickyWrk = Heads.Workspaces.NewSticky()
 }
 
 func AddClient(c Client) {
@@ -85,10 +88,15 @@ func FocusFallback() {
 	focus.Fallback(focusable)
 }
 
+// func Focused() Client { 
+// } 
+
 func focusable(client focus.Client) bool {
 	c := client.(Client)
 	wrk := Workspace()
-	return c.IsMapped() && c.Workspace() == wrk && !c.ImminentDestruction()
+	return c.IsMapped() &&
+		(c.Workspace() == wrk || c.Workspace() == StickyWrk) &&
+		!c.ImminentDestruction()
 }
 
 func Workspace() *workspace.Workspace {

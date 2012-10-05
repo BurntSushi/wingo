@@ -79,6 +79,10 @@ func (wrk *Workspace) Activate(greedy bool) {
 }
 
 func (wrk *Workspace) Add(c Client) {
+	if c.IsSticky() {
+		return
+	}
+
 	current := c.Workspace()
 	if current == wrk {
 		return

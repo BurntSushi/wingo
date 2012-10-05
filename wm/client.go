@@ -14,7 +14,7 @@ type Client interface {
 	Frame() frame.Frame
 	IsMapped() bool
 	Iconified() bool
-	Workspace() *workspace.Workspace
+	Workspace() workspace.Workspacer
 	ImminentDestruction() bool
 
 	CycleItem() *prompt.CycleItem

@@ -6,16 +6,20 @@ import (
 
 func (c *Client) ShouldForceFloating() bool {
 	return c.floating ||
+		c.sticky ||
 		c.transientFor != nil ||
 		c.primaryType != clientTypeNormal
 }
 
 func (c *Client) FloatingToggle() {
-	c.floating = !c.floating
-	c.Workspace().CheckFloatingStatus(c)
+	// Doesn't work on sticky windows. They are already floating.
+	if wrk, ok := c.Workspace().(*workspace.Workspace); ok {
+		c.floating = !c.floating
+		wrk.CheckFloatingStatus(c)
+	}
 }
 
-func (c *Client) Workspace() *workspace.Workspace {
+func (c *Client) Workspace() workspace.Workspacer {
 	return c.workspace
 }
 

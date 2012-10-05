@@ -3,7 +3,6 @@ package wm
 import (
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/prompt"
-	"github.com/BurntSushi/wingo/workspace"
 )
 
 type AllPrompts struct {
@@ -61,7 +60,9 @@ func ShowCycleClient(keyStr string, activeWrk, visible, iconified bool) {
 	Prompts.Cycle.Show(Workspace().Geom(), keyStr, items)
 }
 
-func ShowSelectClient(tabComp int, activeWrk, visible, iconified bool) {
+func ShowSelectClient(tabComp int, activeWrk, visible, iconified bool,
+	data interface{}) {
+
 	allWrks := Heads.Workspaces.Wrks
 
 	groups := make([]*prompt.SelectShowGroup, len(allWrks))
@@ -80,10 +81,10 @@ func ShowSelectClient(tabComp int, activeWrk, visible, iconified bool) {
 		groups[i] = wrk.PromptSlctGroup.ShowGroup(items)
 	}
 
-	Prompts.Slct.Show(Workspace().Geom(), tabComp, groups, nil)
+	Prompts.Slct.Show(Workspace().Geom(), tabComp, groups, data)
 }
 
-func ShowSelectWorkspace(tabComp int, data workspace.SelectData) {
+func ShowSelectWorkspace(tabComp int, data interface{}) {
 	allWrks := Heads.Workspaces.Wrks
 	visibles := Heads.VisibleWorkspaces()
 

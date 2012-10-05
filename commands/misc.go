@@ -10,6 +10,7 @@ import (
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/prompt"
+	"github.com/BurntSushi/wingo/workspace"
 	"github.com/BurntSushi/wingo/wm"
 	"github.com/BurntSushi/wingo/xclient"
 )
@@ -86,45 +87,61 @@ func stringTabComp(s string) int {
 
 // Shortcut for executing Client interface functions that have no parameters
 // and no return values on the currently focused window.
-func withFocused(f func(c *xclient.Client)) {
+func withFocused(f func(c *xclient.Client)) gribble.Any {
 	if focused := focus.Current(); focused != nil {
-		f(focused.(*xclient.Client))
+		client := focused.(*xclient.Client)
+		f(client)
+		return int(client.Id())
 	}
+	return ":void:"
 }
 
-func withClient(clientArg gribble.Any, f func(c *xclient.Client)) {
-	switch c := clientArg.(type) {
+func withClient(cArg gribble.Any, f func(c *xclient.Client)) gribble.Any {
+	switch c := cArg.(type) {
 	case int:
 		if c == 0 {
-			withFocused(f)
-			return
+			return withFocused(f)
 		}
 		for _, client_ := range wm.Clients {
 			client := client_.(*xclient.Client)
 			if int(client.Id()) == c {
 				f(client)
-				return
+				return int(client.Id())
 			}
 		}
-		return
+		return ":void:"
 	case string:
 		switch c {
 		case ":void:":
-			return
+			return ":void:"
 		case ":mouse:":
 			wid := xproto.Window(wm.MouseClientClicked)
 			if client := wm.FindManagedClient(wid); client != nil {
-				f(client.(*xclient.Client))
+				c := client.(*xclient.Client)
+				f(c)
+				return int(c.Id())
 			} else {
 				f(nil)
+				return ":void:"
 			}
 		case ":active:":
-			withFocused(f)
+			return withFocused(f)
 		default:
 			panic("Client name Not implemented: " + c)
 		}
-		return
 	}
 	panic("unreachable")
 }
 
+func withWorkspace(wArg gribble.Any, f func(wrk *workspace.Workspace)) {
+	switch w := wArg.(type) {
+	case int:
+		if wrk := wm.Heads.Workspaces.Get(w); wrk != nil {
+			f(wrk)
+		}
+	case string:
+		if wrk := wm.Heads.Workspaces.Find(w); wrk != nil {
+			f(wrk)
+		}
+	}
+}

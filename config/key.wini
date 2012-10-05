@@ -12,6 +12,7 @@ Mod1-Shift-t := Resize ":active:" 0.5 0.5
 Mod1-a := TileStart
 Mod1-u := TileStop
 Mod1-f := ToggleFloating ":active:"
+Mod1-s := ToggleSticky ":active:"
 
 Mod1-w := HeadFocus 0
 Mod1-w := MovePointerRelative 0 0
@@ -31,21 +32,21 @@ Mod1-Shift-e := MovePointerRelative 0 0
 Mod1-Shift-r := HeadFocusWithClient 2 ":active:"
 Mod1-Shift-r := MovePointerRelative 0 0
 
-Mod4-left := WorkspaceLeft
-Mod4-right := WorkspaceRight
-Mod4-Shift-left := WorkspaceLeftWithClient
-Mod4-Shift-right := WorkspaceRightWithClient
+Mod4-left := Workspace (GetWorkspacePrev)
+Mod4-right := Workspace (GetWorkspaceNext)
+Mod4-Shift-left := WorkspaceWithClient (GetWorkspacePrev) ":active:"
+Mod4-Shift-right := WorkspaceWithClient (GetWorkspaceNext) ":active:"
 
 Control-Mod1-a := WorkspacePrefix "a"
 Control-Mod1-Shift-a := WorkspacePrefixWithClient "a"
 
-Mod4-1 := Workspace "A1"
-Mod4-Shift-1 := WorkspaceSetClient "A1"
-Mod4-2 := Workspace "A2"
-Mod4-3 := Workspace "A3"
-Mod4-4 := Workspace "A4"
-Mod4-5 := Workspace "A5"
-Mod4-6 := Workspace "A6"
+Mod4-1 := Workspace "1"
+Mod4-Shift-1 := WorkspaceWithClient "1" ":active:"
+Mod4-2 := Workspace "2"
+Mod4-3 := Workspace "3"
+Mod4-4 := Workspace "4"
+Mod4-5 := Workspace "5"
+Mod4-6 := Workspace "6"
 
 Mod1-1 := FrameNada ":active:"
 Mod1-2 := FrameSlim ":active:"
@@ -55,9 +56,8 @@ Mod1-4 := FrameFull ":active:"
 Mod1-Tab := CycleClientNext "yes" "no" "yes"
 Mod1-Shift-Tab := CycleClientPrev "yes" "no" "yes"
 
-Mod4-space := SelectClient "Any" "no" "no" "yes"
-# Mod4-return := SelectWorkspace "Prefix" 
+Mod4-space := FocusRaise (SelectClient "Any" "no" "no" "yes")
 Mod4-return := Workspace (SelectWorkspace "Prefix")
-Mod4-Shift-return := SelectWorkspaceWithClient "Prefix" ":active:"
-Mod4-Shift-s := SelectWorkspaceSendClient "Prefix" ":active:"
+Mod4-Shift-return := WorkspaceWithClient (SelectWorkspace "Prefix") ":active:"
+Mod4-Shift-s := WorkspaceSendClient (SelectWorkspace "Prefix") (SelectClient "Any" "no" "no" "yes")
 

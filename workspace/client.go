@@ -11,7 +11,7 @@ import (
 type Client interface {
 	Id() xproto.Window
 	String() string
-	Workspace() *Workspace
+	Workspace() Workspacer
 	WorkspaceSet(wrk *Workspace)
 	Layout() layout.Layout
 	Map()
@@ -22,6 +22,7 @@ type Client interface {
 
 	Iconified() bool
 	IconifiedSet(iconified bool)
+	IsSticky() bool
 
 	HasState(name string) bool
 	SaveState(name string)

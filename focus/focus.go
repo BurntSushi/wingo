@@ -34,6 +34,13 @@ func Current() Client {
 	return nil
 }
 
+func LastCurrent() Client {
+	if len(Clients) == 0 {
+		return nil
+	}
+	return Clients[len(Clients)-1]
+}
+
 func Remove(c Client) {
 	for i, c2 := range Clients {
 		if c.Id() == c2.Id() {

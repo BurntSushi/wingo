@@ -139,9 +139,37 @@ func (hds *Heads) Geom(wrk *workspace.Workspace) xrect.Rect {
 	return nil
 }
 
+func (hds *Heads) NextWorkspace() *workspace.Workspace {
+	if cur := hds.globalIndex(hds.ActiveWorkspace()); cur > -1 {
+		return hds.Workspaces.Get((cur + 1) % len(hds.Workspaces.Wrks))
+	}
+	panic("bug")
+}
+
+func (hds *Heads) PrevWorkspace() *workspace.Workspace {
+	if cur := hds.globalIndex(hds.ActiveWorkspace()); cur > -1 {
+		// I fucking hate Go's module operator. WTF.
+		prev := (cur - 1) % len(hds.Workspaces.Wrks)
+		if cur == 0 {
+			prev = len(hds.Workspaces.Wrks) - 1
+		}
+		return hds.Workspaces.Get(prev)
+	}
+	panic("bug")
+}
+
 func (hds *Heads) visibleIndex(wk *workspace.Workspace) int {
 	for i, vwk := range hds.visibles {
 		if vwk == wk {
+			return i
+		}
+	}
+	return -1
+}
+
+func (hds *Heads) globalIndex(wkNeedle *workspace.Workspace) int {
+	for i, wk := range hds.Workspaces.Wrks {
+		if wk == wkNeedle {
 			return i
 		}
 	}

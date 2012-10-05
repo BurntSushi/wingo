@@ -76,14 +76,23 @@ func (c *Client) CycleHighlighted() {
 
 // Satisfy the prompt.SelectChoice interface.
 
+type SelectData struct {
+	Selected    func(c *Client)
+	Highlighted func(c *Client)
+}
+
 func (c *Client) SelectText() string {
 	return c.String()
 }
 
 func (c *Client) SelectSelected(data interface{}) {
-	focus.Focus(c)
-	stack.Raise(c)
+	if f := data.(SelectData).Selected; f != nil {
+		f(c)
+	}
 }
 
 func (c *Client) SelectHighlighted(data interface{}) {
+	if f := data.(SelectData).Highlighted; f != nil {
+		f(c)
+	}
 }

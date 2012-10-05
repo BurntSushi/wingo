@@ -6,5 +6,5 @@ always_floating := gmrun
 
 [Workspaces]
 # workspaces := Awork Bwork Cwork Dwork Ework 
-workspaces := A1 A2 A3 A4 A5 A6
+workspaces := 1 2 3 4 5 6
 

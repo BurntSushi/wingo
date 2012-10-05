@@ -39,6 +39,7 @@ var Env = gribble.New([]gribble.Command{
 	&ToggleFloating{},
 	&ToggleIconify{},
 	&ToggleMaximize{},
+	&ToggleSticky{},
 	&Maximize{},
 	&MouseMove{},
 	&MouseResize{},
@@ -50,13 +51,16 @@ var Env = gribble.New([]gribble.Command{
 	&Quit{},
 	&SelectClient{},
 	&SelectWorkspace{},
-	&SelectWorkspaceSendClient{},
-	&SelectWorkspaceWithClient{},
 	&Shell{},
 	&TileStart{},
 	&TileStop{},
 	&Unmaximize{},
 	&Workspace{},
+	&WorkspaceSendClient{},
+	&WorkspaceWithClient{},
+
+	&GetWorkspaceNext{},
+	&GetWorkspacePrev{},
 })
 
 var (
@@ -150,7 +154,7 @@ type Focus struct {
 
 func (cmd Focus) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
-		withClient(cmd.Client, func(c *xclient.Client) {
+		return withClient(cmd.Client, func(c *xclient.Client) {
 			if c == nil {
 				focus.Root()
 
@@ -173,7 +177,6 @@ func (cmd Focus) Run() gribble.Value {
 				xevent.ReplayPointer(wm.X)
 			}
 		})
-		return nil
 	})
 }
 
@@ -183,12 +186,11 @@ type FocusRaise struct {
 
 func (cmd FocusRaise) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
-		withClient(cmd.Client, func(c *xclient.Client) {
+		return withClient(cmd.Client, func(c *xclient.Client) {
 			focus.Focus(c)
 			stack.Raise(c)
 			xevent.ReplayPointer(wm.X)
 		})
-		return nil
 	})
 }
 
@@ -317,6 +319,19 @@ func (cmd ToggleMaximize) Run() gribble.Value {
 	})
 }
 
+type ToggleSticky struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd ToggleSticky) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.StickyToggle()
+		})
+		return nil
+	})
+}
+
 type Maximize struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 }
@@ -346,11 +361,10 @@ type Raise struct {
 
 func (cmd Raise) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
-		withClient(cmd.Client, func(c *xclient.Client) {
+		return withClient(cmd.Client, func(c *xclient.Client) {
 			stack.Raise(c)
 			xevent.ReplayPointer(wm.X)
 		})
-		return nil
 	})
 }
 
@@ -439,25 +453,32 @@ type SelectClient struct {
 }
 
 func (cmd SelectClient) Run() gribble.Value {
+	selected := make(chan int, 1)
+
+	data := xclient.SelectData{
+		Selected: func(c *xclient.Client) {
+			selected <- int(c.Id())
+		},
+		Highlighted: nil,
+	}
 	wm.ShowSelectClient(
 		stringTabComp(cmd.TabCompletion),
 		stringBool(cmd.OnlyActiveWorkspace),
 		stringBool(cmd.OnlyVisible),
-		stringBool(cmd.ShowIconified))
-	return nil
-}
+		stringBool(cmd.ShowIconified),
+		data)
 
-type Workspace struct {
-	Name string `param:"1"`
-}
-
-func (cmd Workspace) Run() gribble.Value {
-	return syncRun(func() gribble.Value {
-		if wrk := wm.Heads.Workspaces.Find(cmd.Name); wrk != nil {
-			wrk.Activate(false)
+	for {
+		select {
+		case clientId := <-selected:
+			return clientId
+		case <-time.After(10 * time.Second):
+			if !wm.Prompts.Slct.Showing() {
+				return ":void:"
+			}
 		}
-		return nil
-	})
+	}
+	panic("unreachable")
 }
 
 type SelectWorkspace struct {
@@ -486,43 +507,6 @@ func (cmd SelectWorkspace) Run() gribble.Value {
 		}
 	}
 	panic("unreachable")
-}
-
-type SelectWorkspaceSendClient struct {
-	TabCompletion string      `param:"1"`
-	Client        gribble.Any `param:"2" types:"int,string"`
-}
-
-func (cmd SelectWorkspaceSendClient) Run() gribble.Value {
-	withClient(cmd.Client, func(c *xclient.Client) {
-		data := workspace.SelectData{
-			Selected: func(wrk *workspace.Workspace) {
-				wrk.Add(c)
-			},
-			Highlighted: nil,
-		}
-		wm.ShowSelectWorkspace(stringTabComp(cmd.TabCompletion), data)
-	})
-	return nil
-}
-
-type SelectWorkspaceWithClient struct {
-	TabCompletion string      `param:"1"`
-	Client        gribble.Any `param:"2" types:"int,string"`
-}
-
-func (cmd SelectWorkspaceWithClient) Run() gribble.Value {
-	withClient(cmd.Client, func(c *xclient.Client) {
-		data := workspace.SelectData{
-			Selected: func(wrk *workspace.Workspace) {
-				wrk.Add(c)
-				wrk.Activate(true)
-			},
-			Highlighted: nil,
-		}
-		wm.ShowSelectWorkspace(stringTabComp(cmd.TabCompletion), data)
-	})
-	return nil
 }
 
 // Shell takes a command specified in a configuration file and
@@ -625,4 +609,65 @@ func (cmd Unmaximize) Run() gribble.Value {
 		})
 		return nil
 	})
+}
+
+type Workspace struct {
+	Name gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd Workspace) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withWorkspace(cmd.Name, func(wrk *workspace.Workspace) {
+			wrk.Activate(false)
+			wm.FocusFallback()
+		})
+		return nil
+	})
+}
+
+type WorkspaceSendClient struct {
+	Name gribble.Any `param:"1" types:"int,string"`
+	Client gribble.Any `param:"2" types:"int,string"`
+}
+
+func (cmd WorkspaceSendClient) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withWorkspace(cmd.Name, func(wrk *workspace.Workspace) {
+			withClient(cmd.Client, func(c *xclient.Client) {
+				wrk.Add(c)
+			})
+		})
+		return nil
+	})
+}
+
+type WorkspaceWithClient struct {
+	Name gribble.Any `param:"1" types:"int,string"`
+	Client gribble.Any `param:"2" types:"int,string"`
+}
+
+func (cmd WorkspaceWithClient) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withWorkspace(cmd.Name, func(wrk *workspace.Workspace) {
+			withClient(cmd.Client, func(c *xclient.Client) {
+				stack.Raise(c)
+				wrk.Add(c)
+				wrk.Activate(false)
+				wm.FocusFallback()
+			})
+		})
+		return nil
+	})
+}
+
+type GetWorkspaceNext struct {}
+
+func (cmd GetWorkspaceNext) Run() gribble.Value {
+	return wm.Heads.NextWorkspace().Name
+}
+
+type GetWorkspacePrev struct {}
+
+func (cmd GetWorkspacePrev) Run() gribble.Value {
+	return wm.Heads.PrevWorkspace().Name
 }

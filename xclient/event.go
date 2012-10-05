@@ -150,6 +150,7 @@ func (c *Client) cbPropertyNotify() xevent.PropertyNotifyFun {
 				c.time = xproto.Timestamp(newTime)
 			}
 		case "_NET_WM_STRUT_PARTIAL":
+			c.maybeApplyStruts()
 		}
 
 	}

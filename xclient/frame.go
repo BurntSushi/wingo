@@ -248,7 +248,11 @@ func (c *Client) newClientFrames() clientFrames {
 	c.unmapIgnore++
 	cf := createFrames(c)
 
-	c.frame = cf.full
+	if c.primaryType == clientTypeNormal {
+		c.frame = cf.full
+	} else {
+		c.frame = cf.nada
+	}
 
 	x, y, w, h := frame.ClientToFrame(c.frame,
 		c.win.Geom.X(), c.win.Geom.Y(), c.win.Geom.Width(), c.win.Geom.Height())

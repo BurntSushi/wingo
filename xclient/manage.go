@@ -14,6 +14,7 @@ import (
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/stack"
 	"github.com/BurntSushi/wingo/wm"
+	"github.com/BurntSushi/wingo/workspace"
 )
 
 func New(id xproto.Window) *Client {
@@ -86,10 +87,50 @@ func (c *Client) manage() {
 
 	c.maybeInitPlace()
 	wm.AddClient(c)
-	focus.InitialAdd(c)
+	c.maybeAddToFocusStack()
 	stack.Raise(c)
-	wm.Workspace().Add(c)
 	c.attachEventCallbacks()
+	c.maybeApplyStruts()
+
+	if d, _ := ewmh.WmDesktopGet(wm.X, c.Id()); d == 0xFFFFFFFF {
+		c.stick()
+	} else {
+		c.unstick()
+	}
+}
+
+func (c *Client) IsSticky() bool {
+	return c.sticky
+}
+
+func (c *Client) StickyToggle() {
+	if c.sticky {
+		c.unstick()
+	} else {
+		c.stick()
+	}
+}
+
+func (c *Client) unstick() {
+	c.sticky = false
+	c.workspace = nil
+	wm.Workspace().Add(c)
+}
+
+func (c *Client) stick() {
+	c.sticky = true
+	if c.workspace != nil {
+		c.workspace.(*workspace.Workspace).CheckFloatingStatus(c)
+		c.workspace.Remove(c)
+	}
+	c.workspace = wm.StickyWrk
+}
+
+func (c *Client) maybeApplyStruts() {
+	if strut, _ := ewmh.WmStrutPartialGet(wm.X, c.Id()); strut != nil {
+		c.hadStruts = true
+		wm.Heads.ApplyStruts(wm.Clients)
+	}
 }
 
 func (c *Client) maybeInitPlace() {
@@ -186,6 +227,15 @@ func (c *Client) setPrimaryType() {
 	default:
 		c.primaryType = clientTypeNormal
 	}
+}
+
+func (c *Client) maybeAddToFocusStack() {
+	if c.primaryType == clientTypeDesktop ||
+		c.primaryType == clientTypeDock {
+
+		return
+	}
+	focus.InitialAdd(c)
 }
 
 func (c *Client) setInitialLayer() {

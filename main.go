@@ -23,8 +23,8 @@ import (
 
 func main() {
 	// giggity
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	// runtime.GOMAXPROCS(1) 
+	// runtime.GOMAXPROCS(runtime.NumCPU()) 
+	runtime.GOMAXPROCS(1)
 
 	X, err := xgbutil.NewConn()
 	if err != nil {

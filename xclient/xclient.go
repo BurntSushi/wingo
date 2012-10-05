@@ -27,7 +27,7 @@ const (
 type Client struct {
 	win       *xwindow.Window
 	frame     frame.Frame
-	workspace *workspace.Workspace
+	workspace workspace.Workspacer
 
 	frames  clientFrames
 	states  map[string]clientState
@@ -38,6 +38,7 @@ type Client struct {
 	layer     int // From constants in stack package.
 	maximized bool
 	iconified bool
+	sticky    bool // Belongs to no workspace.
 
 	primaryType  int // one of clientType[...]
 	winTypes     []string
@@ -55,7 +56,8 @@ type Client struct {
 	// floating, when true, this client will *always* be in the floating layer.
 	floating bool
 
-	dragGeom xrect.Rect
+	dragGeom  xrect.Rect
+	hadStruts bool
 }
 
 func (c *Client) IsMapped() bool {

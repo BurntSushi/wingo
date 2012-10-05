@@ -6,6 +6,7 @@ import (
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/wm"
+	"github.com/BurntSushi/wingo/workspace"
 )
 
 func (c *Client) CanFocus() bool {
@@ -39,7 +40,10 @@ func (c *Client) PrepareForFocus() {
 	// We must check for (1) before (2), since a window cannot toggle its
 	// iconification status if its workspace is not the current workspace.
 	if c.workspace != wm.Workspace() {
-		c.workspace.Activate(false) // don't be 'greedy'
+		// This isn't applicable if we're sticky.
+		if wrk, ok := c.workspace.(*workspace.Workspace); ok {
+			wrk.Activate(false) // don't be 'greedy'
+		}
 	}
 	if c.iconified {
 		c.workspace.IconifyToggle(c)
