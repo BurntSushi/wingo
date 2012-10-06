@@ -1,6 +1,7 @@
 package xclient
 
 import (
+	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
 
 	"github.com/BurntSushi/wingo/focus"
@@ -22,14 +23,17 @@ func (c *Client) IsActive() bool {
 }
 
 func (c *Client) Focused() {
+	c.attnStop()
 	c.frame.Active()
 	c.state = frame.Active
 	focus.SetFocus(c)
+	ewmh.ActiveWindowSet(wm.X, c.Id())
 }
 
 func (c *Client) Unfocused() {
 	c.frame.Inactive()
 	c.state = frame.Inactive
+	ewmh.ActiveWindowSet(wm.X, 0)
 }
 
 func (c *Client) PrepareForFocus() {
@@ -46,6 +50,6 @@ func (c *Client) PrepareForFocus() {
 		}
 	}
 	if c.iconified {
-		c.workspace.IconifyToggle(c)
+		c.IconifyToggle()
 	}
 }

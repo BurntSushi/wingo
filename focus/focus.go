@@ -12,13 +12,15 @@ import (
 )
 
 var (
-	X       *xgbutil.XUtil
-	Clients []Client
+	X         *xgbutil.XUtil
+	Clients   []Client
+	clientSet map[xproto.Window]bool // Constant time set of Clients
 )
 
 func Initialize(xu *xgbutil.XUtil) {
 	X = xu
 	Clients = make([]Client, 0, 100)
+	clientSet = make(map[xproto.Window]bool, 100)
 }
 
 func Current() Client {
@@ -45,13 +47,20 @@ func Remove(c Client) {
 	for i, c2 := range Clients {
 		if c.Id() == c2.Id() {
 			Clients = append(Clients[:i], Clients[i+1:]...)
+			delete(clientSet, c.Id())
 			break
 		}
 	}
 }
 
+func add(c Client) {
+	Clients = append(Clients, c)
+	clientSet[c.Id()] = true
+}
+
 func InitialAdd(c Client) {
 	Clients = append([]Client{c}, Clients...)
+	clientSet[c.Id()] = true
 }
 
 // SetFocus moves the given client to the top of the focus stack and does
@@ -59,14 +68,17 @@ func InitialAdd(c Client) {
 // has been discovered via Focus{In,Out} events.
 func SetFocus(c Client) {
 	Remove(c)
-	Clients = append(Clients, c)
+	add(c)
 }
 
 func Focus(c Client) {
-	Remove(c)
+	if !clientSet[c.Id()] {
+		return
+	}
 
+	Remove(c)
 	if c.CanFocus() || c.SendFocusNotify() {
-		Clients = append(Clients, c)
+		add(c)
 		c.PrepareForFocus()
 	}
 	if c.CanFocus() {
@@ -104,12 +116,19 @@ func Root() {
 }
 
 func Fallback(focusable func(c Client) bool) {
+	if c := LastFocused(focusable); c != nil {
+		Focus(c)
+	} else {
+		Root()
+	}
+}
+
+func LastFocused(focusable func(c Client) bool) Client {
 	for i := len(Clients) - 1; i >= 0; i-- {
 		c := Clients[i]
-		if focusable(c) {
-			Focus(c)
-			return
+		if clientSet[c.Id()] && focusable(c) {
+			return c
 		}
 	}
-	Root()
+	return nil
 }

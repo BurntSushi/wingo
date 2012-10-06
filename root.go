@@ -1,8 +1,17 @@
 package main
 
 import (
+	"fmt"
+
+	"github.com/BurntSushi/xgbutil"
+	"github.com/BurntSushi/xgbutil/xevent"
+
 	"github.com/BurntSushi/wingo/focus"
 )
+
+func handleClientMessages(X *xgbutil.XUtil, ev xevent.ClientMessageEvent) {
+	fmt.Println(ev)
+}
 
 func ignoreRootFocus(modeByte, detailByte byte) bool {
 	mode, detail := focus.Modes[modeByte], focus.Details[detailByte]

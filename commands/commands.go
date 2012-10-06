@@ -39,6 +39,8 @@ var Env = gribble.New([]gribble.Command{
 	&ToggleFloating{},
 	&ToggleIconify{},
 	&ToggleMaximize{},
+	&ToggleStackAbove{},
+	&ToggleStackBelow{},
 	&ToggleSticky{},
 	&Maximize{},
 	&MouseMove{},
@@ -64,7 +66,7 @@ var Env = gribble.New([]gribble.Command{
 })
 
 var (
-	SafeExec = make(chan func() gribble.Value, 1)
+	SafeExec   = make(chan func() gribble.Value, 1)
 	SafeReturn = make(chan gribble.Value, 0)
 )
 
@@ -300,7 +302,7 @@ type ToggleIconify struct {
 func (cmd ToggleIconify) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		withClient(cmd.Client, func(c *xclient.Client) {
-			c.Workspace().IconifyToggle(c)
+			c.IconifyToggle()
 		})
 		return nil
 	})
@@ -314,6 +316,32 @@ func (cmd ToggleMaximize) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		withClient(cmd.Client, func(c *xclient.Client) {
 			c.MaximizeToggle()
+		})
+		return nil
+	})
+}
+
+type ToggleStackAbove struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd ToggleStackAbove) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.StackAboveToggle()
+		})
+		return nil
+	})
+}
+
+type ToggleStackBelow struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd ToggleStackBelow) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.StackBelowToggle()
 		})
 		return nil
 	})
@@ -626,7 +654,7 @@ func (cmd Workspace) Run() gribble.Value {
 }
 
 type WorkspaceSendClient struct {
-	Name gribble.Any `param:"1" types:"int,string"`
+	Name   gribble.Any `param:"1" types:"int,string"`
 	Client gribble.Any `param:"2" types:"int,string"`
 }
 
@@ -642,7 +670,7 @@ func (cmd WorkspaceSendClient) Run() gribble.Value {
 }
 
 type WorkspaceWithClient struct {
-	Name gribble.Any `param:"1" types:"int,string"`
+	Name   gribble.Any `param:"1" types:"int,string"`
 	Client gribble.Any `param:"2" types:"int,string"`
 }
 
@@ -660,13 +688,24 @@ func (cmd WorkspaceWithClient) Run() gribble.Value {
 	})
 }
 
-type GetWorkspaceNext struct {}
+type GetWorkspaceNext struct{}
 
 func (cmd GetWorkspaceNext) Run() gribble.Value {
 	return wm.Heads.NextWorkspace().Name
 }
 
-type GetWorkspacePrev struct {}
+type GetWorkspacePrefix struct {
+	Prefix string `param:"1"`
+	Help   string `
+Some documentation.
+`
+}
+
+func (cmd GetWorkspacePrefix) Run() gribble.Value {
+	return nil
+}
+
+type GetWorkspacePrev struct{}
 
 func (cmd GetWorkspacePrev) Run() gribble.Value {
 	return wm.Heads.PrevWorkspace().Name

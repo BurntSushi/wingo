@@ -58,6 +58,10 @@ func (wrk *Workspace) Geom() xrect.Rect {
 	return wrk.all.heads.Geom(wrk)
 }
 
+func (wrk *Workspace) HeadGeom() xrect.Rect {
+	return wrk.all.heads.HeadGeom(wrk)
+}
+
 func (wrk *Workspace) IsActive() bool {
 	return wrk.all.heads.IsActive(wrk)
 }

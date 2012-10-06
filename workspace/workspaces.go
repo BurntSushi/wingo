@@ -18,6 +18,7 @@ type Heads interface {
 	VisibleWorkspaces() []*Workspace
 	IsActive(wrk *Workspace) bool
 	Geom(wrk *Workspace) xrect.Rect
+	HeadGeom(wrk *Workspace) xrect.Rect
 
 	ActivateWorkspace(wrk *Workspace)
 	SwitchWorkspaces(wrk1, wrk2 *Workspace)

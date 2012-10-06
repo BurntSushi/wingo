@@ -6,6 +6,8 @@ Mod4-c := Close ":active:"
 Mod1-Shift-c := Quit
 Mod4-x := ToggleMaximize ":active:"
 Mod4-i := ToggleIconify ":active:"
+Mod1-up := ToggleStackAbove ":active:"
+Mod1-down := ToggleStackBelow ":active:"
 Mod1-Shift-t := Move ":active:" 0.25 0.25
 Mod1-Shift-t := Resize ":active:" 0.5 0.5
 

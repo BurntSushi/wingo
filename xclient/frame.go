@@ -3,7 +3,9 @@ package xclient
 import (
 	"github.com/BurntSushi/xgb/xproto"
 
+	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
+	"github.com/BurntSushi/xgbutil/motif"
 	"github.com/BurntSushi/xgbutil/xrect"
 
 	"github.com/BurntSushi/wingo/frame"
@@ -11,6 +13,36 @@ import (
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/wm"
 )
+
+// shouldDecor returns false if the client has requested no frames or
+// has a type that implies it shouldn't be decorated.
+func (c *Client) shouldDecor() bool {
+	if c.primaryType != clientTypeNormal {
+		return false
+	}
+	if c.hasType("_NET_WM_WINDOW_TYPE_SPLASH") {
+		return false
+	}
+
+	mh, err := motif.WmHintsGet(wm.X, c.Id())
+	if err == nil && !motif.Decor(mh) {
+		return false
+	}
+
+	return true
+}
+
+// refreshExtents sets the _NET_FRAME_EXTENTS property whenever the frame
+// of a client changes. (Or on maximization.)
+func (c *Client) refreshExtents() {
+	exts := ewmh.FrameExtents{
+		Left:   c.frame.Left(),
+		Right:  c.frame.Right(),
+		Top:    c.frame.Top(),
+		Bottom: c.frame.Bottom(),
+	}
+	ewmh.FrameExtentsSet(wm.X, c.Id(), &exts)
+}
 
 // FrameFull switches this client's frame to the 'Full' frame.
 func (c *Client) FrameFull() {
@@ -83,11 +115,18 @@ func (c *Client) maximize() {
 	}
 
 	c.maximized = true
+	c.addState("_NET_WM_STATE_MAXIMIZE_HORZ")
+	c.addState("_NET_WM_STATE_MAXIMIZE_VERT")
+
 	c.frames.maximize()
 
 	// Resize outside of the constraints of a layout.
 	g := c.Workspace().Geom()
 	c.MoveResize(false, g.X(), g.Y(), g.Width(), g.Height())
+
+	// Since we moved outside of the layout, we have to save the last
+	// floating state our selves.
+	c.SaveState("last-floating")
 }
 
 func (c *Client) unmaximize() {
@@ -96,6 +135,8 @@ func (c *Client) unmaximize() {
 	}
 	if c.maximized {
 		c.maximized = false
+		c.removeState("_NET_WM_STATE_MAXIMIZE_HORZ")
+		c.removeState("_NET_WM_STATE_MAXIMIZE_VERT")
 		c.frames.unmaximize()
 	}
 }
@@ -105,6 +146,9 @@ func (c *Client) canMaxUnmax() bool {
 		return false
 	}
 	if _, ok := c.Layout().(layout.Floater); !ok {
+		return false
+	}
+	if c.fullscreen {
 		return false
 	}
 	return true
@@ -248,7 +292,7 @@ func (c *Client) newClientFrames() clientFrames {
 	c.unmapIgnore++
 	cf := createFrames(c)
 
-	if c.primaryType == clientTypeNormal {
+	if c.shouldDecor() {
 		c.frame = cf.full
 	} else {
 		c.frame = cf.nada
@@ -259,6 +303,8 @@ func (c *Client) newClientFrames() clientFrames {
 	x, y = max(0, x), max(0, y)
 	c.frame.MoveResize(true, x, y, w, h)
 	c.frame.On()
+
+	c.refreshExtents()
 
 	return cf
 }
@@ -303,6 +349,8 @@ func (cf clientFrames) set(f frame.Frame) {
 	cf.client.frame = f
 	cf.client.frame.On()
 	frame.Reset(cf.client.frame)
+
+	cf.client.refreshExtents()
 }
 
 // destroy will destroy all resources associated with any frames created for
@@ -323,6 +371,8 @@ func (cf clientFrames) maximize() {
 	cf.borders.Maximize()
 	cf.slim.Maximize()
 	cf.nada.Maximize()
+
+	cf.client.refreshExtents()
 }
 
 func (cf clientFrames) unmaximize() {
@@ -330,6 +380,8 @@ func (cf clientFrames) unmaximize() {
 	cf.borders.Unmaximize()
 	cf.slim.Unmaximize()
 	cf.nada.Unmaximize()
+
+	cf.client.refreshExtents()
 }
 
 // updateIcon updates any frames that use a client's icon.

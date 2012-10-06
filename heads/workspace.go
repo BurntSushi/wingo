@@ -140,8 +140,16 @@ func (hds *Heads) Geom(wrk *workspace.Workspace) xrect.Rect {
 	return nil
 }
 
+func (hds *Heads) HeadGeom(wrk *workspace.Workspace) xrect.Rect {
+	vi := hds.visibleIndex(wrk)
+	if vi >= 0 {
+		return hds.geom[vi]
+	}
+	return nil
+}
+
 func (hds *Heads) NextWorkspace() *workspace.Workspace {
-	if cur := hds.globalIndex(hds.ActiveWorkspace()); cur > -1 {
+	if cur := hds.GlobalIndex(hds.ActiveWorkspace()); cur > -1 {
 		next := (cur + 1) % len(hds.Workspaces.Wrks)
 		return hds.Workspaces.Get(next)
 	}
@@ -149,7 +157,7 @@ func (hds *Heads) NextWorkspace() *workspace.Workspace {
 }
 
 func (hds *Heads) PrevWorkspace() *workspace.Workspace {
-	if cur := hds.globalIndex(hds.ActiveWorkspace()); cur > -1 {
+	if cur := hds.GlobalIndex(hds.ActiveWorkspace()); cur > -1 {
 		// I fucking hate Go's modulo operator. WTF.
 		prev := misc.Mod(cur-1, len(hds.Workspaces.Wrks))
 		return hds.Workspaces.Get(prev)
@@ -166,7 +174,7 @@ func (hds *Heads) visibleIndex(wk *workspace.Workspace) int {
 	return -1
 }
 
-func (hds *Heads) globalIndex(wkNeedle *workspace.Workspace) int {
+func (hds *Heads) GlobalIndex(wkNeedle *workspace.Workspace) int {
 	for i, wk := range hds.Workspaces.Wrks {
 		if wk == wkNeedle {
 			return i

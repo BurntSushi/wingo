@@ -1,6 +1,8 @@
 package xclient
 
 import (
+	"time"
+
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/ewmh"
@@ -41,6 +43,11 @@ func New(id xproto.Window) *Client {
 		iconified:   false,
 		unmapIgnore: 0,
 		floating:    false,
+		fullscreen:  false,
+		skipTaskbar: false,
+		skipPager:   false,
+		demanding:   false,
+		attnQuit:    make(chan struct{}, 0),
 	}
 
 	c.manage()
@@ -97,6 +104,54 @@ func (c *Client) manage() {
 	} else {
 		c.unstick()
 	}
+
+	c.updateInitStates()
+	ewmh.WmAllowedActionsSet(wm.X, c.Id(), allowedActions)
+}
+
+func (c *Client) fullscreenToggle() {
+	if c.fullscreen {
+		c.fullscreened()
+	} else {
+		c.unfullscreened()
+	}
+}
+
+func (c *Client) fullscreened() {
+	if c.workspace == nil || !c.workspace.IsVisible() {
+		return
+	}
+	if c.fullscreen {
+		return
+	}
+	c.SaveState("before-fullscreen")
+	c.fullscreen = true
+
+	// Make sure the window has been forced into a floating layout.
+	if wrk, ok := c.Workspace().(*workspace.Workspace); ok {
+		wrk.CheckFloatingStatus(c)
+	}
+
+	// Resize outside of the constraints of a layout.
+	g := c.Workspace().HeadGeom()
+	c.FrameNada()
+	c.MoveResize(false, g.X(), g.Y(), g.Width(), g.Height())
+
+	// Since we moved outside of the layout, we have to save the last
+	// floating state our selves.
+	c.SaveState("last-floating")
+
+	c.addState("_NET_WM_STATE_FULLSCREEN")
+}
+
+func (c *Client) unfullscreened() {
+	if !c.fullscreen {
+		return
+	}
+	c.fullscreen = false
+	c.LoadState("before-fullscreen")
+
+	c.removeState("_NET_WM_STATE_FULLSCREEN")
 }
 
 func (c *Client) IsSticky() bool {
@@ -115,22 +170,23 @@ func (c *Client) unstick() {
 	c.sticky = false
 	c.workspace = nil
 	wm.Workspace().Add(c)
+
+	c.removeState("_NET_WM_STATE_STICKY")
 }
 
 func (c *Client) stick() {
+	if c.sticky {
+		return
+	}
+
 	c.sticky = true
 	if c.workspace != nil {
 		c.workspace.(*workspace.Workspace).CheckFloatingStatus(c)
 		c.workspace.Remove(c)
 	}
-	c.workspace = wm.StickyWrk
-}
+	c.WorkspaceSet(wm.StickyWrk)
 
-func (c *Client) maybeApplyStruts() {
-	if strut, _ := ewmh.WmStrutPartialGet(wm.X, c.Id()); strut != nil {
-		c.hadStruts = true
-		wm.Heads.ApplyStruts(wm.Clients)
-	}
+	c.addState("_NET_WM_STATE_STICKY")
 }
 
 func (c *Client) maybeInitPlace() {
@@ -249,4 +305,69 @@ func (c *Client) setInitialLayer() {
 	default:
 		panic("Unimplemented client type.")
 	}
+}
+
+func (c *Client) updateInitStates() {
+	var err error
+
+	c.winStates, err = ewmh.WmStateGet(wm.X, c.Id())
+	if err != nil {
+		logger.Warning.Printf(
+			"Could not get _NET_WM_STATE for '%s': %s", c, err)
+		c.winStates = []string{}
+		return
+	}
+
+	// Handle the weird maximize cases first.
+	if strIndex("_NET_WM_STATE_MAXIMIZED_VERT", c.winStates) > -1 &&
+		strIndex("_NET_WM_STATE_MAXIMIZED_HORZ", c.winStates) > -1 {
+
+		c.updateState("add", "_NET_WM_STATE_MAXIMIZED")
+	}
+	for _, state := range c.winStates {
+		if state == "_NET_WM_STATE_MAXIMIZED_VERT" ||
+			state == "_NET_WM_STATE_MAXIMIZED_HORZ" {
+
+			continue
+		}
+		c.updateState("add", state)
+	}
+}
+
+func (c *Client) attnStart() {
+	if c.demanding {
+		return
+	}
+
+	c.demanding = true
+	go func() {
+		for {
+			select {
+			case <-time.After(500 * time.Millisecond):
+				if c.State() == frame.Active {
+					c.frame.Inactive()
+					c.state = frame.Inactive
+				} else {
+					c.frame.Active()
+					c.state = frame.Active
+				}
+			case <-c.attnQuit:
+				return
+			}
+		}
+	}()
+
+	c.addState("_NET_WM_STATE_DEMANDS_ATTENTION")
+}
+
+func (c *Client) attnStop() {
+	if !c.demanding {
+		return
+	}
+
+	c.attnQuit <- struct{}{}
+	c.demanding = false
+	c.frame.Inactive()
+
+	c.removeState("_NET_WM_STATE_DEMANDS_ATTENTION")
 }

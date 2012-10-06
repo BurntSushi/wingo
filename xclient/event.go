@@ -4,8 +4,6 @@ import (
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
-	"github.com/BurntSushi/xgbutil/ewmh"
-	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xprop"
 
@@ -27,6 +25,7 @@ func (c *Client) attachEventCallbacks() {
 	c.cbDestroyNotify().Connect(wm.X, c.Id())
 	c.cbConfigureRequest().Connect(wm.X, c.Id())
 	c.cbPropertyNotify().Connect(wm.X, c.Id())
+	c.cbClientMessage().Connect(wm.X, c.Id())
 
 	c.handleFocusIn().Connect(wm.X, c.Frame().Parent().Id)
 	c.handleFocusOut().Connect(wm.X, c.Frame().Parent().Id)
@@ -109,52 +108,35 @@ func (c *Client) sendConfigureNotify() {
 }
 
 func (c *Client) cbPropertyNotify() xevent.PropertyNotifyFun {
-	// helper function to log property vals
-	showVals := func(o, n interface{}) {
-		logger.Lots.Printf("\tOld value: '%s', new value: '%s'", o, n)
-	}
 	f := func(X *xgbutil.XUtil, ev xevent.PropertyNotifyEvent) {
 		name, err := xprop.AtomName(wm.X, ev.Atom)
 		if err != nil {
 			logger.Warning.Printf("Could not get property atom name for '%s' "+
 				"because: %s.", ev, err)
+			return
 		}
 
 		logger.Lots.Printf("Updating property %s with state %v on window %s",
 			name, ev.State, c)
-		switch name {
-		case "_NET_WM_VISIBLE_NAME":
-			fallthrough
-		case "_NET_WM_NAME":
-			fallthrough
-		case "WM_NAME":
-			c.refreshName()
-		case "_NET_WM_ICON":
-		case "WM_HINTS":
-			if hints, err := icccm.WmHintsGet(X, c.Id()); err == nil {
-				c.hints = hints
-			}
-		case "WM_NORMAL_HINTS":
-			if nhints, err := icccm.WmNormalHintsGet(X, c.Id()); err == nil {
-				c.nhints = nhints
-			}
-		case "WM_TRANSIENT_FOR":
-			if trans, err := icccm.WmTransientForGet(X, c.Id()); err == nil {
-				if transCli := wm.FindManagedClient(trans); transCli != nil {
-					c.transientFor = transCli.(*Client)
-				}
-			}
-		case "_NET_WM_USER_TIME":
-			if newTime, err := ewmh.WmUserTimeGet(X, c.Id()); err == nil {
-				showVals(c.time, newTime)
-				c.time = xproto.Timestamp(newTime)
-			}
-		case "_NET_WM_STRUT_PARTIAL":
-			c.maybeApplyStruts()
-		}
-
+		c.handleProperty(name)
 	}
 	return xevent.PropertyNotifyFun(f)
+}
+
+func (c *Client) cbClientMessage() xevent.ClientMessageFun {
+	f := func(X *xgbutil.XUtil, ev xevent.ClientMessageEvent) {
+		name, err := xprop.AtomName(wm.X, ev.Type)
+		if err != nil {
+			logger.Warning.Printf("Could not get property atom name for "+
+				"ClientMessage event on '%s': %s.", c, err)
+			return
+		}
+
+		logger.Lots.Printf(
+			"Handling ClientMessage '%s' on client '%s'.", name, c)
+		c.handleClientMessage(name, ev.Data.Data32)
+	}
+	return xevent.ClientMessageFun(f)
 }
 
 func ignoreFocus(modeByte, detailByte byte) bool {

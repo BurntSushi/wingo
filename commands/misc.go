@@ -7,7 +7,6 @@ import (
 
 	"github.com/BurntSushi/xgb/xproto"
 
-	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/prompt"
 	"github.com/BurntSushi/wingo/workspace"
@@ -88,7 +87,7 @@ func stringTabComp(s string) int {
 // Shortcut for executing Client interface functions that have no parameters
 // and no return values on the currently focused window.
 func withFocused(f func(c *xclient.Client)) gribble.Any {
-	if focused := focus.Current(); focused != nil {
+	if focused := wm.LastFocused(); focused != nil {
 		client := focused.(*xclient.Client)
 		f(client)
 		return int(client.Id())

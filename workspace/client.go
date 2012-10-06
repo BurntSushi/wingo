@@ -12,7 +12,7 @@ type Client interface {
 	Id() xproto.Window
 	String() string
 	Workspace() Workspacer
-	WorkspaceSet(wrk *Workspace)
+	WorkspaceSet(wrk Workspacer)
 	Layout() layout.Layout
 	Map()
 	Unmap()

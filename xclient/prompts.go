@@ -64,8 +64,8 @@ func (c *Client) CycleText() string {
 }
 
 func (c *Client) CycleSelected() {
-	if c.iconified {
-		c.workspace.IconifyToggle(c)
+	if c.Iconified() {
+		c.IconifyToggle()
 	}
 	focus.Focus(c)
 	stack.Raise(c)

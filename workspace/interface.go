@@ -11,6 +11,7 @@ import (
 type Workspacer interface {
 	String() string
 	Geom() xrect.Rect
+	HeadGeom() xrect.Rect
 	IsActive() bool
 	IsVisible() bool
 	Add(c Client)
@@ -33,6 +34,10 @@ func (wrk *Sticky) String() string {
 }
 
 func (wrk *Sticky) Geom() xrect.Rect {
+	return xwindow.RootGeometry(wrk.X)
+}
+
+func (wrk *Sticky) HeadGeom() xrect.Rect {
 	return xwindow.RootGeometry(wrk.X)
 }
 

@@ -88,8 +88,12 @@ func FocusFallback() {
 	focus.Fallback(focusable)
 }
 
-// func Focused() Client { 
-// } 
+func LastFocused() Client {
+	if c := focus.LastFocused(focusable); c != nil {
+		return c.(Client)
+	}
+	return nil
+}
 
 func focusable(client focus.Client) bool {
 	c := client.(Client)

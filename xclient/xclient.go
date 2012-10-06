@@ -5,7 +5,6 @@ import (
 
 	"github.com/BurntSushi/xgb/xproto"
 
-	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xprop"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/stack"
 	"github.com/BurntSushi/wingo/wm"
 	"github.com/BurntSushi/wingo/workspace"
 )
@@ -24,6 +24,14 @@ const (
 	clientTypeDock
 )
 
+var allowedActions = []string{
+	"_NET_WM_ACTION_MOVE", "_NET_WM_ACTION_RESIZE",
+	"_NET_WM_ACTION_MINIMIZE", "_NET_WM_ACTION_STICK",
+	"_NET_WM_ACTION_MAXMIZE_HORZ", "_NET_WM_ACTION_MAXIMIZE_VERT",
+	"_NET_WM_ACTION_FULLSCREEN", "_NET_WM_ACTION_CHANGE_DESKTOP",
+	"_NET_WM_ACTION_CLOSE", "_NET_WM_ACTION_ABOVE", "_NET_WM_ACTION_BELOW",
+}
+
 type Client struct {
 	win       *xwindow.Window
 	frame     frame.Frame
@@ -33,15 +41,19 @@ type Client struct {
 	states  map[string]clientState
 	prompts clientPrompts
 
-	name      string
-	state     int // One of frame.Active or frame.Inactive.
-	layer     int // From constants in stack package.
-	maximized bool
-	iconified bool
-	sticky    bool // Belongs to no workspace.
+	name        string
+	state       int // One of frame.Active or frame.Inactive.
+	layer       int // From constants in stack package.
+	maximized   bool
+	fullscreen  bool
+	iconified   bool
+	sticky      bool // Belongs to no workspace.
+	skipTaskbar bool
+	skipPager   bool
 
 	primaryType  int // one of clientType[...]
 	winTypes     []string
+	winStates    []string
 	hints        *icccm.Hints
 	nhints       *icccm.NormalHints
 	protocols    []string
@@ -58,6 +70,9 @@ type Client struct {
 
 	dragGeom  xrect.Rect
 	hadStruts bool
+
+	attnQuit  chan struct{}
+	demanding bool
 }
 
 func (c *Client) IsMapped() bool {
@@ -115,30 +130,6 @@ func (c *Client) Close() {
 	}
 }
 
-func (c *Client) refreshName() {
-	defer func() {
-		c.frames.full.UpdateTitle()
-		c.prompts.updateName()
-	}()
-
-	c.name, _ = ewmh.WmVisibleNameGet(wm.X, c.Id())
-	if len(c.name) > 0 {
-		return
-	}
-
-	c.name, _ = ewmh.WmNameGet(wm.X, c.Id())
-	if len(c.name) > 0 {
-		return
-	}
-
-	c.name, _ = icccm.WmNameGet(wm.X, c.Id())
-	if len(c.name) > 0 {
-		return
-	}
-
-	c.name = "Unnamed Window"
-}
-
 func (c *Client) hasType(atom string) bool {
 	return strIndex(atom, c.winTypes) > -1
 }
@@ -174,4 +165,50 @@ func (c *Client) Name() string {
 
 func (c *Client) State() int {
 	return c.state
+}
+
+func (c *Client) StackAboveToggle() {
+	if c.layer == stack.LayerAbove {
+		c.unstackAbove()
+	} else {
+		c.stackAbove()
+	}
+}
+
+func (c *Client) stackAbove() {
+	c.layer = stack.LayerAbove
+	stack.Raise(c)
+
+	c.removeState("_NET_WM_STATE_BELOW")
+	c.addState("_NET_WM_STATE_ABOVE")
+}
+
+func (c *Client) unstackAbove() {
+	c.layer = stack.LayerDefault
+	stack.Raise(c)
+
+	c.removeState("_NET_WM_STATE_ABOVE")
+}
+
+func (c *Client) StackBelowToggle() {
+	if c.layer == stack.LayerBelow {
+		c.unstackBelow()
+	} else {
+		c.stackBelow()
+	}
+}
+
+func (c *Client) stackBelow() {
+	c.layer = stack.LayerBelow
+	stack.Raise(c)
+
+	c.removeState("_NET_WM_STATE_ABOVE")
+	c.addState("_NET_WM_STATE_BELOW")
+}
+
+func (c *Client) unstackBelow() {
+	c.layer = stack.LayerDefault
+	stack.Raise(c)
+
+	c.removeState("_NET_WM_STATE_BELOW")
 }
