@@ -16,7 +16,7 @@ fi
 # we have to create a temporary xauth file to get XGB to connect.
 # echo "add :10 . $(mcookie)" | xauth -f /tmp/xeph.auth 
 
-Xephyr :11 -ac -screen 1920x1080 \
+Xephyr :11 -ac -screen 1600x900 \
        -br -once -reset -terminate -zap &
 xemu=$!
 
