@@ -51,7 +51,7 @@ func (c *Client) WorkspaceSet(newWrk workspace.Workspacer) {
 	case *workspace.Sticky:
 		ewmh.WmDesktopSet(wm.X, c.Id(), 0xFFFFFFFF)
 	case *workspace.Workspace:
-		ewmh.WmDesktopSet(wm.X, c.Id(), wm.Heads.GlobalIndex(wrk))
+		ewmh.WmDesktopSet(wm.X, c.Id(), int64(wm.Heads.GlobalIndex(wrk)))
 	default:
 		panic(fmt.Sprintf("Unknown workspace type: %T", wrk))
 	}

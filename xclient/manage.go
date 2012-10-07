@@ -99,7 +99,7 @@ func (c *Client) manage() {
 	c.attachEventCallbacks()
 	c.maybeApplyStruts()
 
-	if d, _ := ewmh.WmDesktopGet(wm.X, c.Id()); d == 0xFFFFFFFF {
+	if d, _ := ewmh.WmDesktopGet(wm.X, c.Id()); int64(d) == 0xFFFFFFFF {
 		c.stick()
 	} else {
 		c.unstick()
