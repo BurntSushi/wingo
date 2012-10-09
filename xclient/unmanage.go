@@ -32,6 +32,8 @@ func (c *Client) unmanage() {
 	c.workspace.Remove(c)
 	wm.RemoveClient(c)
 	c.attnStop()
+	xproto.ChangeSaveSetChecked(
+		wm.X.Conn(), xproto.SetModeDelete, c.Id()).Check()
 
 	if c.hadStruts {
 		wm.Heads.ApplyStruts(wm.Clients)

@@ -123,10 +123,6 @@ func (c *Client) maximize() {
 	// Resize outside of the constraints of a layout.
 	g := c.Workspace().Geom()
 	c.MoveResize(false, g.X(), g.Y(), g.Width(), g.Height())
-
-	// Since we moved outside of the layout, we have to save the last
-	// floating state our selves.
-	c.SaveState("last-floating")
 }
 
 func (c *Client) unmaximize() {

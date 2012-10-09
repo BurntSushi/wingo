@@ -29,29 +29,38 @@ func main() {
 	X, err := xgbutil.NewConn()
 	if err != nil {
 		logger.Error.Println(err)
-		logger.Error.Println("Error connecting to X, quitting...")
-		return
+		logger.Error.Fatalln("Error connecting to X, quitting...")
 	}
 	defer X.Conn().Close()
+
+	// Do this first! Attempt to retrieve window manager ownership.
+	// This includes waiting for any existing window manager to die.
+	// 'own' also sets up handlers for quitting when a window manager tries
+	// to replace *us*.
+	if err := own(X); err != nil {
+		logger.Error.Fatalf(
+			"Could not establish window manager ownership: %s", err)
+	}
 
 	keybind.Initialize(X)
 	mousebind.Initialize(X)
 	focus.Initialize(X)
 	stack.Initialize(X)
-
-	wm.Init(X, commands.Env, newHacks())
-
-	// Setup some cursors we use
-	cursors.Setup(X)
+	cursors.Initialize(X)
+	wm.Initialize(X, commands.Env, newHacks())
 
 	// Listen to Root. It is all-important.
-	wm.Root.Listen(xproto.EventMaskPropertyChange |
-		xproto.EventMaskFocusChange |
-		xproto.EventMaskButtonPress |
-		xproto.EventMaskButtonRelease |
-		xproto.EventMaskStructureNotify |
-		xproto.EventMaskSubstructureNotify |
-		xproto.EventMaskSubstructureRedirect)
+	err = xwindow.New(X, X.RootWin()).Listen(
+		xproto.EventMaskPropertyChange |
+			xproto.EventMaskFocusChange |
+			xproto.EventMaskButtonPress |
+			xproto.EventMaskButtonRelease |
+			xproto.EventMaskStructureNotify |
+			xproto.EventMaskSubstructureNotify |
+			xproto.EventMaskSubstructureRedirect)
+	if err != nil {
+		logger.Error.Fatalf("Could not listen to Root window events: %s", err)
+	}
 
 	// Update state when the root window changes size
 	// xevent.ConfigureNotifyFun(rootGeometryChange).Connect(X, wm.Root.Id) 
@@ -92,6 +101,10 @@ func main() {
 
 	// Tell everyone what we support.
 	setSupported()
+
+	// Just before starting the main event loop, check to see if there are
+	// any clients that already exist that we should manage.
+	manageExistingClients()
 
 	pingBefore, pingAfter, pingQuit := xevent.MainPing(X)
 	for {
@@ -169,4 +182,31 @@ func setSupported() {
 	ewmh.SupportingWmCheckSet(wm.X, wm.X.RootWin(), wm.X.Dummy())
 	ewmh.SupportingWmCheckSet(wm.X, wm.X.Dummy(), wm.X.Dummy())
 	ewmh.WmNameSet(wm.X, wm.X.Dummy(), "Wingo")
+}
+
+// manageExistingClients traverse the window tree and tries to manage all
+// top-level clients. Clients that are not in the Unmapped state will be
+// managed.
+func manageExistingClients() {
+	tree, err := xproto.QueryTree(wm.X.Conn(), wm.Root.Id).Reply()
+	if err != nil {
+		logger.Warning.Printf("Could not issue QueryTree request: %s", err)
+		return
+	}
+	for _, potential := range tree.Children {
+		// Ignore our own dummy window...
+		if potential == wm.X.Dummy() {
+			continue
+		}
+
+		attrs, err := xproto.GetWindowAttributes(wm.X.Conn(), potential).Reply()
+		if err != nil {
+			continue
+		}
+		if attrs.MapState == xproto.MapStateUnmapped {
+			continue
+		}
+		logger.Message.Printf("Managing existing client %d", potential)
+		xclient.New(potential)
+	}
 }

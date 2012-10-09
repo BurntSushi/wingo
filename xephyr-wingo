@@ -23,9 +23,10 @@ xemu=$!
 sleep 0.5
 export DISPLAY=:11
 
+DISPLAY=:11 thunar &
 DISPLAY=:11 ./wingo &
 # DISPLAY=:10 wingo & 
-# DISPLAY=:10 openbox & 
+# DISPLAY=:11 openbox & 
 # go run $PWD/wingo.go & 
 wingo=$!
 
@@ -37,7 +38,7 @@ xmodmap /home/andrew/.Pmodmap
 DISPLAY=:0 xdotool key ctrl+shift 
 
 wait $wingo
-kill $xemu
+# kill $xemu 
 
 # sleep 1 ; DISPLAY=:0 xdotool key Return 
 

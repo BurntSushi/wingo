@@ -107,6 +107,15 @@ func (c *Client) manage() {
 
 	c.updateInitStates()
 	ewmh.WmAllowedActionsSet(wm.X, c.Id(), allowedActions)
+
+	err := xproto.ChangeSaveSetChecked(
+		wm.X.Conn(), xproto.SetModeInsert, c.Id()).Check()
+	if err != nil {
+		logger.Warning.Printf(
+			"Could not add client '%s' to SaveSet. This may be problematic "+
+				"if you try to replace Wingo with another window manager: %s",
+			c, err)
+	}
 }
 
 func (c *Client) fullscreenToggle() {
@@ -208,8 +217,11 @@ func (c *Client) maybeInitPlace() {
 		return
 	}
 
-	// We're good, do a placement.
-	wm.Workspace().LayoutFloater().InitialPlacement(wm.Workspace().Geom(), c)
+	// We're good, do a placement unless we're already mapped.
+	if c.isAttrsUnmapped() {
+		layFloater := wm.Workspace().LayoutFloater()
+		layFloater.InitialPlacement(wm.Workspace().Geom(), c)
+	}
 
 	// This is a hack. Before a client gets sucked into some layout, we
 	// always want to have some floating state to fall back on to. However,
@@ -312,8 +324,6 @@ func (c *Client) updateInitStates() {
 
 	c.winStates, err = ewmh.WmStateGet(wm.X, c.Id())
 	if err != nil {
-		logger.Warning.Printf(
-			"Could not get _NET_WM_STATE for '%s': %s", c, err)
 		c.winStates = []string{}
 		return
 	}
@@ -370,4 +380,13 @@ func (c *Client) attnStop() {
 	c.frame.Inactive()
 
 	c.removeState("_NET_WM_STATE_DEMANDS_ATTENTION")
+}
+
+func (c *Client) isAttrsUnmapped() bool {
+	attrs, err := xproto.GetWindowAttributes(wm.X.Conn(), c.Id()).Reply()
+	if err != nil {
+		logger.Warning.Printf(
+			"Could not get window attributes for '%s': %s.", c, err)
+	}
+	return attrs.MapState == xproto.MapStateUnmapped
 }
