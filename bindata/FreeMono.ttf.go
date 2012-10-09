@@ -6,8 +6,7 @@ import (
 	"io"
 )
 
-// FreemonoTtf returns the decompressed binary data.
-// It panics if an error occurred.
+// FreemonoTtf returns the raw, uncompressed file data data.
 func FreemonoTtf() []byte {
 	gz, err := gzip.NewReader(bytes.NewBuffer([]byte{
 		0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x00, 0xff, 0xec, 0xfd,
