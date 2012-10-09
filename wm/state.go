@@ -27,7 +27,9 @@ var (
 	cmdHacks   CommandHacks
 )
 
-func Init(x *xgbutil.XUtil, cmdEnv *gribble.Environment, hacks CommandHacks) {
+func Initialize(x *xgbutil.XUtil,
+	cmdEnv *gribble.Environment, hacks CommandHacks) {
+
 	var err error
 
 	X = x
