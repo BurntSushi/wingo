@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"runtime"
 	"os"
 	"path"
+	"runtime"
 	"strings"
 
 	"github.com/BurntSushi/xgb"
@@ -29,9 +29,9 @@ import (
 
 var (
 	flagGoMaxProcs = runtime.NumCPU()
-	flagLogLevel = 3
-	flagLogColors = true
-	flagReplace = false
+	flagLogLevel   = 3
+	flagLogColors  = true
+	flagReplace    = false
 )
 
 func init() {
@@ -39,13 +39,13 @@ func init() {
 		"The maximum number of CPUs that can be executing simultaneously.")
 	flag.IntVar(&flagLogLevel, "log-level", flagLogLevel,
 		"The logging level of Wingo. Valid values are 0, 1, 2, 3, or 4.\n"+
-		"Higher numbers result in Wingo producing more output.")
+			"Higher numbers result in Wingo producing more output.")
 	flag.BoolVar(&flagLogColors, "log-colors", flagLogColors,
 		"Whether to output logging data with terminal colors.")
 	flag.BoolVar(&flagReplace, "replace", flagReplace,
 		"When set, Wingo will attempt to replace a currently running\n"+
-		"window manager. If this is not set, and another window manager\n"+
-		"is running, Wingo will exit.")
+			"window manager. If this is not set, and another window manager\n"+
+			"is running, Wingo will exit.")
 
 	flag.Usage = usage
 	flag.Parse()

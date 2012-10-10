@@ -68,8 +68,8 @@ func own(X *xgbutil.XUtil, replace bool) error {
 		if !replace {
 			return fmt.Errorf(
 				"Another window manager (%s) is already running. Please use "+
-					"the '--replace' option to replace the current window manager "+
-					"with Wingo.", otherWmName)
+					"the '--replace' option to replace the current window "+
+					"manager with Wingo.", otherWmName)
 		} else {
 			logger.Message.Printf(
 				"Waiting for %s to shutdown and transfer ownership to us.",
@@ -110,7 +110,7 @@ func own(X *xgbutil.XUtil, replace bool) error {
 					"Wingo failed to replace the currently running window "+
 						"manager (%s). Namely, Wingo was not able to detect "+
 						"that the current window manager had shut down.",
-						otherWmName)
+					otherWmName)
 			default:
 				ev, err := X.Conn().PollForEvent()
 				if err != nil {

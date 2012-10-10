@@ -32,7 +32,7 @@ var (
 	flags    = FlagDebug | FlagMessage | FlagWarning | FlagError
 	logFlags = log.Lshortfile
 	colors   = true
-	levels = []int{
+	levels   = []int{
 		FlagDebug,
 		FlagDebug | FlagError,
 		FlagDebug | FlagError | FlagWarning,
