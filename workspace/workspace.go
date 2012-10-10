@@ -55,10 +55,16 @@ func (wrk *Workspace) String() string {
 }
 
 func (wrk *Workspace) Geom() xrect.Rect {
+	if !wrk.IsVisible() {
+		panic("Cannot get geometry of a hidden workspace.")
+	}
 	return wrk.all.heads.Geom(wrk)
 }
 
 func (wrk *Workspace) HeadGeom() xrect.Rect {
+	if !wrk.IsVisible() {
+		panic("Cannot get head geometry of a hidden workspace.")
+	}
 	return wrk.all.heads.HeadGeom(wrk)
 }
 
@@ -191,6 +197,10 @@ func (wrk *Workspace) Hide() {
 }
 
 func (wrk *Workspace) Place() {
+	if !wrk.IsVisible() {
+		return
+	}
+
 	// Floater layouts always get placed.
 	wrk.LayoutFloater().Place(wrk.Geom())
 

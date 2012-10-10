@@ -53,7 +53,7 @@ func New(id xproto.Window) *Client {
 	c.manage()
 	if !c.iconified {
 		c.Map()
-		if c.primaryType == clientTypeNormal {
+		if !wm.Startup && c.primaryType == clientTypeNormal {
 			focus.Focus(c)
 		}
 	}
@@ -78,21 +78,10 @@ func (c *Client) manage() {
 	c.states = c.newClientStates()
 	c.prompts = c.newClientPrompts()
 
-	// Before adding the client into our data structures, we should first
-	// make sure it's located on the right head. We do this by finding where
-	// it *is* place and convert it into the coordinate space of where it
-	// *should* be placed.
-	oughtHeadGeom := wm.Workspace().Geom()
-	cgeom := c.frame.Geom()
-	if wrk := wm.Heads.FindMostOverlap(cgeom); wrk != nil {
-		isHeadGeom := wrk.Geom()
-		ngeom := heads.Convert(cgeom, isHeadGeom, oughtHeadGeom)
-		c.MoveResize(true, ngeom.X(), ngeom.Y(), ngeom.Width(), ngeom.Height())
-	} else {
-		c.Move(oughtHeadGeom.X(), oughtHeadGeom.Y())
-	}
+	presumedWorkspace := c.findPresumedWorkspace()
 
-	c.maybeInitPlace()
+	c.moveToProperHead(presumedWorkspace)
+	c.maybeInitPlace(presumedWorkspace)
 	wm.AddClient(c)
 	c.maybeAddToFocusStack()
 	stack.Raise(c)
@@ -102,7 +91,7 @@ func (c *Client) manage() {
 	if d, _ := ewmh.WmDesktopGet(wm.X, c.Id()); int64(d) == 0xFFFFFFFF {
 		c.stick()
 	} else {
-		c.unstick()
+		presumedWorkspace.Add(c)
 	}
 
 	c.updateInitStates()
@@ -198,7 +187,7 @@ func (c *Client) stick() {
 	c.addState("_NET_WM_STATE_STICKY")
 }
 
-func (c *Client) maybeInitPlace() {
+func (c *Client) maybeInitPlace(presumedWorkspace *workspace.Workspace) {
 	// Any client that isn't normal doesn't get placed.
 	// Let it do what it do, baby.
 	if c.primaryType != clientTypeNormal {
@@ -217,22 +206,25 @@ func (c *Client) maybeInitPlace() {
 		return
 	}
 
-	// We're good, do a placement unless we're already mapped.
-	if c.isAttrsUnmapped() {
-		layFloater := wm.Workspace().LayoutFloater()
-		layFloater.InitialPlacement(wm.Workspace().Geom(), c)
-	}
+	// We're good, do a placement unless we're already mapped or on a
+	// hidden workspace..
+	if presumedWorkspace.IsVisible() {
+		if c.isAttrsUnmapped() {
+			layFloater := presumedWorkspace.LayoutFloater()
+			layFloater.InitialPlacement(presumedWorkspace.Geom(), c)
+		}
 
-	// This is a hack. Before a client gets sucked into some layout, we
-	// always want to have some floating state to fall back on to. However,
-	// by the time we're "allowed" to save the client's state, it will have
-	// already been placed in the hands of some layout---which may or may not
-	// be floating. So we inject our own state forcefully here.
-	c.states["last-floating"] = clientState{
-		geom:      xrect.New(xrect.Pieces(c.frame.Geom())),
-		headGeom:  xrect.New(xrect.Pieces(wm.Workspace().Geom())),
-		frame:     c.frame,
-		maximized: c.maximized,
+		// This is a hack. Before a client gets sucked into some layout, we
+		// always want to have some floating state to fall back on to. However,
+		// by the time we're "allowed" to save the client's state, it will have
+		// already been placed in the hands of some layout---which may or may
+		// not be floating. So we inject our own state forcefully here.
+		c.states["last-floating"] = clientState{
+			geom:      xrect.New(xrect.Pieces(c.frame.Geom())),
+			headGeom:  xrect.New(xrect.Pieces(presumedWorkspace.Geom())),
+			frame:     c.frame,
+			maximized: c.maximized,
+		}
 	}
 }
 
@@ -389,4 +381,45 @@ func (c *Client) isAttrsUnmapped() bool {
 			"Could not get window attributes for '%s': %s.", c, err)
 	}
 	return attrs.MapState == xproto.MapStateUnmapped
+}
+
+// findPresumedWorkspace inspects a client before it is fully managed to
+// see which workspace it should go to. Basically, if _NET_WM_DESKTOP is
+// to a valid workspace number, then we grant the request. Otherwise, we use
+// the current workspace.
+func (c *Client) findPresumedWorkspace() *workspace.Workspace {
+	d, err := ewmh.WmDesktopGet(wm.X, c.Id())
+	if err != nil || int64(d) == 0xFFFFFFFF {
+		return wm.Workspace()
+	}
+	if d < 0 || d >= int64(len(wm.Heads.Workspaces.Wrks)) {
+		return wm.Workspace()
+	}
+	return wm.Heads.Workspaces.Get(int(d))
+}
+
+// moveToProperHead is used to make sure a newly managed client is placed on
+// the correct monitor.
+//
+// Before adding the client into our data structures, we should first
+// make sure it's located on the right head. We do this by finding where
+// it *is* placed and convert it into the coordinate space of where it
+// *should* be placed.
+//
+// Note that presumedWorkspace MUST be visible.
+func (c *Client) moveToProperHead(presumedWorkspace *workspace.Workspace) {
+	if !presumedWorkspace.IsVisible() {
+		return
+	}
+
+	oughtHeadGeom := presumedWorkspace.Geom()
+	cgeom := c.frame.Geom()
+	if wrk := wm.Heads.FindMostOverlap(cgeom); wrk != nil {
+		if wrk != presumedWorkspace {
+			isHeadGeom := wrk.Geom()
+			ngeom := heads.Convert(cgeom, isHeadGeom, oughtHeadGeom)
+			c.MoveResize(true,
+				ngeom.X(), ngeom.Y(), ngeom.Width(), ngeom.Height())
+		}
+	}
 }

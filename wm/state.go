@@ -17,6 +17,7 @@ import (
 var (
 	X          *xgbutil.XUtil
 	Root       *xwindow.Window
+	Startup    bool
 	Clients    ClientList
 	Heads      *heads.Heads
 	Prompts    AllPrompts
@@ -33,6 +34,7 @@ func Initialize(x *xgbutil.XUtil,
 	var err error
 
 	X = x
+	Startup = true
 
 	gribbleEnv = cmdEnv
 	cmdHacks = hacks

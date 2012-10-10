@@ -7,6 +7,7 @@ import (
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
+	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xprop"
 	"github.com/BurntSushi/xgbutil/xwindow"
@@ -21,7 +22,15 @@ import (
 
 // own requests ownership over the role of window manager in the current
 // X environment. It can fail if it does not successfully get ownership.
-func own(X *xgbutil.XUtil) error {
+//
+// When 'replace' is true, Wingo will attempt to replace an window manager
+// that is currently running. Otherwise, Wingo will quit if a window manager
+// is running.
+func own(X *xgbutil.XUtil, replace bool) error {
+	otherWmRunning := false
+	otherWmName := ""
+	otherWmOwner := xproto.Window(xproto.WindowNone)
+
 	xTime, err := currentTime(X)
 	if err != nil {
 		return err
@@ -32,6 +41,42 @@ func own(X *xgbutil.XUtil) error {
 		return err
 	}
 
+	// Check to see if we need to replace. If so, determine whether to
+	// continue based on `replace`.
+	reply, err := xproto.GetSelectionOwner(X.Conn(), selAtom).Reply()
+	if err != nil {
+		return err
+	}
+	if reply.Owner != xproto.WindowNone {
+		otherWmRunning = true
+		otherWmOwner = reply.Owner
+
+		// Look for the window manager's name for a nicer error message.
+		otherWmName, err = ewmh.GetEwmhWM(X)
+		if err != nil || len(otherWmName) == 0 {
+			otherWmName = "Unknown"
+		}
+
+		// We need to listen for DestroyNotify events on the selection
+		// owner in case we need to replace the WM.
+		owner := xwindow.New(X, reply.Owner)
+		if err = owner.Listen(xproto.EventMaskStructureNotify); err != nil {
+			return err
+		}
+	}
+	if otherWmRunning {
+		if !replace {
+			return fmt.Errorf(
+				"Another window manager (%s) is already running. Please use "+
+					"the '--replace' option to replace the current window manager "+
+					"with Wingo.", otherWmName)
+		} else {
+			logger.Message.Printf(
+				"Waiting for %s to shutdown and transfer ownership to us.",
+				otherWmName)
+		}
+	}
+
 	err = xproto.SetSelectionOwnerChecked(
 		X.Conn(), X.Dummy(), selAtom, xTime).Check()
 	if err != nil {
@@ -39,7 +84,7 @@ func own(X *xgbutil.XUtil) error {
 	}
 
 	// Now we've got to make sure that we *actually* got ownership.
-	reply, err := xproto.GetSelectionOwner(X.Conn(), selAtom).Reply()
+	reply, err = xproto.GetSelectionOwner(X.Conn(), selAtom).Reply()
 	if err != nil {
 		return err
 	}
@@ -48,6 +93,37 @@ func own(X *xgbutil.XUtil) error {
 			"Could not acquire ownership with SetSelectionOwner. "+
 				"GetSelectionOwner claims that '%d' is the owner, but '%d' "+
 				"needs to be.", reply.Owner, X.Dummy())
+	}
+
+	// While X now acknowledges us as the selection owner, it's possible
+	// that the window manager is misbehaving. ICCCM 2.8 calls for the previous
+	// manager to destroy the selection owner when it's OK for us to take
+	// over. Otherwise, listening to SubstructureRedirect on the root window
+	// might fail if we move too quickly.
+	timeout := time.After(3 * time.Second)
+	if otherWmRunning {
+	OTHER_WM_SHUTDOWN:
+		for {
+			select {
+			case <-timeout:
+				return fmt.Errorf(
+					"Wingo failed to replace the currently running window "+
+						"manager (%s). Namely, Wingo was not able to detect "+
+						"that the current window manager had shut down.",
+						otherWmName)
+			default:
+				ev, err := X.Conn().PollForEvent()
+				if err != nil {
+					continue
+				}
+				if destNotify, ok := ev.(xproto.DestroyNotifyEvent); ok {
+					if destNotify.Window == otherWmOwner {
+						break OTHER_WM_SHUTDOWN
+					}
+				}
+				time.Sleep(100 * time.Millisecond)
+			}
+		}
 	}
 
 	logger.Message.Println("Wingo has window manager ownership!")

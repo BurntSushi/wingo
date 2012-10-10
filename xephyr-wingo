@@ -24,8 +24,7 @@ sleep 0.5
 export DISPLAY=:11
 
 DISPLAY=:11 thunar &
-DISPLAY=:11 ./wingo &
-# DISPLAY=:10 wingo & 
+DISPLAY=:11 ./wingo $* &
 # DISPLAY=:11 openbox & 
 # go run $PWD/wingo.go & 
 wingo=$!

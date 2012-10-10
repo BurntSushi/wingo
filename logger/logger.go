@@ -32,6 +32,13 @@ var (
 	flags    = FlagDebug | FlagMessage | FlagWarning | FlagError
 	logFlags = log.Lshortfile
 	colors   = true
+	levels = []int{
+		FlagDebug,
+		FlagDebug | FlagError,
+		FlagDebug | FlagError | FlagWarning,
+		FlagDebug | FlagError | FlagWarning | FlagMessage,
+		FlagDebug | FlagError | FlagWarning | FlagMessage | FlagLots,
+	}
 
 	Debug, Lots, Message, Warning, Error *logger
 )
@@ -67,6 +74,16 @@ func newLogger(logType int, plain *log.Logger, colored *log.Logger) *logger {
 
 func FlagsSet(newFlags int) {
 	flags = newFlags
+}
+
+// LevelSet is a shortcut for setting log output flags. Valid log levels
+// are integers in the range 0 to 4, inclusive. The higher the level, the
+// more output.
+func LevelSet(lvl int) {
+	if lvl < 0 || lvl > 4 {
+		panic("log level must be in [0, 4]")
+	}
+	FlagsSet(levels[lvl])
 }
 
 func Colors(enable bool) {

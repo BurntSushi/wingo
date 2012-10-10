@@ -54,10 +54,10 @@ func (c *Client) ImminentDestruction() bool {
 		}
 
 		if evUnmap.Window == c.Id() {
-			toIgnore--
 			if toIgnore <= 0 {
 				return true
 			}
+			toIgnore--
 		}
 	}
 	return false

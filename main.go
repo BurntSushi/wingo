@@ -1,8 +1,14 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"runtime"
+	"os"
+	"path"
+	"strings"
 
+	"github.com/BurntSushi/xgb"
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
@@ -21,11 +27,40 @@ import (
 	"github.com/BurntSushi/wingo/xclient"
 )
 
-func main() {
-	// giggity
-	// runtime.GOMAXPROCS(runtime.NumCPU()) 
-	runtime.GOMAXPROCS(1)
+var (
+	flagGoMaxProcs = runtime.NumCPU()
+	flagLogLevel = 3
+	flagLogColors = true
+	flagReplace = false
+)
 
+func init() {
+	flag.IntVar(&flagGoMaxProcs, "p", flagGoMaxProcs,
+		"The maximum number of CPUs that can be executing simultaneously.")
+	flag.IntVar(&flagLogLevel, "log-level", flagLogLevel,
+		"The logging level of Wingo. Valid values are 0, 1, 2, 3, or 4.\n"+
+		"Higher numbers result in Wingo producing more output.")
+	flag.BoolVar(&flagLogColors, "log-colors", flagLogColors,
+		"Whether to output logging data with terminal colors.")
+	flag.BoolVar(&flagReplace, "replace", flagReplace,
+		"When set, Wingo will attempt to replace a currently running\n"+
+		"window manager. If this is not set, and another window manager\n"+
+		"is running, Wingo will exit.")
+
+	flag.Usage = usage
+	flag.Parse()
+
+	runtime.GOMAXPROCS(flagGoMaxProcs)
+	logger.Colors(flagLogColors)
+	logger.LevelSet(flagLogLevel)
+
+	// If the log level is 0, don't show XGB log output either.
+	if flagLogLevel == 0 {
+		xgb.PrintLog = false
+	}
+}
+
+func main() {
 	X, err := xgbutil.NewConn()
 	if err != nil {
 		logger.Error.Println(err)
@@ -37,7 +72,7 @@ func main() {
 	// This includes waiting for any existing window manager to die.
 	// 'own' also sets up handlers for quitting when a window manager tries
 	// to replace *us*.
-	if err := own(X); err != nil {
+	if err := own(X, flagReplace); err != nil {
 		logger.Error.Fatalf(
 			"Could not establish window manager ownership: %s", err)
 	}
@@ -106,6 +141,18 @@ func main() {
 	// any clients that already exist that we should manage.
 	manageExistingClients()
 
+	// Now make sure that clients are in the appropriate visible state.
+	for _, wrk := range wm.Heads.Workspaces.Wrks {
+		if wrk.IsVisible() {
+			wrk.Show()
+		} else {
+			wrk.Hide()
+		}
+	}
+	wm.Heads.ApplyStruts(wm.Clients)
+
+	wm.FocusFallback()
+	wm.Startup = false
 	pingBefore, pingAfter, pingQuit := xevent.MainPing(X)
 	for {
 		select {
@@ -209,4 +256,13 @@ func manageExistingClients() {
 		logger.Message.Printf("Managing existing client %d", potential)
 		xclient.New(potential)
 	}
+}
+
+func usage() {
+	fmt.Fprintf(os.Stderr, "\nUsage: %s [flags]\n", path.Base(os.Args[0]))
+	flag.VisitAll(func(fg *flag.Flag) {
+		fmt.Printf("--%s=\"%s\"\n\t%s\n", fg.Name, fg.DefValue,
+			strings.Replace(fg.Usage, "\n", "\n\t", -1))
+	})
+	os.Exit(1)
 }
