@@ -11,7 +11,7 @@ import (
 type Client interface {
 	State() int
 	Frame() Frame
-	Maximized() bool
+	IsMaximized() bool
 	Icon(width, height int) *xgraphics.Image
 	Name() string
 	ClientGeom() xrect.Rect

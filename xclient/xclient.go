@@ -155,7 +155,7 @@ func (c *Client) Layer() int {
 	return c.layer
 }
 
-func (c *Client) Maximized() bool {
+func (c *Client) IsMaximized() bool {
 	return c.maximized
 }
 

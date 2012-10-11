@@ -78,7 +78,7 @@ func (f *Borders) On() {
 		f.Inactive()
 	}
 
-	if !f.client.Maximized() {
+	if !f.client.IsMaximized() {
 		f.topSide.Map()
 		f.bottomSide.Map()
 		f.leftSide.Map()
@@ -158,28 +158,28 @@ func (f *Borders) Unmaximize() {
 }
 
 func (f *Borders) Top() int {
-	if f.client.Maximized() {
+	if f.client.IsMaximized() {
 		return 0
 	}
 	return f.theme.BorderSize
 }
 
 func (f *Borders) Bottom() int {
-	if f.client.Maximized() {
+	if f.client.IsMaximized() {
 		return 0
 	}
 	return f.theme.BorderSize
 }
 
 func (f *Borders) Left() int {
-	if f.client.Maximized() {
+	if f.client.IsMaximized() {
 		return 0
 	}
 	return f.theme.BorderSize
 }
 
 func (f *Borders) Right() int {
-	if f.client.Maximized() {
+	if f.client.IsMaximized() {
 		return 0
 	}
 	return f.theme.BorderSize

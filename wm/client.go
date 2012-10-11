@@ -16,6 +16,8 @@ type Client interface {
 	Iconified() bool
 	Workspace() workspace.Workspacer
 	ImminentDestruction() bool
+	IsMaximized() bool
+	Remaximize()
 
 	CycleItem() *prompt.CycleItem
 	SelectItem() *prompt.SelectItem

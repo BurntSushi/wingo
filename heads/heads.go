@@ -96,6 +96,12 @@ func (hds *Heads) ApplyStruts(clients Clients) {
 	for _, wrk := range hds.Workspaces.Wrks {
 		wrk.Place()
 	}
+	for i := 0; i < clients.Len(); i++ {
+		c := clients.Get(i)
+		if c.IsMaximized() {
+			c.Remaximize()
+		}
+	}
 }
 
 // Convert takes a source and a destination rect, along with a rect

@@ -57,28 +57,28 @@ func (f *Slim) Maximize()   {}
 func (f *Slim) Unmaximize() {}
 
 func (f *Slim) Top() int {
-	if f.client.Maximized() {
+	if f.client.IsMaximized() {
 		return 0
 	}
 	return f.theme.BorderSize
 }
 
 func (f *Slim) Bottom() int {
-	if f.client.Maximized() {
+	if f.client.IsMaximized() {
 		return 0
 	}
 	return f.theme.BorderSize
 }
 
 func (f *Slim) Left() int {
-	if f.client.Maximized() {
+	if f.client.IsMaximized() {
 		return 0
 	}
 	return f.theme.BorderSize
 }
 
 func (f *Slim) Right() int {
-	if f.client.Maximized() {
+	if f.client.IsMaximized() {
 		return 0
 	}
 	return f.theme.BorderSize

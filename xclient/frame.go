@@ -82,7 +82,7 @@ func (c *Client) EnsureUnmax() {
 }
 
 func (c *Client) MaximizeToggle() {
-	if c.Maximized() {
+	if c.IsMaximized() {
 		c.Unmaximize()
 	} else {
 		c.Maximize()
@@ -93,7 +93,7 @@ func (c *Client) Maximize() {
 	if !c.canMaxUnmax() {
 		return
 	}
-	if !c.Maximized() {
+	if !c.IsMaximized() {
 		c.SaveState("before-maximize")
 		c.maximize()
 	}
@@ -103,10 +103,17 @@ func (c *Client) Unmaximize() {
 	if !c.canMaxUnmax() {
 		return
 	}
-	if c.Maximized() {
+	if c.IsMaximized() {
 		c.unmaximize()
 		c.LoadState("before-maximize")
 	}
+}
+
+func (c *Client) Remaximize() {
+	if !c.IsMaximized() {
+		return
+	}
+	c.maximize()
 }
 
 func (c *Client) maximize() {

@@ -11,4 +11,6 @@ type Clients interface {
 
 type Client interface {
 	Id() xproto.Window
+	IsMaximized() bool
+	Remaximize()
 }

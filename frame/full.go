@@ -127,7 +127,7 @@ func (f *Full) On() {
 	if f.theme.BorderSize > 0 {
 		f.titleBottom.Map()
 
-		if !f.client.Maximized() {
+		if !f.client.IsMaximized() {
 			f.topSide.Map()
 			f.bottomSide.Map()
 			f.leftSide.Map()
@@ -256,28 +256,28 @@ func (f *Full) Unmaximize() {
 }
 
 func (f *Full) Top() int {
-	if f.client.Maximized() {
+	if f.client.IsMaximized() {
 		return f.theme.BorderSize + f.theme.TitleSize
 	}
 	return (f.theme.BorderSize * 2) + f.theme.TitleSize
 }
 
 func (f *Full) Bottom() int {
-	if f.client.Maximized() {
+	if f.client.IsMaximized() {
 		return 0
 	}
 	return f.theme.BorderSize
 }
 
 func (f *Full) Left() int {
-	if f.client.Maximized() {
+	if f.client.IsMaximized() {
 		return 0
 	}
 	return f.theme.BorderSize
 }
 
 func (f *Full) Right() int {
-	if f.client.Maximized() {
+	if f.client.IsMaximized() {
 		return 0
 	}
 	return f.theme.BorderSize
