@@ -1,9 +1,3 @@
-Fix weird gkrellm bug. (Close gkrellm. Struts don't refresh for maximized
-windows. Ug.)
-
-Make sure a client, when mapped, appears on screen (even if it means moving it 
-to a workspace's root coordinates).
-
 Add and remove workspaces. Fun...
 
 Test various combinations of replacing Wingo with Openbox (and vice versa). 

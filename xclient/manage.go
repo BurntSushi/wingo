@@ -421,5 +421,11 @@ func (c *Client) moveToProperHead(presumedWorkspace *workspace.Workspace) {
 			c.MoveResize(true,
 				ngeom.X(), ngeom.Y(), ngeom.Width(), ngeom.Height())
 		}
+	} else {
+		// If we're here, that means the client *ought* to belong to a visible
+		// workspace but it could not be found to overlap with *any* visible
+		// workspace. Therefore, just use a hammer and move it to the root
+		// coordinates of the presumed workspace.
+		c.Move(oughtHeadGeom.X(), oughtHeadGeom.Y())
 	}
 }
