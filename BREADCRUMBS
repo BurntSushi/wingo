@@ -1,1 +1,30 @@
-Figure out how focus interacts with sticky and dock clients. Gah.
+Fix weird gkrellm bug. (Close gkrellm. Struts don't refresh for maximized
+windows. Ug.)
+
+Make sure a client, when mapped, appears on screen (even if it means moving it 
+to a workspace's root coordinates).
+
+Add and remove workspaces. Fun...
+
+Test various combinations of replacing Wingo with Openbox (and vice versa). 
+Particularly in a multi-head setup.
+
+Show a popup message when changing workspaces.
+
+Work on layouts. Make them viable. Prompt for them. Allow layout to save and 
+restore state (yuck).
+
+EWMH for root window crap.
+
+Check for other ICCCM conventions.
+
+Tons and tons of documentation.
+
+More Gribble commands. (Looping and conditionals? Query information?)
+
+IPC Gribble interface.
+
+Add more options for configuration. Focus follows mouse?
+
+Add support for _NET_WM_WINDOW_OPACITY (particularly to indicate focus).
+
