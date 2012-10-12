@@ -150,6 +150,19 @@ func (tp ThemePrompt) SelectTheme() *prompt.SelectTheme {
 	}
 }
 
+func (tp ThemePrompt) InputTheme() *prompt.InputTheme {
+	return &prompt.InputTheme{
+		BorderSize:  tp.borderSize,
+		BgColor:     tp.bgColor,
+		BorderColor: tp.borderColor,
+		Padding:     tp.padding,
+		Font:        tp.font,
+		FontSize:    tp.fontSize,
+		FontColor:   tp.fontColor,
+		InputWidth:  400,
+	}
+}
+
 func newTheme() *ThemeConfig {
 	return &ThemeConfig{
 		DefaultIcon: builtInIcon(),

@@ -30,6 +30,10 @@ func NewHeads(X *xgbutil.XUtil) *Heads {
 	return hds
 }
 
+func (hds *Heads) NumHeads() int {
+	return len(hds.geom)
+}
+
 func (hds *Heads) Initialize(clients Clients) {
 	// Now workarea, geom, active and visible will be set.
 	// Indeed, they are always set in keeping with the invariants when Load

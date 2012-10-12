@@ -50,6 +50,11 @@ func (wrks *Workspaces) NewWorkspace(name string) *Workspace {
 	return wrk
 }
 
+func (wrk *Workspace) Destroy() {
+	wrk.PromptSlctGroup.Destroy()
+	wrk.PromptSlctItem.Destroy()
+}
+
 func (wrk *Workspace) String() string {
 	return wrk.Name
 }

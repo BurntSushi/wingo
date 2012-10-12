@@ -59,28 +59,20 @@ func (hds *Heads) RemoveWorkspace(wk *workspace.Workspace) {
 	// Don't allow it if this would result in fewer workspaces than there
 	// are active physical heads.
 	if len(hds.geom) == len(hds.Workspaces.Wrks) {
-		return
+		panic("Cannot have fewer workspaces than active monitors.")
 	}
 
-	// There's a bit of complexity in choosing where to move the clients to.
-	// Namely, if we're removing a hidden workspace, it's a simple matter of
-	// moving the clients. However, if we're removing a visible workspace,
-	// we have to make sure to make another workspace that is hidden take
-	// its place. (Such a workspace is guaranteed to exist because we have at
-	// least one more workspace than there are active physical heads.)
-	if !wk.IsVisible() {
-		moveClientsTo := hds.Workspaces.Wrks[len(hds.Workspaces.Wrks)-1]
-		if moveClientsTo == wk {
-			moveClientsTo = hds.Workspaces.Wrks[len(hds.Workspaces.Wrks)-2]
-		}
-		wk.RemoveAllAndAdd(moveClientsTo)
-	} else {
-		// Find the last-most hidden workspace that is not itself.
+	// A non-empty workspace cannot be removed.
+	if len(wk.Clients) > 0 {
+		panic(fmt.Sprintf("Non-empty workspace '%s' cannot be removed.", wk))
+	}
+
+	if wk.IsVisible() {
+		// Find the last-most hidden workspace that is not itself and switch.
 		for i := len(hds.Workspaces.Wrks) - 1; i >= 0; i-- {
 			work := hds.Workspaces.Wrks[i]
 			if work != wk && !work.IsVisible() {
 				hds.SwitchWorkspaces(wk, work)
-				wk.RemoveAllAndAdd(work)
 				break
 			}
 		}

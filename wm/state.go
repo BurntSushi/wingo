@@ -1,6 +1,8 @@
 package wm
 
 import (
+	"fmt"
+
 	"github.com/BurntSushi/gribble"
 
 	"github.com/BurntSushi/xgb/xproto"
@@ -56,7 +58,9 @@ func Initialize(x *xgbutil.XUtil,
 
 	Heads = heads.NewHeads(X)
 	for _, wrkName := range Config.Workspaces {
-		AddWorkspace(wrkName)
+		if err := AddWorkspace(wrkName); err != nil {
+			logger.Error.Fatalf("Could not initialize workspaces: %s", err)
+		}
 	}
 	Heads.Initialize(Clients)
 
@@ -111,12 +115,30 @@ func Workspace() *workspace.Workspace {
 	return Heads.ActiveWorkspace()
 }
 
-func AddWorkspace(name string) {
+func AddWorkspace(name string) error {
+	if len(name) == 0 {
+		return fmt.Errorf("Workspaces must have a name of length at least one.")
+	}
+	if Heads.Workspaces.Find(name) != nil {
+		return fmt.Errorf("A workspace with name '%s' already exists.", name)
+	}
 	wrk := Heads.NewWorkspace(name)
 	wrk.PromptSlctGroup = Prompts.Slct.AddGroup(wrk)
 	wrk.PromptSlctItem = Prompts.Slct.AddChoice(wrk)
 
 	Heads.AddWorkspace(wrk)
+	return nil
+}
+
+func RemoveWorkspace(wrk *workspace.Workspace) error {
+	if len(Heads.Workspaces.Wrks) == Heads.NumHeads() {
+		return fmt.Errorf("Cannot have fewer workspaces than active monitors.")
+	}
+	if len(wrk.Clients) > 0 {
+		return fmt.Errorf("Non-empty workspace '%s' cannot be removed.", wrk)
+	}
+	Heads.RemoveWorkspace(wrk)
+	return nil
 }
 
 // cliIndex returns the index of the first occurrence of needle in haystack.

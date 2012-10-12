@@ -25,6 +25,7 @@ import (
 // Env declares all available commands. Any command not in
 // this list cannot be executed.
 var Env = gribble.New([]gribble.Command{
+	&AddWorkspace{},
 	&Close{},
 	&CycleClientNext{},
 	&CycleClientPrev{},
@@ -49,10 +50,9 @@ var Env = gribble.New([]gribble.Command{
 	&MovePointerAbsolute{},
 	&MovePointerRelative{},
 	&Raise{},
+	&RemoveWorkspace{},
 	&Resize{},
 	&Quit{},
-	&SelectClient{},
-	&SelectWorkspace{},
 	&Shell{},
 	&TileStart{},
 	&TileStop{},
@@ -61,6 +61,11 @@ var Env = gribble.New([]gribble.Command{
 	&WorkspaceSendClient{},
 	&WorkspaceWithClient{},
 
+	&Input{},
+	&SelectClient{},
+	&SelectWorkspace{},
+
+	&GetWorkspace{},
 	&GetWorkspaceNext{},
 	&GetWorkspacePrev{},
 })
@@ -73,6 +78,21 @@ var (
 func syncRun(f func() gribble.Value) gribble.Value {
 	SafeExec <- f
 	return <-SafeReturn
+}
+
+type AddWorkspace struct {
+	Name string `param:"1"`
+}
+
+func (cmd AddWorkspace) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		if err := wm.AddWorkspace(cmd.Name); err != nil {
+			logger.Warning.Printf(
+				"Could not add workspace '%s': %s", cmd.Name, err)
+			return ""
+		}
+		return cmd.Name
+	})
 }
 
 type Close struct {
@@ -410,6 +430,7 @@ func (cmd Move) Run() gribble.Value {
 			return nil
 		}
 		withClient(cmd.Client, func(c *xclient.Client) {
+			c.EnsureUnmax()
 			c.LayoutMove(x, y)
 		})
 		return nil
@@ -443,6 +464,24 @@ func (cmd MovePointerRelative) Run() gribble.Value {
 	})
 }
 
+type RemoveWorkspace struct {
+	Name gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd RemoveWorkspace) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withWorkspace(cmd.Name, func(wrk *workspace.Workspace) {
+			if err := wm.RemoveWorkspace(wrk); err != nil {
+				logger.Warning.Printf("Could not remove workspace '%s': %s",
+					wrk, err)
+				return
+			}
+			wm.FocusFallback()
+		})
+		return nil
+	})
+}
+
 type Resize struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	Width  gribble.Any `param:"2" types:"int,float"`
@@ -457,6 +496,7 @@ func (cmd Resize) Run() gribble.Value {
 			return nil
 		}
 		withClient(cmd.Client, func(c *xclient.Client) {
+			c.EnsureUnmax()
 			c.LayoutResize(w, h)
 		})
 		return nil
@@ -473,81 +513,21 @@ func (cmd Quit) Run() gribble.Value {
 	})
 }
 
-type SelectClient struct {
-	TabCompletion       string `param:"1"`
-	OnlyActiveWorkspace string `param:"2"`
-	OnlyVisible         string `param:"3"`
-	ShowIconified       string `param:"4"`
-}
-
-func (cmd SelectClient) Run() gribble.Value {
-	selected := make(chan int, 1)
-
-	data := xclient.SelectData{
-		Selected: func(c *xclient.Client) {
-			selected <- int(c.Id())
-		},
-		Highlighted: nil,
-	}
-	wm.ShowSelectClient(
-		stringTabComp(cmd.TabCompletion),
-		stringBool(cmd.OnlyActiveWorkspace),
-		stringBool(cmd.OnlyVisible),
-		stringBool(cmd.ShowIconified),
-		data)
-
-	for {
-		select {
-		case clientId := <-selected:
-			return clientId
-		case <-time.After(10 * time.Second):
-			if !wm.Prompts.Slct.Showing() {
-				return ":void:"
-			}
-		}
-	}
-	panic("unreachable")
-}
-
-type SelectWorkspace struct {
-	TabCompletion string `param:"1"`
-}
-
-func (cmd SelectWorkspace) Run() gribble.Value {
-	selected := make(chan string, 1)
-
-	data := workspace.SelectData{
-		Selected: func(wrk *workspace.Workspace) {
-			selected <- wrk.Name
-		},
-		Highlighted: nil,
-	}
-	wm.ShowSelectWorkspace(stringTabComp(cmd.TabCompletion), data)
-
-	for {
-		select {
-		case wrkName := <-selected:
-			return wrkName
-		case <-time.After(10 * time.Second):
-			if !wm.Prompts.Slct.Showing() {
-				return ""
-			}
-		}
-	}
-	panic("unreachable")
-}
-
 // Shell takes a command specified in a configuration file and
-// tries to parse it as an executable command. The command must be wrapped
-// in "`" and "`" (back-quotes). If it's not, we return nil. Otherwise, we
-// return a function that will execute the command.
-// This provides rudimentary support for quoted values in the command.
+// tries to parse it as an executable command. The parser currently has
+// only very basic support for quoted values and should be considered
+// fragile. This should NOT be considered as a suitable replacement for
+// something like `xbindkeys`.
 type Shell struct {
 	Command string `param:"1"`
 }
 
 func (cmd Shell) Run() gribble.Value {
 	var stderr bytes.Buffer
+
+	if len(cmd.Command) == 0 {
+		return nil
+	}
 
 	splitCmdName := strings.SplitN(cmd.Command, " ", 2)
 	cmdName := splitCmdName[0]
@@ -686,27 +666,4 @@ func (cmd WorkspaceWithClient) Run() gribble.Value {
 		})
 		return nil
 	})
-}
-
-type GetWorkspaceNext struct{}
-
-func (cmd GetWorkspaceNext) Run() gribble.Value {
-	return wm.Heads.NextWorkspace().Name
-}
-
-type GetWorkspacePrefix struct {
-	Prefix string `param:"1"`
-	Help   string `
-Some documentation.
-`
-}
-
-func (cmd GetWorkspacePrefix) Run() gribble.Value {
-	return nil
-}
-
-type GetWorkspacePrev struct{}
-
-func (cmd GetWorkspacePrev) Run() gribble.Value {
-	return wm.Heads.PrevWorkspace().Name
 }

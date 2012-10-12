@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/BurntSushi/xgbutil"
@@ -38,7 +39,19 @@ func NewWorkspaces(X *xgbutil.XUtil, heads Heads) *Workspaces {
 	}
 }
 
+// Add adds a new workspace to the set. Add will panic if a workspace with
+// the same case-insensitive name as wrk already exists. Add will also panic
+// if the workspace has a zero-length name.
 func (wrks *Workspaces) Add(wrk *Workspace) {
+	if len(wrk.Name) == 0 {
+		panic("Workspaces must have a name of length at least one.")
+	}
+	for _, w := range wrks.Wrks {
+		if strings.ToLower(w.Name) == strings.ToLower(wrk.Name) {
+			panic(fmt.Sprintf("A workspace with the name '%s' already exists.",
+				wrk.Name))
+		}
+	}
 	wrks.Wrks = append(wrks.Wrks, wrk)
 }
 
@@ -46,6 +59,7 @@ func (wrks *Workspaces) Remove(wrk *Workspace) {
 	for i, wrk2 := range wrks.Wrks {
 		if wrk == wrk2 {
 			wrks.Wrks = append(wrks.Wrks[:i], wrks.Wrks[i+1:]...)
+			wrk.Destroy()
 			return
 		}
 	}

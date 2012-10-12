@@ -8,6 +8,7 @@ import (
 type AllPrompts struct {
 	Cycle *prompt.Cycle
 	Slct  *prompt.Select
+	Input *prompt.Input
 
 	slctVisible, slctHidden *prompt.SelectGroupItem
 }
@@ -24,11 +25,15 @@ func newPrompts() AllPrompts {
 		ConfirmKey:   Config.ConfirmKey,
 		TabKey:       Config.TabKey,
 	}
+	inputConfig := prompt.InputConfig{
+		CancelKey:    Config.CancelKey,
+		BackspaceKey: Config.BackspaceKey,
+		ConfirmKey:   Config.ConfirmKey,
+	}
 	ps := AllPrompts{
-		Cycle: prompt.NewCycle(X, Theme.Prompt.CycleTheme(),
-			cycleConfig),
-		Slct: prompt.NewSelect(X, Theme.Prompt.SelectTheme(),
-			selectConfig),
+		Cycle: prompt.NewCycle(X, Theme.Prompt.CycleTheme(), cycleConfig),
+		Slct:  prompt.NewSelect(X, Theme.Prompt.SelectTheme(), selectConfig),
+		Input: prompt.NewInput(X, Theme.Prompt.InputTheme(), inputConfig),
 	}
 	ps.slctVisible = ps.Slct.AddGroup(ps.Slct.NewStaticGroup("Visible"))
 	ps.slctHidden = ps.Slct.AddGroup(ps.Slct.NewStaticGroup("Hidden"))

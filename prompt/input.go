@@ -23,18 +23,19 @@ import (
 type Input struct {
 	X      *xgbutil.XUtil
 	theme  *InputTheme
-	config *InputConfig
+	config InputConfig
 
-	showing bool
-	do      func(inp *Input, text string)
+	showing  bool
+	do       func(inp *Input, text string)
+	canceled func(inp *Input)
 
-	win                    *xwindow.Window
-	label                  *xwindow.Window
-	input                  *text.Input
-	bTop, bBot, bLft, bRht *xwindow.Window
+	win                          *xwindow.Window
+	label                        *xwindow.Window
+	input                        *text.Input
+	bInp, bTop, bBot, bLft, bRht *xwindow.Window
 }
 
-func NewInput(X *xgbutil.XUtil, theme *InputTheme, config *InputConfig) *Input {
+func NewInput(X *xgbutil.XUtil, theme *InputTheme, config InputConfig) *Input {
 	input := &Input{
 		X:       X,
 		theme:   theme,
@@ -51,6 +52,7 @@ func NewInput(X *xgbutil.XUtil, theme *InputTheme, config *InputConfig) *Input {
 	input.label = cwin(input.win.Id)
 	input.input = text.NewInput(X, input.win.Id, 1000, theme.Padding,
 		theme.Font, theme.FontSize, theme.FontColor, theme.BgColor)
+	input.bInp = cwin(input.win.Id)
 	input.bTop, input.bBot = cwin(input.win.Id), cwin(input.win.Id)
 	input.bLft, input.bRht = cwin(input.win.Id), cwin(input.win.Id)
 
@@ -65,6 +67,7 @@ func NewInput(X *xgbutil.XUtil, theme *InputTheme, config *InputConfig) *Input {
 		w.Change(xproto.CwBackPixel, clr.Uint32())
 	}
 	cclr(input.win, input.theme.BgColor)
+	cclr(input.bInp, input.theme.BorderColor)
 	cclr(input.bTop, input.theme.BorderColor)
 	cclr(input.bBot, input.theme.BorderColor)
 	cclr(input.bLft, input.theme.BorderColor)
@@ -73,6 +76,7 @@ func NewInput(X *xgbutil.XUtil, theme *InputTheme, config *InputConfig) *Input {
 	// Map the sub-windows once.
 	input.label.Map()
 	input.input.Map()
+	input.bInp.Map()
 	input.bTop.Map()
 	input.bBot.Map()
 	input.bLft.Map()
@@ -94,6 +98,7 @@ func (inp *Input) Showing() bool {
 func (inp *Input) Destroy() {
 	inp.input.Destroy()
 	inp.label.Destroy()
+	inp.bInp.Destroy()
 	inp.bTop.Destroy()
 	inp.bBot.Destroy()
 	inp.bLft.Destroy()
@@ -105,8 +110,8 @@ func (inp *Input) Id() xproto.Window {
 	return inp.win.Id
 }
 
-func (inp *Input) Show(workarea xrect.Rect,
-	label string, do func(inp *Input, text string)) bool {
+func (inp *Input) Show(workarea xrect.Rect, label string,
+	do func(inp *Input, text string), canceled func(inp *Input)) bool {
 
 	if inp.showing {
 		return false
@@ -129,14 +134,17 @@ func (inp *Input) Show(workarea xrect.Rect,
 
 	inp.win.MoveResize(posx, posy, width, height)
 	inp.label.Move(bs+pad, pad+bs)
-	inp.input.Move(bs + +pad + inp.label.Geom.Width(), bs)
+	inp.bInp.MoveResize(pad+inp.label.Geom.X()+inp.label.Geom.Width(), 0,
+		bs, height)
 	inp.bTop.Resize(width, bs)
 	inp.bBot.MoveResize(0, height-bs, width, bs)
 	inp.bLft.Resize(bs, height)
 	inp.bRht.MoveResize(width-bs, 0, bs, height)
+	inp.input.Move(inp.bInp.Geom.X()+inp.bInp.Geom.Width(), bs)
 
 	inp.showing = true
 	inp.do = do
+	inp.canceled = canceled
 	inp.win.Map()
 	inp.input.Focus()
 
@@ -149,9 +157,11 @@ func (inp *Input) Hide() {
 	}
 
 	inp.win.Unmap()
+	inp.input.Reset()
 
 	inp.showing = false
 	inp.do = nil
+	inp.canceled = nil
 }
 
 func (inp *Input) focusResponse() xevent.FocusOutFun {
@@ -176,7 +186,7 @@ func (inp *Input) keyResponse() xevent.KeyPressFun {
 		case keybind.KeyMatch(X, inp.config.ConfirmKey, mods, kc):
 			inp.do(inp, string(inp.input.Text))
 		case keybind.KeyMatch(X, inp.config.CancelKey, mods, kc):
-			inp.input.Reset()
+			inp.canceled(inp)
 			inp.Hide()
 		default:
 			inp.input.Add(mods, kc)
@@ -199,10 +209,10 @@ type InputTheme struct {
 }
 
 var DefaultInputTheme = &InputTheme{
-	BorderSize:  10,
+	BorderSize:  5,
 	BgColor:     render.NewImageColor(color.RGBA{0xff, 0xff, 0xff, 0xff}),
 	BorderColor: render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
-	Padding:     20,
+	Padding:     10,
 
 	Font: xgraphics.MustFont(xgraphics.ParseFont(
 		bytes.NewBuffer(bindata.DejavusansTtf()))),
@@ -217,7 +227,7 @@ type InputConfig struct {
 	ConfirmKey   string
 }
 
-var DefaultInputConfig = &InputConfig{
+var DefaultInputConfig = InputConfig{
 	CancelKey:    "Escape",
 	BackspaceKey: "BackSpace",
 	ConfirmKey:   "Return",
