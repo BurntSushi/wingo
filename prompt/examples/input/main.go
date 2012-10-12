@@ -13,7 +13,11 @@ import (
 
 var X *xgbutil.XUtil
 
-func response(text string) {
+func response(inp *prompt.Input, text string) {
+	if text == "hide" {
+		inp.Hide()
+		return
+	}
 	if text == "quit" {
 		xevent.Quit(X)
 		return

@@ -26,7 +26,7 @@ type Input struct {
 	config *InputConfig
 
 	showing bool
-	do      func(text string)
+	do      func(inp *Input, text string)
 
 	win                    *xwindow.Window
 	label                  *xwindow.Window
@@ -106,7 +106,7 @@ func (inp *Input) Id() xproto.Window {
 }
 
 func (inp *Input) Show(workarea xrect.Rect,
-	label string, do func(text string)) bool {
+	label string, do func(inp *Input, text string)) bool {
 
 	if inp.showing {
 		return false
@@ -174,7 +174,7 @@ func (inp *Input) keyResponse() xevent.KeyPressFun {
 		case keybind.KeyMatch(X, inp.config.BackspaceKey, mods, kc):
 			inp.input.Remove()
 		case keybind.KeyMatch(X, inp.config.ConfirmKey, mods, kc):
-			inp.do(string(inp.input.Text))
+			inp.do(inp, string(inp.input.Text))
 		case keybind.KeyMatch(X, inp.config.CancelKey, mods, kc):
 			inp.input.Reset()
 			inp.Hide()
