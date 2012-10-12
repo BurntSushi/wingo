@@ -122,7 +122,7 @@ func (wrk *Workspace) Add(c Client) {
 		c.LoadState("last-floating")
 	}
 
-	// If the old and new workspace have never visibilities, adjust the
+	// If the old and new workspace have different visibilities, adjust the
 	// client appropriately.
 	if current != nil {
 		if current.IsVisible() && !wrk.IsVisible() {
@@ -148,26 +148,11 @@ func (wrk *Workspace) Remove(c Client) {
 }
 
 func (wrk *Workspace) RemoveAllAndAdd(newWk *Workspace) {
-	mapOrUnmap := func(c Client) {
-		if newWk.IsVisible() && !wrk.IsVisible() {
-			c.Map()
-		} else if !newWk.IsVisible() && wrk.IsVisible() {
-			c.Unmap()
-		}
-	}
 	for _, c := range wrk.Clients {
 		if c.Workspace() != wrk {
 			continue
 		}
-
-		c.WorkspaceSet(newWk)
-		wrk.removeFromFloaters(c)
-		wrk.removeFromTilers(c)
-		if !c.Iconified() {
-			wrk.addToFloaters(c)
-			wrk.addToTilers(c)
-			mapOrUnmap(c)
-		}
+		newWk.Add(c)
 	}
 	newWk.Place()
 }
