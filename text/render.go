@@ -2,7 +2,6 @@ package text
 
 import (
 	"image"
-	"image/color"
 
 	"code.google.com/p/freetype-go/freetype/truetype"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/misc"
+	"github.com/BurntSushi/wingo/render"
 )
 
 // BUG(burntsushi): I don't think freetype-go has a way to compute text extents
@@ -30,7 +30,7 @@ import (
 //
 // An error can occur when rendering the text to an image.
 func DrawText(win *xwindow.Window, font *truetype.Font, size float64,
-	fontClr, bgClr color.RGBA, text string) error {
+	fontClr, bgClr render.Color, text string) error {
 
 	// Over estimate the extents.
 	ew, eh := xgraphics.TextMaxExtents(font, size, text)
@@ -38,11 +38,11 @@ func DrawText(win *xwindow.Window, font *truetype.Font, size float64,
 
 	// Create an image using the over estimated extents.
 	img := xgraphics.New(win.X, image.Rect(0, 0, ew, eh))
-	xgraphics.BlendBgColor(img, bgClr)
+	xgraphics.BlendBgColor(img, bgClr.ImageColor())
 
 	// Now draw the text, grab the (x, y) position advanced by the text, and
 	// check for an error in rendering.
-	x, y, err := img.Text(0, 0, fontClr, size, font, text)
+	x, y, err := img.Text(0, 0, fontClr.ImageColor(), size, font, text)
 	if err != nil {
 		return err
 	}

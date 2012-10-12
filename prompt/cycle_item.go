@@ -176,8 +176,8 @@ func (ci *CycleItem) UpdateText() {
 	t := ci.cycle.theme
 	txt := ci.choice.CycleText()
 
-	err := text.DrawText(ci.text, t.Font, t.FontSize, t.FontColor.ImageColor(),
-		t.BgColor.ImageColor(), txt)
+	err := text.DrawText(ci.text, t.Font, t.FontSize, t.FontColor,
+		t.BgColor, txt)
 	if err != nil {
 		logger.Warning.Printf("(*CycleItem).UpdateText: "+
 			"Could not render text: %s", err)

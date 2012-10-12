@@ -18,7 +18,6 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/bindata"
-	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/render"
 	"github.com/BurntSushi/wingo/text"
@@ -160,26 +159,6 @@ func (slct *Select) focusResponse() xevent.FocusOutFun {
 		}
 	}
 	return xevent.FocusOutFun(f)
-}
-
-func ignoreFocus(modeByte, detailByte byte) bool {
-	mode, detail := focus.Modes[modeByte], focus.Details[detailByte]
-
-	if mode == "NotifyGrab" || mode == "NotifyUngrab" {
-		return true
-	}
-	if detail == "NotifyAncestor" ||
-		detail == "NotifyInferior" ||
-		detail == "NotifyNonlinear" ||
-		detail == "NotifyPointer" ||
-		detail == "NotifyPointerRoot" ||
-		detail == "NotifyNone" {
-
-		return true
-	}
-	// Only accept modes: NotifyNormal and NotifyWhileGrabbed
-	// Only accept details: NotifyVirtual, NotifyNonlinearVirtual
-	return false
 }
 
 func (slct *Select) keyResponse() xevent.KeyPressFun {
