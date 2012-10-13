@@ -59,8 +59,10 @@ var Env = gribble.New([]gribble.Command{
 	&Unmaximize{},
 	&WingoExec{},
 	&Workspace{},
+	&WorkspaceGreedy{},
 	&WorkspaceSendClient{},
 	&WorkspaceWithClient{},
+	&WorkspaceGreedyWithClient{},
 
 	&Input{},
 	&SelectClient{},
@@ -68,6 +70,7 @@ var Env = gribble.New([]gribble.Command{
 
 	&GetWorkspace{},
 	&GetWorkspaceNext{},
+	&GetWorkspacePrefix{},
 	&GetWorkspacePrev{},
 })
 
@@ -88,8 +91,7 @@ type AddWorkspace struct {
 func (cmd AddWorkspace) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		if err := wm.AddWorkspace(cmd.Name); err != nil {
-			logger.Warning.Printf(
-				"Could not add workspace '%s': %s", cmd.Name, err)
+			wm.PopupError("Could not add workspace '%s': %s", cmd.Name, err)
 			return ""
 		}
 		return cmd.Name
@@ -647,6 +649,20 @@ func (cmd Workspace) Run() gribble.Value {
 	})
 }
 
+type WorkspaceGreedy struct {
+	Name gribble.Any `param:"1" types:"int,string"`
+}
+
+func (cmd WorkspaceGreedy) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withWorkspace(cmd.Name, func(wrk *workspace.Workspace) {
+			wm.SetWorkspace(wrk, true)
+			wm.FocusFallback()
+		})
+		return nil
+	})
+}
+
 type WorkspaceSendClient struct {
 	Name   gribble.Any `param:"1" types:"int,string"`
 	Client gribble.Any `param:"2" types:"int,string"`
@@ -675,6 +691,25 @@ func (cmd WorkspaceWithClient) Run() gribble.Value {
 				stack.Raise(c)
 				wrk.Add(c)
 				wm.SetWorkspace(wrk, false)
+				wm.FocusFallback()
+			})
+		})
+		return nil
+	})
+}
+
+type WorkspaceGreedyWithClient struct {
+	Name   gribble.Any `param:"1" types:"int,string"`
+	Client gribble.Any `param:"2" types:"int,string"`
+}
+
+func (cmd WorkspaceGreedyWithClient) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withWorkspace(cmd.Name, func(wrk *workspace.Workspace) {
+			withClient(cmd.Client, func(c *xclient.Client) {
+				stack.Raise(c)
+				wrk.Add(c)
+				wm.SetWorkspace(wrk, true)
 				wm.FocusFallback()
 			})
 		})

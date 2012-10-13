@@ -98,7 +98,7 @@ func main() {
 	}
 
 	// Update state when the root window changes size
-	// xevent.ConfigureNotifyFun(rootGeometryChange).Connect(X, wm.Root.Id) 
+	wm.RootGeomChangeFun().Connect(X, wm.Root.Id)
 
 	// Oblige map request events
 	xevent.MapRequestFun(

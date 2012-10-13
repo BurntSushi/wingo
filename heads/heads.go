@@ -1,6 +1,8 @@
 package heads
 
 import (
+	"fmt"
+
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xinerama"
@@ -30,18 +32,7 @@ func NewHeads(X *xgbutil.XUtil) *Heads {
 	return hds
 }
 
-func (hds *Heads) NumHeads() int {
-	return len(hds.geom)
-}
-
 func (hds *Heads) Initialize(clients Clients) {
-	// Now workarea, geom, active and visible will be set.
-	// Indeed, they are always set in keeping with the invariants when Load
-	// is called.
-	hds.Load(clients)
-}
-
-func (hds *Heads) Load(clients Clients) {
 	hds.geom = query(hds.X)
 
 	// Check if the number of workspaces is less than the number of heads.
@@ -60,6 +51,100 @@ func (hds *Heads) Load(clients Clients) {
 	hds.visibles = make([]*workspace.Workspace, len(hds.geom))
 	for i := 0; i < len(hds.geom); i++ {
 		hds.visibles[i] = hds.Workspaces.Wrks[i]
+	}
+
+	// Apply the struts set by clients to the workarea geometries.
+	// This will fill in the hds.workarea slice.
+	hds.ApplyStruts(clients)
+
+	// Now show only the visibles and hide everything else.
+	for _, wrk := range hds.Workspaces.Wrks {
+		if wrk.IsVisible() {
+			wrk.Show()
+		} else {
+			wrk.Hide()
+		}
+	}
+}
+
+func (hds *Heads) Reload(clients Clients) {
+	hds.geom = query(hds.X)
+
+	// Check if the number of workspaces is less than the number of heads.
+	if len(hds.Workspaces.Wrks) < len(hds.geom) {
+		logger.Error.Fatalf(
+			"There must be at least %d workspaces (one for each head).",
+			len(hds.geom))
+	}
+
+	logger.Message.Printf("Root window geometry had changed. Mirgrating "+
+		"from %d heads to %d heads.", len(hds.visibles), len(hds.geom))
+
+	// Here comes the tricky part. We may have more, less or the same number
+	// of heads. But we'd like there to be as much of an overlap as possible
+	// between the heads that were visible before and the heads that will
+	// be visible. If we have the same number of heads as before, then we
+	// don't much care about this.
+	if len(hds.visibles) < len(hds.geom) {
+		// We have more heads than we had before. So let's just expand our
+		// visibles with some new workspaces. Remember, we're guaranteed to
+		// have at least as many workspaces as heads.
+		// We also leave the currently active workspace alone.
+		for i := len(hds.visibles); i < len(hds.geom); i++ {
+			// Find an available (i.e., hidden) workspace.
+			for _, wrk := range hds.Workspaces.Wrks {
+				if hds.visibleIndex(wrk) == -1 {
+					hds.visibles = append(hds.visibles, wrk)
+					break
+				}
+			}
+		}
+	} else if len(hds.visibles) > len(hds.geom) {
+		// We now have fewer heads than we had before, so we'll reconstruct
+		// our list of visibles, with care to keep the same ordering and to
+		// keep the currently workspace still visible. (I believe this behavior
+		// to be the least surprising to the user.)
+		oldActive := hds.visibles[hds.active]
+		oldvis := hds.visibles
+		newvis := make([]*workspace.Workspace, len(hds.geom))
+		newActive := -1
+		newi := 0
+		for oldi := 0; oldi < len(oldvis) && newi < len(newvis); oldi++ {
+			// We always add this workspace, UNLESS we have only one spot left
+			// and haven't added the active workspace yet. (We reserve that
+			// last spot for the active workspace.)
+			wrk := oldvis[oldi]
+			if newActive == -1 && newi == len(newvis)-1 && !wrk.IsActive() {
+				continue
+			}
+
+			newvis[newi] = wrk
+			if wrk.IsActive() {
+				newActive = newi
+			}
+			newi++
+		}
+
+		// Now that we've collected our new visibles list, we need to hide
+		// all of the workspaces. (We'll show them later.) This is so that
+		// they get properly refreshed into the right locations on the screen.
+		for _, wrk := range hds.Workspaces.Wrks {
+			wrk.Hide()
+		}
+		hds.visibles = newvis
+		hds.ActivateWorkspace(hds.visibles[newActive])
+
+		if oldActive != hds.visibles[hds.active] {
+			panic(fmt.Sprintf("BUG: Old active workspace %s is not the same "+
+				"as the new active workspace.",
+				oldActive, hds.visibles[hds.active]))
+		}
+	}
+
+	// Protect my sanity...
+	if len(hds.visibles) != len(hds.geom) {
+		panic(fmt.Sprintf("BUG: length of visibles (%d) != length of "+
+			"geometry (%d)", len(hds.visibles), len(hds.geom)))
 	}
 
 	// Apply the struts set by clients to the workarea geometries.
@@ -125,6 +210,17 @@ func Convert(rect, src, dest xrect.Rect) xrect.Rect {
 	// XXX: Allow window scaling as a config option.
 
 	return xrect.New(nx, ny, nw, nh)
+}
+
+// NumHeads returns the current number of heads that Wingo is using.
+func (hds *Heads) NumHeads() int {
+	return len(hds.geom)
+}
+
+// NumConnected pings the Xinerama extension for a fresh tally of the number
+// of heads currently active.
+func (hds *Heads) NumConnected() int {
+	return len(query(hds.X))
 }
 
 func query(X *xgbutil.XUtil) xinerama.Heads {

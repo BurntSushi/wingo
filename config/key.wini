@@ -3,7 +3,7 @@ Mod4-b := Shell "chromium"
 Mod4-t := Shell "lxterminal"
 Mod4-Shift-r := Shell (Input "Command:")
 
-Mod4-w := WingoExec (Input "Wingo command:")
+Mod4-Shift-w := WingoExec (Input "Wingo command:")
 
 Mod4-c := Close ":active:"
 Mod1-Shift-c := Quit
@@ -53,9 +53,8 @@ Mod4-4 := Workspace "4"
 Mod4-5 := Workspace "5"
 Mod4-6 := Workspace "6"
 
-Mod4-a := AddWorkspace (Input "New workspace name:")
-Mod4-Shift-a := WorkspaceWithClient (AddWorkspace (Input "New workspace name:")) ":active:"
-Mod4-d := RemoveWorkspace (SelectWorkspace "Prefix")
+Mod4-shift-a := AddWorkspace (Input "New workspace name:")
+Mod4-shift-d := RemoveWorkspace (SelectWorkspace "Prefix")
 Mod4-BackSpace := RemoveWorkspace (GetWorkspace)
 
 Mod1-1 := FrameNada ":active:"

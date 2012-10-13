@@ -8,6 +8,7 @@ import (
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
+	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/focus"
@@ -147,6 +148,32 @@ func RemoveWorkspace(wrk *workspace.Workspace) error {
 	}
 	Heads.RemoveWorkspace(wrk)
 	return nil
+}
+
+func RootGeomChangeFun() xevent.ConfigureNotifyFun {
+	f := func(X *xgbutil.XUtil, ev xevent.ConfigureNotifyEvent) {
+		// Before trying to reload, make sure we have enough workspaces...
+		// We don't want to die here like we might on start up.
+		for i := len(Heads.Workspaces.Wrks); i < Heads.NumConnected(); i++ {
+			AddWorkspace(uniqueWorkspaceName())
+		}
+		Heads.Reload(Clients)
+		FocusFallback()
+	}
+	return xevent.ConfigureNotifyFun(f)
+}
+
+// uniqueWorkspaceName returns a workspace name that is guaranteed to be of
+// non-zero length and unique with respect to all other workspaces.
+func uniqueWorkspaceName() string {
+	// Simple... try "1", "2", ... until we get a unique workspace.
+	for i := 1; true; i++ {
+		try := fmt.Sprintf("%d", i)
+		if Heads.Workspaces.Find(try) == nil {
+			return try
+		}
+	}
+	panic("unreachable")
 }
 
 // cliIndex returns the index of the first occurrence of needle in haystack.
