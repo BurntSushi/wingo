@@ -65,6 +65,12 @@ func (c *Client) manage() {
 	c.refreshName()
 	logger.Message.Printf("Managing new client: %s", c)
 
+	promptDone := make(chan struct{}, 0)
+	go func() {
+		c.prompts = c.newClientPrompts()
+		promptDone <- struct{}{}
+	}()
+
 	c.fetchXProperties()
 	c.setPrimaryType()
 	c.setInitialLayer()
@@ -76,7 +82,6 @@ func (c *Client) manage() {
 	// newClientFrames sets c.frame.
 	c.frames = c.newClientFrames()
 	c.states = c.newClientStates()
-	c.prompts = c.newClientPrompts()
 
 	presumedWorkspace := c.findPresumedWorkspace()
 
@@ -105,6 +110,8 @@ func (c *Client) manage() {
 				"if you try to replace Wingo with another window manager: %s",
 			c, err)
 	}
+
+	<-promptDone
 }
 
 func (c *Client) fullscreenToggle() {
@@ -264,6 +271,16 @@ func (c *Client) fetchXProperties() {
 		c.winTypes = []string{"_NET_WM_WINDOW_TYPE_NORMAL"}
 	}
 
+	c.class, err = icccm.WmClassGet(wm.X, c.Id())
+	if err != nil {
+		logger.Warning.Printf("Could not find window class for window %X: %s",
+			c.Id(), err)
+		c.class = &icccm.WmClass{
+			Instance: "",
+			Class:    "",
+		}
+	}
+
 	trans, _ := icccm.WmTransientForGet(wm.X, c.Id())
 	if trans == 0 {
 		for _, c2_ := range wm.Clients {
@@ -408,6 +425,9 @@ func (c *Client) findPresumedWorkspace() *workspace.Workspace {
 //
 // Note that presumedWorkspace MUST be visible.
 func (c *Client) moveToProperHead(presumedWorkspace *workspace.Workspace) {
+	if c.primaryType != clientTypeNormal {
+		return
+	}
 	if !presumedWorkspace.IsVisible() {
 		return
 	}

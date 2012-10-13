@@ -167,6 +167,9 @@ func (inp *Input) Hide() {
 func (inp *Input) focusResponse() xevent.FocusOutFun {
 	f := func(X *xgbutil.XUtil, ev xevent.FocusOutEvent) {
 		if !ignoreFocus(ev.Mode, ev.Detail) {
+			if inp.canceled != nil {
+				inp.canceled(inp)
+			}
 			inp.Hide()
 		}
 	}
@@ -184,9 +187,13 @@ func (inp *Input) keyResponse() xevent.KeyPressFun {
 		case keybind.KeyMatch(X, inp.config.BackspaceKey, mods, kc):
 			inp.input.Remove()
 		case keybind.KeyMatch(X, inp.config.ConfirmKey, mods, kc):
-			inp.do(inp, string(inp.input.Text))
+			if inp.do != nil {
+				inp.do(inp, string(inp.input.Text))
+			}
 		case keybind.KeyMatch(X, inp.config.CancelKey, mods, kc):
-			inp.canceled(inp)
+			if inp.canceled != nil {
+				inp.canceled(inp)
+			}
 			inp.Hide()
 		default:
 			inp.input.Add(mods, kc)

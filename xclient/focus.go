@@ -46,7 +46,7 @@ func (c *Client) PrepareForFocus() {
 	if c.workspace != wm.Workspace() {
 		// This isn't applicable if we're sticky.
 		if wrk, ok := c.workspace.(*workspace.Workspace); ok {
-			wrk.Activate(false) // don't be 'greedy'
+			wm.SetWorkspace(wrk, false)
 		}
 	}
 	if c.iconified {

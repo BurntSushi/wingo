@@ -27,7 +27,7 @@ func (c *Client) CheckNewWorkspace() {
 
 	// If this is the active window, switch to this workspace too.
 	if c.IsActive() {
-		newWrk.Activate(false)
+		wm.SetWorkspace(newWrk, false)
 	}
 }
 

@@ -163,6 +163,18 @@ func (tp ThemePrompt) InputTheme() *prompt.InputTheme {
 	}
 }
 
+func (tp ThemePrompt) MessageTheme() *prompt.MessageTheme {
+	return &prompt.MessageTheme{
+		BorderSize:  tp.borderSize,
+		BgColor:     tp.bgColor,
+		BorderColor: tp.borderColor,
+		Padding:     tp.padding,
+		Font:        tp.font,
+		FontSize:    tp.fontSize,
+		FontColor:   tp.fontColor,
+	}
+}
+
 func newTheme() *ThemeConfig {
 	return &ThemeConfig{
 		DefaultIcon: builtInIcon(),

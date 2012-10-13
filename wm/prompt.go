@@ -1,14 +1,18 @@
 package wm
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/prompt"
 )
 
 type AllPrompts struct {
-	Cycle *prompt.Cycle
-	Slct  *prompt.Select
-	Input *prompt.Input
+	Cycle   *prompt.Cycle
+	Slct    *prompt.Select
+	Input   *prompt.Input
+	Message *prompt.Message
 
 	slctVisible, slctHidden *prompt.SelectGroupItem
 }
@@ -30,10 +34,15 @@ func newPrompts() AllPrompts {
 		BackspaceKey: Config.BackspaceKey,
 		ConfirmKey:   Config.ConfirmKey,
 	}
+	msgConfig := prompt.MessageConfig{
+		CancelKey:  Config.CancelKey,
+		ConfirmKey: Config.ConfirmKey,
+	}
 	ps := AllPrompts{
-		Cycle: prompt.NewCycle(X, Theme.Prompt.CycleTheme(), cycleConfig),
-		Slct:  prompt.NewSelect(X, Theme.Prompt.SelectTheme(), selectConfig),
-		Input: prompt.NewInput(X, Theme.Prompt.InputTheme(), inputConfig),
+		Cycle:   prompt.NewCycle(X, Theme.Prompt.CycleTheme(), cycleConfig),
+		Slct:    prompt.NewSelect(X, Theme.Prompt.SelectTheme(), selectConfig),
+		Input:   prompt.NewInput(X, Theme.Prompt.InputTheme(), inputConfig),
+		Message: prompt.NewMessage(X, Theme.Prompt.MessageTheme(), msgConfig),
 	}
 	ps.slctVisible = ps.Slct.AddGroup(ps.Slct.NewStaticGroup("Visible"))
 	ps.slctHidden = ps.Slct.AddGroup(ps.Slct.NewStaticGroup("Hidden"))
@@ -51,6 +60,31 @@ func filterClient(client Client, activeWrk, visible, iconified bool) bool {
 		return false
 	}
 	return true
+}
+
+func PopupError(format string, vals ...interface{}) {
+	if !Config.ShowErrors {
+		return
+	}
+
+	nada := func(msg *prompt.Message) {}
+	Prompts.Message.Hide()
+
+	msg := fmt.Sprintf(format, vals...)
+	Prompts.Message.Show(Workspace().Geom(), msg, 0, nada)
+}
+
+func FYI(format string, vals ...interface{}) {
+	if !Config.ShowFyi {
+		return
+	}
+
+	nada := func(msg *prompt.Message) {}
+	Prompts.Message.Hide()
+
+	timeout := time.Duration(Config.PopupTime) * time.Millisecond
+	msg := fmt.Sprintf(format, vals...)
+	Prompts.Message.Show(Workspace().Geom(), msg, timeout, nada)
 }
 
 func ShowCycleClient(keyStr string, activeWrk, visible, iconified bool) {

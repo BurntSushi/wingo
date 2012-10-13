@@ -10,29 +10,38 @@ import (
 )
 
 type Configuration struct {
-	mouse                 map[string][]mouseCommand
-	key                   map[string][]keyCommand
-	Ffm                   bool
-	Workspaces            []string
-	AlwaysFloating        []string
 	ConfirmKey, CancelKey string
 	BackspaceKey          string
 	TabKey, RevTabKey     string
+
+	Ffm                 bool
+	Workspaces          []string
+	AlwaysFloating      []string
+	PopupTime           int
+	ShowFyi, ShowErrors bool
+
+	mouse map[string][]mouseCommand
+	key   map[string][]keyCommand
 }
 
 // newConfig
 func newConfig() *Configuration {
 	return &Configuration{
-		mouse:          map[string][]mouseCommand{},
-		key:            map[string][]keyCommand{},
+		ConfirmKey:   "Return",
+		CancelKey:    "Escape",
+		BackspaceKey: "BackSpace",
+		TabKey:       "Tab",
+		RevTabKey:    "ISO_Left_Tab",
+
 		Ffm:            false,
 		Workspaces:     []string{"1", "2", "3", "4"},
 		AlwaysFloating: []string{},
-		ConfirmKey:     "Return",
-		CancelKey:      "Escape",
-		BackspaceKey:   "BackSpace",
-		TabKey:         "Tab",
-		RevTabKey:      "ISO_Left_Tab",
+		PopupTime:      500,
+		ShowFyi:        true,
+		ShowErrors:     true,
+
+		mouse: map[string][]mouseCommand{},
+		key:   map[string][]keyCommand{},
 	}
 }
 
@@ -153,6 +162,12 @@ func (conf *Configuration) loadOptionsConfigSection(
 			}
 		case "focus_follows_mouse":
 			setBool(key, &conf.Ffm)
+		case "popup_time":
+			setInt(key, &conf.PopupTime)
+		case "show_popup_fyi":
+			setBool(key, &conf.ShowFyi)
+		case "show_popup_errors":
+			setBool(key, &conf.ShowErrors)
 		case "cancel":
 			setString(key, &conf.CancelKey)
 		case "confirm":

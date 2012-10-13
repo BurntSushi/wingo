@@ -115,6 +115,14 @@ func Workspace() *workspace.Workspace {
 	return Heads.ActiveWorkspace()
 }
 
+func SetWorkspace(wrk *workspace.Workspace, greedy bool) {
+	old := Workspace()
+	wrk.Activate(greedy)
+	if old != Workspace() {
+		FYI("%s", wrk)
+	}
+}
+
 func AddWorkspace(name string) error {
 	if len(name) == 0 {
 		return fmt.Errorf("Workspaces must have a name of length at least one.")

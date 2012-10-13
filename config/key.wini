@@ -3,6 +3,8 @@ Mod4-b := Shell "chromium"
 Mod4-t := Shell "lxterminal"
 Mod4-Shift-r := Shell (Input "Command:")
 
+Mod4-w := WingoExec (Input "Wingo command:")
+
 Mod4-c := Close ":active:"
 Mod1-Shift-c := Quit
 Mod4-x := ToggleMaximize ":active:"

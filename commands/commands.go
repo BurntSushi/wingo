@@ -57,6 +57,7 @@ var Env = gribble.New([]gribble.Command{
 	&TileStart{},
 	&TileStop{},
 	&Unmaximize{},
+	&WingoExec{},
 	&Workspace{},
 	&WorkspaceSendClient{},
 	&WorkspaceWithClient{},
@@ -192,7 +193,7 @@ func (cmd Focus) Run() gribble.Value {
 
 				geom := xrect.New(int(qp.RootX), int(qp.RootY), 1, 1)
 				if wrk := wm.Heads.FindMostOverlap(geom); wrk != nil {
-					wrk.Activate(false)
+					wm.SetWorkspace(wrk, false)
 				}
 			} else {
 				focus.Focus(c)
@@ -276,7 +277,7 @@ func (cmd HeadFocus) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		wm.Heads.WithVisibleWorkspace(cmd.Head,
 			func(wrk *workspace.Workspace) {
-				wrk.Activate(false)
+				wm.SetWorkspace(wrk, false)
 			})
 		wm.FocusFallback()
 		return nil
@@ -293,7 +294,7 @@ func (cmd HeadFocusWithClient) Run() gribble.Value {
 		withClient(cmd.Client, func(c *xclient.Client) {
 			wm.Heads.WithVisibleWorkspace(cmd.Head,
 				func(wrk *workspace.Workspace) {
-					wrk.Activate(false)
+					wm.SetWorkspace(wrk, false)
 					wrk.Add(c)
 					stack.Raise(c)
 				})
@@ -464,6 +465,16 @@ func (cmd MovePointerRelative) Run() gribble.Value {
 	})
 }
 
+type Quit struct{}
+
+func (cmd Quit) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		logger.Message.Println("The User has told us to quit.")
+		xevent.Quit(wm.X)
+		return nil
+	})
+}
+
 type RemoveWorkspace struct {
 	Name gribble.Any `param:"1" types:"int,string"`
 }
@@ -472,10 +483,11 @@ func (cmd RemoveWorkspace) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		withWorkspace(cmd.Name, func(wrk *workspace.Workspace) {
 			if err := wm.RemoveWorkspace(wrk); err != nil {
-				logger.Warning.Printf("Could not remove workspace '%s': %s",
-					wrk, err)
+				wm.PopupError("Could not remove workspace '%s': %s", wrk, err)
 				return
 			}
+
+			wm.FYI("Workspace %s removed.", wrk)
 			wm.FocusFallback()
 		})
 		return nil
@@ -499,16 +511,6 @@ func (cmd Resize) Run() gribble.Value {
 			c.EnsureUnmax()
 			c.LayoutResize(w, h)
 		})
-		return nil
-	})
-}
-
-type Quit struct{}
-
-func (cmd Quit) Run() gribble.Value {
-	return syncRun(func() gribble.Value {
-		logger.Message.Println("The User has told us to quit.")
-		xevent.Quit(wm.X)
 		return nil
 	})
 }
@@ -619,6 +621,18 @@ func (cmd Unmaximize) Run() gribble.Value {
 	})
 }
 
+type WingoExec struct {
+	Command string `param:"1"`
+}
+
+func (cmd WingoExec) Run() gribble.Value {
+	_, err := Env.Run(cmd.Command)
+	if err != nil {
+		logger.Warning.Println(err)
+	}
+	return nil
+}
+
 type Workspace struct {
 	Name gribble.Any `param:"1" types:"int,string"`
 }
@@ -626,7 +640,7 @@ type Workspace struct {
 func (cmd Workspace) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		withWorkspace(cmd.Name, func(wrk *workspace.Workspace) {
-			wrk.Activate(false)
+			wm.SetWorkspace(wrk, false)
 			wm.FocusFallback()
 		})
 		return nil
@@ -660,7 +674,7 @@ func (cmd WorkspaceWithClient) Run() gribble.Value {
 			withClient(cmd.Client, func(c *xclient.Client) {
 				stack.Raise(c)
 				wrk.Add(c)
-				wrk.Activate(false)
+				wm.SetWorkspace(wrk, false)
 				wm.FocusFallback()
 			})
 		})

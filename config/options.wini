@@ -2,7 +2,10 @@
 cancel := Escape
 confirm := Return
 focus_follows_mouse := no
-always_floating := gmrun
+always_floating := gmrun lxterminal
+popup_time := 500
+show_popup_fyi := no
+show_popup_errors := no
 
 [Workspaces]
 # workspaces := Awork Bwork Cwork Dwork Ework 
