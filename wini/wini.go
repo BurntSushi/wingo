@@ -75,7 +75,7 @@ func Parse(filename string) (*Data, error) {
 		}
 
 		// If the line has a continuation, gobble up the rest
-		if line[len(line)-1] == '\\' {
+		for line[len(line)-1] == '\\' {
 			line = line[:len(line)-1] // remove \\
 			ln, _, err := reader.ReadLine()
 			if err != nil {

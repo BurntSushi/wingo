@@ -68,5 +68,7 @@ Mod1-Shift-Tab := CycleClientPrev "yes" "no" "yes"
 Mod4-space := FocusRaise (SelectClient "Any" "no" "no" "yes")
 Mod4-return := Workspace (SelectWorkspace "Prefix")
 Mod4-Shift-return := WorkspaceWithClient (SelectWorkspace "Prefix") ":active:"
-Mod4-Shift-s := WorkspaceSendClient (SelectWorkspace "Prefix") (SelectClient "Any" "no" "no" "yes")
+Mod4-Shift-s := WorkspaceSendClient \
+                  (SelectWorkspace "Prefix") \
+                  (SelectClient "Any" "no" "no" "yes")
 
