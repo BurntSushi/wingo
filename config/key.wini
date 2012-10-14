@@ -4,6 +4,7 @@ Mod4-t := Shell "lxterminal"
 Mod4-Shift-r := Shell (Input "Command:")
 
 Mod4-Shift-w := WingoExec (Input "Wingo command:")
+Mod4-Shift-h := WingoHelp (Input "Wingo command name:")
 
 Mod4-c := Close ":active:"
 Mod1-Shift-c := Quit

@@ -130,6 +130,15 @@ func (ti *Input) AddLetter(char rune) {
 	ti.Render()
 }
 
+// SetString will clear the input box and set it to the string provided.
+func (ti *Input) SetString(s string) {
+	ti.Text = make([]rune, 0, 50)
+	for _, char := range s {
+		ti.Text = append(ti.Text, char)
+	}
+	ti.Render()
+}
+
 // Remove will remove the last character in the input box and re-render.
 // If there are no characters in the input, Remove has no effect.
 func (ti *Input) Remove() {

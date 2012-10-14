@@ -11,6 +11,13 @@ import (
 	"github.com/BurntSushi/wingo/logger"
 )
 
+// ipc starts the command server via a unix domain socket. It accepts
+// connections, reads Wingo commands, and attempts to execute them. If the
+// command results in an error, it is sent back to the client. Otherwise, the
+// return value of the command is sent to the user.
+//
+// Note that every message between the server and client MUST be null
+// terminated.
 func ipc() {
 	fpath := path.Join(os.TempDir(), "wingo-ipc")
 
@@ -30,6 +37,8 @@ func ipc() {
 			continue
 		}
 
+		// Read the command from the connection. All messages are
+		// null-terminated.
 		reader := bufio.NewReader(conn)
 		msg, err := reader.ReadString(0)
 		if err != nil {
@@ -40,6 +49,10 @@ func ipc() {
 
 		logger.Message.Printf("Running command from IPC: '%s'.", msg)
 
+		// Run the command. We set the error reporting to verbose. Be kind!
+		// If the command resulted in an error, we stop and send the error back
+		// to the user. (This would be a Gribble parse/type error, not a
+		// Wingo error.)
 		commands.Env.Verbose = true
 		val, err := commands.Env.RunMany(msg)
 		commands.Env.Verbose = false
@@ -48,6 +61,10 @@ func ipc() {
 			continue
 		}
 
+		// Fetch the return value of the command that was executed, and send
+		// it back to the client. If the return value is nil, send an empty
+		// response back. Otherwise, we need to type switch on all possible
+		// return values.
 		if val != nil {
 			var retVal string
 			switch v := val.(type) {

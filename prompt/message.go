@@ -3,6 +3,7 @@ package prompt
 import (
 	"bytes"
 	"image/color"
+	"strings"
 	"time"
 
 	"code.google.com/p/freetype-go/freetype/truetype"
@@ -34,7 +35,7 @@ type Message struct {
 	cancelTimeout chan struct{}
 
 	win                    *xwindow.Window
-	text                   *xwindow.Window
+	textWins               []*xwindow.Window
 	bTop, bBot, bLft, bRht *xwindow.Window
 }
 
@@ -49,6 +50,7 @@ func NewMessage(X *xgbutil.XUtil,
 		duration:      0,
 		hidden:        nil,
 		cancelTimeout: make(chan struct{}, 0),
+		textWins:      make([]*xwindow.Window, 0),
 	}
 
 	// Create all windows used for the base of the message prompt.
@@ -56,7 +58,6 @@ func NewMessage(X *xgbutil.XUtil,
 		return xwindow.Must(xwindow.Create(X, p))
 	}
 	msg.win = cwin(X.RootWin())
-	msg.text = cwin(msg.win.Id)
 	msg.bTop, msg.bBot = cwin(msg.win.Id), cwin(msg.win.Id)
 	msg.bLft, msg.bRht = cwin(msg.win.Id), cwin(msg.win.Id)
 
@@ -64,7 +65,7 @@ func NewMessage(X *xgbutil.XUtil,
 	// doesn't mess with us.
 	msg.win.Change(xproto.CwOverrideRedirect, 1)
 	msg.win.Listen(xproto.EventMaskFocusChange)
-	msg.text.Listen(xproto.EventMaskKeyPress)
+	msg.bTop.Listen(xproto.EventMaskKeyPress)
 
 	// Colorize the windows.
 	cclr := func(w *xwindow.Window, clr render.Color) {
@@ -77,13 +78,12 @@ func NewMessage(X *xgbutil.XUtil,
 	cclr(msg.bRht, msg.theme.BorderColor)
 
 	// Map the sub-windows once.
-	msg.text.Map()
 	msg.bTop.Map()
 	msg.bBot.Map()
 	msg.bLft.Map()
 	msg.bRht.Map()
 
-	msg.keyResponse().Connect(X, msg.text.Id)
+	msg.keyResponse().Connect(X, msg.bTop.Id)
 	msg.focusResponse().Connect(X, msg.win.Id)
 
 	return msg
@@ -94,7 +94,9 @@ func (msg *Message) Showing() bool {
 }
 
 func (msg *Message) Destroy() {
-	msg.text.Destroy()
+	for _, textWin := range msg.textWins {
+		textWin.Destroy()
+	}
 	msg.bTop.Destroy()
 	msg.bBot.Destroy()
 	msg.bLft.Destroy()
@@ -115,19 +117,33 @@ func (msg *Message) Show(workarea xrect.Rect, message string,
 
 	msg.win.Stack(xproto.StackModeAbove)
 
-	text.DrawText(msg.text, msg.theme.Font, msg.theme.FontSize,
-		msg.theme.FontColor, msg.theme.BgColor, message)
-
 	pad, bs := msg.theme.Padding, msg.theme.BorderSize
-	width := (pad * 2) + (bs * 2) + msg.text.Geom.Width()
-	height := (pad * 2) + (bs * 2) + msg.text.Geom.Height()
+	height := pad + bs
+	width := 0
+	for _, line := range strings.Split(strings.TrimSpace(message), "\n") {
+		textWin := xwindow.Must(xwindow.Create(msg.X, msg.win.Id))
+		msg.textWins = append(msg.textWins, textWin)
+		if len(line) == 0 {
+			line = " "
+		}
+
+		textWin.Map()
+		textWin.Move(bs+pad, height)
+		text.DrawText(textWin, msg.theme.Font, msg.theme.FontSize,
+			msg.theme.FontColor, msg.theme.BgColor, line)
+		height += textWin.Geom.Height()
+		if w := textWin.Geom.Width(); w > width {
+			width = w
+		}
+	}
+	height += pad + bs
+	width += pad*2 + bs*2
 
 	// position the damn window based on its width/height (i.e., center it)
 	posx := workarea.X() + workarea.Width()/2 - width/2
 	posy := workarea.Y() + workarea.Height()/2 - height/2
 
 	msg.win.MoveResize(posx, posy, width, height)
-	msg.text.Move(bs+pad, pad+bs)
 	msg.bTop.Resize(width, bs)
 	msg.bBot.MoveResize(0, height-bs, width, bs)
 	msg.bLft.Resize(bs, height)
@@ -143,7 +159,7 @@ func (msg *Message) Show(workarea xrect.Rect, message string,
 	// automatically hide the popup. Otherwise, focus the window and wait
 	// for user interaction.
 	if duration == 0 {
-		msg.text.Focus()
+		msg.bTop.Focus()
 	} else {
 		go func() {
 			// If `Hide` is called before the timeout expires, we'll
@@ -170,6 +186,11 @@ func (msg *Message) Hide() {
 	default:
 	}
 
+	for _, textWin := range msg.textWins {
+		textWin.Destroy()
+	}
+	msg.textWins = msg.textWins[:0]
+
 	msg.hidden(msg)
 	msg.win.Unmap()
 
@@ -189,7 +210,7 @@ func (msg *Message) focusResponse() xevent.FocusOutFun {
 				msg.Hide()
 			} else {
 				// Otherwise, we need to reacquire focus.
-				msg.text.Focus()
+				msg.bTop.Focus()
 			}
 		}
 	}

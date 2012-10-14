@@ -13,6 +13,16 @@ import (
 
 type Input struct {
 	Label string `param:"1"`
+	Help string `
+Shows a centered prompt window that allows the user to type in text. If the
+user presses the Confirm Key (i.e., enter), then the text typed into the
+input box will be returned.
+
+Label will be shown next to the input box.
+
+This command may be used as a sub-command to pass user provided arguments to
+another command.
+`
 }
 
 func (cmd Input) Run() gribble.Value {
@@ -38,6 +48,26 @@ type SelectClient struct {
 	OnlyActiveWorkspace string `param:"2"`
 	OnlyVisible         string `param:"3"`
 	ShowIconified       string `param:"4"`
+	Help string `
+Shows a centered prompt window with a list of clients satisfying the arguments
+provided.
+
+OnlyActiveWorkspace specifies that only clients on the current workspace should
+be listed. Valid values are "yes" or "no".
+
+OnlyVisible specifies that only clients on visible workspaces should be listed.
+Valid values are "yes" or "no".
+
+ShowIconified specifies that iconified clients will be shown. Valid values are
+"yes" or "no".
+
+TabCompletetion can be set to either "Prefix" or "Any". When it's set to
+"Prefix", the clients can be searched by a prefix matching string. When it's set
+to "Any", the clients can be searched by a substring matching string.
+
+This command may be used as a sub-command to pass a particular client to
+another command.
+`
 }
 
 func (cmd SelectClient) Run() gribble.Value {
@@ -71,6 +101,16 @@ func (cmd SelectClient) Run() gribble.Value {
 
 type SelectWorkspace struct {
 	TabCompletion string `param:"1"`
+	Help string `
+Shows a centered prompt window with a list of all workspaces.
+
+TabCompletetion can be set to either "Prefix" or "Any". When it's set to
+"Prefix", the workspaces can be searched by a prefix matching string. When it's 
+set to "Any", the workspaces can be searched by a substring matching string.
+
+This command may be used as a sub-command to pass a particular workspace to
+another command.
+`
 }
 
 func (cmd SelectWorkspace) Run() gribble.Value {

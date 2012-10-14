@@ -25,6 +25,9 @@ type Input struct {
 	theme  *InputTheme
 	config InputConfig
 
+	history      []string
+	historyIndex int
+
 	showing  bool
 	do       func(inp *Input, text string)
 	canceled func(inp *Input)
@@ -42,6 +45,7 @@ func NewInput(X *xgbutil.XUtil, theme *InputTheme, config InputConfig) *Input {
 		config:  config,
 		showing: false,
 		do:      nil,
+		history: make([]string, 0, 100),
 	}
 
 	// Create all windows used for the base of the input prompt.
@@ -147,6 +151,7 @@ func (inp *Input) Show(workarea xrect.Rect, label string,
 	inp.canceled = canceled
 	inp.win.Map()
 	inp.input.Focus()
+	inp.historyIndex = len(inp.history)
 
 	return true
 }
@@ -184,11 +189,32 @@ func (inp *Input) keyResponse() xevent.KeyPressFun {
 
 		mods, kc := keybind.DeduceKeyInfo(ev.State, ev.Detail)
 		switch {
+		case keybind.KeyMatch(X, "Up", mods, kc):
+			if inp.historyIndex > 0 {
+				inp.historyIndex--
+				inp.input.SetString(inp.history[inp.historyIndex])
+			}
+		case keybind.KeyMatch(X, "Down", mods, kc):
+			if inp.historyIndex < len(inp.history) {
+				inp.historyIndex++
+				if inp.historyIndex < len(inp.history) {
+					inp.input.SetString(inp.history[inp.historyIndex])
+				} else {
+					inp.input.Reset()
+				}
+			}
 		case keybind.KeyMatch(X, inp.config.BackspaceKey, mods, kc):
 			inp.input.Remove()
 		case keybind.KeyMatch(X, inp.config.ConfirmKey, mods, kc):
 			if inp.do != nil {
-				inp.do(inp, string(inp.input.Text))
+				s := string(inp.input.Text)
+				histLen := len(inp.history)
+
+				// Don't added repeated entries.
+				if histLen == 0 || s != inp.history[histLen-1] {
+					inp.history = append(inp.history, s)
+				}
+				inp.do(inp, s)
 			}
 		case keybind.KeyMatch(X, inp.config.CancelKey, mods, kc):
 			if inp.canceled != nil {

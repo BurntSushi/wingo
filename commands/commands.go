@@ -58,6 +58,7 @@ var Env = gribble.New([]gribble.Command{
 	&TileStop{},
 	&Unmaximize{},
 	&WingoExec{},
+	&WingoHelp{},
 	&Workspace{},
 	&WorkspaceGreedy{},
 	&WorkspaceSendClient{},
@@ -632,16 +633,32 @@ type WingoExec struct {
 }
 
 func (cmd WingoExec) Run() gribble.Value {
+	Env.Verbose = true
 	_, err := Env.RunMany(cmd.Commands)
+	Env.Verbose = false
 	if err != nil {
-		logger.Warning.Println(err)
+		wm.PopupError("%s", err)
 	}
+	return nil
+}
+
+type WingoHelp struct {
+	CommandName string `param:"1"`
+}
+
+func (cmd WingoHelp) Run() gribble.Value {
+	if len(strings.TrimSpace(cmd.CommandName)) == 0 {
+		return nil
+	}
+	usage := Env.UsageTypes(cmd.CommandName)
+	help := Env.Help(cmd.CommandName)
+	wm.PopupError("%s\n%s\n%s", usage, strings.Repeat("-", len(usage)), help)
 	return nil
 }
 
 type Workspace struct {
 	Name gribble.Any `param:"1" types:"int,string"`
-	help string `
+	Help string `
 Sets the current workspace to the one specified by 'Name'. 'Name' may be
 a workspace index (integer) or a workspace name.
 `
