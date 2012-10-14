@@ -1,106 +1,141 @@
 package main
 
-/*
-	wingo-cmd is a small program that allows one to issue any command (except
-	for mouse commands) to Wingo.
-
-	It works by using ClientMessage events and the _WINGO_CMD and
-	_WINGO_CMD_STATUS properties on the root window. Note that this approach
-	implies that it is NOT a good idea to run two separate instances of
-	wingo-cmd at the same time.
-
-	The better solution would be some sort of pipe, but that requires digging
-	into the main X event loop.
-
-	Basically, using ClientMessage events is dead simple to implement but easy
-	to break when run concurrently. Using pipes is harder to implement, but
-	also harder to break when run concurrently. I think.
-*/
-
 import (
+	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net"
 	"os"
+	"path"
+	"sort"
 	"strings"
-	"time"
 
-	"github.com/BurntSushi/xgb/xproto"
-
-	"github.com/BurntSushi/xgbutil"
-	"github.com/BurntSushi/xgbutil/ewmh"
-	"github.com/BurntSushi/xgbutil/xevent"
-	"github.com/BurntSushi/xgbutil/xprop"
-	"github.com/BurntSushi/xgbutil/xwindow"
-
-	"github.com/BurntSushi/wingo/cmdusage"
-	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/commands"
 )
 
-func main() {
-	X, err := xgbutil.Dial("")
-	if err != nil {
-		logger.Error.Println(err)
-		logger.Error.Println("Error connecting to X, quitting...")
-		return
-	}
-	defer X.Conn().Close()
+var (
+	flagFileInput         = ""
+	flagListCommands      = false
+	flagListTypeCommands  = false
+	flagListUsageCommands = false
+	flagUsageCommand      = ""
+)
 
-	// Get command from arguments
+func init() {
+	flag.BoolVar(&flagListCommands, "list", flagListCommands,
+		"Print a list of all commands and their parameters.")
+	flag.BoolVar(&flagListTypeCommands, "list-types", flagListTypeCommands,
+		"Print a list of all commands and their parameters (with type info).")
+	flag.BoolVar(&flagListUsageCommands, "list-usage", flagListUsageCommands,
+		"Print a list of all commands, their parameters (with type info),\n"+
+			"and usage information for each command.")
+	flag.StringVar(&flagUsageCommand, "usage", flagUsageCommand,
+		"Print usage information for a particular command.")
+	flag.StringVar(&flagFileInput, "f", flagFileInput,
+		"When set, commands will be read from the specified file.\n"+
+			"If '-' is used, commands will be read from stdin.")
+
+	flag.Usage = usage
 	flag.Parse()
-	if flag.NArg() < 1 {
-		fmt.Fprintln(os.Stderr, "Usage: wingo-cmd CommandName [CommandArgs]")
-		return
+
+	log.SetFlags(0)
+}
+
+func main() {
+	switch {
+	case flagListCommands:
+		fmt.Println(commands.Env.String())
+		os.Exit(0)
+	case flagListTypeCommands:
+		fmt.Println(commands.Env.StringTypes())
+		os.Exit(0)
+	case flagListUsageCommands:
+		cmds := make([]string, 0)
+		commands.Env.Each(func(name, help string) {
+			usage := commands.Env.UsageTypes(name)
+			help = strings.Replace(help, "\n", "\n\t", -1)
+
+			if len(help) > 0 {
+				cmds = append(cmds, fmt.Sprintf("%s\n\t%s\n", usage, help))
+			} else {
+				cmds = append(cmds, usage)
+			}
+		})
+		sort.Sort(sort.StringSlice(cmds))
+		fmt.Println(strings.Join(cmds, "\n"))
+		os.Exit(0)
+	case len(flagUsageCommand) > 0:
+		fmt.Println(commands.Env.UsageTypes(flagUsageCommand))
+
+		help := commands.Env.Help(flagUsageCommand)
+		fmt.Printf("\t%s\n", strings.Replace(help, "\n", "\n\t", -1))
+		os.Exit(0)
 	}
 
-	commandPieces := flag.Args()
-	cmdName := commandPieces[0]
-	cmdFull := strings.Join(commandPieces, " ")
-
-	// make sure we start with failure
-	cmdusage.StatusSet(X, false)
-	success := false
-
-	// Set the command before sending request to run command.
-	err = cmdusage.CmdSet(X, cmdFull)
-	if err != nil {
-		logger.Error.Printf("Could not set command: %s", err)
-		return
-	}
-
-	// Issue the command!
-	ewmh.ClientEvent(X, X.RootWin(), "_WINGO_CMD")
-
-	// Now let's set up a handler to detect when the status changes
-	xevent.PropertyNotifyFun(
-		func(X *xgbutil.XUtil, ev xevent.PropertyNotifyEvent) {
-			name, err := xprop.AtomName(X, ev.Atom)
+	// If '-f' is set, use commands from the file specified.
+	// Otherwise, make sure there is one and only one argument (the command).
+	var cmds string
+	var err error
+	if len(flagFileInput) > 0 {
+		var contents []byte
+		if flagFileInput == "-" {
+			contents, err = ioutil.ReadAll(os.Stdin)
 			if err != nil {
-				logger.Warning.Println(
-					"Could not get property atom name for", ev.Atom)
-				return
+				log.Fatalf("Could not read stdin: %s", err)
 			}
-
-			if name == "_WINGO_CMD_STATUS" {
-				success = cmdusage.StatusGet(X)
-				if success {
-					os.Exit(0)
-				} else {
-					logger.Warning.Printf("Error running '%s'", cmdFull)
-					cmdusage.ShowUsage(cmdName)
-					os.Exit(1)
-				}
+		} else {
+			contents, err = ioutil.ReadFile(flagFileInput)
+			if err != nil {
+				log.Fatalf("Could not read file '%s': %s", flagFileInput, err)
 			}
-		}).Connect(X, X.RootWin())
+		}
 
-	// Listen to Root property change events
-	xwindow.Listen(X, X.RootWin(), xproto.EventMaskPropertyChange)
+		// Ignore any line starting with '#' after trimming.
+		lines := make([]string, 0)
+		for _, line := range bytes.Split(contents, []byte{'\n'}) {
+			line = bytes.TrimSpace(line)
+			if len(line) == 0 || line[0] == '#' {
+				continue
+			}
+			lines = append(lines, string(line))
+		}
+		cmds = strings.Join(lines, "\n")
+	} else {
+		if flag.NArg() != 1 {
+			log.Printf("Expected 1 argument but got %d arguments.", flag.NArg())
+			usage()
+		}
+		cmds = flag.Arg(0)
+	}
 
-	go xevent.Main(X)
+	conn, err := net.Dial("unix", path.Join(os.TempDir(), "wingo-ipc"))
+	if err != nil {
+		log.Fatalf("Could not connect to Wingo IPC: %s", err)
+	}
 
-	time.Sleep(time.Second * 5)
+	if _, err = fmt.Fprintf(conn, "%s%c", cmds, 0); err != nil {
+		log.Fatalf("Error writing command: %s", err)
+	}
 
-	logger.Error.Println(
-		"Timed out while trying to issue command to Wingo. " +
-			"Are you sure Wingo is running?")
+	reader := bufio.NewReader(conn)
+	msg, err := reader.ReadString(0)
+	if err != nil {
+		log.Fatalf("Could not read response: %s", err)
+	}
+	msg = msg[:len(msg)-1] // get rid of null terminator
+
+	fmt.Println(msg)
+}
+
+func usage() {
+	fmt.Fprintf(os.Stderr, "\nUsage: %s [flags] [command]\n",
+		path.Base(os.Args[0]))
+	flag.VisitAll(func(fg *flag.Flag) {
+		fmt.Printf("--%s=\"%s\"\n\t%s\n", fg.Name, fg.DefValue,
+			strings.Replace(fg.Usage, "\n", "\n\t", -1))
+	})
 	os.Exit(1)
 }

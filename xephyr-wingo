@@ -37,7 +37,7 @@ xmodmap /home/andrew/.Pmodmap
 DISPLAY=:0 xdotool key ctrl+shift 
 
 wait $wingo
-# kill $xemu 
+kill $xemu
 
 # sleep 1 ; DISPLAY=:0 xdotool key Return 
 

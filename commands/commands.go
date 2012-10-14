@@ -79,6 +79,10 @@ var (
 	SafeReturn = make(chan gribble.Value, 0)
 )
 
+func init() {
+	Env.Verbose = false
+}
+
 func syncRun(f func() gribble.Value) gribble.Value {
 	SafeExec <- f
 	return <-SafeReturn
@@ -624,11 +628,11 @@ func (cmd Unmaximize) Run() gribble.Value {
 }
 
 type WingoExec struct {
-	Command string `param:"1"`
+	Commands string `param:"1"`
 }
 
 func (cmd WingoExec) Run() gribble.Value {
-	_, err := Env.Run(cmd.Command)
+	_, err := Env.RunMany(cmd.Commands)
 	if err != nil {
 		logger.Warning.Println(err)
 	}
@@ -637,6 +641,10 @@ func (cmd WingoExec) Run() gribble.Value {
 
 type Workspace struct {
 	Name gribble.Any `param:"1" types:"int,string"`
+	help string `
+Sets the current workspace to the one specified by 'Name'. 'Name' may be
+a workspace index (integer) or a workspace name.
+`
 }
 
 func (cmd Workspace) Run() gribble.Value {
