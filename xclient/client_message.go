@@ -6,6 +6,8 @@ import (
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xprop"
 
+	"github.com/BurntSushi/wingo/focus"
+	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/stack"
 	"github.com/BurntSushi/wingo/wm"
@@ -13,6 +15,23 @@ import (
 
 func (c *Client) handleClientMessage(name string, data []uint32) {
 	switch name {
+	case "_NET_ACTIVE_WINDOW":
+		focus.Focus(c)
+		stack.Raise(c)
+	case "_NET_CLOSE_WINDOW":
+		c.Close()
+	case "_NET_MOVERESIZE_WINDOW":
+		// The data[0] element contains bit-packed information. See
+		// EWMH _NET_MOVERESIZE_WINDOW for the deets.
+		gravity := int(data[0] & 0xff)
+		xflags := int((data[0] >> 8) & 0xf)
+		x, y, w, h := frame.ClientToFrame(c.frame, gravity,
+			int(data[1]), int(data[2]), int(data[3]), int(data[4]))
+		c.LayoutMROpt(xflags, x, y, w, h)
+	case "_NET_RESTACK_WINDOW":
+		// We basically treat this as a request to stack the window.
+		// We ignore the sibling. Maybe someday we can support that, but eh...
+		stack.Raise(c)
 	case "_NET_WM_DESKTOP":
 		if data[0] == 0xFFFFFFFF {
 			c.stick()
@@ -45,8 +64,6 @@ func (c *Client) handleClientMessage(name string, data []uint32) {
 }
 
 func (c *Client) updateStates(action, prop1, prop2 string) {
-	println(prop1)
-	println(prop2)
 	// Since we don't support vertical XOR horizontal states and only both,
 	// check if prop1 and prop2 are vert and horz and treat it as a maximize
 	// request. Otherwise, process prop1 and prop2 independently.
@@ -90,19 +107,33 @@ func (c *Client) updateState(action, prop string) {
 		switch action {
 		case "remove":
 			c.skipTaskbar = false
+			c.removeState("_NET_WM_STATE_SKIP_TASKBAR")
 		case "add":
 			c.skipTaskbar = true
+			c.addState("_NET_WM_STATE_SKIP_TASKBAR")
 		case "toggle":
 			c.skipTaskbar = !c.skipTaskbar
+			if c.skipTaskbar {
+				c.addState("_NET_WM_STATE_SKIP_TASKBAR")
+			} else {
+				c.removeState("_NET_WM_STATE_SKIP_TASKBAR")
+			}
 		}
 	case "_NET_WM_STATE_SKIP_PAGER":
 		switch action {
 		case "remove":
 			c.skipPager = false
+			c.removeState("_NET_WM_STATE_SKIP_PAGER")
 		case "add":
 			c.skipPager = true
+			c.addState("_NET_WM_STATE_SKIP_PAGER")
 		case "toggle":
 			c.skipPager = !c.skipPager
+			if c.skipPager {
+				c.addState("_NET_WM_STATE_SKIP_PAGER")
+			} else {
+				c.removeState("_NET_WM_STATE_SKIP_PAGER")
+			}
 		}
 	case "_NET_WM_STATE_HIDDEN":
 		switch action {

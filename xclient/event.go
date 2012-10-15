@@ -90,7 +90,7 @@ func (c *Client) cbConfigureRequest() xevent.ConfigureRequestFun {
 		flags := int(ev.ValueMask) &
 			^int(xproto.ConfigWindowStackMode) &
 			^int(xproto.ConfigWindowSibling)
-		x, y, w, h := frame.ClientToFrame(c.frame,
+		x, y, w, h := frame.ClientToFrame(c.frame, -1,
 			int(ev.X), int(ev.Y), int(ev.Width), int(ev.Height))
 		c.LayoutMROpt(flags, x, y, w, h)
 	}

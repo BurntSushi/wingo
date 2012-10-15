@@ -191,6 +191,43 @@ func (hds *Heads) ApplyStruts(clients Clients) {
 			c.Remaximize()
 		}
 	}
+
+	hds.EwmhWorkarea()
+}
+
+// EwmhWorkarea sets the _NET_WORKAREA property. Generally, this property
+// doesn't make much sense since multiple workspaces can be viewable at
+// one time, and each workspace might have different workareas.
+//
+// However, if the EWMH is read loosely, we can update _NET_WORKAREA not just
+// when the struts change, but also when the configuration of visible workspaces
+// changes. Namely, only the visible workspaces have a valid geometry set
+// in _NET_WORKAREA, while the rest are zeroed out.
+//
+// N.B. Fuck that. This interpretation of _NET_WORKAREA makes KDE go
+// absolutely bonkers. I'm not sure if there is another sensible interpretation,
+// so just don't set it.
+func (hds *Heads) EwmhWorkarea() {
+	// areas := make([]ewmh.Workarea, len(hds.Workspaces.Wrks)) 
+	// for i, wrk := range hds.Workspaces.Wrks { 
+	// if wrk.IsVisible() { 
+	// geom := wrk.Geom() 
+	// areas[i] = ewmh.Workarea{ 
+	// X: geom.X(), 
+	// Y: geom.Y(), 
+	// Width: geom.Width(), 
+	// Height: geom.Height(), 
+	// } 
+	// } else { 
+	// areas[i] = ewmh.Workarea{ 
+	// X: 0, 
+	// Y: 0, 
+	// Width: 0, 
+	// Height: 0, 
+	// } 
+	// } 
+	// } 
+	// ewmh.WorkareaSet(hds.X, areas) 
 }
 
 // Convert takes a source and a destination rect, along with a rect

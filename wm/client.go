@@ -14,6 +14,8 @@ type Client interface {
 	Frame() frame.Frame
 	IsMapped() bool
 	Iconified() bool
+	IsSkipPager() bool
+	IsSkipTaskbar() bool
 	Workspace() workspace.Workspacer
 	ImminentDestruction() bool
 	IsMaximized() bool

@@ -4,6 +4,7 @@ import (
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
+	"github.com/BurntSushi/xgbutil/ewmh"
 )
 
 const (
@@ -48,10 +49,12 @@ func Raise(client Client) {
 		raise(client2)
 	}
 	realize(updateClients)
+
+	ewmhClientListStacking()
 }
 
 func raise(client Client) {
-	Remove(client)
+	remove(client)
 	if len(Clients) == 0 {
 		Clients = []Client{client}
 		return
@@ -87,7 +90,20 @@ func realize(updateClients []Client) {
 }
 
 func Remove(client Client) {
+	remove(client)
+	ewmhClientListStacking()
+}
+
+func remove(client Client) {
 	if i := clientIndex(client, Clients); i > -1 {
 		Clients = append(Clients[:i], Clients[i+1:]...)
 	}
+}
+
+func ewmhClientListStacking() {
+	ids := make([]xproto.Window, len(Clients))
+	for i, client := range Clients {
+		ids[len(Clients)-i-1] = client.Id()
+	}
+	ewmh.ClientListStackingSet(X, ids)
 }

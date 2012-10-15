@@ -127,6 +127,7 @@ func own(X *xgbutil.XUtil, replace bool) error {
 	}
 
 	logger.Message.Println("Wingo has window manager ownership!")
+	announce(X)
 
 	// Listen for SelectionClear events. When we get one of these, then we
 	// know a window manager is trying to replace us.

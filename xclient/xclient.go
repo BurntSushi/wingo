@@ -168,6 +168,14 @@ func (c *Client) State() int {
 	return c.state
 }
 
+func (c *Client) IsSkipPager() bool {
+	return c.skipPager
+}
+
+func (c *Client) IsSkipTaskbar() bool {
+	return c.skipTaskbar
+}
+
 func (c *Client) StackAboveToggle() {
 	if c.layer == stack.LayerAbove {
 		c.unstackAbove()

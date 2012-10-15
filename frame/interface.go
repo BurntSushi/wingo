@@ -44,9 +44,9 @@ func Reset(f Frame) {
 	f.Resize(false, geom.Width(), geom.Height())
 }
 
-func ClientToFrame(f Frame, x, y, w, h int) (int, int, int, int) {
-	return f.Client().GravitizeX(x, -1),
-		f.Client().GravitizeY(y, -1),
+func ClientToFrame(f Frame, gravity, x, y, w, h int) (int, int, int, int) {
+	return f.Client().GravitizeX(x, gravity),
+		f.Client().GravitizeY(y, gravity),
 		w + f.Left() + f.Right(),
 		h + f.Top() + f.Bottom()
 }

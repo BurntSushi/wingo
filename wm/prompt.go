@@ -50,6 +50,9 @@ func newPrompts() AllPrompts {
 }
 
 func filterClient(client Client, activeWrk, visible, iconified bool) bool {
+	if client.IsSkipPager() || client.IsSkipTaskbar() {
+		return false
+	}
 	if activeWrk && !client.Workspace().IsActive() {
 		return false
 	}

@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/BurntSushi/gribble"
@@ -132,7 +133,10 @@ func withClient(cArg gribble.Any, f func(c *xclient.Client)) gribble.Any {
 					return int(client.Id())
 				}
 			}
+			return ":void:"
 		}
+	default:
+		panic(fmt.Sprintf("BUG: Unknown Gribble return type: %T", c))
 	}
 	panic("unreachable")
 }

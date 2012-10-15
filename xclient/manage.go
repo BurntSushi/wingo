@@ -23,6 +23,18 @@ func New(id xproto.Window) *Client {
 	wm.X.Grab()
 	defer wm.X.Ungrab()
 
+	// If this is an override redirect, skip...
+	attrs, err := xproto.GetWindowAttributes(wm.X.Conn(), id).Reply()
+	if err != nil {
+		logger.Warning.Printf("Could not get window attributes for '%d': %s",
+			id, err)
+	} else {
+		if attrs.OverrideRedirect {
+			logger.Message.Printf(
+				"Not managing override redirect window %d", id)
+		}
+	}
+
 	if client := wm.FindManagedClient(id); client != nil {
 		logger.Message.Printf("Already managing client: %s", client)
 		return nil
@@ -93,7 +105,7 @@ func (c *Client) manage() {
 	c.attachEventCallbacks()
 	c.maybeApplyStruts()
 
-	if d, _ := ewmh.WmDesktopGet(wm.X, c.Id()); int64(d) == 0xFFFFFFFF {
+	if _, ok := presumedWorkspace.(*workspace.Sticky); ok {
 		c.stick()
 	} else {
 		presumedWorkspace.Add(c)
@@ -194,10 +206,15 @@ func (c *Client) stick() {
 	c.addState("_NET_WM_STATE_STICKY")
 }
 
-func (c *Client) maybeInitPlace(presumedWorkspace *workspace.Workspace) {
+func (c *Client) maybeInitPlace(presumedWorkspace workspace.Workspacer) {
 	// Any client that isn't normal doesn't get placed.
 	// Let it do what it do, baby.
 	if c.primaryType != clientTypeNormal {
+		return
+	}
+
+	// If it's sticky, let it do what it do.
+	if _, ok := presumedWorkspace.(*workspace.Sticky); ok {
 		return
 	}
 
@@ -217,8 +234,8 @@ func (c *Client) maybeInitPlace(presumedWorkspace *workspace.Workspace) {
 	// hidden workspace..
 	if presumedWorkspace.IsVisible() {
 		if c.isAttrsUnmapped() {
-			layFloater := presumedWorkspace.LayoutFloater()
-			layFloater.InitialPlacement(presumedWorkspace.Geom(), c)
+			w := presumedWorkspace.(*workspace.Workspace)
+			w.LayoutFloater().InitialPlacement(w.Geom(), c)
 		}
 
 		// This is a hack. Before a client gets sucked into some layout, we
@@ -269,6 +286,12 @@ func (c *Client) fetchXProperties() {
 		logger.Warning.Printf("Could not find window type for window %X, "+
 			"using 'normal'.", c.Id())
 		c.winTypes = []string{"_NET_WM_WINDOW_TYPE_NORMAL"}
+	}
+
+	c.winStates, err = ewmh.WmStateGet(wm.X, c.Id())
+	if err != nil {
+		c.winStates = []string{}
+		ewmh.WmStateSet(wm.X, c.Id(), c.winStates)
 	}
 
 	c.class, err = icccm.WmClassGet(wm.X, c.Id())
@@ -329,26 +352,24 @@ func (c *Client) setInitialLayer() {
 }
 
 func (c *Client) updateInitStates() {
-	var err error
-
-	c.winStates, err = ewmh.WmStateGet(wm.X, c.Id())
-	if err != nil {
-		c.winStates = []string{}
-		return
-	}
+	// Keep a copy of the states since we change things as we go along.
+	copied := make([]string, len(c.winStates))
+	copy(copied, c.winStates)
 
 	// Handle the weird maximize cases first.
-	if strIndex("_NET_WM_STATE_MAXIMIZED_VERT", c.winStates) > -1 &&
-		strIndex("_NET_WM_STATE_MAXIMIZED_HORZ", c.winStates) > -1 {
+	if strIndex("_NET_WM_STATE_MAXIMIZED_VERT", copied) > -1 &&
+		strIndex("_NET_WM_STATE_MAXIMIZED_HORZ", copied) > -1 {
 
 		c.updateState("add", "_NET_WM_STATE_MAXIMIZED")
 	}
-	for _, state := range c.winStates {
+
+	for _, state := range copied {
 		if state == "_NET_WM_STATE_MAXIMIZED_VERT" ||
 			state == "_NET_WM_STATE_MAXIMIZED_HORZ" {
 
 			continue
 		}
+		println("Updating initial state", state)
 		c.updateState("add", state)
 	}
 }
@@ -396,6 +417,7 @@ func (c *Client) isAttrsUnmapped() bool {
 	if err != nil {
 		logger.Warning.Printf(
 			"Could not get window attributes for '%s': %s.", c, err)
+		return false
 	}
 	return attrs.MapState == xproto.MapStateUnmapped
 }
@@ -404,10 +426,13 @@ func (c *Client) isAttrsUnmapped() bool {
 // see which workspace it should go to. Basically, if _NET_WM_DESKTOP is
 // to a valid workspace number, then we grant the request. Otherwise, we use
 // the current workspace.
-func (c *Client) findPresumedWorkspace() *workspace.Workspace {
+func (c *Client) findPresumedWorkspace() workspace.Workspacer {
 	d, err := ewmh.WmDesktopGet(wm.X, c.Id())
-	if err != nil || int64(d) == 0xFFFFFFFF {
+	if err != nil {
 		return wm.Workspace()
+	}
+	if int64(d) == 0xFFFFFFFF {
+		return wm.StickyWrk
 	}
 	if d < 0 || d >= int64(len(wm.Heads.Workspaces.Wrks)) {
 		return wm.Workspace()
@@ -424,8 +449,11 @@ func (c *Client) findPresumedWorkspace() *workspace.Workspace {
 // *should* be placed.
 //
 // Note that presumedWorkspace MUST be visible.
-func (c *Client) moveToProperHead(presumedWorkspace *workspace.Workspace) {
+func (c *Client) moveToProperHead(presumedWorkspace workspace.Workspacer) {
 	if c.primaryType != clientTypeNormal {
+		return
+	}
+	if _, ok := presumedWorkspace.(*workspace.Sticky); ok {
 		return
 	}
 	if !presumedWorkspace.IsVisible() {

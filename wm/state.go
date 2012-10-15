@@ -69,6 +69,13 @@ func Initialize(x *xgbutil.XUtil,
 	rootMouseSetup()
 
 	StickyWrk = Heads.Workspaces.NewSticky()
+
+	ewmhClientList()
+	ewmhNumberOfDesktops()
+	ewmhCurrentDesktop()
+	ewmhVisibleDesktops()
+	ewmhDesktopNames()
+	ewmhDesktopGeometry()
 }
 
 func AddClient(c Client) {
@@ -76,12 +83,16 @@ func AddClient(c Client) {
 		panic("BUG: Cannot add client that is already managed.")
 	}
 	Clients = append(Clients, c)
+
+	ewmhClientList()
 }
 
 func RemoveClient(c Client) {
 	if i := cliIndex(c, Clients); i > -1 {
 		Clients = append(Clients[:i], Clients[i+1:]...)
 	}
+
+	ewmhClientList()
 }
 
 func FindManagedClient(id xproto.Window) Client {
@@ -122,6 +133,10 @@ func SetWorkspace(wrk *workspace.Workspace, greedy bool) {
 	if old != Workspace() {
 		FYI("%s", wrk)
 	}
+
+	ewmhCurrentDesktop()
+	ewmhVisibleDesktops()
+	Heads.EwmhWorkarea()
 }
 
 func AddWorkspace(name string) error {
@@ -136,6 +151,11 @@ func AddWorkspace(name string) error {
 	wrk.PromptSlctItem = Prompts.Slct.AddChoice(wrk)
 
 	Heads.AddWorkspace(wrk)
+
+	ewmhDesktopNames()
+	ewmhNumberOfDesktops()
+	ewmhVisibleDesktops()
+	Heads.EwmhWorkarea()
 	return nil
 }
 
@@ -147,6 +167,11 @@ func RemoveWorkspace(wrk *workspace.Workspace) error {
 		return fmt.Errorf("Non-empty workspace '%s' cannot be removed.", wrk)
 	}
 	Heads.RemoveWorkspace(wrk)
+
+	ewmhDesktopNames()
+	ewmhNumberOfDesktops()
+	ewmhVisibleDesktops()
+	Heads.EwmhWorkarea()
 	return nil
 }
 
@@ -159,6 +184,8 @@ func RootGeomChangeFun() xevent.ConfigureNotifyFun {
 		}
 		Heads.Reload(Clients)
 		FocusFallback()
+		ewmhVisibleDesktops()
+		ewmhDesktopGeometry()
 	}
 	return xevent.ConfigureNotifyFun(f)
 }
