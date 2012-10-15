@@ -4,6 +4,7 @@ import (
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/ewmh"
+	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xprop"
 
 	"github.com/BurntSushi/wingo/focus"
@@ -14,7 +15,12 @@ import (
 )
 
 func (c *Client) handleClientMessage(name string, data []uint32) {
+	logger.Debug.Printf("Handling %s", name)
 	switch name {
+	case "WM_CHANGE_STATE":
+		if data[0] == icccm.StateIconic && !c.iconified {
+			c.IconifyToggle()
+		}
 	case "_NET_ACTIVE_WINDOW":
 		focus.Focus(c)
 		stack.Raise(c)

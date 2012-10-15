@@ -24,6 +24,7 @@ func (c *Client) attachEventCallbacks() {
 	}
 	c.Frame().Parent().Listen(masks)
 
+	c.cbMapNotify().Connect(wm.X, c.Id())
 	c.cbUnmapNotify().Connect(wm.X, c.Id())
 	c.cbDestroyNotify().Connect(wm.X, c.Id())
 	c.cbConfigureRequest().Connect(wm.X, c.Id())
@@ -39,6 +40,26 @@ func (c *Client) attachEventCallbacks() {
 
 	wm.ClientMouseSetup(c)
 	wm.FrameMouseSetup(c, c.frame.Parent().Id)
+}
+
+func (c *Client) cbMapNotify() xevent.MapNotifyFun {
+	f := func(X *xgbutil.XUtil, ev xevent.MapNotifyEvent) {
+		if c.IsMapped() {
+			return
+		}
+
+		// I don't know what to do here if the client wasn't iconified.
+		// It *should* have been unmanaged if the client issues an Unmap
+		// on its own...
+		if !c.iconified {
+			logger.Warning.Printf("POSSIBLE BUG: Client '%s' is trying to map "+
+				"itself, but Wingo doesn't think it was iconified.", c)
+			return
+		}
+
+		c.IconifyToggle()
+	}
+	return xevent.MapNotifyFun(f)
 }
 
 func (c *Client) cbDestroyNotify() xevent.DestroyNotifyFun {

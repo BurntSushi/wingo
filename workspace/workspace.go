@@ -212,10 +212,8 @@ func (wrk *Workspace) IconifyToggle(c Client) {
 		return
 	}
 	if c.Iconified() {
-		if _, ok := wrk.Layout(c).(layout.Floater); ok {
-			c.LoadState("before-iconify")
-		} else {
-			c.DeleteState("before-iconify")
+		if _, ok := c.Layout().(layout.Floater); ok {
+			c.LoadState("last-floating")
 		}
 		wrk.addToFloaters(c)
 		wrk.addToTilers(c)
@@ -224,7 +222,9 @@ func (wrk *Workspace) IconifyToggle(c Client) {
 		wrk.Place()
 		c.Map()
 	} else {
-		c.SaveState("before-iconify")
+		if _, ok := c.Layout().(layout.Floater); ok {
+			c.SaveState("last-floating")
+		}
 		wrk.removeFromFloaters(c)
 		wrk.removeFromTilers(c)
 		c.IconifiedSet(true)

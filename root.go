@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xprop"
@@ -41,9 +39,9 @@ func handleClientMessages(X *xgbutil.XUtil, ev xevent.ClientMessageEvent) {
 			logger.Warning.Printf("Desktop index %d is not in the range "+
 				"[0, %d).", index, len(wm.Heads.Workspaces.Wrks))
 		}
+	default:
+		logger.Warning.Printf("Unknown root client message: %s", name)
 	}
-
-	fmt.Println(name, ev)
 }
 
 func ignoreRootFocus(modeByte, detailByte byte) bool {
