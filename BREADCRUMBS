@@ -9,8 +9,6 @@ Tons and tons of documentation.
 
 More Gribble commands. (Looping and conditionals? Query information?)
 
-IPC Gribble interface.
-
 Add more options for configuration. Focus follows mouse?
 
 Add support for _NET_WM_WINDOW_OPACITY (particularly to indicate focus).

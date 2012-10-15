@@ -18,8 +18,11 @@ func (c *Client) attachEventCallbacks() {
 	c.win.Listen(xproto.EventMaskPropertyChange |
 		xproto.EventMaskStructureNotify)
 
-	c.Frame().Parent().Listen(xproto.EventMaskFocusChange |
-		xproto.EventMaskSubstructureRedirect)
+	masks := xproto.EventMaskFocusChange | xproto.EventMaskSubstructureRedirect
+	if wm.Config.Ffm {
+		masks |= xproto.EventMaskEnterWindow
+	}
+	c.Frame().Parent().Listen(masks)
 
 	c.cbUnmapNotify().Connect(wm.X, c.Id())
 	c.cbDestroyNotify().Connect(wm.X, c.Id())
@@ -27,6 +30,10 @@ func (c *Client) attachEventCallbacks() {
 	c.cbPropertyNotify().Connect(wm.X, c.Id())
 	c.cbClientMessage().Connect(wm.X, c.Id())
 
+	// Focus follows mouse?
+	if wm.Config.Ffm {
+		c.cbEnterNotify().Connect(wm.X, c.Frame().Parent().Id)
+	}
 	c.handleFocusIn().Connect(wm.X, c.Frame().Parent().Id)
 	c.handleFocusOut().Connect(wm.X, c.Frame().Parent().Id)
 
@@ -157,6 +164,13 @@ func ignoreFocus(modeByte, detailByte byte) bool {
 	// Only accept modes: NotifyNormal and NotifyWhileGrabbed
 	// Only accept details: NotifyVirtual, NotifyNonlinearVirtual
 	return false
+}
+
+func (c *Client) cbEnterNotify() xevent.EnterNotifyFun {
+	f := func(X *xgbutil.XUtil, ev xevent.EnterNotifyEvent) {
+		focus.Focus(c)
+	}
+	return xevent.EnterNotifyFun(f)
 }
 
 func (c *Client) handleFocusIn() xevent.FocusInFun {
