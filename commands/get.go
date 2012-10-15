@@ -1,10 +1,41 @@
 package commands
 
 import (
+	"github.com/BurntSushi/xgb/xproto"
+
 	"github.com/BurntSushi/gribble"
 
+	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/wm"
+	"github.com/BurntSushi/wingo/xclient"
 )
+
+type GetActive struct {
+	Help string `
+Returns the id of the currently active window. If there is no active window,
+0 is returned.
+`
+}
+
+func (cmd GetActive) Run() gribble.Value {
+	reply, err := xproto.GetInputFocus(wm.X.Conn()).Reply()
+	if err != nil {
+		logger.Warning.Printf("Could not get input focus: %s", err)
+		return 0
+	}
+
+	// If our dummy window has focus, then it's equivalent to having root
+	// window focus.
+	// XXX: This may not be right if we're in a DE with desktop windows...
+	if reply.Focus == wm.X.Dummy() {
+		return 0
+	}
+	if focused := wm.LastFocused(); focused != nil {
+		client := focused.(*xclient.Client)
+		return int(client.Id())
+	}
+	return 0
+}
 
 type GetWorkspace struct {
 	Help string `

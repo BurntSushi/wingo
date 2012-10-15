@@ -99,7 +99,7 @@ func withClient(cArg gribble.Any, f func(c *xclient.Client)) gribble.Any {
 	switch c := cArg.(type) {
 	case int:
 		if c == 0 {
-			return withFocused(f)
+			return ":void:"
 		}
 		for _, client_ := range wm.Clients {
 			client := client_.(*xclient.Client)
@@ -123,10 +123,15 @@ func withClient(cArg gribble.Any, f func(c *xclient.Client)) gribble.Any {
 				f(nil)
 				return ":void:"
 			}
-		case ":active:":
-			return withFocused(f)
 		default:
-			panic("Client name Not implemented: " + c)
+			for _, client_ := range wm.Clients {
+				client := client_.(*xclient.Client)
+				name := strings.ToLower(client.Name())
+				if strings.Contains(name, strings.ToLower(c)) {
+					f(client)
+					return int(client.Id())
+				}
+			}
 		}
 	}
 	panic("unreachable")

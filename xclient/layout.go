@@ -36,23 +36,31 @@ func (c *Client) Layout() layout.Layout {
 }
 
 func (c *Client) LayoutMROpt(flags, x, y, width, height int) {
+	c.resizing = true
 	c.Layout().MROpt(c, flags, x, y, width, height)
 	c.CheckNewWorkspace()
+	c.resizing = false
 }
 
 func (c *Client) LayoutMoveResize(x, y, width, height int) {
+	c.resizing = true
 	c.Layout().MoveResize(c, x, y, width, height)
 	c.CheckNewWorkspace()
+	c.resizing = false
 }
 
 func (c *Client) LayoutMove(x, y int) {
+	c.moving = true
 	c.Layout().Move(c, x, y)
 	c.CheckNewWorkspace()
+	c.moving = false
 }
 
 func (c *Client) LayoutResize(width, height int) {
+	c.resizing = true
 	c.Layout().Resize(c, width, height)
 	c.CheckNewWorkspace()
+	c.resizing = false
 }
 
 func (c *Client) Geom() xrect.Rect {

@@ -66,7 +66,8 @@ type Client struct {
 	unmapIgnore int
 
 	// floating, when true, this client will *always* be in the floating layer.
-	floating bool
+	floating         bool
+	moving, resizing bool
 
 	dragGeom  xrect.Rect
 	hadStruts bool

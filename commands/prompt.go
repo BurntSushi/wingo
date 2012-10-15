@@ -11,6 +11,104 @@ import (
 	"github.com/BurntSushi/wingo/xclient"
 )
 
+type CycleClientChoose struct{
+	Help string `
+Activates the current choice in a cycle prompt.
+`
+}
+
+func (cmd CycleClientChoose) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		wm.Prompts.Cycle.Choose()
+		return nil
+	})
+}
+
+type CycleClientHide struct{
+	Help string `
+Hides (i.e., cancels) the current cycle prompt.
+`
+}
+
+func (cmd CycleClientHide) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		wm.Prompts.Cycle.Hide()
+		return nil
+	})
+}
+
+type CycleClientNext struct {
+	OnlyActiveWorkspace string `param:"1"`
+	OnlyVisible         string `param:"2"`
+	ShowIconified       string `param:"3"`
+	Help string `
+Shows the cycle prompt for clients and advances the selection to the next
+client. If the cycle prompt is already visible, then the selection is advanced
+to the next client.
+
+OnlyActiveWorkspace specifies that only clients on the current workspace should
+be listed. Valid values are "yes" or "no".
+
+OnlyVisible specifies that only clients on visible workspaces should be listed.
+Valid values are "yes" or "no".
+
+ShowIconified specifies that iconified clients will be shown. Valid values are
+"yes" or "no".
+`
+}
+
+func (cmd CycleClientNext) Run() gribble.Value {
+	cmd.RunWithKeyStr("")
+	return nil
+}
+
+func (cmd CycleClientNext) RunWithKeyStr(keyStr string) {
+	syncRun(func() gribble.Value {
+		wm.ShowCycleClient(keyStr,
+			stringBool(cmd.OnlyActiveWorkspace),
+			stringBool(cmd.OnlyVisible),
+			stringBool(cmd.ShowIconified))
+		wm.Prompts.Cycle.Next()
+		return nil
+	})
+}
+
+type CycleClientPrev struct {
+	OnlyActiveWorkspace string `param:"1"`
+	OnlyVisible         string `param:"2"`
+	ShowIconified       string `param:"3"`
+	Help string `
+Shows the cycle prompt for clients and advances the selection to the previous
+client. If the cycle prompt is already visible, then the selection is advanced
+to the previous client.
+
+OnlyActiveWorkspace specifies that only clients on the current workspace should
+be listed. Valid values are "yes" or "no".
+
+OnlyVisible specifies that only clients on visible workspaces should be listed.
+Valid values are "yes" or "no".
+
+ShowIconified specifies that iconified clients will be shown. Valid values are
+"yes" or "no".
+`
+}
+
+func (cmd CycleClientPrev) Run() gribble.Value {
+	cmd.RunWithKeyStr("")
+	return nil
+}
+
+func (cmd CycleClientPrev) RunWithKeyStr(keyStr string) {
+	syncRun(func() gribble.Value {
+		wm.ShowCycleClient(keyStr,
+			stringBool(cmd.OnlyActiveWorkspace),
+			stringBool(cmd.OnlyVisible),
+			stringBool(cmd.ShowIconified))
+		wm.Prompts.Cycle.Prev()
+		return nil
+	})
+}
+
 type Input struct {
 	Label string `param:"1"`
 	Help string `

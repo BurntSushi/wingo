@@ -304,6 +304,10 @@ func (wrk *Workspace) Layout(c Client) layout.Layout {
 }
 
 func (wrk *Workspace) LayoutStateSet(state int) {
+	if !wrk.IsVisible() {
+		return
+	}
+
 	if state == wrk.State {
 		// If it's an AutoTiler, then just call Place again.
 		if wrk.State == AutoTiling {

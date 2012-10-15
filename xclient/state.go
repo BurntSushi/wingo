@@ -83,13 +83,21 @@ func (c *Client) LoadState(name string) {
 	// Finally, if we're here and the client isn't being moved/resized, then
 	// we can revert to the geometry specified by the state, adjusted for the
 	// head geometry used when capturing that state.
-	if !c.frame.Moving() && !c.frame.Resizing() {
-		if s.headGeom != nil && c.workspace.Geom() != s.headGeom {
-			s.geom = heads.Convert(s.geom, s.headGeom, c.workspace.Geom())
-		}
-		c.LayoutMoveResize(s.geom.X(), s.geom.Y(),
-			s.geom.Width(), s.geom.Height())
+	if c.frame.Moving() || c.frame.Resizing() {
+		return
 	}
+
+	// We also need to check if the client has just moved via its layout.
+	// If so, don't continue.
+	if c.moving || c.resizing {
+		return
+	}
+
+	if s.headGeom != nil && c.workspace.Geom() != s.headGeom {
+		s.geom = heads.Convert(s.geom, s.headGeom, c.workspace.Geom())
+	}
+	c.LayoutMoveResize(s.geom.X(), s.geom.Y(),
+		s.geom.Width(), s.geom.Height())
 }
 
 func (c *Client) DeleteState(name string) {

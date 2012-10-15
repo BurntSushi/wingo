@@ -6,19 +6,19 @@ Mod4-Shift-r := Shell (Input "Command:")
 Mod4-Shift-w := WingoExec (Input "Wingo command:")
 Mod4-Shift-h := WingoHelp (Input "Wingo command name:")
 
-Mod4-c := Close ":active:"
+Mod4-c := Close (GetActive)
 Mod1-Shift-c := Quit
-Mod4-x := ToggleMaximize ":active:"
-Mod4-i := ToggleIconify ":active:"
-Mod1-up := ToggleStackAbove ":active:"
-Mod1-down := ToggleStackBelow ":active:"
-Mod1-Shift-t := Move ":active:" 0.25 0.25
-Mod1-Shift-t := Resize ":active:" 0.5 0.5
+Mod4-x := ToggleMaximize (GetActive)
+Mod4-i := ToggleIconify (GetActive)
+Mod1-up := ToggleStackAbove (GetActive)
+Mod1-down := ToggleStackBelow (GetActive)
+Mod1-Shift-t := Move (GetActive) 0.25 0.25
+Mod1-Shift-t := Resize (GetActive) 0.5 0.5
 
-Mod1-a := TileStart
-Mod1-u := TileStop
-Mod1-f := ToggleFloating ":active:"
-Mod1-s := ToggleSticky ":active:"
+Mod1-a := TileStart (GetWorkspace)
+Mod1-u := TileStop (GetWorkspace)
+Mod1-f := ToggleFloating (GetActive)
+Mod1-s := ToggleSticky (GetActive)
 
 Mod1-w := HeadFocus 0
 Mod1-w := MovePointerRelative 0 0
@@ -29,25 +29,25 @@ Mod1-e := MovePointerRelative 0 0
 Mod1-r := HeadFocus 2
 Mod1-r := MovePointerRelative 0 0
 
-Mod1-Shift-w := HeadFocusWithClient 0 ":active:"
+Mod1-Shift-w := HeadFocusWithClient 0 (GetActive)
 Mod1-Shift-w := MovePointerRelative 0 0
 
-Mod1-Shift-e := HeadFocusWithClient 1 ":active:"
+Mod1-Shift-e := HeadFocusWithClient 1 (GetActive)
 Mod1-Shift-e := MovePointerRelative 0 0
 
-Mod1-Shift-r := HeadFocusWithClient 2 ":active:"
+Mod1-Shift-r := HeadFocusWithClient 2 (GetActive)
 Mod1-Shift-r := MovePointerRelative 0 0
 
 Mod4-left := Workspace (GetWorkspacePrev)
 Mod4-right := Workspace (GetWorkspaceNext)
-Mod4-Shift-left := WorkspaceWithClient (GetWorkspacePrev) ":active:"
-Mod4-Shift-right := WorkspaceWithClient (GetWorkspaceNext) ":active:"
+Mod4-Shift-left := WorkspaceWithClient (GetWorkspacePrev) (GetActive)
+Mod4-Shift-right := WorkspaceWithClient (GetWorkspaceNext) (GetActive)
 
 Control-Mod1-a := WorkspacePrefix "a"
 Control-Mod1-Shift-a := WorkspacePrefixWithClient "a"
 
 Mod4-1 := Workspace "1"
-Mod4-Shift-1 := WorkspaceWithClient "1" ":active:"
+Mod4-Shift-1 := WorkspaceWithClient "1" (GetActive)
 Mod4-2 := Workspace "2"
 Mod4-3 := Workspace "3"
 Mod4-4 := Workspace "4"
@@ -58,17 +58,19 @@ Mod4-shift-a := AddWorkspace (Input "New workspace name:")
 Mod4-shift-d := RemoveWorkspace (SelectWorkspace "Prefix")
 Mod4-BackSpace := RemoveWorkspace (GetWorkspace)
 
-Mod1-1 := FrameNada ":active:"
-Mod1-2 := FrameSlim ":active:"
-Mod1-3 := FrameBorders ":active:"
-Mod1-4 := FrameFull ":active:"
+Mod1-1 := FrameNada (GetActive)
+Mod1-2 := FrameSlim (GetActive)
+Mod1-3 := FrameBorders (GetActive)
+Mod1-4 := FrameFull (GetActive)
 
 Mod1-Tab := CycleClientNext "yes" "no" "yes"
 Mod1-Shift-Tab := CycleClientPrev "yes" "no" "yes"
 
 Mod4-space := FocusRaise (SelectClient "Any" "no" "no" "yes")
-Mod4-return := Workspace (SelectWorkspace "Prefix")
-Mod4-Shift-return := WorkspaceWithClient (SelectWorkspace "Prefix") ":active:"
+Mod4-return := WorkspaceGreedy (SelectWorkspace "Prefix")
+Mod4-Shift-return := WorkspaceGreedyWithClient \
+                       (SelectWorkspace "Prefix") \
+                       (GetActive)
 Mod4-Shift-s := WorkspaceSendClient \
                   (SelectWorkspace "Prefix") \
                   (SelectClient "Any" "no" "no" "yes")

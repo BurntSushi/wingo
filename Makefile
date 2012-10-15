@@ -7,7 +7,7 @@ BINDATA=$(BD)/wingo.png.go \
 install: bindata
 	go install -p 6 . ./bindata ./cursors ./focus \
 		./frame ./heads ./layout ./logger ./misc ./prompt ./render \
-		./stack ./text ./wini ./wm ./workspace ./xclient
+		./stack ./text ./wingo-cmd ./wini ./wm ./workspace ./xclient
 
 git-hooks:
 	cp git-hook-pre-commit ./.git/hooks/pre-commit
