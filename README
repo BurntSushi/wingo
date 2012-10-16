@@ -147,7 +147,7 @@ zero or more windows and an empty container may have focus.
 
 
 Why doesn't Wingo have..?
-==========================
+=========================
 Tags
 ----
 Another popular workspace model (particularly among tiling window managers) is 
@@ -175,7 +175,7 @@ If an ambitious person wanted to run with it, that's fine, but there are
 serious hurdles. The most pertinent one is mixing OpenGL with the pure X Go 
 Binding. I am not sure how to do it.
 
-One coud use the X RENDER extension, but I think everyone hates that.
+One could use the X RENDER extension, but I think everyone hates that.
 
 Wayland
 -------
@@ -202,9 +202,9 @@ shouldn't care about dependencies. But I'll list them anyway---with many thanks
 to the authors (well, the one that aren't me anyway).
 
 go                  http://golang.org
-graphics-go         http://code.google.com/p/graphics-go/graphics
-freetype-go         http://code.google.com/p/freetype-go/freetype
-ansi                http://github.com/str1ngs/ansi/color
+graphics-go         http://code.google.com/p/graphics-go
+freetype-go         http://code.google.com/p/freetype-go
+ansi                http://github.com/str1ngs/ansi
 gribble             http://github.com/BurntSushi/gribble
 xgb                 http://github.com/BurntSushi/xgb
 xgbutil             http://github.com/BurntSushi/xgbutil
