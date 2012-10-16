@@ -40,7 +40,9 @@ func newParent(X *xgbutil.XUtil, cid xproto.Window) (*Parent, error) {
 	err = parent.CreateChecked(X.RootWin(), 0, 0, 1, 1,
 		xproto.CwEventMask,
 		xproto.EventMaskSubstructureRedirect|
-			xproto.EventMaskButtonPress|xproto.EventMaskButtonRelease)
+			xproto.EventMaskButtonPress|
+			xproto.EventMaskButtonRelease|
+			xproto.EventMaskFocusChange)
 	if err != nil {
 		return nil, err
 	}

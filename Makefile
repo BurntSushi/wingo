@@ -4,7 +4,7 @@ BINDATA=$(BD)/wingo.png.go \
 				$(BD)/close.png.go $(BD)/maximize.png.go $(BD)/minimize.png.go \
 				$(BD)/DejaVuSans.ttf.go $(BD)/FreeMono.ttf.go
 
-install: bindata
+install: bindata supported
 	go install -p 6 . ./bindata ./cursors ./focus \
 		./frame ./heads ./layout ./logger ./misc ./prompt ./render \
 		./stack ./text ./wingo-cmd ./wini ./wm ./workspace ./xclient
@@ -21,6 +21,9 @@ gofmt:
 
 cmd:
 	go install github.com/BurntSushi/wingo/wingo-cmd
+
+supported:
+	scripts/generate-supported | gofmt > ewmh_supported.go
 
 bindata: $(BINDATA)
 

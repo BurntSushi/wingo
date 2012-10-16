@@ -19,9 +19,11 @@ func (c *Client) handleProperty(name string) {
 	case "WM_NAME":
 		c.refreshName()
 	case "_NET_WM_ICON":
+		c.refreshIcon()
 	case "WM_HINTS":
 		if hints, err := icccm.WmHintsGet(wm.X, c.Id()); err == nil {
 			c.hints = hints
+			c.refreshIcon()
 		}
 	case "WM_NORMAL_HINTS":
 		if nhints, err := icccm.WmNormalHintsGet(wm.X, c.Id()); err == nil {
@@ -64,6 +66,11 @@ func (c *Client) handleProperty(name string) {
 			}
 		}
 	}
+}
+
+func (c *Client) refreshIcon() {
+	c.frames.full.UpdateIcon()
+	c.prompts.updateIcon()
 }
 
 func (c *Client) refreshName() {

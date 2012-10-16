@@ -28,12 +28,14 @@ func (c *Client) Focused() {
 	c.state = frame.Active
 	focus.SetFocus(c)
 	ewmh.ActiveWindowSet(wm.X, c.Id())
+	c.addState("_NET_WM_STATE_FOCUSED")
 }
 
 func (c *Client) Unfocused() {
 	c.frame.Inactive()
 	c.state = frame.Inactive
 	ewmh.ActiveWindowSet(wm.X, 0)
+	c.removeState("_NET_WM_STATE_FOCUSED")
 }
 
 func (c *Client) PrepareForFocus() {

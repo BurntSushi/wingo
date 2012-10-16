@@ -18,11 +18,15 @@ func (c *Client) attachEventCallbacks() {
 	c.win.Listen(xproto.EventMaskPropertyChange |
 		xproto.EventMaskStructureNotify)
 
-	masks := xproto.EventMaskFocusChange | xproto.EventMaskSubstructureRedirect
-	if wm.Config.Ffm {
-		masks |= xproto.EventMaskEnterWindow
+	pid := c.Frame().Parent().Id
+	attrs, err := xproto.GetWindowAttributes(wm.X.Conn(), pid).Reply()
+	if err == nil {
+		masks := int(attrs.YourEventMask)
+		if wm.Config.Ffm {
+			masks |= xproto.EventMaskEnterWindow
+		}
+		c.Frame().Parent().Listen(masks)
 	}
-	c.Frame().Parent().Listen(masks)
 
 	c.cbMapNotify().Connect(wm.X, c.Id())
 	c.cbUnmapNotify().Connect(wm.X, c.Id())
