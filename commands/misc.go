@@ -70,6 +70,26 @@ func stringBool(s string) bool {
 	return sl == "yes" || sl == "y"
 }
 
+// boolToInt converts a boolean value to an integer. (True = 1 and False = 0.)
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+// intToBool converts an integer value to a boolean.
+// An integer other than 0 or 1 causes a panic.
+func intToBool(n int) bool {
+	switch n {
+	case 0:
+		return false
+	case 1:
+		return true
+	}
+	panic(fmt.Sprintf("Unexpected boolean integer: %d", n))
+}
+
 // stringTabComp takes a string and converts it to a tab completion constant
 // defined in the prompt package. Valid values are "Prefix" and "Any."
 func stringTabComp(s string) int {

@@ -190,6 +190,21 @@ func (d *Data) Sections() []string {
 	return sections
 }
 
+func (d *Data) GetKey(section, keyName string) *Key {
+	skey := strings.ToLower(section)
+	if keys, ok := d.data[skey]; ok {
+		if _, ok := keys[keyName]; ok {
+			return &Key{
+				data:        d,
+				section:     section,
+				key:         keyName,
+				niceSection: section,
+			}
+		}
+	}
+	return nil
+}
+
 func (d *Data) Keys(section string) []Key {
 	skey := strings.ToLower(section)
 	if s, ok := d.data[skey]; ok {

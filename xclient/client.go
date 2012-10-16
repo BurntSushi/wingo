@@ -12,6 +12,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/frame"
+	"github.com/BurntSushi/wingo/hook"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/stack"
 	"github.com/BurntSushi/wingo/wm"
@@ -150,6 +151,13 @@ func (c *Client) Win() *xwindow.Window {
 
 func (c *Client) TopWin() *xwindow.Window {
 	return c.frame.Parent().Window
+}
+
+func (c *Client) FireHook(hk hook.Type) {
+	args := hook.Args{
+		Client: fmt.Sprintf("%d", c.Id()),
+	}
+	hook.Fire(hk, args)
 }
 
 func (c *Client) Layer() int {

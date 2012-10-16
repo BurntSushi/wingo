@@ -1,15 +1,5 @@
 Work on layouts. Make them viable. Prompt for them. Allow layout to save and 
 restore state (yuck).
 
-EWMH for root window crap.
-
-Check for other ICCCM conventions.
-
 Tons and tons of documentation.
-
-More Gribble commands. (Looping and conditionals? Query information?)
-
-Add more options for configuration. Focus follows mouse?
-
-Add support for _NET_WM_WINDOW_OPACITY (particularly to indicate focus).
 

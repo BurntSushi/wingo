@@ -1,6 +1,8 @@
 package wm
 
 import (
+	"os"
+	"path"
 	"strings"
 
 	"github.com/BurntSushi/xgbutil/ewmh"
@@ -57,9 +59,10 @@ func loadConfig() (*Configuration, error) {
 		loadSection func(*Configuration, *wini.Data, string)
 	}
 	cfiles := []confFile{
-		{"config/mouse.wini", (*Configuration).loadMouseConfigSection},
-		{"config/key.wini", (*Configuration).loadKeyConfigSection},
-		{"config/options.wini", (*Configuration).loadOptionsConfigSection},
+		{ConfigFile("mouse.wini"), (*Configuration).loadMouseConfigSection},
+		{ConfigFile("key.wini"), (*Configuration).loadKeyConfigSection},
+		{ConfigFile("options.wini"), (*Configuration).loadOptionsConfigSection},
+		// FYI hooks.wini is loaded in the hook package.
 	}
 	for _, cfile := range cfiles {
 		cdata, err := wini.Parse(cfile.fpath)
@@ -71,6 +74,25 @@ func loadConfig() (*Configuration, error) {
 		}
 	}
 	return conf, nil
+}
+
+// ConfigFile returns a file path containing the configuration file
+// specified. If one cannot be found, Wingo will quit and log an error.
+func ConfigFile(name string) string {
+	readable := func(p string) bool {
+		if _, err := os.Open(p); err != nil {
+			return false
+		}
+		return true
+	}
+
+	fpath := path.Join("config", name)
+
+	if !readable(fpath) {
+		logger.Error.Fatalf(
+			"Could not find a readable '%s' configuration file.", name)
+	}
+	return fpath
 }
 
 // loadMouseConfigSection does two things:

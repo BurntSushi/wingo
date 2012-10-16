@@ -13,6 +13,7 @@ import (
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/heads"
+	"github.com/BurntSushi/wingo/hook"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/stack"
 	"github.com/BurntSushi/wingo/wm"
@@ -69,6 +70,8 @@ func New(id xproto.Window) *Client {
 			focus.Focus(c)
 		}
 	}
+
+	c.FireHook(hook.Managed)
 
 	return c
 }

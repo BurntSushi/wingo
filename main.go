@@ -21,6 +21,7 @@ import (
 	"github.com/BurntSushi/wingo/commands"
 	"github.com/BurntSushi/wingo/cursors"
 	"github.com/BurntSushi/wingo/focus"
+	"github.com/BurntSushi/wingo/hook"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/stack"
 	"github.com/BurntSushi/wingo/wm"
@@ -83,6 +84,7 @@ func main() {
 	stack.Initialize(X)
 	cursors.Initialize(X)
 	wm.Initialize(X, commands.Env, newHacks())
+	hook.Initialize(commands.Env, wm.ConfigFile("hooks.wini"))
 
 	// Listen to Root. It is all-important.
 	err = xwindow.New(X, X.RootWin()).Listen(

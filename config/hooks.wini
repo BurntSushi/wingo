@@ -1,0 +1,6 @@
+[FocusTransparency]
+match := True
+
+focused := SetOpacity ":client:" 1.0
+unfocused := SetOpacity ":client:" 0.5
+

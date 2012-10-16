@@ -6,6 +6,7 @@ import (
 
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/frame"
+	"github.com/BurntSushi/wingo/hook"
 	"github.com/BurntSushi/wingo/wm"
 	"github.com/BurntSushi/wingo/workspace"
 )
@@ -29,6 +30,8 @@ func (c *Client) Focused() {
 	focus.SetFocus(c)
 	ewmh.ActiveWindowSet(wm.X, c.Id())
 	c.addState("_NET_WM_STATE_FOCUSED")
+
+	c.FireHook(hook.Focused)
 }
 
 func (c *Client) Unfocused() {
@@ -36,6 +39,8 @@ func (c *Client) Unfocused() {
 	c.state = frame.Inactive
 	ewmh.ActiveWindowSet(wm.X, 0)
 	c.removeState("_NET_WM_STATE_FOCUSED")
+
+	c.FireHook(hook.Unfocused)
 }
 
 func (c *Client) PrepareForFocus() {
