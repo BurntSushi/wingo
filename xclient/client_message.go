@@ -15,7 +15,6 @@ import (
 )
 
 func (c *Client) handleClientMessage(name string, data []uint32) {
-	logger.Debug.Printf("Handling %s", name)
 	switch name {
 	case "WM_CHANGE_STATE":
 		if data[0] == icccm.StateIconic && !c.iconified {

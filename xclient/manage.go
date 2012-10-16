@@ -64,14 +64,13 @@ func New(id xproto.Window) *Client {
 	}
 
 	c.manage()
+	c.FireHook(hook.Managed)
 	if !c.iconified {
 		c.Map()
 		if !wm.Startup && c.primaryType == clientTypeNormal && !wm.Config.Ffm {
 			focus.Focus(c)
 		}
 	}
-
-	c.FireHook(hook.Managed)
 
 	return c
 }
@@ -372,7 +371,6 @@ func (c *Client) updateInitStates() {
 
 			continue
 		}
-		println("Updating initial state", state)
 		c.updateState("add", state)
 	}
 }
