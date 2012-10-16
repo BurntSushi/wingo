@@ -1,0 +1,235 @@
+Compliance with desktop standards
+=================================
+This is an attempt at documenting Wingo's compliance with desktop standards. At 
+this time, this only includes ICCCM [1] and EWMH [2]. It should also probably 
+include XDG [3].
+
+Inconsistencies in this document with actual Wingo behavior should be 
+considered bugs.
+
+[1] - http://standards.freedesktop.org/wm-spec/wm-spec-latest.html
+[2] - http://tronche.com/gui/x/icccm/
+[3] - http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+
+Legend
+======
++     Full support
+/     Partial support
+-     No support
+
+ICCCM
+=====
+I have attempted to include some status for all relevant portions of the ICCCM
+as they relate to window managers. If I've missed a section, please file a
+bug report.
+
++     2.8       WM_S{X screen number}
+
++     4.1.2.1   WM_NAME (when _NET_WM_NAME isn't present)
+-     4.1.2.2   WM_ICON_NAME
+/     4.1.2.3   WM_NORMAL_HINTS (missing aspect ratios)
++     4.1.2.4   WM_HINTS (icon_pixmap used when _NET_WM_ICON isn't present)
++     4.1.2.5   WM_CLASS
++     4.1.2.6   WM_TRANSIENT_FOR
+/     4.1.2.7   WM_PROTOCOLS (only WM_TAKE_FOCUS and WM_DELETE_WINDOW)
+-     4.1.2.8   WM_COLORMAP_WINDOWS
+-     4.1.2.9   WM_CLIENT_MACHINE
++     4.1.3.1   WM_STATE
+-     4.1.3.2   WM_ICON_SIZE (Wingo resizes icons to fit)
++     4.1.4     State transitions (Normal, Iconic and Withdrawn)
+/     4.1.5     Configuring window (stacking changes aren't allowed)
++     4.1.6     Wingo respects override redirect flag
++     4.1.7     All focus models supported (no input, passive, local, global)
+-     4.1.8     Wingo doesn't do anything with colormaps
+/     4.1.9     Icons (used in absence of _NET_WM_ICON; icon_window is ignored)
++     4.1.10    Wingo respects WM_TRANSIENT_FOR and override redirect
+/     4.1.11    Wingo sometimes uses window groups to determine transients
+
++     4.2.1     All Wingo clients are reparented; SaveSets are used
++     4.2.2     Wingo redirects all Map/Configure requests
++     4.2.3     Wingo sends synthetic ConfigureNotify events when appropriate
++     4.2.4     Wingo does not send synthetic ConfigureNotify events on resize
++     4.2.5     Wingo supports Iconification and updates WM_STATE
+-     4.2.6     Wingo doesn't do anything with colormaps
++     4.2.7     SetInputFocus and WM_TAKE_FOCUS are used appropriately
++     4.2.8     ClientMessage format
++     4.2.8.1   DestroyWindow is used when WM_DELETE_WINDOW is not present
++     4.2.9     Wingo selects SubstructureRedirect on root and frame windows
+
+-     4.3       Complies with 2.8 but no selection conversion. (No point IMO)
+
+-     4.5       No session support
+
+
+EWMH
+====
+Wingo diverges from most mainstream window managers in that multiple workspaces 
+are visible at one time when multiple monitors are present. Typically, window 
+managers stretch a single workspace across all monitors. There are several 
+parts of the EWMH that implicitly assume that one and only one workspace is 
+viewable.
+
+As a result, there are several EWMH properties that Wingo *cannot* suppport (or 
+can only partially support). Details are provided below on a case by case 
+basis. Additionally, Wingo adds a new property to track which workspaces are 
+visible:
+
+_NET_VISIBLE_DESKTOPS
+---------------------
+_NET_VISIBLE_DESKTOPS, CARDINAL[n]/32
+
+A list of n integers corresponding to the indices of each desktop viewable on n 
+separate monitors. The list should be ordered by monitor geometry, from left to 
+right then top to bottom.
+
+N.B. Maybe this should be the order of Xinerama screens reported, but either 
+ordering is unambiguous.
+
+Status
+------
+I have attempted to include some status on each portion of the EWMH. If I've 
+missed anything, please file a bug report.
+
+I've marked properties which I believe have a good chance of being supported in 
+the future with a '*'. Other unsupported properties are either excluded because 
+of Wingo's workspace model or because I don't have the motivation to work on 
+them.
+
+(N.B. The list below is machine readable and used to automatically generate the
+      'ewmh_supported.go' file. All properties labeled '+' or '/' are added
+      to the _NET_SUPPORTED list.)
+
+@@@@@ Start EWMH supported atom names
++  _NET_SUPPORTED
++  _NET_CLIENT_LIST
+/  _NET_NUMBER_OF_DESKTOPS      Read-only. Workspaces must be added or removed
+                                by using Wingo's "AddWorkspace" or
+                                "RemoveWorkspace" commands.
+/  _NET_DESKTOP_GEOMETRY        Read-only. Just stores the root window
+                                geometry. Multiple workspaces can have
+                                variable geometry simultaneously, so this
+                                property can't be fully supported.
+-  _NET_DESKTOP_VIEWPORT        Wingo doesn't have viewports.
++  _NET_CURRENT_DESKTOP
++  _NET_VISIBLE_DESKTOPS
++  _NET_DESKTOP_NAMES
++  _NET_ACTIVE_WINDOW
+-  _NET_WORKAREA                Multiple workspaces can have different 
+                                geometries simultaneously, and it's impossible
+                                to know what geometry a hidden workspace might
+                                have. Any attempt at setting this causes KDE to
+                                explode.
++  _NET_SUPPORTING_WM_CHECK
+-  _NET_VIRTUAL_ROOTS           Wingo does not use virtual root windows.
+-  _NET_DESKTOP_LAYOUT          *
+-  _NET_SHOWING_DESKTOP
+
++  _NET_CLOSE_WINDOW
++  _NET_MOVERESIZE_WINDOW
+-  _NET_WM_MOVERESIZE           *
+/  _NET_RESTACK_WINDOW          Only raises window to top of layer. Does not
+                                allow sibling stacking (yet).
+-  _NET_REQUEST_FRAME_EXTENTS   *
+
++  _NET_WM_NAME
+-  _NET_WM_VISIBLE_NAME         Wingo doesn't have any name truncation detection
+                                yet.
+-  _NET_WM_ICON_NAME            *
+-  _NET_WM_VISIBLE_ICON_NAME    Wingo doesn't have any name truncation detection
+                                yet.
++  _NET_WM_DESKTOP
++  _NET_WM_WINDOW_TYPE          Wingo treats desktops and docks differently,
+                                and classifies all other windows as "normal".
+                                This may get more sophisticated.
++  _NET_WM_WINDOW_TYPE_DESKTOP
++  _NET_WM_WINDOW_TYPE_DOCK
++  _NET_WM_WINDOW_TYPE_TOOLBAR
++  _NET_WM_WINDOW_TYPE_MENU
++  _NET_WM_WINDOW_TYPE_UTILITY
++  _NET_WM_WINDOW_TYPE_SPLASH
++  _NET_WM_WINDOW_TYPE_DIALOG
++  _NET_WM_WINDOW_TYPE_DROPDOWN_MENU
++  _NET_WM_WINDOW_TYPE_POPUP_MENU
++  _NET_WM_WINDOW_TYPE_TOOLTIP
++  _NET_WM_WINDOW_TYPE_NOTIFICATION
++  _NET_WM_WINDOW_TYPE_COMBO
++  _NET_WM_WINDOW_TYPE_DND
++  _NET_WM_WINDOW_TYPE_NORMAL
+/  _NET_WM_STATE                See supported states below.
+-  _NET_WM_STATE_MODAL          ?
++  _NET_WM_STATE_STICKY
+/  _NET_WM_STATE_MAXIMIZED_VERT Wingo only does full maximization. Namely, both
+                                the VERT and HORZ states need to be set or
+                                unset at the same time.
+/  _NET_WM_STATE_MAXIMIZED_HORZ Wingo only does full maximization. Namely, both
+                                the VERT and HORZ states need to be set or
+                                unset at the same time.
+-  _NET_WM_STATE_SHADED
++  _NET_WM_STATE_SKIP_TASKBAR
++  _NET_WM_STATE_SKIP_PAGER
++  _NET_WM_STATE_HIDDEN
++  _NET_WM_STATE_FULLSCREEN
++  _NET_WM_STATE_ABOVE
++  _NET_WM_STATE_BELOW
++  _NET_WM_STATE_DEMANDS_ATTENTION
++  _NET_WM_STATE_FOCUSED
+/  _NET_WM_ALLOWED_ACTIONS      Wingo is not very sophisticated in setting this 
+                                property, and simply gives the same set of
+                                values to all clients. All such values are
+                                listed below (only completely unsupported
+                                actions are omitted).
++  _NET_WM_ACTION_MOVE
++  _NET_WM_ACTION_RESIZE
++  _NET_WM_ACTION_MINIMIZE
+-  _NET_WM_ACTION_SHADE
++  _NET_WM_ACTION_STICK
+/  _NET_WM_ACTION_MAXIMIZE_HORZ Wingo only does full maximization. Namely, both
+                                the VERT and HORZ states need to be set or
+                                unset at the same time.
+/  _NET_WM_ACTION_MAXIMIZE_VERT Wingo only does full maximization. Namely, both
+                                the VERT and HORZ states need to be set or
+                                unset at the same time.
++  _NET_WM_ACTION_FULLSCREEN
++  _NET_WM_ACTION_CHANGE_DESKTOP
++  _NET_WM_ACTION_CLOSE
++  _NET_WM_ACTION_ABOVE
++  _NET_AM_ACTION_BELOW
+-  _NET_WM_STRUT                Use _NET_WM_STRUT_PARTIAL. I will add this if
+                                necessary.
++  _NET_WM_STRUT_PARTIAL
+-  _NET_WM_ICON_GEOMETRY        *
++  _NET_WM_ICON                 Wingo falls back to WM_HINTS when this property
+                                is not present.
+-  _NET_WM_PID                  *
+-  _NET_WM_HANDLED_ICONS        Wingo doesn't have a taskbar.
+-  _NET_WM_USER_TIME            *
+-  _NET_WM_USER_TIME_WINDOW     *
++  _NET_FRAME_EXTENTS
+-  _NET_WM_OPAQUE_REGION
+
+-  _NET_WM_PING                 *
+-  _NET_WM_SYNC_REQUEST         This trades drawing glitches for window
+                                jitteryness. I'll stick with my drawing 
+                                glitches. (xcompmgr seems to make things a
+                                little smoother.)
+-  _NET_WM_FULLSCREEN_MONITORS
+-  _NET_WM_FULL_PLACEMENT
+-  _NET_WM_CM_Sn
++  WM_TRANSIENT_FOR
+@@@@@ End EWMH supported atom names
+
+
+Motif
+=====
+/  _MOTIF_WM_HINTS
+
+According to my limited experience, MOTIF hints still seem to be used in the
+wild to indicate when a client doesn't want decorations. (The EWMH tries to 
+solve this semantically, but just doesn't account for things like Google Chrome 
+that have their own decorations.)
+
+Thus, Wingo inspects _MOTIF_WM_HINTS, and if the DecorationAll,
+DecorationTitle and DecorationResizeH hints are all disabled, Wingo will not
+decorate a window. Wingo will listen for changes on this property and adjust
+decorations appropriately.
+
