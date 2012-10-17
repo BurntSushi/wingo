@@ -20,9 +20,9 @@ import (
 )
 
 const (
-	clientTypeNormal = iota
-	clientTypeDesktop
-	clientTypeDock
+	TypeNormal = iota
+	TypeDesktop
+	TypeDock
 )
 
 var allowedActions = []string{
@@ -52,7 +52,7 @@ type Client struct {
 	skipTaskbar bool
 	skipPager   bool
 
-	primaryType  int // one of clientType[...]
+	primaryType  int // one of Type[...]
 	winTypes     []string
 	winStates    []string
 	hints        *icccm.Hints

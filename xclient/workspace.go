@@ -18,7 +18,7 @@ func (c *Client) ShouldForceFloating() bool {
 		c.sticky ||
 		c.fullscreen ||
 		c.transientFor != nil ||
-		c.primaryType != clientTypeNormal ||
+		c.PrimaryType() != TypeNormal ||
 		c.isFixedSize() ||
 		c.hasType("_NET_WM_WINDOW_TYPE_SPLASH") ||
 		c.matchWmClass(wm.Config.AlwaysFloating)

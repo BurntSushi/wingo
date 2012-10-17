@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"runtime/pprof"
 	"strings"
 
 	"github.com/BurntSushi/xgb"
@@ -33,6 +34,7 @@ var (
 	flagLogLevel   = 3
 	flagLogColors  = true
 	flagReplace    = false
+	flagCpuProfile = ""
 )
 
 func init() {
@@ -47,6 +49,9 @@ func init() {
 		"When set, Wingo will attempt to replace a currently running\n"+
 			"window manager. If this is not set, and another window manager\n"+
 			"is running, Wingo will exit.")
+
+	flag.StringVar(&flagCpuProfile, "cpuprofile", flagCpuProfile,
+		"When set, a CPU profile will be written to the file specified.")
 
 	flag.Usage = usage
 	flag.Parse()
@@ -159,6 +164,15 @@ func main() {
 	wm.FocusFallback()
 	wm.Startup = false
 	pingBefore, pingAfter, pingQuit := xevent.MainPing(X)
+
+	if len(flagCpuProfile) > 0 {
+		f, err := os.Create(flagCpuProfile)
+		if err != nil {
+			logger.Error.Fatalf("%s\n", err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 	for {
 		select {
 		case <-pingBefore:

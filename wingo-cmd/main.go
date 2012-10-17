@@ -12,6 +12,7 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/BurntSushi/wingo/commands"
 )
@@ -21,10 +22,14 @@ var (
 	flagListCommands      = false
 	flagListTypeCommands  = false
 	flagListUsageCommands = false
+	flagPoll              = 0
 	flagUsageCommand      = ""
 )
 
 func init() {
+	flag.StringVar(&flagFileInput, "f", flagFileInput,
+		"When set, commands will be read from the specified file.\n"+
+			"If '-' is used, commands will be read from stdin.")
 	flag.BoolVar(&flagListCommands, "list", flagListCommands,
 		"Print a list of all commands and their parameters.")
 	flag.BoolVar(&flagListTypeCommands, "list-types", flagListTypeCommands,
@@ -32,11 +37,11 @@ func init() {
 	flag.BoolVar(&flagListUsageCommands, "list-usage", flagListUsageCommands,
 		"Print a list of all commands, their parameters (with type info),\n"+
 			"and usage information for each command.")
+	flag.IntVar(&flagPoll, "poll", flagPoll,
+		"When greater than 0, the commands specified will be repeated at "+
+			"the interval specified in milliseconds.")
 	flag.StringVar(&flagUsageCommand, "usage", flagUsageCommand,
 		"Print usage information for a particular command.")
-	flag.StringVar(&flagFileInput, "f", flagFileInput,
-		"When set, commands will be read from the specified file.\n"+
-			"If '-' is used, commands will be read from stdin.")
 
 	flag.Usage = usage
 	flag.Parse()
@@ -57,20 +62,30 @@ func main() {
 		log.Fatalf("Could not connect to Wingo IPC: %s", err)
 	}
 
-	// Send the command.
-	if _, err = fmt.Fprintf(conn, "%s%c", cmds, 0); err != nil {
-		log.Fatalf("Error writing command: %s", err)
-	}
+	// If the 'poll' flag is set, then we'll need to send the command and
+	// print the result repeatedly.
+	for {
+		// Send the command.
+		if _, err = fmt.Fprintf(conn, "%s%c", cmds, 0); err != nil {
+			log.Fatalf("Error writing command: %s", err)
+		}
 
-	// Read the response.
-	reader := bufio.NewReader(conn)
-	msg, err := reader.ReadString(0)
-	if err != nil {
-		log.Fatalf("Could not read response: %s", err)
-	}
-	msg = msg[:len(msg)-1] // get rid of null terminator
+		// Read the response.
+		reader := bufio.NewReader(conn)
+		msg, err := reader.ReadString(0)
+		if err != nil {
+			log.Fatalf("Could not read response: %s", err)
+		}
+		msg = msg[:len(msg)-1] // get rid of null terminator
 
-	fmt.Println(msg)
+		fmt.Println(msg)
+
+		if flagPoll == 0 {
+			break
+		} else {
+			time.Sleep(time.Duration(flagPoll) * time.Millisecond)
+		}
+	}
 }
 
 // getCommands inspects the arguments to extra a series of commands. If the

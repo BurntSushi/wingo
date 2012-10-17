@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path"
@@ -39,11 +40,21 @@ func ipc() {
 
 		// Read the command from the connection. All messages are
 		// null-terminated.
+		go handleClient(conn)
+	}
+}
+
+func handleClient(conn net.Conn) {
+	defer conn.Close()
+	for {
 		reader := bufio.NewReader(conn)
 		msg, err := reader.ReadString(0)
+		if err == io.EOF {
+			return
+		}
 		if err != nil {
 			logger.Warning.Printf("Error reading command '%s': %s", msg, err)
-			continue
+			return
 		}
 		msg = msg[:len(msg)-1] // get rid of null terminator
 
@@ -58,6 +69,8 @@ func ipc() {
 		commands.Env.Verbose = false
 		if err != nil {
 			fmt.Fprintf(conn, "%s%c", err, 0)
+
+			// One command failing doesn't mean we should close the conn.
 			continue
 		}
 

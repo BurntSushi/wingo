@@ -1,12 +1,16 @@
 package commands
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/gribble"
 
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/wm"
+	"github.com/BurntSushi/wingo/workspace"
 	"github.com/BurntSushi/wingo/xclient"
 )
 
@@ -37,6 +41,90 @@ func (cmd GetActive) Run() gribble.Value {
 	return 0
 }
 
+type GetClientList struct {
+	Workspace   gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns a list of client ids separated by new lines on the workspace specified
+by Workspace. Clients are listed in their focus orderering, from most recently
+focused to least recently focused.
+
+Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+`
+}
+
+func (cmd GetClientList) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		cids := make([]string, 0)
+		withWorkspace(cmd.Workspace, func(wrk *workspace.Workspace) {
+			for _, client := range wrk.Clients {
+				cids = append(cids, fmt.Sprintf("%d", client.Id()))
+			}
+		})
+		return strings.Join(cids, "\n")
+	})
+}
+
+type GetClientName struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns the name of the window specified by Client active window.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd GetClientName) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		name := ""
+		withClient(cmd.Client, func(c *xclient.Client) {
+			name = c.Name()
+		})
+		return name
+	})
+}
+
+type GetClientType struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns the type of the window specified by Client active window. A window
+type will either be "desktop", "dock" or "normal".
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd GetClientType) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		typ := ""
+		withClient(cmd.Client, func(c *xclient.Client) {
+			typ = c.PrimaryTypeString()
+		})
+		return typ
+	})
+}
+
+type GetClientWorkspace struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns the workspace of the window specified by Client active window.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd GetClientWorkspace) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		var wrk workspace.Workspacer = nil
+		withClient(cmd.Client, func(c *xclient.Client) {
+			wrk = c.Workspace()
+		})
+		if wrk == nil {
+			return ""
+		}
+		return wrk.String()
+	})
+}
+
 type GetWorkspace struct {
 	Help string `
 Returns the name of the current workspace.
@@ -45,6 +133,24 @@ Returns the name of the current workspace.
 
 func (cmd GetWorkspace) Run() gribble.Value {
 	return wm.Workspace().Name
+}
+
+type GetWorkspaceList struct {
+	Help string `
+Returns a list of all workspaces, in the order that they were added.
+
+The special "Sticky" workspace is not included.
+`
+}
+
+func (cmd GetWorkspaceList) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		wrks := make([]string, len(wm.Heads.Workspaces.Wrks))
+		for i, wrk := range wm.Heads.Workspaces.Wrks {
+			wrks[i] = wrk.Name
+		}
+		return strings.Join(wrks, "\n")
+	})
 }
 
 type GetWorkspaceNext struct {

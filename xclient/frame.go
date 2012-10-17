@@ -17,7 +17,7 @@ import (
 // shouldDecor returns false if the client has requested no frames or
 // has a type that implies it shouldn't be decorated.
 func (c *Client) shouldDecor() bool {
-	if c.primaryType != clientTypeNormal {
+	if c.PrimaryType() != TypeNormal {
 		return false
 	}
 	if c.hasType("_NET_WM_WINDOW_TYPE_SPLASH") {
@@ -129,7 +129,7 @@ func (c *Client) maximize() {
 
 	// Resize outside of the constraints of a layout.
 	g := c.Workspace().Geom()
-	c.MoveResize(false, g.X(), g.Y(), g.Width(), g.Height())
+	c.MoveResize(g.X(), g.Y(), g.Width(), g.Height())
 }
 
 func (c *Client) unmaximize() {

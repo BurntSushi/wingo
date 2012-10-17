@@ -31,7 +31,8 @@ type Client interface {
 	DeleteState(name string)
 
 	MROpt(validate bool, flags, x, y, width, height int)
-	MoveResize(validate bool, x, y, width, height int)
+	MoveResize(x, y, width, height int)
+	MoveResizeValid(x, y, width, height int)
 	Move(x, y int)
 	Resize(validate bool, width, height int)
 

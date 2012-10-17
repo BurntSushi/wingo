@@ -1,5 +1,7 @@
 package misc
 
+import "math"
+
 func Max(a, b int) int {
 	if a > b {
 		return a
@@ -22,4 +24,12 @@ func Mod(x, m int) int {
 		r += m
 	}
 	return r
+}
+
+func Round(n float64) int {
+	ceil := math.Ceil(n)
+	if ceil-n <= 0.5 {
+		return int(ceil)
+	}
+	return int(ceil) - 1
 }

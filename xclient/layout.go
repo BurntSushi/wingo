@@ -84,8 +84,12 @@ func (c *Client) MROpt(validate bool, flags, x, y, w, h int) {
 	}
 }
 
-func (c *Client) MoveResize(validate bool, x, y, width, height int) {
-	c.frame.MoveResize(validate, x, y, width, height)
+func (c *Client) MoveResize(x, y, width, height int) {
+	c.frame.MoveResize(false, x, y, width, height)
+}
+
+func (c *Client) MoveResizeValid(x, y, width, height int) {
+	c.frame.MoveResize(true, x, y, width, height)
 }
 
 func (c *Client) Move(x, y int) {

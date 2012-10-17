@@ -67,7 +67,7 @@ func New(id xproto.Window) *Client {
 	c.FireHook(hook.Managed)
 	if !c.iconified {
 		c.Map()
-		if !wm.Startup && c.primaryType == clientTypeNormal && !wm.Config.Ffm {
+		if !wm.Startup && c.PrimaryType() == TypeNormal && !wm.Config.Ffm {
 			focus.Focus(c)
 		}
 	}
@@ -154,7 +154,7 @@ func (c *Client) fullscreened() {
 	// Resize outside of the constraints of a layout.
 	g := c.Workspace().HeadGeom()
 	c.FrameNada()
-	c.MoveResize(false, g.X(), g.Y(), g.Width(), g.Height())
+	c.MoveResize(g.X(), g.Y(), g.Width(), g.Height())
 
 	// Since we moved outside of the layout, we have to save the last
 	// floating state our selves.
@@ -211,7 +211,7 @@ func (c *Client) stick() {
 func (c *Client) maybeInitPlace(presumedWorkspace workspace.Workspacer) {
 	// Any client that isn't normal doesn't get placed.
 	// Let it do what it do, baby.
-	if c.primaryType != clientTypeNormal {
+	if c.PrimaryType() != TypeNormal {
 		return
 	}
 
@@ -323,17 +323,34 @@ func (c *Client) fetchXProperties() {
 func (c *Client) setPrimaryType() {
 	switch {
 	case c.hasType("_NET_WM_WINDOW_TYPE_DESKTOP"):
-		c.primaryType = clientTypeDesktop
+		c.primaryType = TypeDesktop
 	case c.hasType("_NET_WM_WINDOW_TYPE_DOCK"):
-		c.primaryType = clientTypeDock
+		c.primaryType = TypeDock
 	default:
-		c.primaryType = clientTypeNormal
+		c.primaryType = TypeNormal
 	}
 }
 
+func (c *Client) PrimaryType() int {
+	return c.primaryType
+}
+
+func (c *Client) PrimaryTypeString() string {
+	switch c.PrimaryType() {
+	case TypeNormal:
+		return "normal"
+	case TypeDesktop:
+		return "desktop"
+	case TypeDock:
+		return "dock"
+	}
+	logger.Error.Fatalf("BUG: Unknown client type %d", c.PrimaryType())
+	panic("unreachable")
+}
+
 func (c *Client) maybeAddToFocusStack() {
-	if c.primaryType == clientTypeDesktop ||
-		c.primaryType == clientTypeDock {
+	if c.PrimaryType() == TypeDesktop ||
+		c.PrimaryType() == TypeDock {
 
 		return
 	}
@@ -341,12 +358,12 @@ func (c *Client) maybeAddToFocusStack() {
 }
 
 func (c *Client) setInitialLayer() {
-	switch c.primaryType {
-	case clientTypeDesktop:
+	switch c.PrimaryType() {
+	case TypeDesktop:
 		c.layer = stack.LayerDesktop
-	case clientTypeDock:
+	case TypeDock:
 		c.layer = stack.LayerDock
-	case clientTypeNormal:
+	case TypeNormal:
 		c.layer = stack.LayerDefault
 	default:
 		panic("Unimplemented client type.")
@@ -451,7 +468,7 @@ func (c *Client) findPresumedWorkspace() workspace.Workspacer {
 //
 // Note that presumedWorkspace MUST be visible.
 func (c *Client) moveToProperHead(presumedWorkspace workspace.Workspacer) {
-	if c.primaryType != clientTypeNormal {
+	if c.PrimaryType() != TypeNormal {
 		return
 	}
 	if _, ok := presumedWorkspace.(*workspace.Sticky); ok {
@@ -467,7 +484,7 @@ func (c *Client) moveToProperHead(presumedWorkspace workspace.Workspacer) {
 		if wrk != presumedWorkspace {
 			isHeadGeom := wrk.Geom()
 			ngeom := heads.Convert(cgeom, isHeadGeom, oughtHeadGeom)
-			c.MoveResize(true,
+			c.MoveResizeValid(
 				ngeom.X(), ngeom.Y(), ngeom.Width(), ngeom.Height())
 		}
 	} else {
