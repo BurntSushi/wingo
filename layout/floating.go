@@ -95,7 +95,7 @@ func (f *Floating) MROpt(c Client, flags, x, y, width, height int) {
 }
 
 func (f *Floating) MoveResize(c Client, x, y, width, height int) {
-	c.MoveResize(true, x, y, width, height)
+	c.MoveResizeValid(x, y, width, height)
 	c.SaveState("last-floating")
 }
 
