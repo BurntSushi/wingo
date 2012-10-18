@@ -2,7 +2,8 @@ BD=bindata
 D=data
 BINDATA=$(BD)/wingo.png.go \
 				$(BD)/close.png.go $(BD)/maximize.png.go $(BD)/minimize.png.go \
-				$(BD)/DejaVuSans.ttf.go $(BD)/FreeMono.ttf.go
+				$(BD)/DejaVuSans.ttf.go $(BD)/FreeMono.ttf.go \
+				$(BD)/wingo.wav.go
 
 install: bindata supported
 	go install -p 6 . ./bindata ./cursors ./focus \
@@ -33,6 +34,11 @@ $(BD)/%.ttf.go: $(D)/%.ttf
 	go-bindata -f `python2 -c 'print "$*".title()'`Ttf \
 		-i $(D)/$*.ttf -o $(BD)/$*.ttf.go -p bindata
 	gofmt -w $(BD)/$*.ttf.go
+
+$(BD)/%.wav.go: $(D)/%.wav
+	go-bindata -f `python2 -c 'print "$*".title()'`Wav \
+		-i $(D)/$*.wav -o $(BD)/$*.wav.go -p bindata
+	gofmt -w $(BD)/$*.wav.go
 
 loc:
 	find ./ -name '*.go' -and -not -wholename './tests*' -and -not -wholename './bindata*' -print | sort | xargs wc -l

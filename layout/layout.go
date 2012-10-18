@@ -13,11 +13,14 @@ const (
 )
 
 type Layout interface {
-	Place(geom xrect.Rect)
-	Unplace(geom xrect.Rect)
+	Name() string
+	SetGeom(geom xrect.Rect)
+	Place()
+	Unplace()
 	Add(c Client)
 	Remove(c Client)
 	Exists(c Client) bool
+	Destroy()
 
 	MROpt(c Client, flags, x, y, width, height int)
 	MoveResize(c Client, x, y, width, height int)
@@ -26,14 +29,22 @@ type Layout interface {
 }
 
 type Floater interface {
-	Floater()
 	Layout
-	InitialPlacement(geom xrect.Rect, c Client)
+	InitialPlacement(c Client)
 	Save()
-	Reposition(geom xrect.Rect)
+	Reposition()
 }
 
 type AutoTiler interface {
-	AutoTiler()
 	Layout
+	ResizeMaster(amount float64)
+	ResizeWindow(amount float64)
+	Next()
+	Prev()
+	SwitchNext()
+	SwitchPrev()
+	FocusMaster()
+	MakeMaster()
+	MastersMore()
+	MastersFewer()
 }

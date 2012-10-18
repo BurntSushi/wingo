@@ -125,6 +125,31 @@ func (cmd GetClientWorkspace) Run() gribble.Value {
 	})
 }
 
+type GetLayout struct {
+	Workspace gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns the name of the currently active (or "default") layout on the workspace
+specified by Workspace. Note that when a workspace is set to a tiling layout,
+it is still possible for clients to be floating.
+
+Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+`
+}
+
+func (cmd GetLayout) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		var w workspace.Workspacer = nil
+		withWorkspace(cmd.Workspace, func(wrk *workspace.Workspace) {
+			w = wrk
+		})
+		if w == nil {
+			return ""
+		}
+		return w.LayoutName()
+	})
+}
+
+
 type GetWorkspace struct {
 	Help string `
 Returns the name of the current workspace.

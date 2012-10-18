@@ -17,12 +17,15 @@ type Client interface {
 	Map()
 	Unmap()
 	ShouldForceFloating() bool
+	Focus()
+	Raise()
 	Geom() xrect.Rect
 	DragGeom() xrect.Rect
 
 	Iconified() bool
 	IconifiedSet(iconified bool)
 	IsSticky() bool
+	IsActive() bool
 
 	HasState(name string) bool
 	SaveState(name string)

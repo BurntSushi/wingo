@@ -2,10 +2,10 @@
 cancel := Escape
 confirm := Return
 focus_follows_mouse := no
-always_floating := gmrun
 popup_time := 500
 show_popup_fyi := yes
 show_popup_errors := yes
+audio_play_cmd := aplay
 
 [Workspaces]
 # workspaces := Awork Bwork Cwork Dwork Ework 

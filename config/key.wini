@@ -12,13 +12,28 @@ Mod4-x := ToggleMaximize (GetActive)
 Mod4-i := ToggleIconify (GetActive)
 Mod1-up := ToggleStackAbove (GetActive)
 Mod1-down := ToggleStackBelow (GetActive)
+Mod1-f := ToggleFloating (GetActive)
+Mod1-s := ToggleSticky (GetActive)
 Mod1-Shift-t := Move (GetActive) 0.25 0.25
 Mod1-Shift-t := Resize (GetActive) 0.5 0.5
 
-Mod1-a := TileStart (GetWorkspace)
-Mod1-u := TileStop (GetWorkspace)
-Mod1-f := ToggleFloating (GetActive)
-Mod1-s := ToggleSticky (GetActive)
+Mod1-a := AutoTile (GetWorkspace)
+Mod1-u := AutoUntile (GetWorkspace)
+Mod1-z := AutoCycle (GetWorkspace)
+Mod1-h := AutoResizeMaster (GetWorkspace) -0.02
+Mod1-l := AutoResizeMaster (GetWorkspace) 0.02
+Mod1-b := AutoResizeWindow (GetWorkspace) -0.02
+Mod1-n := AutoResizeWindow (GetWorkspace) 0.02
+Mod1-k := AutoNext (GetWorkspace)
+Mod1-j := AutoPrev (GetWorkspace)
+Mod1-Shift-k := AutoSwitchNext (GetWorkspace)
+Mod1-Shift-j := AutoSwitchPrev (GetWorkspace)
+Mod1-m := AutoMaster (GetWorkspace)
+Mod1-Shift-return := AutoMakeMaster (GetWorkspace)
+Mod1-comma := AutoMastersFewer (GetWorkspace)
+Mod1-period := AutoMastersMore (GetWorkspace)
+
+Mod4-Shift-l := SetLayout (GetWorkspace) (Input "Layout name:")
 
 Mod1-w := HeadFocus 0
 Mod1-w := MovePointerRelative 0 0

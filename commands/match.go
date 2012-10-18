@@ -10,6 +10,58 @@ import (
 	"github.com/BurntSushi/wingo/xclient"
 )
 
+type MatchClientClass struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Class string `param:"2"`
+	Help string `
+Returns 1 if the "class" part of the WM_CLASS property on the window 
+specified by Client contains the substring specified by Class, and otherwise 
+returns 0. The search is done case insensitively.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd MatchClientClass) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		matched := false
+		withClient(cmd.Client, func(c *xclient.Client) {
+			needle := strings.ToLower(cmd.Class)
+			haystack := strings.ToLower(c.Class().Class)
+			if strings.Contains(haystack, needle) {
+				matched = true
+			}
+		})
+		return boolToInt(matched)
+	})
+}
+
+type MatchClientInstance struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Instance string `param:"2"`
+	Help string `
+Returns 1 if the "instance" part of the WM_CLASS property on the window 
+specified by Client contains the substring specified by Instance, and otherwise 
+returns 0. The search is done case insensitively.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd MatchClientInstance) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		matched := false
+		withClient(cmd.Client, func(c *xclient.Client) {
+			needle := strings.ToLower(cmd.Instance)
+			haystack := strings.ToLower(c.Class().Instance)
+			if strings.Contains(haystack, needle) {
+				matched = true
+			}
+		})
+		return boolToInt(matched)
+	})
+}
+
 type MatchClientName struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	Name string `param:"2"`

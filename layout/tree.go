@@ -39,6 +39,16 @@ type node interface {
 	VisitLeafNodes(f func(lf *leaf) bool) bool
 }
 
+type splitter interface {
+	node
+	AddNode(n node, last bool)
+	RemoveNode(n node)
+	SetChildProportion(n node, newProp proportion)
+	Size() int
+	Child(i int) node
+	ChildIndex(n node) int
+}
+
 type hsplit struct {
 	split
 }
@@ -54,7 +64,7 @@ type split struct {
 }
 
 type leaf struct {
-	parent node // can never be a leaf
+	parent splitter
 	client Client
 	prop   proportion
 }
@@ -65,25 +75,24 @@ func newTree() *tree {
 	}
 }
 
-func (t *tree) place(geom xrect.Rect) {
-	if t.child == nil {
-		return
+func (t *tree) place(geom xrect.Rect) bool {
+	if t.child == nil || geom == nil {
+		return false
 	}
 
 	x, y, w, h := geom.X(), geom.Y(), geom.Width(), geom.Height()
 	if !t.child.ValidDims(w, h, 1, 1, w, h) {
-		return
+		return false
 	}
 	t.child.MoveResize(x, y, w, h)
+	return true
 }
 
 func (t *tree) setChild(n node) {
 	t.child = n
 }
 
-func (t *tree) switchClients(c1, c2 Client) {
-	lf1 := t.findLeaf(c1)
-	lf2 := t.findLeaf(c2)
+func (t *tree) switchClients(lf1, lf2 *leaf) {
 	if lf1 == nil || lf2 == nil {
 		return
 	}
@@ -105,7 +114,7 @@ func (t *tree) findLeaf(c Client) *leaf {
 	return lf
 }
 
-func newLeaf(parent node, client Client) *leaf {
+func newLeaf(parent splitter, client Client) *leaf {
 	return &leaf{
 		parent: parent,
 		client: client,
@@ -165,7 +174,7 @@ func (s *split) VisitLeafNodes(f func(lf *leaf) bool) bool {
 	return true
 }
 
-func (s *split) addNode(n node, last bool) {
+func (s *split) AddNode(n node, last bool) {
 	// Get the proportion of the new leaf.
 	newProp := fullPortion / proportion(len(s.children)+1)
 
@@ -188,7 +197,7 @@ func (s *split) addNode(n node, last bool) {
 	s.checkPortions()
 }
 
-func (s *split) removeNode(n node) {
+func (s *split) RemoveNode(n node) {
 	// Remove it from the list of children.
 	removed := false
 	for i, child := range s.children {
@@ -210,6 +219,37 @@ func (s *split) removeNode(n node) {
 
 		s.checkPortions()
 	}
+}
+
+func (s *split) SetChildProportion(n node, newProp proportion) {
+	// Find the difference between the old proportion and the new. Then
+	// spread the difference over the node's siblings.
+	diff := n.Proportion() - newProp
+	chops := diff / proportion(s.Size()-1)
+	for _, child := range s.children {
+		if child != n {
+			child.SetProportion(child.Proportion() + chops)
+		}
+	}
+	n.SetProportion(newProp)
+	s.checkPortions()
+}
+
+func (s *split) Size() int {
+	return len(s.children)
+}
+
+func (s *split) Child(i int) node {
+	return s.children[i]
+}
+
+func (s *split) ChildIndex(n node) int {
+	for i, child := range s.children {
+		if child == n {
+			return i
+		}
+	}
+	return -1
 }
 
 func (hs *hsplit) MoveResize(x, y, width, height int) {
@@ -272,7 +312,7 @@ func (lf *leaf) Parent() node {
 }
 
 func (lf *leaf) SetParent(n node) {
-	lf.parent = n
+	lf.parent = n.(splitter)
 }
 
 func (lf *leaf) ValidDims(w, h, minw, minh, maxw, maxh int) bool {

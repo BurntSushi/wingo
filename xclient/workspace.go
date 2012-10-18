@@ -20,8 +20,7 @@ func (c *Client) ShouldForceFloating() bool {
 		c.transientFor != nil ||
 		c.PrimaryType() != TypeNormal ||
 		c.isFixedSize() ||
-		c.hasType("_NET_WM_WINDOW_TYPE_SPLASH") ||
-		c.matchWmClass(wm.Config.AlwaysFloating)
+		c.hasType("_NET_WM_WINDOW_TYPE_SPLASH")
 }
 
 // isFixedSize returns true when the client has the minimum and maximum

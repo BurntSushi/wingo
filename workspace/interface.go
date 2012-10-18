@@ -10,6 +10,7 @@ import (
 
 type Workspacer interface {
 	String() string
+	LayoutName() string
 	Geom() xrect.Rect
 	HeadGeom() xrect.Rect
 	IsActive() bool
@@ -31,6 +32,10 @@ func (wrks *Workspaces) NewSticky() *Sticky {
 
 func (wrk *Sticky) String() string {
 	return "Sticky"
+}
+
+func (wrk *Sticky) LayoutName() string {
+	return wrk.floater.Name()
 }
 
 func (wrk *Sticky) Geom() xrect.Rect {

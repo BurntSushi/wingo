@@ -191,7 +191,9 @@ func (msg *Message) Hide() {
 	}
 	msg.textWins = msg.textWins[:0]
 
-	msg.hidden(msg)
+	if msg.hidden != nil {
+		msg.hidden(msg)
+	}
 	msg.win.Unmap()
 
 	msg.showing = false

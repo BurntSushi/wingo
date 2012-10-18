@@ -23,6 +23,10 @@ func (c *Client) IsActive() bool {
 	return c.state == frame.Active
 }
 
+func (c *Client) Focus() {
+	focus.Focus(c)
+}
+
 func (c *Client) Focused() {
 	c.attnStop()
 	c.frame.Active()

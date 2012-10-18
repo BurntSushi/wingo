@@ -173,6 +173,8 @@ func main() {
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 	}
+
+	hook.Fire(hook.Startup, hook.Args{})
 	for {
 		select {
 		case <-pingBefore:

@@ -7,7 +7,6 @@ import (
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xprop"
 
-	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/stack"
@@ -21,8 +20,8 @@ func (c *Client) handleClientMessage(name string, data []uint32) {
 			c.IconifyToggle()
 		}
 	case "_NET_ACTIVE_WINDOW":
-		focus.Focus(c)
-		stack.Raise(c)
+		c.Focus()
+		c.Raise()
 	case "_NET_CLOSE_WINDOW":
 		c.Close()
 	case "_NET_MOVERESIZE_WINDOW":
@@ -36,7 +35,7 @@ func (c *Client) handleClientMessage(name string, data []uint32) {
 	case "_NET_RESTACK_WINDOW":
 		// We basically treat this as a request to stack the window.
 		// We ignore the sibling. Maybe someday we can support that, but eh...
-		stack.Raise(c)
+		c.Raise()
 	case "_NET_WM_DESKTOP":
 		if data[0] == 0xFFFFFFFF {
 			c.stick()

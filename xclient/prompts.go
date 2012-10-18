@@ -3,9 +3,7 @@ package xclient
 import (
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
-	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/prompt"
-	"github.com/BurntSushi/wingo/stack"
 	"github.com/BurntSushi/wingo/wm"
 )
 
@@ -67,8 +65,8 @@ func (c *Client) CycleSelected() {
 	if c.Iconified() {
 		c.IconifyToggle()
 	}
-	focus.Focus(c)
-	stack.Raise(c)
+	c.Focus()
+	c.Raise()
 }
 
 func (c *Client) CycleHighlighted() {

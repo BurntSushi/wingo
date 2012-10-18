@@ -1,6 +1,9 @@
 package workspace
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xrect"
 
@@ -45,12 +48,19 @@ func (wrks *Workspaces) NewWorkspace(name string) *Workspace {
 	}
 	wrk.autoTilers = []layout.AutoTiler{
 		layout.NewVertical(),
+		layout.NewHorizontal(),
 	}
 
 	return wrk
 }
 
 func (wrk *Workspace) Destroy() {
+	for _, lay := range wrk.floaters {
+		lay.Destroy()
+	}
+	for _, lay := range wrk.autoTilers {
+		lay.Destroy()
+	}
 	wrk.PromptSlctGroup.Destroy()
 	wrk.PromptSlctItem.Destroy()
 }
@@ -162,8 +172,19 @@ func (wrk *Workspace) RemoveAllAndAdd(newWk *Workspace) {
 	newWk.Place()
 }
 
+func (wrk *Workspace) setGeom(geom xrect.Rect) {
+	for _, lay := range wrk.floaters {
+		lay.SetGeom(geom)
+	}
+	for _, lay := range wrk.autoTilers {
+		lay.SetGeom(geom)
+	}
+}
+
 func (wrk *Workspace) Show() {
+	wrk.setGeom(wrk.Geom())
 	wrk.Place()
+
 	for _, c := range wrk.Clients {
 		if c.Iconified() {
 			continue
@@ -178,6 +199,7 @@ func (wrk *Workspace) Show() {
 }
 
 func (wrk *Workspace) Hide() {
+	wrk.setGeom(nil)
 	for _, c := range wrk.Clients {
 		if c.Workspace() == wrk {
 			c.SaveState("workspace-switch")
@@ -192,7 +214,7 @@ func (wrk *Workspace) Place() {
 	}
 
 	// Floater layouts always get placed.
-	wrk.LayoutFloater().Place(wrk.Geom())
+	wrk.LayoutFloater().Place()
 
 	// Tiling layouts are only "placed" when the workspace is in the
 	// appropriate layout mode.
@@ -200,7 +222,7 @@ func (wrk *Workspace) Place() {
 	case Floating:
 		// Nada nada limonada
 	case AutoTiling:
-		wrk.LayoutAutoTiler().Place(wrk.Geom())
+		wrk.LayoutAutoTiler().Place()
 	default:
 		panic("Layout mode not implemented.")
 	}
@@ -291,6 +313,13 @@ func (wrk *Workspace) removeFromTilers(c Client) {
 	}
 }
 
+func (wrk *Workspace) AutoCycle() {
+	if wrk.State == AutoTiling {
+		wrk.curAutoTiler = (wrk.curAutoTiler + 1) % len(wrk.autoTilers)
+		wrk.LayoutAutoTiler().Place()
+	}
+}
+
 func (wrk *Workspace) Layout(c Client) layout.Layout {
 	switch {
 	case wrk.State == Floating || c.ShouldForceFloating():
@@ -303,6 +332,52 @@ func (wrk *Workspace) Layout(c Client) layout.Layout {
 	panic("unreachable")
 }
 
+func (wrk *Workspace) SetLayout(name string) {
+	var use layout.Layout = nil
+	var index int
+
+	name = strings.ToLower(name)
+	for i, lay := range wrk.floaters {
+		if name == strings.ToLower(lay.Name()) {
+			use = lay
+			index = i
+			break
+		}
+	}
+	if use == nil {
+		for i, lay := range wrk.autoTilers {
+			if name == strings.ToLower(lay.Name()) {
+				use = lay
+				index = i
+				break
+			}
+		}
+		if use == nil {
+			return
+		}
+	}
+
+	if _, ok := use.(layout.Floater); ok {
+		wrk.curFloater = index
+		wrk.LayoutStateSet(Floating)
+	} else if _, ok := use.(layout.AutoTiler); ok {
+		wrk.curAutoTiler = index
+		wrk.LayoutStateSet(AutoTiling)
+	} else {
+		panic(fmt.Sprintf("Unknown layout type: %T", use))
+	}
+}
+
+func (wrk *Workspace) LayoutName() string {
+	switch wrk.State {
+	case Floating:
+		return wrk.LayoutFloater().Name()
+	case AutoTiling:
+		return wrk.LayoutAutoTiler().Name()
+	}
+	panic(fmt.Sprintf("Unknown workspace layout state: %d", wrk.State))
+}
+
 func (wrk *Workspace) LayoutStateSet(state int) {
 	if !wrk.IsVisible() {
 		return
@@ -311,7 +386,7 @@ func (wrk *Workspace) LayoutStateSet(state int) {
 	if state == wrk.State {
 		// If it's an AutoTiler, then just call Place again.
 		if wrk.State == AutoTiling {
-			wrk.LayoutAutoTiler().Place(wrk.Geom())
+			wrk.LayoutAutoTiler().Place()
 		}
 		return
 	}
@@ -320,9 +395,9 @@ func (wrk *Workspace) LayoutStateSet(state int) {
 	switch wrk.State {
 	case Floating:
 		wrk.LayoutFloater().Save()
-		wrk.LayoutFloater().Unplace(wrk.Geom())
+		wrk.LayoutFloater().Unplace()
 	case AutoTiling:
-		wrk.LayoutAutoTiler().Unplace(wrk.Geom())
+		wrk.LayoutAutoTiler().Unplace()
 	default:
 		panic("Layout state not implemented.")
 	}
@@ -331,11 +406,11 @@ func (wrk *Workspace) LayoutStateSet(state int) {
 	switch state {
 	case Floating:
 		wrk.State = state
-		wrk.LayoutFloater().Place(wrk.Geom())
-		wrk.LayoutFloater().Reposition(wrk.Geom())
+		wrk.LayoutFloater().Place()
+		wrk.LayoutFloater().Reposition()
 	case AutoTiling:
 		wrk.State = state
-		wrk.LayoutAutoTiler().Place(wrk.Geom())
+		wrk.LayoutAutoTiler().Place()
 	default:
 		panic("Layout state not implemented.")
 	}

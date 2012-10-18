@@ -1,6 +1,16 @@
+[ForceFloating]
+match := MatchClientClass ":client:" "gimp"
+
+managed := ToggleFloating ":client:"
+
 [FocusTransparency]
 match := True
 
 focused := SetOpacity ":client:" 1.0
 unfocused := SetOpacity ":client:" 0.5
+
+[Dale]
+match := False
+
+startup := Dale
 

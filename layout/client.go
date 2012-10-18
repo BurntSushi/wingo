@@ -19,6 +19,9 @@ type Client interface {
 	Geom() xrect.Rect
 	DragGeom() xrect.Rect
 	ShouldForceFloating() bool
+	Focus()
+	Raise()
+	IsActive() bool
 
 	MROpt(validate bool, flags, x, y, width, height int)
 	MoveResize(x, y, width, height int)

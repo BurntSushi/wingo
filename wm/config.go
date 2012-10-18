@@ -18,9 +18,9 @@ type Configuration struct {
 
 	Ffm                 bool
 	Workspaces          []string
-	AlwaysFloating      []string
 	PopupTime           int
 	ShowFyi, ShowErrors bool
+	AudioProgram        string
 
 	mouse map[string][]mouseCommand
 	key   map[string][]keyCommand
@@ -35,12 +35,12 @@ func newConfig() *Configuration {
 		TabKey:       "Tab",
 		RevTabKey:    "ISO_Left_Tab",
 
-		Ffm:            false,
-		Workspaces:     []string{"1", "2", "3", "4"},
-		AlwaysFloating: []string{},
-		PopupTime:      500,
-		ShowFyi:        true,
-		ShowErrors:     true,
+		Ffm:          false,
+		Workspaces:   []string{"1", "2", "3", "4"},
+		PopupTime:    500,
+		ShowFyi:      true,
+		ShowErrors:   true,
+		AudioProgram: "aplay",
 
 		mouse: map[string][]mouseCommand{},
 		key:   map[string][]keyCommand{},
@@ -178,10 +178,6 @@ func (conf *Configuration) loadOptionsConfigSection(
 			if workspaces, ok := getLastString(key); ok {
 				conf.Workspaces = strings.Split(workspaces, " ")
 			}
-		case "always_floating":
-			if alwaysFloating, ok := getLastString(key); ok {
-				conf.AlwaysFloating = strings.Split(alwaysFloating, " ")
-			}
 		case "focus_follows_mouse":
 			setBool(key, &conf.Ffm)
 		case "popup_time":
@@ -194,6 +190,8 @@ func (conf *Configuration) loadOptionsConfigSection(
 			setString(key, &conf.CancelKey)
 		case "confirm":
 			setString(key, &conf.ConfirmKey)
+		case "audio_play_cmd":
+			setString(key, &conf.AudioProgram)
 		}
 	}
 }

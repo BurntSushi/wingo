@@ -68,7 +68,7 @@ func New(id xproto.Window) *Client {
 	if !c.iconified {
 		c.Map()
 		if !wm.Startup && c.PrimaryType() == TypeNormal && !wm.Config.Ffm {
-			focus.Focus(c)
+			c.Focus()
 		}
 	}
 
@@ -103,7 +103,7 @@ func (c *Client) manage() {
 	c.maybeInitPlace(presumedWorkspace)
 	wm.AddClient(c)
 	c.maybeAddToFocusStack()
-	stack.Raise(c)
+	c.Raise()
 	c.attachEventCallbacks()
 	c.maybeApplyStruts()
 
@@ -209,6 +209,20 @@ func (c *Client) stick() {
 }
 
 func (c *Client) maybeInitPlace(presumedWorkspace workspace.Workspacer) {
+	// This is a hack. Before a client gets sucked into some layout, we
+	// always want to have some floating state to fall back on to. However,
+	// by the time we're "allowed" to save the client's state, it will have
+	// already been placed in the hands of some layout---which may or may
+	// not be floating. So we inject our own state forcefully here.
+	defer func() {
+		c.states["last-floating"] = clientState{
+			geom:      xrect.New(xrect.Pieces(c.frame.Geom())),
+			headGeom:  xrect.New(xrect.Pieces(presumedWorkspace.Geom())),
+			frame:     c.frame,
+			maximized: c.maximized,
+		}
+	}()
+
 	// Any client that isn't normal doesn't get placed.
 	// Let it do what it do, baby.
 	if c.PrimaryType() != TypeNormal {
@@ -234,24 +248,11 @@ func (c *Client) maybeInitPlace(presumedWorkspace workspace.Workspacer) {
 
 	// We're good, do a placement unless we're already mapped or on a
 	// hidden workspace..
-	if presumedWorkspace.IsVisible() {
-		if c.isAttrsUnmapped() {
-			w := presumedWorkspace.(*workspace.Workspace)
-			w.LayoutFloater().InitialPlacement(w.Geom(), c)
-		}
-
-		// This is a hack. Before a client gets sucked into some layout, we
-		// always want to have some floating state to fall back on to. However,
-		// by the time we're "allowed" to save the client's state, it will have
-		// already been placed in the hands of some layout---which may or may
-		// not be floating. So we inject our own state forcefully here.
-		c.states["last-floating"] = clientState{
-			geom:      xrect.New(xrect.Pieces(c.frame.Geom())),
-			headGeom:  xrect.New(xrect.Pieces(presumedWorkspace.Geom())),
-			frame:     c.frame,
-			maximized: c.maximized,
-		}
+	if !presumedWorkspace.IsVisible() || !c.isAttrsUnmapped() {
+		return
 	}
+	w := presumedWorkspace.(*workspace.Workspace)
+	w.LayoutFloater().InitialPlacement(c)
 }
 
 func (c *Client) fetchXProperties() {

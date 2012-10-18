@@ -9,6 +9,7 @@ import (
 
 type Floating struct {
 	clients []Client
+	geom    xrect.Rect
 }
 
 func NewFloating() *Floating {
@@ -17,15 +18,13 @@ func NewFloating() *Floating {
 	}
 }
 
-func (f *Floating) Floater() {}
-
-func (f *Floating) InitialPlacement(geom xrect.Rect, c Client) {
+func (f *Floating) InitialPlacement(c Client) {
 	rand.Seed(time.Now().UnixNano())
 	cgeom := c.Geom()
 
-	x, y := geom.X(), geom.Y()
-	xlimit := geom.Width() - cgeom.Width()
-	ylimit := geom.Height() - cgeom.Height()
+	x, y := f.geom.X(), f.geom.Y()
+	xlimit := f.geom.Width() - cgeom.Width()
+	ylimit := f.geom.Height() - cgeom.Height()
 	if xlimit > 0 {
 		x += rand.Intn(xlimit)
 	}
@@ -35,8 +34,17 @@ func (f *Floating) InitialPlacement(geom xrect.Rect, c Client) {
 	f.Move(c, x, y)
 }
 
-func (f *Floating) Place(geom xrect.Rect)   {}
-func (f *Floating) Unplace(geom xrect.Rect) {}
+func (f *Floating) Place()   {}
+func (f *Floating) Unplace() {}
+func (f *Floating) Destroy() {}
+
+func (f *Floating) Name() string {
+	return "Floating"
+}
+
+func (f *Floating) SetGeom(geom xrect.Rect) {
+	f.geom = geom
+}
 
 // Save is called when a workspace switches from a floating layout to a
 // tiling layout. It should save the "last-floating" state for all floating
@@ -51,8 +59,8 @@ func (f *Floating) Save() {
 
 // Reposition is called when a workspace switches from a tiling layout to a
 // floating layout. It should reload the "last-floating" client state.
-func (f *Floating) Reposition(geom xrect.Rect) {
-	if geom == nil {
+func (f *Floating) Reposition() {
+	if f.geom == nil {
 		return
 	}
 	for _, c := range f.clients {

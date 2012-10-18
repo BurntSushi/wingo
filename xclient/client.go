@@ -176,12 +176,20 @@ func (c *Client) State() int {
 	return c.state
 }
 
+func (c *Client) Class() *icccm.WmClass {
+	return c.class
+}
+
 func (c *Client) IsSkipPager() bool {
 	return c.skipPager
 }
 
 func (c *Client) IsSkipTaskbar() bool {
 	return c.skipTaskbar
+}
+
+func (c *Client) Raise() {
+	stack.Raise(c)
 }
 
 func (c *Client) StackAboveToggle() {
@@ -194,7 +202,7 @@ func (c *Client) StackAboveToggle() {
 
 func (c *Client) stackAbove() {
 	c.layer = stack.LayerAbove
-	stack.Raise(c)
+	c.Raise()
 
 	c.removeState("_NET_WM_STATE_BELOW")
 	c.addState("_NET_WM_STATE_ABOVE")
@@ -202,7 +210,7 @@ func (c *Client) stackAbove() {
 
 func (c *Client) unstackAbove() {
 	c.layer = stack.LayerDefault
-	stack.Raise(c)
+	c.Raise()
 
 	c.removeState("_NET_WM_STATE_ABOVE")
 }
@@ -217,7 +225,7 @@ func (c *Client) StackBelowToggle() {
 
 func (c *Client) stackBelow() {
 	c.layer = stack.LayerBelow
-	stack.Raise(c)
+	c.Raise()
 
 	c.removeState("_NET_WM_STATE_ABOVE")
 	c.addState("_NET_WM_STATE_BELOW")
@@ -225,7 +233,7 @@ func (c *Client) stackBelow() {
 
 func (c *Client) unstackBelow() {
 	c.layer = stack.LayerDefault
-	stack.Raise(c)
+	c.Raise()
 
 	c.removeState("_NET_WM_STATE_BELOW")
 }

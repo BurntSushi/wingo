@@ -1,17 +1,3 @@
-/*
-   command_key.go is responsible for setting up *all* key bindings found
-   in the key.wini config file.
-
-   It isn't quite the same as command_mouse.go because they operate under
-   two different assumptions: key bindings are global in nature (i.e.,
-   they are bound to the root window) while mouse bindings are window
-   specific in nature (i.e., bound to each specific window).
-
-   This actually makes command_key.go simpler than command_mouse.go, because
-   we don't need to provide an interface for each client to bind keys
-   separately. We can just bind them to the root window and let the commands
-   infer state and act appropriately.
-*/
 package wm
 
 import (
@@ -57,14 +43,21 @@ func (kcmd keyCommand) attach() {
 			return
 		}
 
-		keybind.KeyPressFun(
+		err = keybind.KeyPressFun(
 			func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 				go run()
 			}).Connect(X, Root.Id, kcmd.keyStr, true)
-		keybind.KeyPressFun(
+		if err != nil {
+			logger.Warning.Printf("Could not bind '%s': %s", kcmd.keyStr, err)
+		}
+
+		err = keybind.KeyPressFun(
 			func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 				go run()
 			}).Connect(X, X.Dummy(), kcmd.keyStr, true)
+		if err != nil {
+			logger.Warning.Printf("Could not bind '%s': %s", kcmd.keyStr, err)
+		}
 	} else {
 		run := func() {
 			go func() {
@@ -75,15 +68,23 @@ func (kcmd keyCommand) attach() {
 			}()
 		}
 		if kcmd.down {
-			keybind.KeyPressFun(
+			err := keybind.KeyPressFun(
 				func(X *xgbutil.XUtil, ev xevent.KeyPressEvent) {
 					run()
 				}).Connect(X, Root.Id, kcmd.keyStr, true)
+			if err != nil {
+				logger.Warning.Printf("Could not bind '%s': %s",
+					kcmd.keyStr, err)
+			}
 		} else {
-			keybind.KeyReleaseFun(
+			err := keybind.KeyReleaseFun(
 				func(X *xgbutil.XUtil, ev xevent.KeyReleaseEvent) {
 					run()
 				}).Connect(X, Root.Id, kcmd.keyStr, true)
+			if err != nil {
+				logger.Warning.Printf("Could not bind '%s': %s",
+					kcmd.keyStr, err)
+			}
 		}
 	}
 }

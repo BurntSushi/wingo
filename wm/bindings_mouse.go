@@ -127,15 +127,23 @@ func (mcmd mouseCommand) attach(wid xproto.Window, run func(),
 	propagate, grab bool) {
 
 	if mcmd.down {
-		mousebind.ButtonPressFun(
+		err := mousebind.ButtonPressFun(
 			func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
 				run()
 			}).Connect(X, wid, mcmd.buttonStr, propagate, grab)
+		if err != nil {
+			logger.Warning.Printf("Could not bind '%s': %s",
+				mcmd.buttonStr, err)
+		}
 	} else {
-		mousebind.ButtonReleaseFun(
+		err := mousebind.ButtonReleaseFun(
 			func(X *xgbutil.XUtil, ev xevent.ButtonReleaseEvent) {
 				run()
 			}).Connect(X, wid, mcmd.buttonStr, propagate, grab)
+		if err != nil {
+			logger.Warning.Printf("Could not bind '%s': %s",
+				mcmd.buttonStr, err)
+		}
 	}
 }
 
@@ -144,14 +152,23 @@ func (mcmd mouseCommand) attach(wid xproto.Window, run func(),
 //
 // TODO: Recall and document *why* this is needed.
 func (mcmd mouseCommand) attachGrabRelease(wid xproto.Window, run func()) {
-	mousebind.ButtonPressFun(
+	var err error
+
+	err = mousebind.ButtonPressFun(
 		func(X *xgbutil.XUtil, ev xevent.ButtonPressEvent) {
 			// empty
 		}).Connect(X, wid, mcmd.buttonStr, false, true)
-	mousebind.ButtonReleaseFun(
+	if err != nil {
+		logger.Warning.Printf("Could not bind '%s': %s", mcmd.buttonStr, err)
+	}
+
+	err = mousebind.ButtonReleaseFun(
 		func(X *xgbutil.XUtil, ev xevent.ButtonReleaseEvent) {
 			run()
 		}).Connect(X, wid, mcmd.buttonStr, false, false)
+	if err != nil {
+		logger.Warning.Printf("Could not bind '%s': %s", mcmd.buttonStr, err)
+	}
 }
 
 func rootMouseSetup() {

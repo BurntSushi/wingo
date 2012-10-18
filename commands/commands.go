@@ -15,9 +15,9 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xrect"
 
+	"github.com/BurntSushi/wingo/bindata"
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/stack"
 	"github.com/BurntSushi/wingo/wm"
 	"github.com/BurntSushi/wingo/workspace"
 	"github.com/BurntSushi/wingo/xclient"
@@ -28,6 +28,7 @@ import (
 var Env = gribble.New([]gribble.Command{
 	&AddWorkspace{},
 	&Close{},
+	&Dale{},
 	&Focus{},
 	&FocusRaise{},
 	&FrameBorders{},
@@ -53,10 +54,9 @@ var Env = gribble.New([]gribble.Command{
 	&RemoveWorkspace{},
 	&Resize{},
 	&Quit{},
+	&SetLayout{},
 	&SetOpacity{},
 	&Shell{},
-	&TileStart{},
-	&TileStop{},
 	&Unmaximize{},
 	&WingoExec{},
 	&WingoHelp{},
@@ -65,6 +65,20 @@ var Env = gribble.New([]gribble.Command{
 	&WorkspaceSendClient{},
 	&WorkspaceWithClient{},
 	&WorkspaceGreedyWithClient{},
+
+	&AutoTile{},
+	&AutoUntile{},
+	&AutoCycle{},
+	&AutoResizeMaster{},
+	&AutoResizeWindow{},
+	&AutoNext{},
+	&AutoPrev{},
+	&AutoSwitchNext{},
+	&AutoSwitchPrev{},
+	&AutoMaster{},
+	&AutoMakeMaster{},
+	&AutoMastersMore{},
+	&AutoMastersFewer{},
 
 	&CycleClientChoose{},
 	&CycleClientHide{},
@@ -79,6 +93,7 @@ var Env = gribble.New([]gribble.Command{
 	&GetClientName{},
 	&GetClientType{},
 	&GetClientWorkspace{},
+	&GetLayout{},
 	&GetWorkspace{},
 	&GetWorkspaceList{},
 	&GetWorkspaceNext{},
@@ -87,7 +102,10 @@ var Env = gribble.New([]gribble.Command{
 
 	&True{},
 	&False{},
+	&MatchClientClass{},
+	&MatchClientInstance{},
 	&MatchClientName{},
+	&Or{},
 })
 
 var (
@@ -153,6 +171,31 @@ func (cmd Close) Run() gribble.Value {
 	})
 }
 
+type Dale struct {
+	Help string `
+Make sure "audio_play_cmd" is set to a program that can play wav files.
+`
+}
+
+func (cmd Dale) Run() gribble.Value {
+	go func() {
+		var stderr bytes.Buffer
+
+		program := wm.Config.AudioProgram
+
+		c := exec.Command(program)
+		c.Stderr = &stderr
+		c.Stdin = bytes.NewReader(bindata.WingoWav())
+		if err := c.Run(); err != nil {
+			if stderr.Len() > 0 {
+				logger.Warning.Printf("%s failed: %s", program, stderr.String())
+			}
+			logger.Warning.Printf("Error running %s: %s", program, err)
+		}
+	}()
+	return nil
+}
+
 type Focus struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	Help string `
@@ -183,7 +226,7 @@ func (cmd Focus) Run() gribble.Value {
 					wm.SetWorkspace(wrk, false)
 				}
 			} else {
-				focus.Focus(c)
+				c.Focus()
 				xevent.ReplayPointer(wm.X)
 			}
 		})
@@ -202,8 +245,8 @@ Client may be the window id or a substring that matches a window name.
 func (cmd FocusRaise) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		return withClient(cmd.Client, func(c *xclient.Client) {
-			focus.Focus(c)
-			stack.Raise(c)
+			c.Focus()
+			c.Raise()
 			xevent.ReplayPointer(wm.X)
 		})
 	})
@@ -319,7 +362,7 @@ func (cmd HeadFocusWithClient) Run() gribble.Value {
 				func(wrk *workspace.Workspace) {
 					wm.SetWorkspace(wrk, false)
 					wrk.Add(c)
-					stack.Raise(c)
+					c.Raise()
 				})
 		})
 		return nil
@@ -513,7 +556,7 @@ Client may be the window id or a substring that matches a window name.
 func (cmd Raise) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		return withClient(cmd.Client, func(c *xclient.Client) {
-			stack.Raise(c)
+			c.Raise()
 			xevent.ReplayPointer(wm.X)
 		})
 	})
@@ -633,6 +676,30 @@ func (cmd Quit) Run() gribble.Value {
 		return nil
 	})
 }
+
+type SetLayout struct {
+	Workspace gribble.Any `param:"1" types:"int,string"`
+	Name string `param:"2"`
+	Help string `
+Sets the current layout of the workspace specified by Workspace to the layout
+named by Name. If a layout with name Name does not exist, this command has
+no effect.
+
+Note that this command has no effect if the workspace is not visible.
+
+Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+`
+}
+
+func (cmd SetLayout) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withWorkspace(cmd.Workspace, func(wrk *workspace.Workspace) {
+			wrk.SetLayout(cmd.Name)
+		})
+		return nil
+	})
+}
+
 
 type SetOpacity struct {
 	Client gribble.Any `param:"1" types:"int,string"`
@@ -801,49 +868,6 @@ func (cmd Shell) Run() gribble.Value {
 	return nil
 }
 
-type TileStart struct {
-	Workspace gribble.Any `param:"1" types:"int,string"`
-	Help string `
-Initiates tiling on the workspace specified by Workspace. If tiling is already
-active, the layout will be re-placed.
-
-Note that this command has no effect if the workspace is not visible.
-
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
-`
-}
-
-func (cmd TileStart) Run() gribble.Value {
-	return syncRun(func() gribble.Value {
-		withWorkspace(cmd.Workspace, func(wrk *workspace.Workspace) {
-			wrk.LayoutStateSet(workspace.AutoTiling)
-		})
-		return nil
-	})
-}
-
-type TileStop struct {
-	Workspace gribble.Any `param:"1" types:"int,string"`
-	Help string `
-Stops tiling on the workspace specified by Workspace, and restores windows to
-their position and geometry before being tiled. If tiling is not active on the
-specified workspace, this command has no effect.
-
-Note that this command has no effect if the workspace is not visible.
-
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
-`
-}
-
-func (cmd TileStop) Run() gribble.Value {
-	return syncRun(func() gribble.Value {
-		withWorkspace(cmd.Workspace, func(wrk *workspace.Workspace) {
-			wrk.LayoutStateSet(workspace.Floating)
-		})
-		return nil
-	})
-}
-
 type Unmaximize struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	Help string `
@@ -981,7 +1005,7 @@ func (cmd WorkspaceWithClient) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		withWorkspace(cmd.Workspace, func(wrk *workspace.Workspace) {
 			withClient(cmd.Client, func(c *xclient.Client) {
-				stack.Raise(c)
+				c.Raise()
 				wrk.Add(c)
 				wm.SetWorkspace(wrk, false)
 				wm.FocusFallback()
@@ -1012,7 +1036,7 @@ func (cmd WorkspaceGreedyWithClient) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		withWorkspace(cmd.Workspace, func(wrk *workspace.Workspace) {
 			withClient(cmd.Client, func(c *xclient.Client) {
-				stack.Raise(c)
+				c.Raise()
 				wrk.Add(c)
 				wm.SetWorkspace(wrk, true)
 				wm.FocusFallback()
