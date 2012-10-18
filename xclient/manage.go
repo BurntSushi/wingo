@@ -3,6 +3,7 @@ package xclient
 import (
 	"time"
 
+	"github.com/BurntSushi/xgb/shape"
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/ewmh"
@@ -319,6 +320,8 @@ func (c *Client) fetchXProperties() {
 	} else if transCli := wm.FindManagedClient(trans); transCli != nil {
 		c.transientFor = transCli.(*Client)
 	}
+
+	c.setShaped()
 }
 
 func (c *Client) setPrimaryType() {
@@ -494,5 +497,25 @@ func (c *Client) moveToProperHead(presumedWorkspace workspace.Workspacer) {
 		// workspace. Therefore, just use a hammer and move it to the root
 		// coordinates of the presumed workspace.
 		c.Move(oughtHeadGeom.X(), oughtHeadGeom.Y())
+	}
+}
+
+func (c *Client) setShaped() {
+	c.shaped = false
+	if wm.ShapeExt {
+		err := shape.SelectInputChecked(wm.X.Conn(), c.Id(), true).Check()
+		if err != nil {
+			logger.Warning.Printf("Could not select Shape events for '%s': %s",
+				c, err)
+			return
+		}
+
+		extents, err := shape.QueryExtents(wm.X.Conn(), c.Id()).Reply()
+		if err != nil {
+			logger.Warning.Printf("X Shape QueryExtents failed on '%s': %s",
+				c, err)
+			return
+		}
+		c.shaped = extents.BoundingShaped
 	}
 }

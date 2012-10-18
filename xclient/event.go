@@ -1,6 +1,7 @@
 package xclient
 
 import (
+	"github.com/BurntSushi/xgb/shape"
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
@@ -34,6 +35,7 @@ func (c *Client) attachEventCallbacks() {
 	c.cbConfigureRequest().Connect(wm.X, c.Id())
 	c.cbPropertyNotify().Connect(wm.X, c.Id())
 	c.cbClientMessage().Connect(wm.X, c.Id())
+	c.cbShapeNotify().Connect(wm.X, c.Id())
 
 	// Focus follows mouse?
 	if wm.Config.Ffm {
@@ -205,12 +207,6 @@ func (c *Client) handleFocusIn() xevent.FocusInFun {
 		}
 
 		c.Focused()
-		// logger.Debug.Println("---------------------------------------------")
-		// logger.Debug.Println("Focus In") 
-		// logger.Debug.Printf("Window: %s", c.Name()) 
-		// logger.Debug.Printf("Mode: %s", modes[ev.Mode]) 
-		// logger.Debug.Printf("Detail: %s", details[ev.Detail]) 
-		// logger.Debug.Println("---------------------------------------------")
 	}
 	return xevent.FocusInFun(f)
 }
@@ -221,13 +217,65 @@ func (c *Client) handleFocusOut() xevent.FocusOutFun {
 			return
 		}
 		c.Unfocused()
-
-		// logger.Debug.Println("---------------------------------------------")
-		// logger.Debug.Println("Focus Out") 
-		// logger.Debug.Printf("Window: %s", c.Name()) 
-		// logger.Debug.Printf("Mode: %s", modes[ev.Mode]) 
-		// logger.Debug.Printf("Detail: %s", details[ev.Detail]) 
-		// logger.Debug.Println("---------------------------------------------")
 	}
 	return xevent.FocusOutFun(f)
+}
+
+func (c *Client) cbShapeNotify() xevent.ShapeNotifyFun {
+	var err error
+
+	f := func(X *xgbutil.XUtil, ev xevent.ShapeNotifyEvent) {
+		// Many thanks to Openbox. I'll followed their lead.
+		xoff, yoff := int16(c.frame.Left()), int16(c.frame.Top())
+		// var xoff, yoff int16 = 0, 0 
+
+		// Update the client's shaped status.
+		c.shaped = ev.Shaped
+
+		// If the client is no longer shaped, clear the mask.
+		if !c.shaped {
+			err = shape.MaskChecked(wm.X.Conn(),
+				shape.SoSet, ev.ShapeKind, c.frame.Parent().Id,
+				xoff, yoff, xproto.PixmapNone).Check()
+			if err != nil {
+				logger.Warning.Printf("Error clearing Shape mask on '%s': %s",
+					c, err)
+			}
+			return
+		}
+
+		// Now we have to shape the frame like the client.
+		err = shape.CombineChecked(wm.X.Conn(),
+			shape.SoSet, ev.ShapeKind, ev.ShapeKind,
+			c.frame.Parent().Id, xoff, yoff, c.Id()).Check()
+		if err != nil {
+			logger.Warning.Printf("Error combining on '%s': %s", c, err)
+			return
+		}
+
+		// We don't even bother with shaping the frame if the client has any 
+		// kind of decoration. Unless I'm mistaken, shaping Wingo's decorations 
+		// to fit client shaping really isn't going to do anything...
+		if _, ok := c.frame.(*frame.Nada); ok {
+			return
+		}
+
+		// So this is only done with Slim/Borders/Full frames. It basically
+		// negates the effects of shaping since we use one monolithic 
+		// rectangle.
+		rect := xproto.Rectangle{
+			X:      0,
+			Y:      0,
+			Width:  uint16(c.frame.Geom().Width()),
+			Height: uint16(c.frame.Geom().Height()),
+		}
+		err = shape.RectanglesChecked(wm.X.Conn(),
+			shape.SoUnion, shape.SkBounding, xproto.ClipOrderingUnsorted,
+			c.frame.Parent().Id, 0, 0, []xproto.Rectangle{rect}).Check()
+		if err != nil {
+			logger.Warning.Printf("Error adding rectangles on '%s': %s", c, err)
+			return
+		}
+	}
+	return xevent.ShapeNotifyFun(f)
 }

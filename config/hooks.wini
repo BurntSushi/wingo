@@ -14,3 +14,10 @@ match := False
 
 startup := Dale
 
+[Autostart]
+match := True
+
+startup := Shell "chromium"
+startup := Shell "gkrellm"
+startup := Shell "pager-multihead"
+

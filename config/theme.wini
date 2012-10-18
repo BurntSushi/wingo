@@ -59,7 +59,7 @@ a_border_color := $ORANGE
 i_border_color := $GREY
 
 [Slim]
-border_size := 10
-a_border_color := $BLUE
-i_border_color := $GREY
+border_size := 1
+a_border_color := 0x000000
+i_border_color := 0x000000
 

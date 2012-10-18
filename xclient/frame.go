@@ -298,7 +298,15 @@ func (c *Client) newClientFrames() clientFrames {
 	if c.shouldDecor() {
 		c.frame = cf.full
 	} else {
-		c.frame = cf.nada
+		if c.PrimaryType() == TypeNormal {
+			if c.shaped {
+				c.frame = cf.nada
+			} else {
+				c.frame = cf.slim
+			}
+		} else {
+			c.frame = cf.nada
+		}
 	}
 
 	x, y, w, h := frame.ClientToFrame(c.frame, -1,

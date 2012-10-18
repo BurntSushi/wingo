@@ -72,6 +72,7 @@ type Client struct {
 
 	dragGeom  xrect.Rect
 	hadStruts bool
+	shaped    bool
 
 	attnQuit  chan struct{}
 	demanding bool

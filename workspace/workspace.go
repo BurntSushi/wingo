@@ -213,6 +213,10 @@ func (wrk *Workspace) Place() {
 		return
 	}
 
+	// Refresh the geometry, since this is called right after struts change
+	// or when monitor configuration changes.
+	wrk.setGeom(wrk.Geom())
+
 	// Floater layouts always get placed.
 	wrk.LayoutFloater().Place()
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/BurntSushi/gribble"
 
+	"github.com/BurntSushi/xgb/shape"
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
@@ -29,6 +30,7 @@ var (
 	StickyWrk  *workspace.Sticky
 	gribbleEnv *gribble.Environment
 	cmdHacks   CommandHacks
+	ShapeExt   bool
 )
 
 func Initialize(x *xgbutil.XUtil,
@@ -69,6 +71,15 @@ func Initialize(x *xgbutil.XUtil,
 	rootMouseSetup()
 
 	StickyWrk = Heads.Workspaces.NewSticky()
+
+	err = shape.Init(X.Conn())
+	if err != nil {
+		ShapeExt = false
+		logger.Warning.Printf("The X SHAPE extension could not be loaded. " +
+			"Google Chrome might look ugly.")
+	} else {
+		ShapeExt = true
+	}
 
 	ewmhClientList()
 	ewmhNumberOfDesktops()

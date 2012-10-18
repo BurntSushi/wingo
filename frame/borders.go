@@ -104,7 +104,7 @@ func (f *Borders) Active() {
 	f.bottomLeft.Active()
 	f.bottomRight.Active()
 
-	f.parent.Change(xproto.CwBackPixel, uint32(0xff0000))
+	f.parent.Change(xproto.CwBackPixel, uint32(0xffffff))
 	f.parent.ClearAll()
 }
 
@@ -121,7 +121,7 @@ func (f *Borders) Inactive() {
 	f.bottomLeft.Inactive()
 	f.bottomRight.Inactive()
 
-	f.parent.Change(xproto.CwBackPixel, uint32(0xff0000))
+	f.parent.Change(xproto.CwBackPixel, uint32(0xffffff))
 	f.parent.ClearAll()
 }
 
