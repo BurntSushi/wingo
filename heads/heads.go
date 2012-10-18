@@ -213,16 +213,16 @@ func (hds *Heads) EwmhWorkarea() {
 	// if wrk.IsVisible() { 
 	// geom := wrk.Geom() 
 	// areas[i] = ewmh.Workarea{ 
-	// X: geom.X(), 
-	// Y: geom.Y(), 
-	// Width: geom.Width(), 
+	// X:      geom.X(), 
+	// Y:      geom.Y(), 
+	// Width:  geom.Width(), 
 	// Height: geom.Height(), 
 	// } 
 	// } else { 
 	// areas[i] = ewmh.Workarea{ 
-	// X: 0, 
-	// Y: 0, 
-	// Width: 0, 
+	// X:      0, 
+	// Y:      0, 
+	// Width:  0, 
 	// Height: 0, 
 	// } 
 	// } 

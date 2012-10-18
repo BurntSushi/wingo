@@ -73,9 +73,6 @@ func (lay *verthorz) SetGeom(geom xrect.Rect) {
 }
 
 func (lay verthorz) Place() {
-	if lay.geom == nil {
-		return
-	}
 	lay.store.place(lay.geom)
 }
 
@@ -87,17 +84,31 @@ func (lay verthorz) Exists(c Client) bool {
 
 func (lay verthorz) ResizeMaster(amount float64) {
 	if lay.root.Size() == 2 {
+		lay.root.PropsSave()
+
 		newProp := lay.masters.Proportion() + proportion(amount)
 		lay.root.SetChildProportion(lay.masters, newProp)
-		lay.Place()
+
+		if lay.store.place(lay.geom) {
+			lay.root.PropsClear()
+		} else {
+			lay.root.PropsRollback()
+		}
 	}
 }
 
 func (lay verthorz) ResizeWindow(amount float64) {
 	if lf := lay.leafCurrent(); lf != nil && lf.parent.Size() > 1 {
+		lf.parent.PropsSave()
+
 		newProp := lf.Proportion() + proportion(amount)
 		lf.parent.SetChildProportion(lf, newProp)
-		lay.Place()
+
+		if lay.store.place(lay.geom) {
+			lf.parent.PropsClear()
+		} else {
+			lf.parent.PropsRollback()
+		}
 	}
 }
 

@@ -47,6 +47,10 @@ type splitter interface {
 	Size() int
 	Child(i int) node
 	ChildIndex(n node) int
+
+	PropsSave()
+	PropsRollback()
+	PropsClear()
 }
 
 type hsplit struct {
@@ -61,6 +65,7 @@ type split struct {
 	parent   node
 	children []node
 	prop     proportion
+	saved    []proportion
 }
 
 type leaf struct {
@@ -125,6 +130,7 @@ func newHSplit(parent node) *hsplit {
 	return &hsplit{split{
 		parent:   parent,
 		children: make([]node, 0),
+		saved:    make([]proportion, 0),
 	}}
 }
 
@@ -132,6 +138,7 @@ func newVSplit(parent node) *vsplit {
 	return &vsplit{split{
 		parent:   parent,
 		children: make([]node, 0),
+		saved:    make([]proportion, 0),
 	}}
 }
 
@@ -180,9 +187,10 @@ func (s *split) AddNode(n node, last bool) {
 
 	// Now push everything else over by an even amount.
 	if len(s.children) > 0 {
-		chop := newProp / proportion(len(s.children))
+		// chop := newProp / proportion(len(s.children)) 
 		for _, child := range s.children {
-			child.SetProportion(child.Proportion() - chop)
+			child.SetProportion(
+				child.Proportion() - (child.Proportion() * newProp))
 		}
 	}
 
@@ -211,10 +219,17 @@ func (s *split) RemoveNode(n node) {
 	}
 
 	// Distribute this node's portion to the rest.
+	// Give more to those who don't have much, and less to those who have
+	// a lot.
 	if len(s.children) > 0 {
-		leftovers := n.Proportion() / proportion(len(s.children))
-		for _, child := range s.children {
-			child.SetProportion(child.Proportion() + leftovers)
+		normalized := make([]proportion, len(s.children))
+		sum := 1.0 - n.Proportion()
+		for i, child := range s.children {
+			normalized[i] = child.Proportion() / sum
+		}
+		for i, child := range s.children {
+			child.SetProportion(
+				child.Proportion() + normalized[i]*n.Proportion())
 		}
 
 		s.checkPortions()
@@ -226,6 +241,21 @@ func (s *split) SetChildProportion(n node, newProp proportion) {
 	// spread the difference over the node's siblings.
 	diff := n.Proportion() - newProp
 	chops := diff / proportion(s.Size()-1)
+
+	// Normalize proportions that don't include the 'n' node.
+	// normalized := make([]proportion, 0, s.Size() - 1) 
+	// sum := proportion(0) 
+	// for _, child := range s.children { 
+	// if child != n { 
+	// sum += child.Proportion() 
+	// } 
+	// } 
+	// for _, child := range s.children { 
+	// if child != n { 
+	// normalized = append(normalized, child.Proportion() / sum) 
+	// } 
+	// } 
+
 	for _, child := range s.children {
 		if child != n {
 			child.SetProportion(child.Proportion() + chops)
@@ -250,6 +280,24 @@ func (s *split) ChildIndex(n node) int {
 		}
 	}
 	return -1
+}
+
+func (s *split) PropsSave() {
+	s.saved = s.saved[:0]
+	for _, child := range s.children {
+		s.saved = append(s.saved, child.Proportion())
+	}
+}
+
+func (s *split) PropsRollback() {
+	for i, childProp := range s.saved {
+		s.children[i].SetProportion(childProp)
+	}
+	s.saved = s.saved[:0]
+}
+
+func (s *split) PropsClear() {
+	s.saved = s.saved[:0]
 }
 
 func (hs *hsplit) MoveResize(x, y, width, height int) {

@@ -26,7 +26,7 @@ func (c *Client) newClientState() clientState {
 		maximized: c.maximized,
 	}
 	if c.workspace.IsVisible() {
-		s.headGeom = xrect.New(xrect.Pieces(c.workspace.Geom()))
+		s.headGeom = xrect.New(xrect.Pieces(c.workspace.HeadGeom()))
 	}
 	return s
 }
@@ -93,8 +93,8 @@ func (c *Client) LoadState(name string) {
 		return
 	}
 
-	if s.headGeom != nil && c.workspace.Geom() != s.headGeom {
-		s.geom = heads.Convert(s.geom, s.headGeom, c.workspace.Geom())
+	if s.headGeom != nil && c.workspace.HeadGeom() != s.headGeom {
+		s.geom = heads.Convert(s.geom, s.headGeom, c.workspace.HeadGeom())
 	}
 	c.LayoutMoveResize(s.geom.X(), s.geom.Y(),
 		s.geom.Width(), s.geom.Height())

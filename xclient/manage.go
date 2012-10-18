@@ -218,7 +218,7 @@ func (c *Client) maybeInitPlace(presumedWorkspace workspace.Workspacer) {
 	defer func() {
 		c.states["last-floating"] = clientState{
 			geom:      xrect.New(xrect.Pieces(c.frame.Geom())),
-			headGeom:  xrect.New(xrect.Pieces(presumedWorkspace.Geom())),
+			headGeom:  xrect.New(xrect.Pieces(presumedWorkspace.HeadGeom())),
 			frame:     c.frame,
 			maximized: c.maximized,
 		}
@@ -482,11 +482,11 @@ func (c *Client) moveToProperHead(presumedWorkspace workspace.Workspacer) {
 		return
 	}
 
-	oughtHeadGeom := presumedWorkspace.Geom()
+	oughtHeadGeom := presumedWorkspace.HeadGeom()
 	cgeom := c.frame.Geom()
 	if wrk := wm.Heads.FindMostOverlap(cgeom); wrk != nil {
 		if wrk != presumedWorkspace {
-			isHeadGeom := wrk.Geom()
+			isHeadGeom := wrk.HeadGeom()
 			ngeom := heads.Convert(cgeom, isHeadGeom, oughtHeadGeom)
 			c.MoveResizeValid(
 				ngeom.X(), ngeom.Y(), ngeom.Width(), ngeom.Height())
@@ -496,7 +496,8 @@ func (c *Client) moveToProperHead(presumedWorkspace workspace.Workspacer) {
 		// workspace but it could not be found to overlap with *any* visible
 		// workspace. Therefore, just use a hammer and move it to the root
 		// coordinates of the presumed workspace.
-		c.Move(oughtHeadGeom.X(), oughtHeadGeom.Y())
+		geom := presumedWorkspace.Geom()
+		c.Move(geom.X(), geom.Y())
 	}
 }
 
