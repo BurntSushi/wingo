@@ -15,6 +15,9 @@ Or if you're brave, just run this to replace your current window manager:
 
     wingo --replace
 
+WARNING: In order to build Wingo, you'll need at least 2GB of RAM. See:
+https://github.com/BurntSushi/wingo/issues/8
+
 Dude... why?
 ============
 Wingo has two features which, when combined, set it apart from other window 
