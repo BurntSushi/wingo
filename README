@@ -57,7 +57,7 @@ variable substitution (which makes theming a bit simpler).
 No XML. No recompiling. No scripting.
 
 Configuring key/mouse bindings and hooks uses a central command system called 
-Gribble. For example, one can add a workspace named "sweetness" with this
+Gribble. For example, one can add a workspace named "cromulent" with this
 command:
 
     AddWorkspace "cromulent"
@@ -96,6 +96,12 @@ Want to pipe some information to another program? No problem, since commands
 can return stuff!
 
     wingo-cmd GetWorkspace
+
+And you can even make commands repeat themselves every X milliseconds, which is 
+ideal for use with something like dzen to show the name of the currently active 
+window:
+
+    wingo-cmd --poll 500 'GetClientName (GetActive)' | dzen2
 
 Finally, you can see a list of all commands, their parameters and their usage:
 (even if Wingo isn't running)
