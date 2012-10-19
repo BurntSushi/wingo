@@ -10,7 +10,7 @@ focused := SetOpacity ":client:" 1.0
 unfocused := SetOpacity ":client:" 0.8
 
 [Dale]
-match := True
+match := False
 
 startup := Dale
 

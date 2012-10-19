@@ -1,6 +1,7 @@
 package wm
 
 import (
+	"go/build"
 	"os"
 	"path"
 	"strings"
@@ -86,13 +87,38 @@ func ConfigFile(name string) string {
 		return true
 	}
 
-	fpath := path.Join("config", name)
-
-	if !readable(fpath) {
-		logger.Error.Fatalf(
-			"Could not find a readable '%s' configuration file.", name)
+	try := []string{
+		ConfigDir,
+		path.Join(os.Getenv("HOME"), ".config", "wingo"),
+		path.Join("/", "etc", "xdg", "wingo"),
 	}
-	return fpath
+
+	// Add directories from GOPATH...
+	for _, dir := range build.Default.SrcDirs() {
+		d := path.Join(dir, "github.com", "BurntSushi", "wingo", "config")
+		try = append(try, d)
+	}
+
+	// Now use the first one.
+	tried := make([]string, 0, len(try))
+	for _, dir := range try {
+		if len(dir) == 0 {
+			continue
+		}
+
+		fpath := path.Join(dir, name)
+		if readable(fpath) {
+			return fpath
+		} else {
+			tried = append(tried, fpath)
+		}
+	}
+
+	// Show the user where we've looked for config files...
+	triedStr := strings.Join(tried, ", ")
+	logger.Error.Fatalf("Could not find a readable '%s' config file. Wingo "+
+		"has tried the following paths: %s", name, triedStr)
+	panic("unreachable")
 }
 
 // loadMouseConfigSection does two things:

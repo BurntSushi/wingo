@@ -15,6 +15,7 @@ import (
 // is fired.
 const (
 	Startup   Type = "startup"
+	Restarted Type = "restart"
 	Managed   Type = "managed"
 	Focused   Type = "focused"
 	Unfocused Type = "unfocused"
@@ -27,6 +28,7 @@ var (
 	// A map from group constants to group values.
 	groups = map[Type]group{
 		Startup:   make(group, 0),
+		Restarted: make(group, 0),
 		Managed:   make(group, 0),
 		Focused:   make(group, 0),
 		Unfocused: make(group, 0),

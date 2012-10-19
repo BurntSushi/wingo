@@ -243,7 +243,7 @@ func newTheme() *ThemeConfig {
 func loadTheme() (*ThemeConfig, error) {
 	theme := newTheme()
 
-	tdata, err := loadThemeFile()
+	tdata, err := wini.Parse(ConfigFile("theme.wini"))
 	if err != nil {
 		return nil, err
 	}
@@ -304,10 +304,6 @@ func loadTheme() (*ThemeConfig, error) {
 		theme.Full.titleSize, theme.Full.titleSize)
 
 	return theme, nil
-}
-
-func loadThemeFile() (*wini.Data, error) {
-	return wini.Parse("config/theme.wini")
 }
 
 func loadMiscOption(theme *ThemeConfig, k wini.Key) {

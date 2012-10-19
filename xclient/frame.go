@@ -127,9 +127,8 @@ func (c *Client) maximize() {
 
 	c.frames.maximize()
 
-	// Resize outside of the constraints of a layout.
 	g := c.Workspace().Geom()
-	c.MoveResize(g.X(), g.Y(), g.Width(), g.Height())
+	c.LayoutMoveResize(g.X(), g.Y(), g.Width(), g.Height())
 }
 
 func (c *Client) unmaximize() {

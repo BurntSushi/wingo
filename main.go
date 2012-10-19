@@ -35,6 +35,7 @@ var (
 	flagLogLevel       = 3
 	flagLogColors      = true
 	flagReplace        = false
+	flagConfigDir      = ""
 	flagCpuProfile     = ""
 	flagWingoRestarted = false
 )
@@ -51,6 +52,11 @@ func init() {
 		"When set, Wingo will attempt to replace a currently running\n"+
 			"window manager. If this is not set, and another window manager\n"+
 			"is running, Wingo will exit.")
+	flag.StringVar(&flagConfigDir, "config-dir", flagConfigDir,
+		"Override the location of the configuration files. When this\n"+
+			"is not set, the following paths will be checked (in order):\n"+
+			"$HOME/.config/wingo, /etc/xdg/wingo,\n"+
+			"$GOPATH/src/github.com/BurntSushi/wingo/config")
 	flag.BoolVar(&flagWingoRestarted, "wingo-restarted", flagWingoRestarted,
 		"DO NOT USE. INTERNAL WINGO USE ONLY.")
 
@@ -92,7 +98,7 @@ func main() {
 	focus.Initialize(X)
 	stack.Initialize(X)
 	cursors.Initialize(X)
-	wm.Initialize(X, commands.Env, newHacks())
+	wm.Initialize(X, commands.Env, newHacks(), flagConfigDir)
 	hook.Initialize(commands.Env, wm.ConfigFile("hooks.wini"))
 
 	// Listen to Root. It is all-important.
@@ -178,7 +184,9 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	if !flagWingoRestarted {
+	if flagWingoRestarted {
+		hook.Fire(hook.Restarted, hook.Args{})
+	} else {
 		hook.Fire(hook.Startup, hook.Args{})
 	}
 
