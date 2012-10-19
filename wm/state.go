@@ -31,6 +31,7 @@ var (
 	gribbleEnv *gribble.Environment
 	cmdHacks   CommandHacks
 	ShapeExt   bool
+	Restart    bool
 )
 
 func Initialize(x *xgbutil.XUtil,
@@ -80,6 +81,8 @@ func Initialize(x *xgbutil.XUtil,
 	} else {
 		ShapeExt = true
 	}
+
+	Restart = false
 
 	ewmhClientList()
 	ewmhNumberOfDesktops()

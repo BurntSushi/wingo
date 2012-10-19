@@ -7,10 +7,10 @@ managed := ToggleFloating ":client:"
 match := True
 
 focused := SetOpacity ":client:" 1.0
-unfocused := SetOpacity ":client:" 0.5
+unfocused := SetOpacity ":client:" 0.8
 
 [Dale]
-match := False
+match := True
 
 startup := Dale
 

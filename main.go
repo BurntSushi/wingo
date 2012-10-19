@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"strings"
+	"syscall"
 
 	"github.com/BurntSushi/xgb"
 	"github.com/BurntSushi/xgb/xproto"
@@ -30,11 +31,12 @@ import (
 )
 
 var (
-	flagGoMaxProcs = runtime.NumCPU()
-	flagLogLevel   = 3
-	flagLogColors  = true
-	flagReplace    = false
-	flagCpuProfile = ""
+	flagGoMaxProcs     = runtime.NumCPU()
+	flagLogLevel       = 3
+	flagLogColors      = true
+	flagReplace        = false
+	flagCpuProfile     = ""
+	flagWingoRestarted = false
 )
 
 func init() {
@@ -49,6 +51,8 @@ func init() {
 		"When set, Wingo will attempt to replace a currently running\n"+
 			"window manager. If this is not set, and another window manager\n"+
 			"is running, Wingo will exit.")
+	flag.BoolVar(&flagWingoRestarted, "wingo-restarted", flagWingoRestarted,
+		"DO NOT USE. INTERNAL WINGO USE ONLY.")
 
 	flag.StringVar(&flagCpuProfile, "cpuprofile", flagCpuProfile,
 		"When set, a CPU profile will be written to the file specified.")
@@ -174,7 +178,11 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	hook.Fire(hook.Startup, hook.Args{})
+	if !flagWingoRestarted {
+		hook.Fire(hook.Startup, hook.Args{})
+	}
+
+EVENTLOOP:
 	for {
 		select {
 		case <-pingBefore:
@@ -183,8 +191,24 @@ func main() {
 		case f := <-commands.SafeExec:
 			commands.SafeReturn <- f()
 		case <-pingQuit:
-			return
+			break EVENTLOOP
 		}
+	}
+	if wm.Restart {
+		// We need to tell the next invocation of Wingo that it is being
+		// *restarted*. (So that we don't refire the startup hook.)
+		// Thus, search os.Args for "--wingo-restarted". If it doesn't exist,
+		// add it.
+		found := false
+		for _, arg := range os.Args {
+			if strings.ToLower(strings.TrimSpace(arg)) == "--wingo-restarted" {
+				found = true
+			}
+		}
+		if !found {
+			os.Args = append(os.Args, "--wingo-restarted")
+		}
+		syscall.Exec(os.Args[0], os.Args, os.Environ())
 	}
 }
 

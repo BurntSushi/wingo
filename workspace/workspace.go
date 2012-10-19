@@ -133,8 +133,16 @@ func (wrk *Workspace) Add(c Client) {
 		wrk.addToTilers(c)
 		wrk.Place()
 	}
-	if _, ok := c.Layout().(layout.Floater); ok && wrk.IsVisible() {
-		c.LoadState("last-floating")
+	if _, ok := c.Layout().(layout.Floater); ok {
+		// If the workspace is visible, reload a state now.
+		// Otherwise, we get a little hacky and copy the state into
+		// workspace-switch, which will be invoked then the workspace
+		// becomes visible...
+		if wrk.IsVisible() {
+			c.LoadState("last-floating")
+		} else {
+			c.CopyState("last-floating", "workspace-switch")
+		}
 	}
 
 	// If the old and new workspace have different visibilities, adjust the

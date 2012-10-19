@@ -193,14 +193,55 @@ func (cmd GetWorkspaceNext) Run() gribble.Value {
 type GetWorkspacePrefix struct {
 	Prefix string `param:"1"`
 	Help   string `
-Returns the first workspace starting with Prefix. If the current workspace
-starts with Prefix, then the first workspace *after* the current workspace
-starting with Prefix will be returned.
+Returns the first non-visible workspace starting with Prefix. If the current 
+workspace starts with Prefix, then the first workspace *after* the current 
+workspace starting with Prefix will be returned.
 `
 }
 
 func (cmd GetWorkspacePrefix) Run() gribble.Value {
-	return nil
+	return syncRun(func() gribble.Value {
+		hasPre := func(wrk *workspace.Workspace, prefix string) bool {
+			return strings.HasPrefix(strings.ToLower(wrk.Name), prefix)
+		}
+		preAndHidden := func(wrk *workspace.Workspace, prefix string) bool {
+			return !wrk.IsVisible() && hasPre(wrk, prefix)
+		}
+
+		needle := strings.ToLower(cmd.Prefix)
+		cur := wm.Workspace()
+		if hasPre(cur, needle) {
+			past := false
+			for _, wrk := range wm.Heads.Workspaces.Wrks {
+				if past {
+					if preAndHidden(wrk, needle) {
+						return wrk.Name
+					}
+					continue
+				}
+				if wrk == cur {
+					past = true
+				}
+			}
+
+			// Nothing? Now look for one before 'cur'...
+			for _, wrk := range wm.Heads.Workspaces.Wrks {
+				if wrk == cur { // we've gone too far...
+					return ""
+				}
+				if preAndHidden(wrk, needle) {
+					return wrk.Name
+				}
+			}
+		} else {
+			for _, wrk := range wm.Heads.Workspaces.Wrks {
+				if preAndHidden(wrk, needle) {
+					return wrk.Name
+				}
+			}
+		}
+		return ""
+	})
 }
 
 type GetWorkspacePrev struct {

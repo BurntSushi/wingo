@@ -53,6 +53,7 @@ var Env = gribble.New([]gribble.Command{
 	&Raise{},
 	&RemoveWorkspace{},
 	&Resize{},
+	&Restart{},
 	&Quit{},
 	&SetLayout{},
 	&SetOpacity{},
@@ -663,7 +664,22 @@ func (cmd MovePointerRelative) Run() gribble.Value {
 	})
 }
 
-type Quit struct{
+type Restart struct {
+	Help string `
+Restarts Wingo in place using exec. This should be used to reload Wingo
+after you've made changes to its configuration.
+`
+}
+
+func (cmd Restart) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		wm.Restart = true // who says globals are bad?
+		xevent.Quit(wm.X)
+		return nil
+	})
+}
+
+type Quit struct {
 	Help string `
 Stops Wingo.
 `

@@ -253,6 +253,14 @@ func (c *Client) cbShapeNotify() xevent.ShapeNotifyFun {
 			return
 		}
 
+		// If the client is being shaped and claims that it doesn't want
+		// decorations, make sure it has "nada" instead of "slim".
+		// We do this on startup, but maybe the client didn't say anything
+		// about shaping then...
+		if !c.shouldDecor() {
+			c.FrameNada()
+		}
+
 		// We don't even bother with shaping the frame if the client has any 
 		// kind of decoration. Unless I'm mistaken, shaping Wingo's decorations 
 		// to fit client shaping really isn't going to do anything...
