@@ -51,6 +51,19 @@ func (wrks *Workspaces) NewWorkspace(name string) *Workspace {
 		layout.NewHorizontal(),
 	}
 
+	if state, index := wrk.findLayout(wrks.defaultLayout); state != -1 {
+		switch state {
+		case Floating:
+			wrk.curFloater = index
+			wrk.State = Floating
+		case AutoTiling:
+			wrk.curAutoTiler = index
+			wrk.State = AutoTiling
+		default:
+			panic(fmt.Sprintf("Unknown layout state '%d'.", state))
+		}
+	}
+
 	return wrk
 }
 
@@ -339,14 +352,31 @@ func (wrk *Workspace) Layout(c Client) layout.Layout {
 	case wrk.State == AutoTiling:
 		return wrk.LayoutAutoTiler()
 	default:
-		panic("Layout state not implemented.")
+		panic(fmt.Sprintf("Unknown layout state '%d'.", wrk.State))
 	}
 	panic("unreachable")
 }
 
 func (wrk *Workspace) SetLayout(name string) {
+	state, index := wrk.findLayout(name)
+	switch state {
+	case Floating:
+		wrk.curFloater = index
+		wrk.LayoutStateSet(Floating)
+	case AutoTiling:
+		wrk.curAutoTiler = index
+		wrk.LayoutStateSet(AutoTiling)
+	case -1: // couldn't find layout with name 'name'
+		return
+	default:
+		panic(fmt.Sprintf("Unknown layout state '%d'.", state))
+	}
+	panic("unreachable")
+}
+
+func (wrk *Workspace) findLayout(name string) (state int, index int) {
 	var use layout.Layout = nil
-	var index int
+	state, index = -1, -1
 
 	name = strings.ToLower(name)
 	for i, lay := range wrk.floaters {
@@ -365,19 +395,16 @@ func (wrk *Workspace) SetLayout(name string) {
 			}
 		}
 		if use == nil {
-			return
+			return -1, -1
 		}
 	}
 
 	if _, ok := use.(layout.Floater); ok {
-		wrk.curFloater = index
-		wrk.LayoutStateSet(Floating)
+		return Floating, index
 	} else if _, ok := use.(layout.AutoTiler); ok {
-		wrk.curAutoTiler = index
-		wrk.LayoutStateSet(AutoTiling)
-	} else {
-		panic(fmt.Sprintf("Unknown layout type: %T", use))
+		return AutoTiling, index
 	}
+	panic(fmt.Sprintf("Unknown layout type: %T", use))
 }
 
 func (wrk *Workspace) LayoutName() string {

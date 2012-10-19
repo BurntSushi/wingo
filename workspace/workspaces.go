@@ -26,16 +26,20 @@ type Heads interface {
 }
 
 type Workspaces struct {
-	X     *xgbutil.XUtil
-	Wrks  []*Workspace
-	heads Heads
+	X             *xgbutil.XUtil
+	Wrks          []*Workspace
+	heads         Heads
+	defaultLayout string
 }
 
-func NewWorkspaces(X *xgbutil.XUtil, heads Heads) *Workspaces {
+func NewWorkspaces(
+	X *xgbutil.XUtil, heads Heads, defaultLayout string) *Workspaces {
+
 	return &Workspaces{
-		X:     X,
-		Wrks:  make([]*Workspace, 0, 1),
-		heads: heads,
+		X:             X,
+		Wrks:          make([]*Workspace, 0, 1),
+		heads:         heads,
+		defaultLayout: defaultLayout,
 	}
 }
 

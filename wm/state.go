@@ -62,7 +62,7 @@ func Initialize(x *xgbutil.XUtil,
 	Clients = make(ClientList, 0, 50)
 	Prompts = newPrompts()
 
-	Heads = heads.NewHeads(X)
+	Heads = heads.NewHeads(X, Config.DefaultLayout)
 	for _, wrkName := range Config.Workspaces {
 		if err := AddWorkspace(wrkName); err != nil {
 			logger.Error.Fatalf("Could not initialize workspaces: %s", err)

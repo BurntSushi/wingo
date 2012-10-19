@@ -23,12 +23,12 @@ type Heads struct {
 	visibles   []*workspace.Workspace // Slice of all visible workspaces.
 }
 
-func NewHeads(X *xgbutil.XUtil) *Heads {
+func NewHeads(X *xgbutil.XUtil, defaultLayout string) *Heads {
 	hds := &Heads{
 		X:      X,
 		active: 0,
 	}
-	hds.Workspaces = workspace.NewWorkspaces(X, hds)
+	hds.Workspaces = workspace.NewWorkspaces(X, hds, defaultLayout)
 	return hds
 }
 

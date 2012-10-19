@@ -62,6 +62,27 @@ func (cmd MatchClientInstance) Run() gribble.Value {
 	})
 }
 
+type MatchClientIsTransient struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns 1 if the window specified by Client is a transient window, and 
+otherwise returns 0. A transient window usually corresponds to some kind of
+dialog window.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd MatchClientIsTransient) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		matched := false
+		withClient(cmd.Client, func(c *xclient.Client) {
+			matched = c.IsTransient()
+		})
+		return boolToInt(matched)
+	})
+}
+
 type MatchClientName struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	Name string `param:"2"`
@@ -81,6 +102,31 @@ func (cmd MatchClientName) Run() gribble.Value {
 			needle := strings.ToLower(cmd.Name)
 			haystack := strings.ToLower(c.Name())
 			if strings.Contains(haystack, needle) {
+				matched = true
+			}
+		})
+		return boolToInt(matched)
+	})
+}
+
+type MatchClientType struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Type string `param:"2"`
+	Help string `
+Returns 1 if the type of the window specified by Client matches the type
+named by Type, and otherwise returns 0.
+
+Valid window types are "Normal", "Dock" or "Desktop".
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd MatchClientType) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		matched := false
+		withClient(cmd.Client, func(c *xclient.Client) {
+			if strings.ToLower(cmd.Type) == c.PrimaryTypeString() {
 				matched = true
 			}
 		})
@@ -129,7 +175,7 @@ func (cmd Not) Run() gribble.Value {
 				"'Not' received a value not in {0, 1}: %d", cmd.Op)
 			return nil
 		}
-		return intToBool(cmd.Op)
+		return boolToInt(!intToBool(cmd.Op))
 	})
 }
 

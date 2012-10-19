@@ -29,6 +29,7 @@ var Env = gribble.New([]gribble.Command{
 	&AddWorkspace{},
 	&Close{},
 	&Dale{},
+	&Float{},
 	&Focus{},
 	&FocusRaise{},
 	&FrameBorders{},
@@ -58,6 +59,7 @@ var Env = gribble.New([]gribble.Command{
 	&SetLayout{},
 	&SetOpacity{},
 	&Shell{},
+	&Unfloat{},
 	&Unmaximize{},
 	&WingoExec{},
 	&WingoHelp{},
@@ -105,7 +107,10 @@ var Env = gribble.New([]gribble.Command{
 	&False{},
 	&MatchClientClass{},
 	&MatchClientInstance{},
+	&MatchClientIsTransient{},
 	&MatchClientName{},
+	&MatchClientType{},
+	&Not{},
 	&Or{},
 })
 
@@ -195,6 +200,25 @@ func (cmd Dale) Run() gribble.Value {
 		}
 	}()
 	return nil
+}
+
+type Float struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Floats the window specified by Client. If the window is already floating,
+this command has no effect.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd Float) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.Float()
+		})
+		return nil
+	})
 }
 
 type Focus struct {
@@ -884,6 +908,25 @@ func (cmd Shell) Run() gribble.Value {
 	return nil
 }
 
+type Unfloat struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Unfloats the window specified by Client. If the window is not floating,
+this command has no effect.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd Unfloat) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.Unfloat()
+		})
+		return nil
+	})
+}
+
 type Unmaximize struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	Help string `
@@ -915,7 +958,7 @@ func (cmd WingoExec) Run() gribble.Value {
 	Env.Verbose = true
 	_, err := Env.RunMany(cmd.Commands)
 	Env.Verbose = false
-	if err != nil {
+	if len(cmd.Commands) > 0 && err != nil {
 		wm.PopupError("%s", err)
 	}
 	return nil

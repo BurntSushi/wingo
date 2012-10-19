@@ -46,6 +46,12 @@ type hook struct {
 	// List of match conditions expressed as Gribble commands.
 	satisfies []string
 
+	// When true, each condition in 'satisfies' will be combined as a set
+	// of conjunctions.
+	// When false, each condition in 'satisfies' will be combined as a set
+	// of disjunctions.
+	conjunction bool
+
 	// List of consequences expressed as Gribble commands. All consequences
 	// are fired if '(and satisfies[0] satisfies[1] ... satisfies[n-1])' is
 	// satisfied.
@@ -87,8 +93,11 @@ func Fire(hk Type, args Args) {
 			return
 		}
 		for _, hook := range groups[hk] {
-			// Run all of the match conditions. If one returns false, we quit.
-			matched := true
+			// Run all of the match conditions. Depending upon the value
+			// of hk.conjunction, we treat the conditions as either a set
+			// of conjunctions or a set of disjunctions.
+			andMatched := true
+			orMatched := false
 			for _, condCmd := range hook.satisfies {
 				val, err := gribbleEnv.Run(args.apply(condCmd))
 				if err != nil {
@@ -96,18 +105,32 @@ func Fire(hk Type, args Args) {
 						"conditions for your '%s' hook in the '%s' group, "+
 						"the command '%s' returned an error: %s",
 						hook.name, hk, condCmd, err)
-					matched = false
+					andMatched = false
+					orMatched = false
 					break
 				}
-				if !gribbleBool(val) {
-					logger.Lots.Printf("The hook '%s' in the '%s' group "+
-						"failed to match on the '%s' condition.",
-						hook.name, hk, condCmd)
-					matched = false
-					break
+				if gribbleBool(val) {
+					logger.Lots.Printf("Condition '%s' matched "+
+						"for the hook '%s' in the '%s' group.",
+						condCmd, hook.name, hk)
+					orMatched = true
+					if !hook.conjunction {
+						break
+					}
+				} else {
+					logger.Lots.Printf("Condition '%s' failed to match "+
+						"for the hook '%s' in the '%s' group.",
+						condCmd, hook.name, hk)
+					andMatched = false
+					if hook.conjunction {
+						break
+					}
 				}
 			}
-			if !matched {
+			if hook.conjunction && !andMatched {
+				continue
+			}
+			if !hook.conjunction && !orMatched {
 				continue
 			}
 
@@ -158,13 +181,24 @@ func readSection(cdata *wini.Data, section string) error {
 			"not be parsed: %s", cmd, section, err)
 	}
 
+	// Now try to find whether it's a conjunction or not.
+	conjunction := true
+	conjunctionKey := cdata.GetKey(section, "conjunction")
+	if conjunctionKey != nil {
+		if vals, err := conjunctionKey.Bools(); err != nil {
+			logger.Warning.Println(err)
+		} else {
+			conjunction = vals[0]
+		}
+	}
+
 	// Now traverse all of the keys in the section. We'll skip "match" since
 	// we've already grabbed the data. Any other key should correspond to
 	// a hook group name.
 	addedOne := false
 	for _, key := range cdata.Keys(section) {
 		groupName := Type(key.Name())
-		if groupName == "match" {
+		if groupName == "match" || groupName == "conjunction" {
 			continue
 		}
 		if _, ok := groups[groupName]; !ok {
@@ -183,6 +217,7 @@ func readSection(cdata *wini.Data, section string) error {
 		hook := hook{
 			name:         section,
 			satisfies:    satisfies,
+			conjunction:  conjunction,
 			consequences: consequences,
 		}
 		groups[groupName] = append(groups[groupName], hook)

@@ -19,6 +19,7 @@ type Configuration struct {
 
 	Ffm                 bool
 	Workspaces          []string
+	DefaultLayout       string
 	PopupTime           int
 	ShowFyi, ShowErrors bool
 	AudioProgram        string
@@ -204,6 +205,8 @@ func (conf *Configuration) loadOptionsConfigSection(
 			if workspaces, ok := getLastString(key); ok {
 				conf.Workspaces = strings.Split(workspaces, " ")
 			}
+		case "default_layout":
+			setString(key, &conf.DefaultLayout)
 		case "focus_follows_mouse":
 			setBool(key, &conf.Ffm)
 		case "popup_time":
