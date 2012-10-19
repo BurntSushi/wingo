@@ -2,7 +2,6 @@ package xclient
 
 import (
 	"github.com/BurntSushi/xgbutil/ewmh"
-	"github.com/BurntSushi/xgbutil/icccm"
 
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/frame"
@@ -10,18 +9,6 @@ import (
 	"github.com/BurntSushi/wingo/wm"
 	"github.com/BurntSushi/wingo/workspace"
 )
-
-func (c *Client) CanFocus() bool {
-	return c.hints.Flags&icccm.HintInput > 0 && c.hints.Input == 1
-}
-
-func (c *Client) SendFocusNotify() bool {
-	return strIndex("WM_TAKE_FOCUS", c.protocols) > -1
-}
-
-func (c *Client) IsActive() bool {
-	return c.state == frame.Active
-}
 
 func (c *Client) Focus() {
 	focus.Focus(c)

@@ -155,14 +155,14 @@ func (c *Client) updateState(action, prop string) {
 	case "_NET_WM_STATE_FULLSCREEN":
 		switch action {
 		case "remove":
-			c.unfullscreened()
+			c.Unfullscreened()
 		case "add":
-			c.fullscreened()
+			c.Fullscreened()
 		case "toggle":
 			if c.fullscreen {
-				c.unfullscreened()
+				c.Unfullscreened()
 			} else {
-				c.fullscreened()
+				c.Fullscreened()
 			}
 		}
 	case "_NET_WM_STATE_ABOVE":

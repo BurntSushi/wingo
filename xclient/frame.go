@@ -5,32 +5,12 @@ import (
 
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
-	"github.com/BurntSushi/xgbutil/motif"
 	"github.com/BurntSushi/xgbutil/xrect"
 
 	"github.com/BurntSushi/wingo/frame"
-	"github.com/BurntSushi/wingo/layout"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/wm"
 )
-
-// shouldDecor returns false if the client has requested no frames or
-// has a type that implies it shouldn't be decorated.
-func (c *Client) shouldDecor() bool {
-	if c.PrimaryType() != TypeNormal {
-		return false
-	}
-	if c.hasType("_NET_WM_WINDOW_TYPE_SPLASH") {
-		return false
-	}
-
-	mh, err := motif.WmHintsGet(wm.X, c.Id())
-	if err == nil && !motif.Decor(mh) {
-		return false
-	}
-
-	return true
-}
 
 // refreshExtents sets the _NET_FRAME_EXTENTS property whenever the frame
 // of a client changes. (Or on maximization.)
@@ -79,81 +59,6 @@ func (c *Client) ClientGeom() xrect.Rect {
 // overrides a client's maximized state. (Like issuing a tiling request.)
 func (c *Client) EnsureUnmax() {
 	c.unmaximize()
-}
-
-func (c *Client) MaximizeToggle() {
-	if c.IsMaximized() {
-		c.Unmaximize()
-	} else {
-		c.Maximize()
-	}
-}
-
-func (c *Client) Maximize() {
-	if !c.canMaxUnmax() {
-		return
-	}
-	if !c.IsMaximized() {
-		c.SaveState("before-maximize")
-		c.maximize()
-	}
-}
-
-func (c *Client) Unmaximize() {
-	if !c.canMaxUnmax() {
-		return
-	}
-	if c.IsMaximized() {
-		c.unmaximize()
-		c.LoadState("before-maximize")
-	}
-}
-
-func (c *Client) Remaximize() {
-	if !c.IsMaximized() {
-		return
-	}
-	c.maximize()
-}
-
-func (c *Client) maximize() {
-	if !c.canMaxUnmax() {
-		return
-	}
-
-	c.maximized = true
-	c.addState("_NET_WM_STATE_MAXIMIZE_HORZ")
-	c.addState("_NET_WM_STATE_MAXIMIZE_VERT")
-
-	c.frames.maximize()
-
-	g := c.Workspace().Geom()
-	c.LayoutMoveResize(g.X(), g.Y(), g.Width(), g.Height())
-}
-
-func (c *Client) unmaximize() {
-	if c.Workspace() == nil || !c.Workspace().IsVisible() {
-		return
-	}
-	if c.maximized {
-		c.maximized = false
-		c.removeState("_NET_WM_STATE_MAXIMIZE_HORZ")
-		c.removeState("_NET_WM_STATE_MAXIMIZE_VERT")
-		c.frames.unmaximize()
-	}
-}
-
-func (c *Client) canMaxUnmax() bool {
-	if c.Workspace() == nil || !c.Workspace().IsVisible() {
-		return false
-	}
-	if _, ok := c.Layout().(layout.Floater); !ok {
-		return false
-	}
-	if c.fullscreen {
-		return false
-	}
-	return true
 }
 
 func (c *Client) HeadGeom() xrect.Rect {

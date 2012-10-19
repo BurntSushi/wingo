@@ -78,10 +78,6 @@ type Client struct {
 	demanding bool
 }
 
-func (c *Client) IsMapped() bool {
-	return c.frame.IsMapped()
-}
-
 func (c *Client) Map() {
 	if c.IsMapped() {
 		return
@@ -133,10 +129,6 @@ func (c *Client) Close() {
 	}
 }
 
-func (c *Client) hasType(atom string) bool {
-	return strIndex(atom, c.winTypes) > -1
-}
-
 func (c *Client) String() string {
 	// return c.name 
 	return fmt.Sprintf("%d :: %s", c.Id(), c.name)
@@ -165,10 +157,6 @@ func (c *Client) Layer() int {
 	return c.layer
 }
 
-func (c *Client) IsMaximized() bool {
-	return c.maximized
-}
-
 func (c *Client) Name() string {
 	return c.String()
 }
@@ -181,60 +169,6 @@ func (c *Client) Class() *icccm.WmClass {
 	return c.class
 }
 
-func (c *Client) IsSkipPager() bool {
-	return c.skipPager
-}
-
-func (c *Client) IsSkipTaskbar() bool {
-	return c.skipTaskbar
-}
-
 func (c *Client) Raise() {
 	stack.Raise(c)
-}
-
-func (c *Client) StackAboveToggle() {
-	if c.layer == stack.LayerAbove {
-		c.unstackAbove()
-	} else {
-		c.stackAbove()
-	}
-}
-
-func (c *Client) stackAbove() {
-	c.layer = stack.LayerAbove
-	c.Raise()
-
-	c.removeState("_NET_WM_STATE_BELOW")
-	c.addState("_NET_WM_STATE_ABOVE")
-}
-
-func (c *Client) unstackAbove() {
-	c.layer = stack.LayerDefault
-	c.Raise()
-
-	c.removeState("_NET_WM_STATE_ABOVE")
-}
-
-func (c *Client) StackBelowToggle() {
-	if c.layer == stack.LayerBelow {
-		c.unstackBelow()
-	} else {
-		c.stackBelow()
-	}
-}
-
-func (c *Client) stackBelow() {
-	c.layer = stack.LayerBelow
-	c.Raise()
-
-	c.removeState("_NET_WM_STATE_ABOVE")
-	c.addState("_NET_WM_STATE_BELOW")
-}
-
-func (c *Client) unstackBelow() {
-	c.layer = stack.LayerDefault
-	c.Raise()
-
-	c.removeState("_NET_WM_STATE_BELOW")
 }

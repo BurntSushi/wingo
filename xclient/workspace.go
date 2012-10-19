@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/BurntSushi/xgbutil/ewmh"
-	"github.com/BurntSushi/xgbutil/icccm"
 
 	"github.com/BurntSushi/wingo/wm"
 	"github.com/BurntSushi/wingo/workspace"
@@ -21,23 +20,6 @@ func (c *Client) ShouldForceFloating() bool {
 		c.PrimaryType() != TypeNormal ||
 		c.isFixedSize() ||
 		c.hasType("_NET_WM_WINDOW_TYPE_SPLASH")
-}
-
-// isFixedSize returns true when the client has the minimum and maximum
-// width equivalent AND has the minimum and maximum height equivalent.
-func (c *Client) isFixedSize() bool {
-	return c.nhints.Flags&icccm.SizeHintPMinSize > 0 &&
-		c.nhints.Flags&icccm.SizeHintPMaxSize > 0 &&
-		c.nhints.MinWidth == c.nhints.MaxWidth &&
-		c.nhints.MinHeight == c.nhints.MaxHeight
-}
-
-func (c *Client) FloatingToggle() {
-	// Doesn't work on sticky windows. They are already floating.
-	if wrk, ok := c.Workspace().(*workspace.Workspace); ok {
-		c.floating = !c.floating
-		wrk.CheckFloatingStatus(c)
-	}
 }
 
 func (c *Client) Workspace() workspace.Workspacer {
@@ -65,10 +47,6 @@ func (c *Client) IconifyToggle() {
 	} else {
 		c.removeState("_NET_WM_STATE_HIDDEN")
 	}
-}
-
-func (c *Client) Iconified() bool {
-	return c.iconified
 }
 
 func (c *Client) IconifiedSet(iconified bool) {

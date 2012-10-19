@@ -129,86 +129,6 @@ func (c *Client) manage() {
 	<-promptDone
 }
 
-func (c *Client) fullscreenToggle() {
-	if c.fullscreen {
-		c.fullscreened()
-	} else {
-		c.unfullscreened()
-	}
-}
-
-func (c *Client) fullscreened() {
-	if c.workspace == nil || !c.workspace.IsVisible() {
-		return
-	}
-	if c.fullscreen {
-		return
-	}
-	c.SaveState("before-fullscreen")
-	c.fullscreen = true
-
-	// Make sure the window has been forced into a floating layout.
-	if wrk, ok := c.Workspace().(*workspace.Workspace); ok {
-		wrk.CheckFloatingStatus(c)
-	}
-
-	// Resize outside of the constraints of a layout.
-	g := c.Workspace().HeadGeom()
-	c.FrameNada()
-	c.MoveResize(g.X(), g.Y(), g.Width(), g.Height())
-
-	// Since we moved outside of the layout, we have to save the last
-	// floating state our selves.
-	c.SaveState("last-floating")
-
-	c.addState("_NET_WM_STATE_FULLSCREEN")
-}
-
-func (c *Client) unfullscreened() {
-	if !c.fullscreen {
-		return
-	}
-	c.fullscreen = false
-	c.LoadState("before-fullscreen")
-
-	c.removeState("_NET_WM_STATE_FULLSCREEN")
-}
-
-func (c *Client) IsSticky() bool {
-	return c.sticky
-}
-
-func (c *Client) StickyToggle() {
-	if c.sticky {
-		c.unstick()
-	} else {
-		c.stick()
-	}
-}
-
-func (c *Client) unstick() {
-	c.sticky = false
-	c.workspace = nil
-	wm.Workspace().Add(c)
-
-	c.removeState("_NET_WM_STATE_STICKY")
-}
-
-func (c *Client) stick() {
-	if c.sticky {
-		return
-	}
-
-	c.sticky = true
-	if c.workspace != nil {
-		c.workspace.(*workspace.Workspace).CheckFloatingStatus(c)
-		c.workspace.Remove(c)
-	}
-	c.WorkspaceSet(wm.StickyWrk)
-
-	c.addState("_NET_WM_STATE_STICKY")
-}
-
 func (c *Client) maybeInitPlace(presumedWorkspace workspace.Workspacer) {
 	// This is a hack. Before a client gets sucked into some layout, we
 	// always want to have some floating state to fall back on to. However,
@@ -432,16 +352,6 @@ func (c *Client) attnStop() {
 	c.frame.Inactive()
 
 	c.removeState("_NET_WM_STATE_DEMANDS_ATTENTION")
-}
-
-func (c *Client) isAttrsUnmapped() bool {
-	attrs, err := xproto.GetWindowAttributes(wm.X.Conn(), c.Id()).Reply()
-	if err != nil {
-		logger.Warning.Printf(
-			"Could not get window attributes for '%s': %s.", c, err)
-		return false
-	}
-	return attrs.MapState == xproto.MapStateUnmapped
 }
 
 // findPresumedWorkspace inspects a client before it is fully managed to
