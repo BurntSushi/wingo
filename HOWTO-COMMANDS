@@ -6,7 +6,7 @@ workspace, changing the active window, querying Wingo for information about
 state, and even restarting Wingo itself (useful when upgrading or changing the 
 configuration).
 
-(The gophers out there might be interested to know that every command is 
+(The gophers out there might be interested to know that each command is 
 declared by reflection via a single struct. See 
 https://github.com/BurntSushi/gribble)
 
