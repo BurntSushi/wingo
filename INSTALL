@@ -1,0 +1,84 @@
+Quick Install Instructions
+==========================
+Since Wingo is a pure Go program, the best way to install Wingo is with the Go 
+tool. If you have a Go environment already set up, this is as easy as:
+
+    go get github.com/BurntSushi/wingo
+    go get github.com/BurntSushi/wingo/wingo-cmd # optional
+
+The first command installs the Wingo window manager and the second installs the 
+command that can be used to interact with Wingo from the command line.
+
+If you don't have Go, then it's only a short hop, skip and a jump to install 
+it: (But check if your Linux distribution has already packaged Wingo, and if 
+so, use that instead.)
+
+In all likelihood, your Linux distribution probably has a Go package available 
+for you to install (search the keywords "google" and "go"). If so, install it.
+Then add the following to your ~/.bashrc (or equivalent):
+
+    export GOPATH="$HOME/go"
+    export PATH="$HOME/go/bin:$PATH"
+
+And now you should be able to run the aforementioned commands. The Wingo 
+binary will be installed to $HOME/go/bin if you used the same paths as above.
+
+
+Running Wingo
+=============
+The most lightweight way to run Wingo is to run it all by itself---without a 
+desktop environment like KDE or GNOME. To do so, just add
+
+    exec wingo
+
+to your $HOME/.xinitrc file. When you login to a tty, just run `startx`. 
+Although, all the cool kids say you should use this instead:
+
+    exec ck-launch-session dbus-launch wingo
+
+If you want some nice logging (especially if you're reporting a bug), use:
+
+    exec wingo -p 1 --log-level 3 --log-colors > $HOME/wingo.log
+
+(The "-p 1" option is to force Wingo into sequential execution. This makes sure
+no error messages are cut off if Wingo crashes.)
+
+
+Configuring Wingo
+=================
+Running
+
+    wingo --write-config
+
+Will (in all likelihood) write a fresh copy of the configuration files to your 
+$HOME/.config/wingo directory. The configuration files are full of comments.
+
+
+Running Wingo in KDE
+====================
+I've done a little bit of testing with KDE, and Wingo is serviceable. It isn't 
+an ideal experience (especially if you have multiple monitors), but it seems to 
+work well enough.
+
+To swap your window manager in place, you can run this while KDE is running:
+
+    wingo --replace
+
+Or to change Wingo to the default window manager which will be used whenever 
+KDE starts, create a new file in $HOME/.kde4/env, set the KDEWM environment
+variable, and make it executable:
+
+    echo 'export KDEWM="wingo"' > $HOME/.kde4/env/wm.sh
+    chmod +x $HOME/.kde4/env/wm.sh
+
+Remove the file if you want to switch back to regular KDE. Or you can run this 
+command to temporarily switch to KDE's default window manager while Wingo is 
+running:
+
+    kwin --replace
+
+
+Running Wingo in GNOME (or anything else)
+=========================================
+I don't know.
+
