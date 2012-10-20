@@ -32,8 +32,8 @@ import (
 
 var (
 	flagGoMaxProcs     = runtime.NumCPU()
-	flagLogLevel       = 3
-	flagLogColors      = true
+	flagLogLevel       = 2
+	flagLogColors      = false
 	flagReplace        = false
 	flagConfigDir      = ""
 	flagWriteConfig    = false

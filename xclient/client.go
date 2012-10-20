@@ -130,8 +130,7 @@ func (c *Client) Close() {
 }
 
 func (c *Client) String() string {
-	// return c.name 
-	return fmt.Sprintf("%d :: %s", c.Id(), c.name)
+	return c.name
 }
 
 func (c *Client) Id() xproto.Window {

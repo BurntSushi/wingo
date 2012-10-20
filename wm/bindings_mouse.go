@@ -66,13 +66,20 @@ func (mcmd mouseCommand) setup(c Client, wid xproto.Window) {
 			defer mouseClientLock.Unlock()
 
 			MouseClientClicked = c.Id()
-			gribbleEnv.Run(mcmd.cmdStr)
+			_, err := gribbleEnv.Run(mcmd.cmdStr)
+			if err != nil {
+				logger.Warning.Println(err)
+			}
 			MouseClientClicked = 0
 		}()
 	}
 	if wid == c.Id() || (c.Frame() != nil && wid == c.Frame().Parent().Id) {
 		if mcmd.down {
-			mcmd.attach(wid, run, true, true)
+			f := func() {
+				run()
+				xevent.ReplayPointer(X)
+			}
+			mcmd.attach(wid, f, true, true)
 		} else { // we have to handle release grabs specially!
 			mcmd.attachGrabRelease(wid, run)
 		}
@@ -172,8 +179,16 @@ func (mcmd mouseCommand) attachGrabRelease(wid xproto.Window, run func()) {
 }
 
 func rootMouseSetup() {
-	for _, mcmd := range Config.mouse["root"] {
-		run := func() { go gribbleEnv.Run(mcmd.cmdStr) }
+	for _, mcmd_ := range Config.mouse["root"] {
+		mcmd := mcmd_
+		run := func() {
+			go func() {
+				_, err := gribbleEnv.Run(mcmd.cmdStr)
+				if err != nil {
+					logger.Warning.Println(err)
+				}
+			}()
+		}
 		mcmd.attach(Root.Id, run, false, false)
 	}
 }
