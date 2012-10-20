@@ -50,7 +50,7 @@ Running
 
     wingo --write-config
 
-Will (in all likelihood) write a fresh copy of the configuration files to your 
+will (in all likelihood) write a fresh copy of the configuration files to your 
 $HOME/.config/wingo directory. The configuration files are full of comments.
 
 
