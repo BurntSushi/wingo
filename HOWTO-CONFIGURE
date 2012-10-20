@@ -1,0 +1,13 @@
+Configuring Wingo
+=================
+Running
+
+    wingo --write-config
+
+will (in all likelihood) write a fresh copy of the configuration files to your 
+$HOME/.config/wingo directory. The configuration files are full of comments.
+
+If you've made changes to your configuration, you have to restart Wingo in 
+order for the changes to take effect. You can restart Wingo by running the 
+Restart command. (See HOWTO-COMMANDS for a primer on Wingo commands.)
+
