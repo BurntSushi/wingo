@@ -1,23 +1,102 @@
-[ForceFloating]
-match := MatchClientClass ":client:" "gimp"
-
-managed := ToggleFloating ":client:"
-
-[FocusTransparency]
-match := True
-
-focused := SetOpacity ":client:" 1.0
-unfocused := SetOpacity ":client:" 0.8
-
-[Dale]
-match := False
-
-startup := Dale
+# Hooks are a way to run arbitrary Wingo commands whenever a certain event
+# occurs. The idea is to specify a set of match conditions and a set of 
+# commands that are executed for some particular event. Match conditions are 
+# run when the event occurs, and if the match conditions executes successfully, 
+# the associated commands are executed.
+#
+# The following hooks are allowed:
+# startup, restart, managed, focused, unfocused
+#
+# (I'd like to add more hooks. But I'd rather add too few than add too many.)
+#
+# A hook is started with some label like "[MyHookName]". The label can be
+# anything, and is used in the Wingo logs when you need to debug your hook.
+#
+# Every hook also needs a "match" option set. A hook that always matches
+# can be specified with "match := True". A hook that never matches can be
+# specified with "match := False". The "match" option must be set to commands
+# that return either a 0 or a 1. Namely, such commands can be found with the
+# prefix "Match", like "MatchClientName". There are also logical commands
+# "Not", "Or" and "And" to help you form more complex conditions. Finally,
+# multiple match conditions can be specified by simply adding more with
+# subsequent assignments to "match".
+#
+# All commands attached to "match" are combined conjunctively. That is, all
+# match conditions must return "1" in order for the hook to fire. Alternatively,
+# if the "conjunction" option is set to "yes", the commands will be combined
+# disjunctively. That is, at least one match condition must return "1" in
+# order for the hook to fire.
+#
+# In order to specify the commands to run when the hook fires, you'll need to
+# add them to the particular hook group listed above (i.e., "startup" or
+# "focused".) This works just like "match", in that you can add commands to
+# execute by adding them with successive definitions of "hook_group := ...".
+#
+# Finally, the special string ":client:" is replaced in every command by the
+# client that executed the hook. (If it's appropriate. For instance, no
+# substitution will occur on the "startup" hook.)
+#
+# Let's walk through an example that, in simple terms, tries to match a
+# terminal window and then maximize it and removes its decorations 
+# when it's first managed.
+#
+# -------------------------------------------------------
+# [MaximizeTerminals] 
+# match := MatchClientClass ":client:" "lxterminal" 
+# match := MatchClientClass ":client:" "konsole" 
+# match := MatchClientClass ":client:" "urxvt" 
+# match := MatchClientClass ":client:" "xterm" 
+# match := MatchClientClass ":client:" "gnome-terminal" 
+#  
+# conjunction := no 
+#  
+# managed := FrameSlim ":client:"
+# managed := Maximize ":client:" 
+# -------------------------------------------------------
+#
+# Here we name our hook "MaximizeTerminals". (You'll see this name if there was
+# problem setting up your hook.) We specify 5 different commands, and disable
+# conjunctive evaluation, so that only ONE of the match commands needs to
+# return true in order for the managed hook to fire. If we didn't disable
+# conjuctive evaluation, then no window would ever be able to match our
+# conditions.
+#
+# Finally, we set the "managed" hook to run the commands 'FrameSlim ":client:"'
+# and 'Maximize ":client:"'. The special ":client:" string will be replaced
+# with the id of the client that was managed.
 
 [Autostart]
 match := True
 
-startup := Shell "chromium"
-startup := Shell "gkrellm"
-startup := Shell "pager-multihead"
+# You can add startup programs here if you like.
+#startup := Shell "xterm"
+
+# You can add more by just adding another definition of "startup".
+#startup := Shell "gkrellm"
+
+# Easter egg!
+startup := Dale
+
+[ForceFloating]
+# This hook matches certain windows, and forces them into the floating layout.
+# You probably don't need to add windows like "gmrun" or "krunner", since
+# they are automatically inferred to be floating.
+match := MatchClientClass ":client:" "gimp"
+
+# Typically match conditions are combined as a set of conjunctions. That is,
+# all match conditions must be met for the hook to fire. But here, we want
+# to fire the hook if *any* of the match conditions match, so we disable
+# the default conjunction mode.
+conjunction := no
+
+# Just make sure it's floating.
+managed := Float ":client:"
+
+[FocusTransparency]
+# If you have a compositing manager running, this will use transparency
+# to indicate focus.
+match := True
+
+focused := SetOpacity ":client:" 1.0
+unfocused := SetOpacity ":client:" 0.85
 

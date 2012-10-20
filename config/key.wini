@@ -1,22 +1,169 @@
+# This is where all key bindings are specified. Mouse bindings are specified
+# in mouse.wini.
+#
+# Key bindings work by specifying a key combination (left side of ":=") that
+# will execute a command (right side of ":=") when pressed. Commands in this
+# case are Wingo commands (the Gribble language). There are *a lot* of commands
+# available to you---only a small subset are shown below in the default
+# configuration.
+#
+#
+# Key combinations
+# ----------------
+# Key combinations are specified as "[Mod[-Mod[...]]-]KEY", where "mod"
+# corresponds to a key modifier like "Mod1" or "Control", and "KEY" corresponds
+# to a key symbol on your keyboard like "a" or "Return" or "plus". A full
+# list of key symbols can be found here: http://goo.gl/MYd7G --- you could
+# also discover them by running the 'xev' command and pressing the keys.
+#
+#
+# Modifiers
+# ---------
+# Since most keys on the keyboard have their own particular function, it is
+# usually necessary to bind key presses in combination with some modifier key
+# like "Shift", "Control", "Alt" or "Super" (i.e., the window key). In order
+# to know which keys are bound to particular modifiers on your system, you
+# should run the `xmodmap` command. The left hand column lists the modifiers
+# you should use in this file, while the right columns list the key symbols
+# bound to those modifiers.
+#
+# In general, if you haven't tweaked your configuration, the mapping probably
+# looks something like this:
+#
+#     shift   -> Shift
+#     control -> Control
+#     mod1    -> alt
+#     mod4    -> super (the "windows" key)
+#
+#
+# Where's the beef?
+# -----------------
+# Wingo has a lot of commands, and they can all be inspected either in Wingo
+# itself with the `WingoHelp` command (by default bound to "Mod4-Shift-h") or
+# with the `wingo-cmd` utility.
+#
+# With `wingo-cmd`, you can get a list of every command and the type of
+# parameters they accept:
+#
+#     wingo-cmd --list-types
+#
+# Or you can see a list of all commands with a description of each:
+#
+#     wingo-cmd --list-usage
+#
+# Or you can see the details of a particular command:
+#
+#     wingo-cmd --usage WorkspaceGreedy
+#
+# If you don't have `wingo-cmd` available on your system, and you installed
+# Wingo with `go get`, then `go get github.com/BurntSushi/wingo/wingo-cmd`
+# should install wingo-cmd for you. If you *didn't* install Wingo with `go 
+# get`, then presumably you need to speak to the package maintainer in charge 
+# of the package.
+
+
 [Global]
-Mod4-b := Shell "chromium"
-Mod4-t := Shell "lxterminal"
-Mod4-Shift-r := Shell (Input "Command:")
+# Set up some common key bindings. "Shell" is Wingo's command for executing
+# shell commands. In practice, I strongly recommend using `xbindkeys` to
+# configure shortcuts for running programs. It's more mature and will work
+# with *any* window manager.
+Mod4-t := Shell "xterm"
+Mod1-F2 := Shell "gmrun"
 
-Mod4-Shift-w := WingoExec (Input "Wingo command:")
-Mod4-Shift-h := WingoHelp (Input "Wingo command name:")
+# You could also use Wingo's Shell command to execute commands, but it
+# isn't recommended since the shell lexer is extremely stupid.
+# Mod4-r := Shell (Input "Command:") 
 
+# Some basic window manager commands. Closing/maximizing can also be done with
+# buttons on fully decorated windows.
 Mod4-c := Close (GetActive)
 Mod1-Shift-c := Quit
 Mod4-x := ToggleMaximize (GetActive)
-Mod4-i := ToggleIconify (GetActive)
-Mod1-up := ToggleStackAbove (GetActive)
-Mod1-down := ToggleStackBelow (GetActive)
 Mod1-f := ToggleFloating (GetActive)
 Mod1-s := ToggleSticky (GetActive)
-Mod1-Shift-t := Move (GetActive) 0.25 0.25
-Mod1-Shift-t := Resize (GetActive) 0.5 0.5
 
+# WingoExec will allow you to execute *any* Wingo command.
+Mod4-Shift-r := WingoExec (Input "Wingo command:")
+
+# WingoHelp will show you everything you'd could possible want to know about
+# any of Wingo's commands.
+Mod4-Shift-h := WingoHelp (Input "Wingo command name:")
+
+# Allows you to specify precisely which layout you want to be active.
+Mod4-Shift-l := SetLayout (GetWorkspace) (Input "Layout name:")
+
+# Add and remove workspaces.
+# Note that a workspace MUST be empty before it can be removed. (Don't worry,
+# Wingo won't let you do it even if you try :P)
+Mod4-shift-a := AddWorkspace (Input "New workspace name:")
+Mod4-BackSpace := RemoveWorkspace (GetWorkspace)
+
+# Your basic Workspace commands.
+# Note that these commands become extremely awkward in a multi-head setup,
+# particularly because a different workspace is visible on each monitor.
+Mod4-left := Workspace (GetWorkspacePrev)
+Mod4-right := Workspace (GetWorkspaceNext)
+Mod4-Shift-left := WorkspaceWithClient (GetWorkspacePrev) (GetActive)
+Mod4-Shift-right := WorkspaceWithClient (GetWorkspaceNext) (GetActive)
+
+# Switch to a particular workspace "greedily". A greedy workspace switch
+# *always* brings the workspace specified to the current workspace. When the
+# workspace is hidden, there is no difference between a regular switch and
+# a greedy switch. But when the workspace is visible on another monitor,
+# a greedy switch will flip the workspaces whereas a regular switch will
+# move focus to the monitor that the workspace is on.
+# (This is exactly like a greedy switch in Xmonad.)
+Mod1-1 := WorkspaceGreedy "1"
+Mod1-2 := WorkspaceGreedy "2"
+Mod1-3 := WorkspaceGreedy "3"
+Mod1-4 := WorkspaceGreedy "4"
+
+# Same as above, but bring the active window with us.
+Mod1-Shift-1 := WorkspaceGreedyWithClient "1" (GetActive)
+Mod1-Shift-2 := WorkspaceGreedyWithClient "2" (GetActive)
+Mod1-Shift-3 := WorkspaceGreedyWithClient "3" (GetActive)
+Mod1-Shift-4 := WorkspaceGreedyWithClient "4" (GetActive)
+
+# Move focus to the workspace on the corresponding monitor. Monitor indices
+# start at 0 and are ordered by left to right, and then top to bottom.
+# (We also move the pointer with the focus.)
+# Bonus: Triple monitors on Linux: http://goo.gl/nmW6v
+Mod1-w := HeadFocus 0
+Mod1-w := MovePointerRelative 0 0
+Mod1-e := HeadFocus 1
+Mod1-e := MovePointerRelative 0 0
+Mod1-r := HeadFocus 2
+Mod1-r := MovePointerRelative 0 0
+
+# Move focus and the current client to a particular monitor.
+Mod1-Shift-w := HeadFocusWithClient 0 (GetActive)
+Mod1-Shift-w := MovePointerRelative 0 0
+Mod1-Shift-e := HeadFocusWithClient 1 (GetActive)
+Mod1-Shift-e := MovePointerRelative 0 0
+Mod1-Shift-r := HeadFocusWithClient 2 (GetActive)
+Mod1-Shift-r := MovePointerRelative 0 0
+
+# Your every day Alt-Tab. Use WingoHelp or `wingo-cmd --usage CycleClientNext`
+# to discover what each of the parameters means. (They specify which kinds of
+# clients should be shown.)
+Mod1-Tab := CycleClientNext "yes" "no" "yes"
+Mod1-Shift-Tab := CycleClientPrev "yes" "no" "yes"
+
+# List all windows and focus/raise the selected client.
+Mod4-space := FocusRaise (SelectClient "Any" "no" "no" "yes")
+
+# List all workspaces, and greedily switch to the one selected.
+Mod4-return := WorkspaceGreedy (SelectWorkspace "Prefix")
+
+# List all workspaces, and greedily switch to the one selected with the
+# active window.
+Mod4-Shift-return := WorkspaceGreedyWithClient \
+                       (SelectWorkspace "Prefix") \
+                       (GetActive)
+
+# Basic auto tiling commands. Auto tiling layouts are split into two panes:
+# "masters" and "slaves". The commands below revolve around adjusting the size
+# of those two panes, adding/removing windows from those panes, etc.
 Mod1-a := AutoTile (GetWorkspace)
 Mod1-u := AutoUntile (GetWorkspace)
 Mod1-z := AutoCycle (GetWorkspace)
@@ -32,111 +179,4 @@ Mod1-m := AutoMaster (GetWorkspace)
 Mod1-Shift-return := AutoMakeMaster (GetWorkspace)
 Mod1-comma := AutoMastersFewer (GetWorkspace)
 Mod1-period := AutoMastersMore (GetWorkspace)
-
-Mod4-Shift-l := SetLayout (GetWorkspace) (Input "Layout name:")
-
-Mod1-w := HeadFocus 0
-Mod1-w := MovePointerRelative 0 0
-
-Mod1-e := HeadFocus 1
-Mod1-e := MovePointerRelative 0 0
-
-Mod1-r := HeadFocus 2
-Mod1-r := MovePointerRelative 0 0
-
-Mod1-Shift-w := HeadFocusWithClient 0 (GetActive)
-Mod1-Shift-w := MovePointerRelative 0 0
-
-Mod1-Shift-e := HeadFocusWithClient 1 (GetActive)
-Mod1-Shift-e := MovePointerRelative 0 0
-
-Mod1-Shift-r := HeadFocusWithClient 2 (GetActive)
-Mod1-Shift-r := MovePointerRelative 0 0
-
-Mod4-left := Workspace (GetWorkspacePrev)
-Mod4-right := Workspace (GetWorkspaceNext)
-Mod4-Shift-left := WorkspaceWithClient (GetWorkspacePrev) (GetActive)
-Mod4-Shift-right := WorkspaceWithClient (GetWorkspaceNext) (GetActive)
-
-Mod4-1 := Workspace "1"
-Mod4-Shift-1 := WorkspaceWithClient "1" (GetActive)
-Mod4-2 := Workspace "2"
-Mod4-3 := Workspace "3"
-Mod4-4 := Workspace "4"
-Mod4-5 := Workspace "5"
-Mod4-6 := Workspace "6"
-
-Mod4-shift-a := AddWorkspace (Input "New workspace name:")
-Mod4-shift-d := RemoveWorkspace (SelectWorkspace "Prefix")
-Mod4-BackSpace := RemoveWorkspace (GetWorkspace)
-
-Mod1-1 := FrameNada (GetActive)
-Mod1-2 := FrameSlim (GetActive)
-Mod1-3 := FrameBorders (GetActive)
-Mod1-4 := FrameFull (GetActive)
-
-Mod1-Tab := CycleClientNext "yes" "no" "yes"
-Mod1-Shift-Tab := CycleClientPrev "yes" "no" "yes"
-
-Mod4-space := FocusRaise (SelectClient "Any" "no" "no" "yes")
-Mod4-return := WorkspaceGreedy (SelectWorkspace "Prefix")
-Mod4-Shift-return := WorkspaceGreedyWithClient \
-                       (SelectWorkspace "Prefix") \
-                       (GetActive)
-Mod4-Shift-s := WorkspaceSendClient \
-                  (SelectWorkspace "Prefix") \
-                  (SelectClient "Any" "no" "no" "yes")
-
-Control-Mod1-a := Workspace (GetWorkspacePrefix "a")
-Control-Mod1-Shift-a := WorkspaceWithClient (GetWorkspacePrefix "a") (GetActive)
-Control-Mod1-b := Workspace (GetWorkspacePrefix "b")
-Control-Mod1-Shift-b := WorkspaceWithClient (GetWorkspacePrefix "b") (GetActive)
-Control-Mod1-c := Workspace (GetWorkspacePrefix "c")
-Control-Mod1-Shift-c := WorkspaceWithClient (GetWorkspacePrefix "c") (GetActive)
-Control-Mod1-d := Workspace (GetWorkspacePrefix "d")
-Control-Mod1-Shift-d := WorkspaceWithClient (GetWorkspacePrefix "d") (GetActive)
-Control-Mod1-e := Workspace (GetWorkspacePrefix "e")
-Control-Mod1-Shift-e := WorkspaceWithClient (GetWorkspacePrefix "e") (GetActive)
-Control-Mod1-f := Workspace (GetWorkspacePrefix "f")
-Control-Mod1-Shift-f := WorkspaceWithClient (GetWorkspacePrefix "f") (GetActive)
-Control-Mod1-g := Workspace (GetWorkspacePrefix "g")
-Control-Mod1-Shift-g := WorkspaceWithClient (GetWorkspacePrefix "g") (GetActive)
-Control-Mod1-h := Workspace (GetWorkspacePrefix "h")
-Control-Mod1-Shift-h := WorkspaceWithClient (GetWorkspacePrefix "h") (GetActive)
-Control-Mod1-i := Workspace (GetWorkspacePrefix "i")
-Control-Mod1-Shift-i := WorkspaceWithClient (GetWorkspacePrefix "i") (GetActive)
-Control-Mod1-j := Workspace (GetWorkspacePrefix "j")
-Control-Mod1-Shift-j := WorkspaceWithClient (GetWorkspacePrefix "j") (GetActive)
-Control-Mod1-k := Workspace (GetWorkspacePrefix "k")
-Control-Mod1-Shift-k := WorkspaceWithClient (GetWorkspacePrefix "k") (GetActive)
-Control-Mod1-l := Workspace (GetWorkspacePrefix "l")
-Control-Mod1-Shift-l := WorkspaceWithClient (GetWorkspacePrefix "l") (GetActive)
-Control-Mod1-m := Workspace (GetWorkspacePrefix "m")
-Control-Mod1-Shift-m := WorkspaceWithClient (GetWorkspacePrefix "m") (GetActive)
-Control-Mod1-n := Workspace (GetWorkspacePrefix "n")
-Control-Mod1-Shift-n := WorkspaceWithClient (GetWorkspacePrefix "n") (GetActive)
-Control-Mod1-o := Workspace (GetWorkspacePrefix "o")
-Control-Mod1-Shift-o := WorkspaceWithClient (GetWorkspacePrefix "o") (GetActive)
-Control-Mod1-p := Workspace (GetWorkspacePrefix "p")
-Control-Mod1-Shift-p := WorkspaceWithClient (GetWorkspacePrefix "p") (GetActive)
-Control-Mod1-q := Workspace (GetWorkspacePrefix "q")
-Control-Mod1-Shift-q := WorkspaceWithClient (GetWorkspacePrefix "q") (GetActive)
-Control-Mod1-r := Workspace (GetWorkspacePrefix "r")
-Control-Mod1-Shift-r := WorkspaceWithClient (GetWorkspacePrefix "r") (GetActive)
-Control-Mod1-s := Workspace (GetWorkspacePrefix "s")
-Control-Mod1-Shift-s := WorkspaceWithClient (GetWorkspacePrefix "s") (GetActive)
-Control-Mod1-t := Workspace (GetWorkspacePrefix "t")
-Control-Mod1-Shift-t := WorkspaceWithClient (GetWorkspacePrefix "t") (GetActive)
-Control-Mod1-u := Workspace (GetWorkspacePrefix "u")
-Control-Mod1-Shift-u := WorkspaceWithClient (GetWorkspacePrefix "u") (GetActive)
-Control-Mod1-v := Workspace (GetWorkspacePrefix "v")
-Control-Mod1-Shift-v := WorkspaceWithClient (GetWorkspacePrefix "v") (GetActive)
-Control-Mod1-w := Workspace (GetWorkspacePrefix "w")
-Control-Mod1-Shift-w := WorkspaceWithClient (GetWorkspacePrefix "w") (GetActive)
-Control-Mod1-x := Workspace (GetWorkspacePrefix "x")
-Control-Mod1-Shift-x := WorkspaceWithClient (GetWorkspacePrefix "x") (GetActive)
-Control-Mod1-y := Workspace (GetWorkspacePrefix "y")
-Control-Mod1-Shift-y := WorkspaceWithClient (GetWorkspacePrefix "y") (GetActive)
-Control-Mod1-z := Workspace (GetWorkspacePrefix "z")
-Control-Mod1-Shift-z := WorkspaceWithClient (GetWorkspacePrefix "z") (GetActive)
 

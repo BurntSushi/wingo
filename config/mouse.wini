@@ -1,8 +1,70 @@
-$OPACITY_UP := Shell "transset-df -p --max 1.0 --inc 0.05"
-$OPACITY_DOWN := Shell "transset-df -p --min 0.1 --dec 0.05"
+# This is the mouse configuration file, which controls *all* of the mouse
+# controls found in Wingo. The idea is to set a button combination (left side
+# of ":=") to a command (right side of ":=").
+#
+# Basically, each distinct region of a window can have its own mouse commands
+# defined. Regions are defined as "[ ... ]" sections below. And just like
+# in the key configuration, more than one command can be assigned to a
+# particular button combination just be successive definitions.
+#
+# The default mouse configuration isn't that interesting, and is clearly
+# intended to work well with a regular floating window manager. However, since
+# all commands are available here, you could combine tiling with the mouse.
+# (Say what!?!?)
+#
+#
+# Buttons
+# -------
+# Button combinations are specified as "[Mod[-Mod[...]]-]BUTTONNUMBER" where
+# "mod" corresponds to a modifier like "Mod1" or "Control". Examples of button
+# combinations are "1", "Mod4-3", "Control-Shift-3".
+#
+# Usually "1" corresponds to left click, "3" corresponds to right click and
+# "2" corresponds to middle. Scroll wheels are usually "4" and "5". If you have
+# more buttons, use the `xev` program and click in the window that shows up
+# with the button. Read the event data and look for "button NUMBER".
+#
+# Also, if you add "up" after the button combination, the command will be
+# executed when the button is *released*. Otherwise, the command is executed
+# when the button is *pressed*. This is useful to keep behavior with window
+# buttons similar to how buttons are pressed every where else.
+#
+#
+# Modifiers
+# ---------
+# Modifiers for mouse buttons work just like modifiers for key bindings.
+# See the "Modifiers" section in key.wini for the full scoop.
+# 
+# TL;DR - Run `xmodmap` and use the names in the left column which line up
+#         to the actual keys you want to use. Mod1 is usually "alt" and Mod4
+#         is usually "Super" (the windows key). "Shift" and "Control" usually
+#         map to what you'd expect.
+#
+#
+# Special mouse commands
+# ----------------------
+# Two of the commands found below are special and can ONLY be used here in
+# mouse.wini. Those commands are "MouseMove" and "MouseResize". They are
+# special because of the way drag handling has been set up in Wingo. (It's not
+# very flexible.)
+#
+# If you want to move/resize windows without those commands, you'll have to
+# use the "Move" or "Resize" commands.
+#
+#
+# What is ":mouse:"?
+# ------------------
+# It is a special string (i.e., a terrible hack) that is replaced with the
+# client associated with the mouse press. Something similar is done in
+# hooks.wini.
+
 
 [Root]
 1 := Focus ":mouse:"
+
+# Here's an example of changing the workspace with your scroll wheel.
+# Mod4-4 := Workspace (GetWorkspaceNext) 
+# Mod4-5 := Workspace (GetWorkspacePrev) 
 
 [Client]
 1 := FocusRaise ":mouse:"
@@ -10,109 +72,101 @@ $OPACITY_DOWN := Shell "transset-df -p --min 0.1 --dec 0.05"
 [Frame]
 Mod4-1 := MouseMove
 Mod4-3 := MouseResize "Infer"
-Mod4-4 up := $OPACITY_UP
-Mod4-5 up := $OPACITY_DOWN
+
+# Here's an example of binding to the mouse scroll wheel.
+# (If a compositing manager is running, this will allow you to adjust the
+# opacity of a window with your scroll wheel.)
+# Mod4-4 := Shell "transset-df -p --max 1.0 --inc 0.05" 
+# Mod4-5 := Shell "transset-df -p --min 0.1 --dec 0.05" 
 
 [FullIcon]
 1 := MouseMove
 1 := FocusRaise ":mouse:"
 3 := MouseResize "Infer"
-Mod4-4 up := $OPACITY_UP
-Mod4-5 up := $OPACITY_DOWN
 
 [FullTitleText]
 1 := MouseMove
 1 := FocusRaise ":mouse:"
 3 := MouseResize "Infer"
-Mod4-4 up := $OPACITY_UP
-Mod4-5 up := $OPACITY_DOWN
 
 [FullTitleBar]
 1 := MouseMove
 1 := FocusRaise ":mouse:"
 3 := MouseResize "Infer"
-Mod4-4 up := $OPACITY_UP
-Mod4-5 up := $OPACITY_DOWN
 
 [FullClose]
 1 up := Close ":mouse:"
-Mod4-4 up := $OPACITY_UP
-Mod4-5 up := $OPACITY_DOWN
 
 [FullMaximize]
 1 up := ToggleMaximize ":mouse:"
-Mod4-4 up := $OPACITY_UP
-Mod4-5 up := $OPACITY_DOWN
 
 [FullMinimize]
 1 up := ToggleIconify ":mouse:"
-Mod4-4 up := $OPACITY_UP
-Mod4-5 up := $OPACITY_DOWN
 
 [FullTop]
 1 := MouseResize "Top"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [FullTitleBottom]
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [FullBottom]
 1 := MouseResize "Bottom"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [FullLeft]
 1 := MouseResize "Left"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [FullRight]
 1 := MouseResize "Right"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [FullTopLeft]
 1 := MouseResize "TopLeft"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [FullTopRight]
 1 := MouseResize "TopRight"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [FullBottomLeft]
 1 := MouseResize "BottomLeft"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [FullBottomRight]
 1 := MouseResize "BottomRight"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [BordersTop]
 1 := MouseResize "Top"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [BordersBottom]
 1 := MouseResize "Bottom"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [BordersLeft]
 1 := MouseResize "Left"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [BordersRight]
 1 := MouseResize "Right"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [BordersTopLeft]
 1 := MouseResize "TopLeft"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [BordersTopRight]
 1 := MouseResize "TopRight"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [BordersBottomLeft]
 1 := MouseResize "BottomLeft"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
 [BordersBottomRight]
 1 := MouseResize "BottomRight"
-1 down := FocusRaise ":mouse:"
+1 := FocusRaise ":mouse:"
 
