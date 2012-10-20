@@ -1,2 +1,207 @@
-Nothing here yet.
+What is Gribble?
+================
+Gribble is a simple command oriented language that can be used to control the 
+behavior of Wingo. Such behavior includes, but is not limited to: changing the 
+workspace, changing the active window, querying Wingo for information about 
+state, and even restarting Wingo itself (useful when upgrading or changing the 
+configuration).
+
+(The gophers out there might be interested to know that every command is 
+declared by reflection via a single struct. See 
+https://github.com/BurntSushi/gribble)
+
+In Wingo, commands are extremely important because they are used everywhere. 
+They are used for key bindings, mouse bindings, hooks and can be run via the 
+WingoExec prompt. They can be run via the `wingo-cmd` program, or if you're 
+more savvy, can be run from opening up a socket yourself. (See the end for an 
+example in Python.)
+
+
+Get wingo-cmd working
+=====================
+Throughout this document, I'll invoke `wingo-cmd` several times. It's extremely 
+useful because it provides documentation (types and description) for *every*
+command.
+
+If you don't have it and you used `go get` to install Wingo, then:
+
+    go get github.com/BurntSushi/wingo/wingo-cmd
+
+should install it. If you don't have it and didn't use `go get` to install
+Wingo, then you probably installed Wingo via your package manager. In that 
+case, either speak to the package maintainer or get Go installed on your system 
+and use `go get` to install Wingo. (See the INSTALL file.)
+
+If you can't get `wingo-cmd` installed, then you can use the `WingoHelp` 
+command while Wingo is running to get usage information for a particular 
+command.
+
+In the worst case, you can use the Go package docs, but it's a bit harder
+to read:
+http://godoc.burntsushi.net/pkg/github.com/BurntSushi/wingo/commands/
+
+
+How to run commands
+===================
+Wingo needs to be running.
+
+There are two common ways to run a command. One is from within Wingo using one 
+of its prompts. If you have a vanilla configuration, you can bring up such a 
+prompt with "Mod4+Shift+r" (mod4 is usually the "super" or "windows" key on 
+your keyboard).
+
+The other way to run a command is with `wingo-cmd`. For example, while Wingo is 
+running:
+
+    wingo-cmd 'AddWorkspace "embiggen"'
+
+
+Break it down
+=============
+At first glance, Wingo commands look like regular old shell commands:
+
+    AddWorkspace "embiggen"
+
+Here, we're invoking the "AddWorkspace" command and passing a string 
+"embiggen", which should add a new workspace called "embiggen".
+
+If you use `wingo-cmd` to get usage information for this command, we'll see 
+that my description is correct:
+
+    wingo-cmd --usage AddWorkspace
+
+    AddWorkspace (Name :: string)
+        Adds a new workspace to Wingo with a name Name. Note that a workspace 
+        name must be unique with respect to other workspaces and must have 
+        non-zero length.
+
+Note here that the first parameter also says that it has to be a string. What 
+happens if you give it an integer?
+
+    AddWorkspace 5
+
+Go ahead, try it.
+
+Some commands don't need any arguments:
+
+    Restart
+
+Some commands usually take the output of another command as an argument:
+
+    Focus (GetActive)
+
+So what is the usage for Focus?
+
+    wingo-cmd --usage Focus
+
+    Focus (Client :: int | string)
+        Focuses the window specified by Client.
+        
+        Client may be the window id or a substring that matches a window name.
+
+So Focus accepts one argument called Client, and the type is annotated as
+"int | string", which in English means "an integer OR a string". In this case, 
+GetActive returns the identifier (an integer) of the currently active 
+window---so its return value is a valid argument to Focus.
+
+If you squint a bit harder, and add the optional outside parantheses, Gribble 
+is a bit closer to a Lisp dialect:
+
+    (Focus (GetActive))
+
+
+Advanced command usage
+======================
+Wingo also provides several different kinds of prompts that can be used as 
+input to Gribble commands---which makes the command system truly dynamic with 
+respect to user input.
+
+For example, remember the AddWorkspace command we had above?
+
+    AddWorkspace "embiggen"
+
+Things are a bit more flexible if we bind this to a keybinding:
+
+    AddWorkspace (Input "Workspace name:")
+
+But what does Input do?
+
+    wingo-cmd --usage Input
+
+    Input (Label :: string)
+        Shows a centered prompt window that allows the user to type in text. If
+        the user presses the Confirm Key (i.e., enter), then the text typed
+        into the input box will be returned.
+        
+        Label will be shown next to the input box.
+        
+        This command may be used as a sub-command to pass user provided
+        arguments to another command.
+
+So we've now created a command that will prompt the user for some text, and 
+pass the entered text as an argument to a command.
+
+There are also other prompts available too. Namely, there are prompts that list 
+workspaces and clients. We can use them together in the same command!
+
+    WorkspaceSendClient \
+        (SelectWorkspace "Prefix") \
+        (SelectClient "Any" "no" "no" "yes")
+
+So let's take a look at the types of each of the commands:
+
+    WorkspaceSendClient (Workspace :: int | string) (Client :: int | string)
+    SelectWorkspace (TabCompletion :: string)
+    SelectClient (TabCompletion :: string) \
+                 (OnlyActiveWorkspace :: string) \
+                 (OnlyVisible :: string) \
+                 (ShowIconified :: string)
+
+The effect of this command is that first you'll see a prompt to select a 
+workspace. Then you'll see a prompt to select a client. Then the client 
+selected will be sent to the workspace selected. This works because the
+SelectWorkspace command passes a workspace as the first argument, and 
+SelectClient passes a client as the second argument.
+
+
+Python, Sockets and Gribble... Oh my!
+=====================================
+Wingo uses Unix Domain Sockets for its inter-process communication mechanism. 
+In order to send commands to Wingo, you'll have to create a Unix socket 
+connection.
+
+The IPC mechanism is very simple. Firstly, every message is terminated by the 
+null character (byte 0). Secondly, the client protocol is to send a null 
+terminated command and wait for a null terminated response. After which, the 
+client may send another command.
+
+The response may be empty (just the null byte), may contain an error string or 
+may contain the return value of the command if it has one.
+
+The socket connection should be located in your system's temporary directory 
+(usually /tmp) and will be named "wingo-ipc".
+
+What follows is a simple template program for Python that provides a function 
+"gribble" that will run a command and return the value received in response.
+
+The source code can be found in scripts/wingo-cmd-example.py.
+
+import socket
+
+sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+sock.connect("/tmp/wingo-ipc")
+
+def recv(sock):
+    data = ''
+    while chr(0) not in data:
+        data += sock.recv(4096)
+    return data
+
+def gribble(cmd):
+    sock.send("%s%s" % (cmd, chr(0)))
+    return recv(sock)
+
+print gribble("GetClientName (GetActive)")
+
+sock.close()
 
