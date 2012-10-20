@@ -120,7 +120,7 @@ func ConfigFile(name string) string {
 			try = append(try, path.Join(p, "wingo"))
 		}
 	} else {
-		try = append(try, path.Join("/", "etc", "xdg"))
+		try = append(try, path.Join("/", "etc", "xdg", "wingo"))
 	}
 
 	// Add directories from GOPATH. Last resort.

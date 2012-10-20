@@ -55,8 +55,8 @@ func init() {
 			"is running, Wingo will exit.")
 	flag.StringVar(&flagConfigDir, "config-dir", flagConfigDir,
 		"Override the location of the configuration files. When this\n"+
-			"is not set, the following paths will be checked (in order):\n"+
-			"$HOME/.config/wingo, /etc/xdg/wingo,\n"+
+			"is not set, the following paths (roughly) will be checked\n"+
+			"in order: $XDG_CONFIG_DIR/.config/wingo, /etc/xdg/wingo,\n"+
 			"$GOPATH/src/github.com/BurntSushi/wingo/config")
 	flag.BoolVar(&flagWriteConfig, "write-config", flagWriteConfig,
 		"Writes a fresh set of configuration files to $XDG_CONFIG_HOME/wingo\n"+
@@ -64,7 +64,8 @@ func init() {
 			"are written to $HOME/.config/wingo.\n"+
 			"This will fail if the 'wingo' configuration directory already\n"+
 			"exists, to prevent accidentally overwriting an existing\n"+
-			"configuration.")
+			"configuration.\n\n"+
+			"When this flag is set, Wingo will not start.")
 	flag.BoolVar(&flagWingoRestarted, "wingo-restarted", flagWingoRestarted,
 		"DO NOT USE. INTERNAL WINGO USE ONLY.")
 
