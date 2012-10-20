@@ -2,7 +2,7 @@ BD=bindata
 D=data
 BINDATA=$(BD)/wingo.png.go \
 				$(BD)/close.png.go $(BD)/maximize.png.go $(BD)/minimize.png.go \
-				$(BD)/DejaVuSans.ttf.go $(BD)/FreeMono.ttf.go \
+				$(BD)/DejaVuSans.ttf.go \
 				$(BD)/wingo.wav.go
 
 install: bindata supported
