@@ -179,6 +179,32 @@ func (cmd Not) Run() gribble.Value {
 	})
 }
 
+type And struct {
+	Op1 int `param:"1"`
+	Op2 int `param:"2"`
+	Help string `
+Returns the logical AND of Op1 and Op2.
+
+If Op1 or Op2 is not in {0, 1}, then a warning is logged and nil is returned.
+`
+}
+
+func (cmd And) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		if cmd.Op1 != 0 && cmd.Op1 != 1 {
+			logger.Warning.Printf(
+				"Op1 in 'Or' received a value not in {0, 1}: %d", cmd.Op1)
+			return nil
+		}
+		if cmd.Op2 != 0 && cmd.Op2 != 1 {
+			logger.Warning.Printf(
+				"Op2 in 'Or' received a value not in {0, 1}: %d", cmd.Op2)
+			return nil
+		}
+		return boolToInt(intToBool(cmd.Op1) && intToBool(cmd.Op2))
+	})
+}
+
 type Or struct {
 	Op1 int `param:"1"`
 	Op2 int `param:"2"`

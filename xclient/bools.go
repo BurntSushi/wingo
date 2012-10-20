@@ -36,7 +36,10 @@ func (c *Client) hasType(atom string) bool {
 }
 
 func (c *Client) CanFocus() bool {
-	return c.hints.Flags&icccm.HintInput > 0 && c.hints.Input == 1
+	if c.hints.Flags&icccm.HintInput > 0 {
+		return c.hints.Input == 1
+	}
+	return true
 }
 
 func (c *Client) SendFocusNotify() bool {

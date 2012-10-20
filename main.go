@@ -36,6 +36,7 @@ var (
 	flagLogColors      = true
 	flagReplace        = false
 	flagConfigDir      = ""
+	flagWriteConfig    = false
 	flagCpuProfile     = ""
 	flagWingoRestarted = false
 )
@@ -57,6 +58,13 @@ func init() {
 			"is not set, the following paths will be checked (in order):\n"+
 			"$HOME/.config/wingo, /etc/xdg/wingo,\n"+
 			"$GOPATH/src/github.com/BurntSushi/wingo/config")
+	flag.BoolVar(&flagWriteConfig, "write-config", flagWriteConfig,
+		"Writes a fresh set of configuration files to $XDG_CONFIG_HOME/wingo\n"+
+			"if XDG_CONFIG_HOME is set. Otherwise, configuration files\n"+
+			"are written to $HOME/.config/wingo.\n"+
+			"This will fail if the 'wingo' configuration directory already\n"+
+			"exists, to prevent accidentally overwriting an existing\n"+
+			"configuration.")
 	flag.BoolVar(&flagWingoRestarted, "wingo-restarted", flagWingoRestarted,
 		"DO NOT USE. INTERNAL WINGO USE ONLY.")
 
@@ -77,6 +85,11 @@ func init() {
 }
 
 func main() {
+	if flagWriteConfig {
+		writeConfigFiles()
+		os.Exit(0)
+	}
+
 	X, err := xgbutil.NewConn()
 	if err != nil {
 		logger.Error.Println(err)
@@ -264,6 +277,10 @@ func manageExistingClients() {
 func usage() {
 	fmt.Fprintf(os.Stderr, "\nUsage: %s [flags]\n", path.Base(os.Args[0]))
 	flag.VisitAll(func(fg *flag.Flag) {
+		// Don't let users know about flags they shouldn't use.
+		if fg.Name == "wingo-restarted" {
+			return
+		}
 		fmt.Printf("--%s=\"%s\"\n\t%s\n", fg.Name, fg.DefValue,
 			strings.Replace(fg.Usage, "\n", "\n\t", -1))
 	})

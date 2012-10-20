@@ -88,19 +88,48 @@ func ConfigFile(name string) string {
 		return true
 	}
 
-	try := []string{
-		ConfigDir,
-		path.Join(os.Getenv("HOME"), ".config", "wingo"),
-		path.Join("/", "etc", "xdg", "wingo"),
+	home := os.Getenv("HOME")
+	xdgHome := os.Getenv("XDG_CONFIG_HOME")
+	xdgDirs := os.Getenv("XDG_CONFIG_DIRS")
+
+	// We're going to accumulate a list of directories for places to inspect
+	// for configuration files. Basically, this includes following the
+	// xdg basedir spec for the XDG_CONFIG_HOME and XDG_CONFIG_DIRS environment
+	// variables.
+	try := make([]string, 0)
+
+	// from the command line
+	if len(ConfigDir) > 0 {
+		try = append(try, ConfigDir)
 	}
 
-	// Add directories from GOPATH...
+	// XDG_CONFIG_HOME
+	if len(xdgHome) > 0 && strings.HasPrefix(xdgHome, "/") {
+		try = append(try, path.Join(xdgHome, "wingo"))
+	} else if len(home) > 0 {
+		try = append(try, path.Join(home, ".config", "wingo"))
+	}
+
+	// XDG_CONFIG_DIRS
+	if len(xdgDirs) > 0 {
+		for _, p := range strings.Split(xdgDirs, ":") {
+			// XDG basedir spec does not allow relative paths
+			if !strings.HasPrefix(p, "/") {
+				continue
+			}
+			try = append(try, path.Join(p, "wingo"))
+		}
+	} else {
+		try = append(try, path.Join("/", "etc", "xdg"))
+	}
+
+	// Add directories from GOPATH. Last resort.
 	for _, dir := range build.Default.SrcDirs() {
 		d := path.Join(dir, "github.com", "BurntSushi", "wingo", "config")
 		try = append(try, d)
 	}
 
-	// Now use the first one.
+	// Now use the first one and keep track of the ones we've tried.
 	tried := make([]string, 0, len(try))
 	for _, dir := range try {
 		if len(dir) == 0 {

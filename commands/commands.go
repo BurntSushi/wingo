@@ -111,6 +111,7 @@ var Env = gribble.New([]gribble.Command{
 	&MatchClientName{},
 	&MatchClientType{},
 	&Not{},
+	&And{},
 	&Or{},
 })
 

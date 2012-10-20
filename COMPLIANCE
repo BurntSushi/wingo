@@ -1,8 +1,8 @@
 Compliance with desktop standards
 =================================
 This is an attempt at documenting Wingo's compliance with desktop standards. At 
-this time, this only includes ICCCM [1] and EWMH [2]. It should also probably 
-include XDG [3].
+this time, this only includes ICCCM [1], EWMH [2] and the XDG Base Directory
+Specification.
 
 Inconsistencies in this document with actual Wingo behavior should be 
 considered bugs.
@@ -233,3 +233,9 @@ DecorationTitle and DecorationResizeH hints are all disabled, Wingo will not
 decorate a window. Wingo will listen for changes on this property and adjust
 decorations appropriately.
 
+
+XDG Base Directory Specification
+================================
+Wingo follows all of the rules detailed in the specification for the
+XDG_CONFIG_HOME and XDG_CONFIG_DIRS environment variables. (They are only used
+to locate and write configuration files.)
