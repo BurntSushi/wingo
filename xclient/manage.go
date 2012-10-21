@@ -136,11 +136,14 @@ func (c *Client) maybeInitPlace(presumedWorkspace workspace.Workspacer) {
 	// already been placed in the hands of some layout---which may or may
 	// not be floating. So we inject our own state forcefully here.
 	defer func() {
-		c.states["last-floating"] = clientState{
-			geom:      xrect.New(xrect.Pieces(c.frame.Geom())),
-			headGeom:  xrect.New(xrect.Pieces(presumedWorkspace.HeadGeom())),
-			frame:     c.frame,
-			maximized: c.maximized,
+		wrk := presumedWorkspace
+		if wrk.IsVisible() {
+			c.states["last-floating"] = clientState{
+				geom:      xrect.New(xrect.Pieces(c.frame.Geom())),
+				headGeom:  xrect.New(xrect.Pieces(wrk.HeadGeom())),
+				frame:     c.frame,
+				maximized: c.maximized,
+			}
 		}
 	}()
 

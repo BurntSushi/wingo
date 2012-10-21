@@ -9,6 +9,7 @@ import (
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
+	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
@@ -63,9 +64,20 @@ func Initialize(x *xgbutil.XUtil,
 	Prompts = newPrompts()
 
 	Heads = heads.NewHeads(X, Config.DefaultLayout)
-	for _, wrkName := range Config.Workspaces {
-		if err := AddWorkspace(wrkName); err != nil {
-			logger.Error.Fatalf("Could not initialize workspaces: %s", err)
+
+	// If _NET_DESKTOP_NAMES is set, let's use workspaces from that instead.
+	if names, _ := ewmh.DesktopNamesGet(X); len(names) > 0 {
+		for _, wrkName := range names {
+			if err := AddWorkspace(wrkName); err != nil {
+				logger.Warning.Printf("Could not add workspace %s: %s",
+					wrkName, err)
+			}
+		}
+	} else {
+		for _, wrkName := range Config.Workspaces {
+			if err := AddWorkspace(wrkName); err != nil {
+				logger.Error.Fatalf("Could not initialize workspaces: %s", err)
+			}
 		}
 	}
 	Heads.Initialize(Clients)
