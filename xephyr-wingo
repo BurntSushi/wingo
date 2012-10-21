@@ -24,7 +24,13 @@ sleep 0.5
 export DISPLAY=:11
 
 DISPLAY=:11 thunar &
-DISPLAY=:11 ./wingo $* &
+
+if [ -n "$*" ]; then
+  DISPLAY=:11 ./wingo $* &
+else
+  DISPLAY=:11 ./wingo --log-colors --log-level 3 -p 1 --config-dir config &
+fi
+
 # DISPLAY=:11 openbox & 
 # go run $PWD/wingo.go & 
 wingo=$!
