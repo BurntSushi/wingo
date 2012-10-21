@@ -34,6 +34,7 @@ func New(id xproto.Window) *Client {
 		if attrs.OverrideRedirect {
 			logger.Message.Printf(
 				"Not managing override redirect window %d", id)
+			return nil
 		}
 	}
 
@@ -65,7 +66,14 @@ func New(id xproto.Window) *Client {
 	}
 
 	c.manage()
-	c.FireHook(hook.Managed)
+
+	// We don't fire the managed hook on startup since it can lead to
+	// unintuitive state changes.
+	// If someone really wants it, we can add a new "startup_managed" hook
+	// or something.
+	if !wm.Startup {
+		c.FireHook(hook.Managed)
+	}
 	if !c.iconified {
 		c.Map()
 		if !wm.Startup && c.PrimaryType() == TypeNormal && !wm.Config.Ffm {
