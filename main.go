@@ -230,7 +230,7 @@ EVENTLOOP:
 		if !found {
 			os.Args = append(os.Args, "--wingo-restarted")
 		}
-		logger.Message.Println("The user has told us to restart...")
+		logger.Message.Println("The user has told us to restart...\n\n\n")
 		if err := syscall.Exec(os.Args[0], os.Args, os.Environ()); err != nil {
 			logger.Error.Fatalf("Could not exec '%s': %s",
 				strings.Join(os.Args, " "), err)
