@@ -18,6 +18,12 @@ Or if you're brave, just run this to replace your current window manager:
 WARNING: In order to build Wingo, you'll need at least 2GB of RAM. See:
 https://github.com/BurntSushi/wingo/issues/8
 
+
+Triple head
+===========
+
+![Triple head with Wingo](https://github.com/BurntSushi/wingo/wiki/screenshots/thumbs/triple-head.png)
+
 Dude... why?
 ============
 Wingo has two features which, when combined, set it apart from other window 
