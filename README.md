@@ -22,7 +22,7 @@ https://github.com/BurntSushi/wingo/issues/8
 Triple head
 ===========
 
-![Triple head with Wingo](https://github.com/BurntSushi/wingo/wiki/screenshots/thumbs/triple-head.png)
+[![Triple head with Wingo](https://github.com/BurntSushi/wingo/wiki/screenshots/thumbs/triple-head.png)](https://github.com/BurntSushi/wingo/wiki/screenshots/triple-head.png)
 
 Dude... why?
 ============
