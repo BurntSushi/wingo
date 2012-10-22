@@ -40,7 +40,7 @@ Although, all the cool kids say you should use this instead:
 
 If you want some nice logging (especially if you're reporting a bug), use:
 
-    exec wingo -p 1 --log-level 3 --log-colors > $HOME/wingo.log
+    exec wingo -p 1 --log-level 3 > $HOME/wingo.log 2>&1
 
 (The "-p 1" option is to force Wingo into sequential execution. This makes sure
 no error messages are cut off if Wingo crashes.)
