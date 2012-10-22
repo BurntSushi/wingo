@@ -1,19 +1,30 @@
 wingo-cmd is a tool that can issue commands to Wingo from the command line.
 
-The set of commands available should be equivalent to the set of commands
-available to be bound to keys. (There is no documentation for this yet.)
+The set of commands available can be viewed in list form with
 
-Example usage:
+  wingo-cmd --list
+
+And to get for detailed usage for each command:
+
+  wingo-cmd --list-usage
+
+Or for a particular command:
+
+  wingo-cmd --usage WorkspaceGreedy
+
+
+Example usage
+=============
 
 Move the active window to (20, 100)
 
-  wingo-cmd Move 20 100
+  wingo-cmd 'Move (GetActive) 20 100'
 
 Resize the window with id 0xa00001 to half the screen width and height
 
-  wingo-cmd Resize 0.5 0.5 0xa00001  
+  wingo-cmd 'Resize 0xa00001 0.5 0.5'
 
 Close the active window:
 
-  wingo-cmd Close
+  wingo-cmd 'Close (GetActive)'
 

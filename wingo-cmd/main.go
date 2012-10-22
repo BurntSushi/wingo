@@ -37,11 +37,11 @@ func init() {
 	flag.BoolVar(&flagListUsageCommands, "list-usage", flagListUsageCommands,
 		"Print a list of all commands, their parameters (with type info),\n"+
 			"and usage information for each command.")
+	flag.StringVar(&flagUsageCommand, "usage", flagUsageCommand,
+		"Print usage information for a particular command.")
 	flag.IntVar(&flagPoll, "poll", flagPoll,
 		"When greater than 0, the commands specified will be repeated at "+
 			"the interval specified in milliseconds.")
-	flag.StringVar(&flagUsageCommand, "usage", flagUsageCommand,
-		"Print usage information for a particular command.")
 
 	flag.Usage = usage
 	flag.Parse()
