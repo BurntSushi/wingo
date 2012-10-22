@@ -3,6 +3,7 @@ communicating with X up to drawing text on windows, are also in Go. Wingo is
 mostly ICCCM and EWMH compliant (see COMPLIANCE).
 
 If you have Go installed and configured on your machine, all you need to do is:
+(For Archlinux users, Wingo is in the AUR.)
 
     go get github.com/BurntSushi/wingo
 
@@ -10,8 +11,9 @@ And in your $HOME/.xinitrc:
 
     exec wingo
 
-Or if you're brave, just run this to replace your current window manager:
-(Seriously though, save you work. Wingo is still very alpha.)
+Or if you're brave and are using a desktop environment, just run this to 
+replace your current window manager: (Seriously though, save you work. Wingo is 
+still very alpha.)
 
     wingo --replace
 

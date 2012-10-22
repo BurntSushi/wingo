@@ -1,3 +1,5 @@
+Archlinux users: Wingo is in the AUR under 'wingo-git'.
+
 Quick Install Instructions
 ==========================
 Since Wingo is a pure Go program, the best way to install Wingo is with the Go 
