@@ -606,8 +606,8 @@ Client may be the window id or a substring that matches a window name.
 
 func (cmd Move) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
-		x, xok := parsePos(cmd.X, false)
-		y, yok := parsePos(cmd.Y, true)
+		x, xok := parsePos(wm.Workspace().Geom(), cmd.X, false)
+		y, yok := parsePos(wm.Workspace().Geom(), cmd.Y, true)
 		if !xok || !yok {
 			return nil
 		}
@@ -638,15 +638,14 @@ Client may be the window id or a substring that matches a window name.
 
 func (cmd MoveRelative) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
-		x, xok := parsePos(cmd.X, false)
-		y, yok := parsePos(cmd.Y, true)
+		geom := wm.Workspace().Geom()
+		x, xok := parsePos(geom, cmd.X, false)
+		y, yok := parsePos(geom, cmd.Y, true)
 		if !xok || !yok {
 			return nil
 		}
 		withClient(cmd.Client, func(c *xclient.Client) {
 			c.EnsureUnmax()
-
-			geom := c.Workspace().Geom()
 			c.LayoutMove(geom.X() + x, geom.Y() + y)
 		})
 		return nil
@@ -671,20 +670,29 @@ func (cmd MovePointer) Run() gribble.Value {
 }
 
 type MovePointerRelative struct {
-	X int `param:"1"`
-	Y int `param:"2"`
+	X gribble.Any `param:"1" types:"int,float"`
+	Y gribble.Any `param:"2" types:"int,float"`
 	Help string `
 Moves the pointer to the x and y position specified by X and Y relative to the
 current workspace. Note the the origin is located in the top left corner of
 the current workspace.
+
+X and Y may either be pixels (integers) or ratios in the range 0.0 to
+1.0 (specifically, (0.0, 1.0]). Ratios are measured with respect to the
+window's workspace's geometry.
 `
 }
 
 func (cmd MovePointerRelative) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		geom := wm.Workspace().Geom()
+		x, xok := parsePos(geom, cmd.X, false)
+		y, yok := parsePos(geom, cmd.Y, true)
+		if !xok || !yok {
+			return nil
+		}
 		xproto.WarpPointer(wm.X.Conn(), 0, wm.X.RootWin(), 0, 0, 0, 0,
-			int16(geom.X()+cmd.X), int16(geom.Y()+cmd.Y))
+			int16(geom.X()+x), int16(geom.Y()+y))
 		return nil
 	})
 }
@@ -817,8 +825,8 @@ Client may be the window id or a substring that matches a window name.
 
 func (cmd Resize) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
-		w, wok := parseDim(cmd.Width, false)
-		h, hok := parseDim(cmd.Height, true)
+		w, wok := parseDim(wm.Workspace().Geom(), cmd.Width, false)
+		h, hok := parseDim(wm.Workspace().Geom(), cmd.Height, true)
 		if !wok || !hok {
 			return nil
 		}

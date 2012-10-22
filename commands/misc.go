@@ -8,6 +8,8 @@ import (
 
 	"github.com/BurntSushi/xgb/xproto"
 
+	"github.com/BurntSushi/xgbutil/xrect"
+
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/prompt"
 	"github.com/BurntSushi/wingo/workspace"
@@ -19,7 +21,7 @@ import (
 // The magic here is that while a string could just be a simple integer,
 // it could also be a float greater than 0 but <= 1 in terms of the current
 // head's geometry.
-func parsePos(gribblePos gribble.Any, y bool) (int, bool) {
+func parsePos(geom xrect.Rect, gribblePos gribble.Any, y bool) (int, bool) {
 	switch pos := gribblePos.(type) {
 	case int:
 		return pos, true
@@ -29,11 +31,10 @@ func parsePos(gribblePos gribble.Any, y bool) (int, bool) {
 			return 0, false
 		}
 
-		headGeom := wm.Workspace().Geom()
 		if y {
-			return headGeom.Y() + int(float64(headGeom.Height())*pos), true
+			return geom.Y() + int(float64(geom.Height())*pos), true
 		} else {
-			return headGeom.X() + int(float64(headGeom.Width())*pos), true
+			return geom.X() + int(float64(geom.Width())*pos), true
 		}
 	}
 	panic("unreachable")
@@ -43,7 +44,7 @@ func parsePos(gribblePos gribble.Any, y bool) (int, bool) {
 // The magic here is that while a string could just be a simple integer,
 // it could also be a float greater than 0 but <= 1 in terms of the current
 // head's geometry.
-func parseDim(gribbleDim gribble.Any, height bool) (int, bool) {
+func parseDim(geom xrect.Rect, gribbleDim gribble.Any, hght bool) (int, bool) {
 	switch dim := gribbleDim.(type) {
 	case int:
 		return dim, true
@@ -53,11 +54,10 @@ func parseDim(gribbleDim gribble.Any, height bool) (int, bool) {
 			return 0, false
 		}
 
-		headGeom := wm.Workspace().Geom()
-		if height {
-			return int(float64(headGeom.Height()) * dim), true
+		if hght {
+			return int(float64(geom.Height()) * dim), true
 		} else {
-			return int(float64(headGeom.Width()) * dim), true
+			return int(float64(geom.Width()) * dim), true
 		}
 	}
 	panic("unreachable")
