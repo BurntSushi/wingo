@@ -1,0 +1,46 @@
+# Contributor: Andrew Gallant <andrew@burntsushi.net>
+# Maintainer: Andrew Gallant
+pkgname=wingo-git
+pkgver=20121022
+pkgrel=1
+pkgdesc="An X window manager featuring per-monitor workspaces with floating and tiling placement policies."
+arch=('any')
+url="https://github.com/BurntSushi/wingo"
+license=('WTFPL')
+groups=()
+makedepends=('git')
+depends=('go')
+source=()
+noextract=()
+install=wingo.install
+md5sums=()
+
+build() {
+  cd "$srcdir"
+
+  msg "go getting wingo... (this may take a while)"
+  GOPATH="$srcdir" go get -u github.com/BurntSushi/wingo
+  GOPATH="$srcdir" go get -u github.com/BurntSushi/wingo/wingo-cmd
+
+  # Install the wingo executables.
+  install -Dm755 bin/wingo "$pkgdir/usr/bin/wingo"
+  install -Dm755 bin/wingo-cmd "$pkgdir/usr/bin/wingo-cmd"
+
+  # Install Wingo documentation.
+  cd "$srcdir/src/github.com/BurntSushi/wingo"
+  install -Dm644 COMPLIANCE "$pkgdir/usr/share/doc/wingo/COMPLIANCE"
+  install -Dm644 COPYING "$pkgdir/usr/share/doc/wingo/COPYING"
+  install -Dm644 HOWTO-COMMANDS "$pkgdir/usr/share/doc/wingo/HOWTO-COMMANDS"
+  install -Dm644 HOWTO-CONFIGURE "$pkgdir/usr/share/doc/wingo/HOWTO-CONFIGURE"
+  install -Dm644 INSTALL "$pkgdir/usr/share/doc/wingo/INSTALL"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/wingo/README.md"
+  install -Dm644 STYLE "$pkgdir/usr/share/doc/wingo/STYLE"
+
+  # Install Wingo configuration to /etc/xdg/wingo
+  cd "$srcdir/src/github.com/BurntSushi/wingo/config"
+  install -Dm644 hooks.wini "$pkgdir/etc/xdg/wingo/hooks.wini"
+  install -Dm644 key.wini "$pkgdir/etc/xdg/wingo/key.wini"
+  install -Dm644 mouse.wini "$pkgdir/etc/xdg/wingo/mouse.wini"
+  install -Dm644 options.wini "$pkgdir/etc/xdg/wingo/options.wini"
+  install -Dm644 theme.wini "$pkgdir/etc/xdg/wingo/theme.wini"
+}
