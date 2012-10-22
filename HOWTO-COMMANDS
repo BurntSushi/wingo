@@ -149,7 +149,7 @@ workspaces and clients. We can use them together in the same command!
         (SelectClient "Any" "no" "no" "yes")
 
 (N.B. The '\' is used as a line continuation. It can be used in your 
-configuration files if you're as crazy about 80 columns as you are me. 
+configuration files if you're as crazy about 80 columns as I am.
 Otherwise, you can put everything on one line and omit the '\' characters.)
 
 So let's take a look at the types of each of the commands:
