@@ -219,7 +219,7 @@ Dependencies
 ============
 You really should be using the 'go' tool to install Wingo, and therefore 
 shouldn't care about dependencies. But I'll list them anyway---with many thanks 
-to the authors (well, the one that aren't me anyway).
+to the authors (well, the ones that aren't me anyway).
 
 * go                  http://golang.org
 * graphics-go         http://code.google.com/p/graphics-go
@@ -249,14 +249,14 @@ them in your own window manager. The packages of particular interest are
 probably the ones that do the most nitty gritty X stuff---especially relating 
 to drawing windows. Here's a quick run down of those:
 
-cursors     Sets up some plain old X cursors. Not very interesting.
-prompt      Provides several different kinds of prompt windows that can take
-            user input. These should actually work in an existing window 
-            manager. (See the examples in the package directory.) Prompt
-            requires both the 'render' and 'text' Wingo packages.
-render      Renders some very basic shapes and gradients to X windows.
-text        Renders text to windows. Also provides a special window type that
-            can act as a text box for user input.
+* cursors     Sets up some plain old X cursors. Not very interesting.
+* prompt      Provides several different kinds of prompt windows that can take
+              user input. These should actually work in an existing window 
+              manager. (See the examples in the package directory.) Prompt
+              requires both the 'render' and 'text' Wingo packages.
+* render      Renders some very basic shapes and gradients to X windows.
+* text        Renders text to windows. Also provides a special window type that
+              can act as a text box for user input.
 
 The only other package worth mentioning is 'frame'. It's probably too 
 monolithic to be used in another window manager (unless you really like Wingo's 
