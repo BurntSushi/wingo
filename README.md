@@ -26,6 +26,7 @@ My triple head setup
 
 [![Triple head with Wingo](https://github.com/BurntSushi/wingo/wiki/screenshots/thumbs/triple-head.png)](https://github.com/BurntSushi/wingo/wiki/screenshots/triple-head.png)
 
+
 Dude... why?
 ============
 Wingo has two features which, when combined, set it apart from other window 
@@ -63,6 +64,12 @@ up hooks that will fire depending upon a set of match conditions.
 All configuration is done using an INI like file format with support for simple
 variable substitution (which makes theming a bit simpler).
 No XML. No recompiling. No scripting.
+
+A fresh set of configuration files can be added to `$HOME/.config/wingo` with
+
+    wingo --write-config
+
+Each configuration file is heavily documented.
 
 Configuring key/mouse bindings and hooks uses a central command system called 
 Gribble. For example, one can add a workspace named "cromulent" with this
