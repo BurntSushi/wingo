@@ -127,7 +127,9 @@ func (c *Client) Fullscreened() {
 	if c.fullscreen {
 		return
 	}
-	c.SaveState("before-fullscreen")
+	if _, ok := c.Layout().(layout.Floater); ok {
+		c.SaveState("last-floating")
+	}
 	c.fullscreen = true
 
 	// Make sure the window has been forced into a floating layout.
@@ -140,10 +142,6 @@ func (c *Client) Fullscreened() {
 	c.FrameNada()
 	c.MoveResize(g.X(), g.Y(), g.Width(), g.Height())
 
-	// Since we moved outside of the layout, we have to save the last
-	// floating state our selves.
-	c.SaveState("last-floating")
-
 	c.addState("_NET_WM_STATE_FULLSCREEN")
 }
 
@@ -152,7 +150,17 @@ func (c *Client) Unfullscreened() {
 		return
 	}
 	c.fullscreen = false
-	c.LoadState("before-fullscreen")
+
+	// Make sure the window is no longer forced into a floating layout just
+	// because of its fullscreen status.
+	if wrk, ok := c.Workspace().(*workspace.Workspace); ok {
+		wrk.CheckFloatingStatus(c)
+	}
+
+	// If the window's layout is now floating, restore geometry.
+	if _, ok := c.Layout().(layout.Floater); ok {
+		c.LoadState("last-floating")
+	}
 
 	c.removeState("_NET_WM_STATE_FULLSCREEN")
 }

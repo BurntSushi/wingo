@@ -67,6 +67,9 @@ func (c *Client) shouldDecor() bool {
 	if c.hasType("_NET_WM_WINDOW_TYPE_SPLASH") {
 		return false
 	}
+	if c.fullscreen {
+		return false
+	}
 
 	mh, err := motif.WmHintsGet(wm.X, c.Id())
 	if err == nil && !motif.Decor(mh) {
