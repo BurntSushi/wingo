@@ -175,7 +175,8 @@ func (hds *Heads) ApplyStruts(clients Clients) {
 		if strut == nil {
 			continue
 		}
-		xrect.ApplyStrut(hds.workarea, rgeom.Width(), rgeom.Height(),
+		xrect.ApplyStrut(hds.workarea,
+			uint(rgeom.Width()), uint(rgeom.Height()),
 			strut.Left, strut.Right, strut.Top, strut.Bottom,
 			strut.LeftStartY, strut.LeftEndY,
 			strut.RightStartY, strut.RightEndY,

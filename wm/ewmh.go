@@ -20,18 +20,18 @@ func ewmhClientList() {
 }
 
 func ewmhNumberOfDesktops() {
-	ewmh.NumberOfDesktopsSet(X, len(Heads.Workspaces.Wrks))
+	ewmh.NumberOfDesktopsSet(X, uint(len(Heads.Workspaces.Wrks)))
 }
 
 func ewmhCurrentDesktop() {
-	ewmh.CurrentDesktopSet(X, workspaceIndex(Workspace()))
+	ewmh.CurrentDesktopSet(X, uint(workspaceIndex(Workspace())))
 }
 
 func ewmhVisibleDesktops() {
 	visibles := Heads.VisibleWorkspaces()
-	desks := make([]int, len(visibles))
+	desks := make([]uint, len(visibles))
 	for i, wrk := range visibles {
-		desks[i] = workspaceIndex(wrk)
+		desks[i] = uint(workspaceIndex(wrk))
 	}
 	ewmh.VisibleDesktopsSet(X, desks)
 }

@@ -145,16 +145,18 @@ func (c *Client) GravitizeY(y int, gravity int) int {
 // from the WM_NORMAL_HINTS property to change 'height' to a valid height.
 // See Section 4.1.2.3 of the ICCCM for more details.
 func (c *Client) ValidateHeight(height int) int {
-	return c.validateSize(height, c.nhints.HeightInc, c.nhints.BaseHeight,
-		c.nhints.MinHeight, c.nhints.MaxHeight)
+	return c.validateSize(height,
+		int(c.nhints.HeightInc), int(c.nhints.BaseHeight),
+		int(c.nhints.MinHeight), int(c.nhints.MaxHeight))
 }
 
 // ValidateWidth use's a clients min/max width and width increment values
 // from the WM_NORMAL_HINTS property to change 'width' to a valid width.
 // See Section 4.1.2.3 of the ICCCM for more details.
 func (c *Client) ValidateWidth(width int) int {
-	return c.validateSize(width, c.nhints.WidthInc, c.nhints.BaseWidth,
-		c.nhints.MinWidth, c.nhints.MaxWidth)
+	return c.validateSize(width,
+		int(c.nhints.WidthInc), int(c.nhints.BaseWidth),
+		int(c.nhints.MinWidth), int(c.nhints.MaxWidth))
 }
 
 // validateSize is does the math for ValidateWidth and ValidateHeight.

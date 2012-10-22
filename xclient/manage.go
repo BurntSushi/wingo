@@ -374,10 +374,10 @@ func (c *Client) findPresumedWorkspace() workspace.Workspacer {
 	if err != nil {
 		return wm.Workspace()
 	}
-	if int64(d) == 0xFFFFFFFF {
+	if d == 0xFFFFFFFF {
 		return wm.StickyWrk
 	}
-	if d < 0 || d >= int64(len(wm.Heads.Workspaces.Wrks)) {
+	if d < 0 || d >= uint(len(wm.Heads.Workspaces.Wrks)) {
 		return wm.Workspace()
 	}
 	return wm.Heads.Workspaces.Get(int(d))
