@@ -44,6 +44,10 @@ func (c *Client) StackAboveToggle() {
 }
 
 func (c *Client) stackAbove() {
+	if c.fullscreen {
+		return
+	}
+
 	c.layer = stack.LayerAbove
 	c.Raise()
 
@@ -52,6 +56,10 @@ func (c *Client) stackAbove() {
 }
 
 func (c *Client) unstackAbove() {
+	if c.fullscreen {
+		return
+	}
+
 	c.layer = stack.LayerDefault
 	c.Raise()
 
@@ -67,6 +75,10 @@ func (c *Client) StackBelowToggle() {
 }
 
 func (c *Client) stackBelow() {
+	if c.fullscreen {
+		return
+	}
+
 	c.layer = stack.LayerBelow
 	c.Raise()
 
@@ -75,6 +87,10 @@ func (c *Client) stackBelow() {
 }
 
 func (c *Client) unstackBelow() {
+	if c.fullscreen {
+		return
+	}
+
 	c.layer = stack.LayerDefault
 	c.Raise()
 
@@ -143,6 +159,9 @@ func (c *Client) Fullscreened() {
 	c.MoveResize(g.X(), g.Y(), g.Width(), g.Height())
 
 	c.addState("_NET_WM_STATE_FULLSCREEN")
+
+	c.layer = stack.LayerFullscreen
+	c.Raise()
 }
 
 func (c *Client) Unfullscreened() {
@@ -163,6 +182,9 @@ func (c *Client) Unfullscreened() {
 	}
 
 	c.removeState("_NET_WM_STATE_FULLSCREEN")
+
+	c.layer = stack.LayerDefault
+	c.Raise()
 }
 
 func (c *Client) MaximizeToggle() {
