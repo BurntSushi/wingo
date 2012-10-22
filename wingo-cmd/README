@@ -15,7 +15,6 @@ Or for a particular command:
 
 Example usage
 =============
-
 Move the active window to (20, 100)
 
   wingo-cmd 'Move (GetActive) 20 100'
