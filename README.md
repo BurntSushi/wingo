@@ -1,6 +1,6 @@
 Wingo is an X window manager written in pure Go. All of its dependencies, from 
 communicating with X up to drawing text on windows, are also in Go. Wingo is 
-mostly ICCCM and EWMH compliant.
+mostly ICCCM and EWMH compliant (see COMPLIANCE).
 
 If you have Go installed and configured on your machine, all you need to do is:
 
@@ -19,8 +19,8 @@ WARNING: In order to build Wingo, you'll need at least 2GB of RAM. See:
 https://github.com/BurntSushi/wingo/issues/8
 
 
-Triple head
-===========
+My triple head setup
+====================
 
 [![Triple head with Wingo](https://github.com/BurntSushi/wingo/wiki/screenshots/thumbs/triple-head.png)](https://github.com/BurntSushi/wingo/wiki/screenshots/triple-head.png)
 
@@ -169,7 +169,7 @@ Another popular workspace model (particularly among tiling window managers) is
 tagging a window with one or more workspaces.
 
 Not only do I find this needlessly complex, but it doesn't really make sense in 
-a model where more than workspace can be visible in multi-head setups.
+a model where more than one workspace can be visible in multi-head setups.
 
 Shaded windows
 --------------
@@ -206,6 +206,11 @@ Plus, in order to use Wayland, Wingo would need a compositing backend (along
 with every other non-compositing X11 window manager). This is also not an easy 
 task.
 
+Supposedly there are some ideas for plans floating around that would let
+non-compositing X window managers to "plug into" the Wayland reference 
+compositor (Weston). When this will be possible (or even *if* it will be 
+possible with a window manager written in Go) remains to be seen.
+
 If I am in err (and this is quite likely; my OpenGL knowledge is limited), 
 please ping me.
 
@@ -216,13 +221,14 @@ You really should be using the 'go' tool to install Wingo, and therefore
 shouldn't care about dependencies. But I'll list them anyway---with many thanks 
 to the authors (well, the one that aren't me anyway).
 
-go                  http://golang.org
-graphics-go         http://code.google.com/p/graphics-go
-freetype-go         http://code.google.com/p/freetype-go
-ansi                http://github.com/str1ngs/ansi
-gribble             http://github.com/BurntSushi/gribble
-xgb                 http://github.com/BurntSushi/xgb
-xgbutil             http://github.com/BurntSushi/xgbutil
+* go                  http://golang.org
+* graphics-go         http://code.google.com/p/graphics-go
+* freetype-go         http://code.google.com/p/freetype-go
+* ansi                http://github.com/str1ngs/ansi
+* go-bindata          http://github.com/jteeuwen/go-bindata (build dependency)
+* gribble             http://github.com/BurntSushi/gribble
+* xgb                 http://github.com/BurntSushi/xgb
+* xgbutil             http://github.com/BurntSushi/xgbutil
 
 
 Inspiration
