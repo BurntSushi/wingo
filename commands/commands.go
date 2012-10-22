@@ -679,7 +679,7 @@ the current workspace.
 
 X and Y may either be pixels (integers) or ratios in the range 0.0 to
 1.0 (specifically, (0.0, 1.0]). Ratios are measured with respect to the
-window's workspace's geometry.
+workspace's geometry.
 `
 }
 
