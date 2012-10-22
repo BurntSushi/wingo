@@ -1,7 +1,5 @@
-// Package logger is a very light wrapper around 'log' so we can control IO.
+// package logger is a very light wrapper around 'log' so we can control IO.
 // It can also print pretty colors.
-// XXX: Only 'Print*' functions have been wrapped. The rest of the methods
-// directly use those provided by 'log'.
 package logger
 
 import (

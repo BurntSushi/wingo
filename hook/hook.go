@@ -242,6 +242,14 @@ func checkCommands(cmds []string) (string, error) {
 	return "", nil
 }
 
+// Args represents a value that specifies what special strings get replaced
+// with in user defined hooks. So for instance, the "focused" hook is
+// specifically defined on a particular client, so its hook is fired like so:
+//
+//	args := Args{
+//		Client: "identifier of window being focused",
+//	}
+//	hook.Fire(hook.Focused, args)
 type Args struct {
 	Client string
 }

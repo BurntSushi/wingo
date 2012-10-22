@@ -55,15 +55,16 @@
 # -------------------------------------------------------
 #
 # Here we name our hook "MaximizeTerminals". (You'll see this name if there was
-# problem setting up your hook.) We specify 5 different commands, and disable
-# conjunctive evaluation, so that only ONE of the match commands needs to
-# return true in order for the managed hook to fire. If we didn't disable
-# conjuctive evaluation, then no window would ever be able to match our
-# conditions.
+# problem setting up your hook.) We specify 5 different command match
+# conditions, and disable conjunctive evaluation, so that only ONE of the match 
+# commands needs to return true in order for the managed hook to fire. If we 
+# didn't disable conjuctive evaluation, then no window would ever be able to 
+# match our conditions.
 #
 # Finally, we set the "managed" hook to run the commands 'FrameSlim ":client:"'
 # and 'Maximize ":client:"'. The special ":client:" string will be replaced
-# with the id of the client that was managed.
+# with the id of the client that was managed. (You can think of ":client:" as
+# semantically equivalent to a preprocessor macro.)
 
 [Autostart]
 match := True
