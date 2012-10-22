@@ -17,9 +17,6 @@ still very alpha.)
 
     wingo --replace
 
-WARNING: In order to build Wingo, you'll need at least 2GB of RAM. See:
-https://github.com/BurntSushi/wingo/issues/8
-
 
 My triple head setup
 ====================
