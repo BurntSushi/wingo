@@ -23,7 +23,7 @@
 #
 # All commands attached to "match" are combined conjunctively. That is, all
 # match conditions must return "1" in order for the hook to fire. Alternatively,
-# if the "conjunction" option is set to "yes", the commands will be combined
+# if the "conjunction" option is set to "no", the commands will be combined
 # disjunctively. That is, at least one match condition must return "1" in
 # order for the hook to fire.
 #
