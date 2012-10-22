@@ -45,7 +45,7 @@ func init() {
 	flag.IntVar(&flagGoMaxProcs, "p", flagGoMaxProcs,
 		"The maximum number of CPUs that can be executing simultaneously.")
 	flag.IntVar(&flagLogLevel, "log-level", flagLogLevel,
-		"The logging level of Wingo. Valid values are 0, 1, 2, 3, or 4.\n"+
+		"The logging level of Wingo. Valid values are 0, 1, 2, 3 or 4.\n"+
 			"Higher numbers result in Wingo producing more output.")
 	flag.BoolVar(&flagLogColors, "log-colors", flagLogColors,
 		"Whether to output logging data with terminal colors.")
