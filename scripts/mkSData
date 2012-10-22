@@ -6,16 +6,14 @@ if len(sys.argv) != 3:
     print >> sys.stderr, 'Usage: mkSData var-name data-file'
     sys.exit(1)
 
+dname, dfile = sys.argv[1], sys.argv[2]
 assembly = '''
-.globl bindata.%s
-bindata.%s:
-    .long data
-    .int data_end - data
-    .int data_end - data
-data:
+.globl _%s
+.globl _e%s
+_%s:
 .incbin "%s"
-data_end:
-''' % (sys.argv[1], sys.argv[1], sys.argv[2])
+_e%s:
+''' % (dname, dname, dname, dfile, dname)
 
 print assembly.strip()
 

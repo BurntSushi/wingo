@@ -1,0 +1,62 @@
+See https://groups.google.com/forum/#!msg/golang-nuts/UOIUyn7uFsY/Uescy-cI7hQJ
+
+Thanks minux!
+
+Discussion between minux and I:
+===============================
+Excellent suggestion! I almost have it working, but I'm getting some
+strange errors when I try to build wingo:
+
+[andrew@Ocelot wingo] go build
+# github.com/BurntSushi/wingo
+/home/andrew/go/pkg/linux_amd64/github.com/BurntSushi/wingo/
+bindata.a(DejaVuSans.ttf.s): unknown relocation type 10; compiled
+without -fpic?
+
+
+you need to change
+.long data /* pointer */
+to
+.quad data /* pointer */
+
+i think i was wrong about one .syso fits all, if we embed a slice in .syso file,
+we need to provide two different .syso files for 32-bit and 64-bit systems.
+(as the type of data pointer is different)
+
+to alleviate this problem, i refined my approach as follows:
+/* data.S, as -o data.syso */
+.globl _bindataA /* no longer need to prepend package name here */
+.globl _ebindataA
+_bindataA:
+.incbin "dataA"
+_ebindataA:
+
+.globl _bindataB /* no longer need to prepend package name here */
+.globl _ebindataB
+_bindataB:
+.incbin "dataB"
+_ebindataB:
+
+And two other files:
+/* slice.c */
+#include "runtime.h"
+extern byte _bindataA[], _bindataB[], _ebindataA, _ebindataB;
+
+void ·getDataSlices(Slice a, Slice b) {
+  a.array = _bindataA;
+  a.len = a.cap = &_ebindataA - _bindataA;
+  b.array = _bindataB;
+  b.len = b.cap = &_ebindataB - _bindataB;
+  FLUSH(&a);
+  FLUSH(&b);
+}
+
+/* data.go */
+package bindata
+func getDataSlices() ([]byte, []byte) // defined in slice.c
+
+var A, B = getDataSlices()
+
+although we need 3 files now, but you won't need to provide two .syso for 64-bit
+and 32-bit systems.
+

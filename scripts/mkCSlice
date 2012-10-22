@@ -1,0 +1,23 @@
+#!/usr/bin/env python2.7
+# -*- coding: utf-8 -*-
+
+import sys
+
+if len(sys.argv) != 2:
+    print >> sys.stderr, 'Usage: mkCSlice var-name'
+    sys.exit(1)
+
+dname = sys.argv[1]
+c = '''
+#include "runtime.h"
+extern byte _%s[], _e%s;
+
+void ·get%s(Slice s) {
+    s.array = _%s;
+    s.len = s.cap = &_e%s - _%s;
+    FLUSH(&s);
+}
+''' % (dname, dname, dname, dname, dname, dname)
+
+print c.strip()
+
