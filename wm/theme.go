@@ -433,7 +433,7 @@ func loadPromptOption(theme *ThemeConfig, k wini.Key) {
 }
 
 func builtInIcon() *xgraphics.Image {
-	img, err := xgraphics.NewBytes(X, bindata.WingoPng())
+	img, err := xgraphics.NewBytes(X, bindata.WingoPng)
 	if err != nil {
 		logger.Warning.Printf("Could not get built in icon image because: %v",
 			err)
@@ -442,9 +442,9 @@ func builtInIcon() *xgraphics.Image {
 	return img
 }
 
-func builtInButton(loadBuiltIn func() []byte) *xgraphics.Image {
+func builtInButton(builtInData []byte) *xgraphics.Image {
 
-	img, err := xgraphics.NewBytes(X, loadBuiltIn())
+	img, err := xgraphics.NewBytes(X, builtInData)
 	if err != nil {
 		logger.Warning.Printf("Could not get built in button image because: %v",
 			err)
@@ -454,8 +454,7 @@ func builtInButton(loadBuiltIn func() []byte) *xgraphics.Image {
 }
 
 func builtInFont() *truetype.Font {
-	bs := bindata.DejavusansTtf()
-	font, err := freetype.ParseFont(bs)
+	font, err := freetype.ParseFont(bindata.DejavusansTtf)
 	if err != nil {
 		logger.Warning.Printf("Could not parse default font because: %v", err)
 		return nil

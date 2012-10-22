@@ -1,9 +1,13 @@
 BD=bindata
 D=data
-BINDATA=$(BD)/wingo.png.go \
-				$(BD)/close.png.go $(BD)/maximize.png.go $(BD)/minimize.png.go \
-				$(BD)/DejaVuSans.ttf.go \
-				$(BD)/wingo.wav.go
+BINDATA=$(BD)/wingo.png.syso \
+				$(BD)/close.png.syso $(BD)/maximize.png.syso $(BD)/minimize.png.syso \
+				$(BD)/DejaVuSans.ttf.syso \
+				$(BD)/wingo.wav.syso
+# BINDATA=$(BD)/wingo.png.go \ 
+				# $(BD)/close.png.go $(BD)/maximize.png.go $(BD)/minimize.png.go \ 
+				# $(BD)/DejaVuSans.ttf.go \ 
+				# $(BD)/wingo.wav.go 
 
 install: bindata supported
 	go install -p 6 . ./bindata ./cursors ./focus \
@@ -25,23 +29,26 @@ supported:
 
 bindata: $(BINDATA)
 
-$(BD)/%.png.go: $(D)/%.png
-	go-bindata -f `python2 -c 'print "$*".title()'`Png \
-		-i $(D)/$*.png -o $(BD)/$*.png.go -p bindata
-	gofmt -w $(BD)/$*.png.go
+$(BD)/%.syso: $(BD)/%.S
+	as -o $(BD)/$*.syso $(BD)/$*.S
 
-$(BD)/%.ttf.go: $(D)/%.ttf
-	go-bindata -f `python2 -c 'print "$*".title()'`Ttf \
-		-i $(D)/$*.ttf -o $(BD)/$*.ttf.go -p bindata
-	gofmt -w $(BD)/$*.ttf.go
+$(BD)/%.png.S: $(D)/%.png
+	scripts/mkSData `python2 -c 'print "$*".title()'`Png $(D)/$*.png \
+		> $(BD)/$*.png.S
 
-$(BD)/%.wav.go: $(D)/%.wav
-	go-bindata -f `python2 -c 'print "$*".title()'`Wav \
-		-i $(D)/$*.wav -o $(BD)/$*.wav.go -p bindata
-	gofmt -w $(BD)/$*.wav.go
+$(BD)/%.ttf.S: $(D)/%.ttf
+	scripts/mkSData `python2 -c 'print "$*".title()'`Ttf $(D)/$*.ttf \
+	 	> $(BD)/$*.ttf.S
+
+$(BD)/%.wav.S: $(D)/%.wav
+	scripts/mkSData `python2 -c 'print "$*".title()'`Wav $(D)/$*.wav \
+	 	> $(BD)/$*.wav.S
 
 loc:
-	find ./ -name '*.go' -and -not -wholename './tests*' -and -not -wholename './bindata*' -print | sort | xargs wc -l
+	find ./ -name '*.go' \
+		-and -not -wholename './tests*' \
+		-and -not -wholename './bindata*' -print \
+		| sort | xargs wc -l
 
 tags:
 	find ./ \( -name '*.go' \

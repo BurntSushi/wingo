@@ -1,0 +1,21 @@
+#!/usr/bin/env python2.7
+
+import sys
+
+if len(sys.argv) != 3:
+    print >> sys.stderr, 'Usage: mkSData var-name data-file'
+    sys.exit(1)
+
+assembly = '''
+.globl bindata.%s
+bindata.%s:
+    .long data
+    .int data_end - data
+    .int data_end - data
+data:
+.incbin "%s"
+data_end:
+''' % (sys.argv[1], sys.argv[1], sys.argv[2])
+
+print assembly.strip()
+

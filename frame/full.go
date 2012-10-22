@@ -416,7 +416,7 @@ type FullTheme struct {
 func DefaultFullTheme(X *xgbutil.XUtil) *FullTheme {
 	return &FullTheme{
 		Font: xgraphics.MustFont(xgraphics.ParseFont(
-			bytes.NewBuffer(bindata.DejavusansTtf()))),
+			bytes.NewBuffer(bindata.DejavusansTtf))),
 		FontSize:   15,
 		AFontColor: render.NewColor(0xffffff),
 		IFontColor: render.NewColor(0x000000),
@@ -441,9 +441,9 @@ func DefaultFullTheme(X *xgbutil.XUtil) *FullTheme {
 }
 
 func builtInButton(X *xgbutil.XUtil,
-	loadBuiltIn func() []byte) *xgraphics.Image {
+	builtInData []byte) *xgraphics.Image {
 
-	img, err := xgraphics.NewBytes(X, loadBuiltIn())
+	img, err := xgraphics.NewBytes(X, builtInData)
 	if err != nil {
 		logger.Error.Printf("Could not get built in button image because: %v",
 			err)

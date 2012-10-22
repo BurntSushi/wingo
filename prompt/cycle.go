@@ -399,7 +399,7 @@ var DefaultCycleTheme = &CycleTheme{
 	BorderColor: render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
 	Padding:     10,
 	Font: xgraphics.MustFont(xgraphics.ParseFont(
-		bytes.NewBuffer(bindata.DejavusansTtf()))),
+		bytes.NewBuffer(bindata.DejavusansTtf))),
 	FontSize:         20.0,
 	FontColor:        render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
 	IconSize:         100,

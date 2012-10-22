@@ -397,7 +397,7 @@ var DefaultSelectTheme = &SelectTheme{
 	Padding:     20,
 
 	Font: xgraphics.MustFont(xgraphics.ParseFont(
-		bytes.NewBuffer(bindata.DejavusansTtf()))),
+		bytes.NewBuffer(bindata.DejavusansTtf))),
 	FontSize:  20.0,
 	FontColor: render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
 
@@ -406,7 +406,7 @@ var DefaultSelectTheme = &SelectTheme{
 
 	GroupBgColor: render.NewImageColor(color.RGBA{0xff, 0xff, 0xff, 0xff}),
 	GroupFont: xgraphics.MustFont(xgraphics.ParseFont(
-		bytes.NewBuffer(bindata.DejavusansTtf()))),
+		bytes.NewBuffer(bindata.DejavusansTtf))),
 	GroupFontSize:  25.0,
 	GroupFontColor: render.NewImageColor(color.RGBA{0x33, 0x66, 0xff, 0xff}),
 	GroupSpacing:   15,
