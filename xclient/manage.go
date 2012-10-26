@@ -1,8 +1,6 @@
 package xclient
 
 import (
-	"time"
-
 	"github.com/BurntSushi/xgb/shape"
 	"github.com/BurntSushi/xgb/xproto"
 
@@ -349,44 +347,6 @@ func (c *Client) updateInitStates() {
 		}
 		c.updateState("add", state)
 	}
-}
-
-func (c *Client) attnStart() {
-	if c.demanding {
-		return
-	}
-
-	c.demanding = true
-	go func() {
-		for {
-			select {
-			case <-time.After(500 * time.Millisecond):
-				if c.State() == frame.Active {
-					c.frame.Inactive()
-					c.state = frame.Inactive
-				} else {
-					c.frame.Active()
-					c.state = frame.Active
-				}
-			case <-c.attnQuit:
-				return
-			}
-		}
-	}()
-
-	c.addState("_NET_WM_STATE_DEMANDS_ATTENTION")
-}
-
-func (c *Client) attnStop() {
-	if !c.demanding {
-		return
-	}
-
-	c.attnQuit <- struct{}{}
-	c.demanding = false
-	c.frame.Inactive()
-
-	c.removeState("_NET_WM_STATE_DEMANDS_ATTENTION")
 }
 
 // findPresumedWorkspace inspects a client before it is fully managed to
