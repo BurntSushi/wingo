@@ -18,6 +18,11 @@ still very alpha.)
     wingo --replace
 
 
+Help
+====
+You can find me in the #wingo IRC channel on FreeNode.
+
+
 My triple head setup
 ====================
 
