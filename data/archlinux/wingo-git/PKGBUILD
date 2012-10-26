@@ -18,8 +18,10 @@ build() {
   cd "$srcdir"
 
   msg "go getting wingo... (this may take a while)"
-  GOPATH="$srcdir" go get -u github.com/BurntSushi/wingo
-  GOPATH="$srcdir" go get -u github.com/BurntSushi/wingo/wingo-cmd
+  GOPATH="$srcdir" go get -u -v -x github.com/BurntSushi/wingo
+
+  msg "go getting wingo-cmd..."
+  GOPATH="$srcdir" go get -u -v -x github.com/BurntSushi/wingo/wingo-cmd
 
   # Install the wingo executables.
   install -Dm755 bin/wingo "$pkgdir/usr/bin/wingo"
@@ -42,4 +44,13 @@ build() {
   install -Dm644 mouse.wini "$pkgdir/etc/xdg/wingo/mouse.wini"
   install -Dm644 options.wini "$pkgdir/etc/xdg/wingo/options.wini"
   install -Dm644 theme.wini "$pkgdir/etc/xdg/wingo/theme.wini"
+
+  # Install Wingo data files to /usr/share/wingo
+  cd "$srcdir/src/github.com/BurntSushi/wingo/data"
+  install -Dm644 DejaVuSans.ttf "$pkgdir/usr/share/wingo/DejaVuSans.ttf"
+  install -Dm644 wingo.wav "$pkgdir/usr/share/wingo/wingo.wav"
+  install -Dm644 wingo.png "$pkgdir/usr/share/wingo/wingo.png"
+  install -Dm644 close.png "$pkgdir/usr/share/wingo/close.png"
+  install -Dm644 minimize.png "$pkgdir/usr/share/wingo/minimize.png"
+  install -Dm644 maximize.png "$pkgdir/usr/share/wingo/maximize.png"
 }
