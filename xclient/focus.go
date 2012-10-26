@@ -11,6 +11,7 @@ import (
 )
 
 func (c *Client) Focus() {
+	c.attnStop()
 	focus.Focus(c)
 }
 
