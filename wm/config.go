@@ -16,6 +16,9 @@ type Configuration struct {
 	TabKey, RevTabKey     string
 
 	Ffm                 bool
+	FfmFocus            bool
+	FfmRaise            bool
+	FfmStartupFocus     bool
 	Workspaces          []string
 	DefaultLayout       string
 	PopupTime           int
@@ -35,12 +38,15 @@ func newConfig() *Configuration {
 		TabKey:       "Tab",
 		RevTabKey:    "ISO_Left_Tab",
 
-		Ffm:          false,
-		Workspaces:   []string{"1", "2", "3", "4"},
-		PopupTime:    500,
-		ShowFyi:      true,
-		ShowErrors:   true,
-		AudioProgram: "aplay",
+		Ffm:             false,
+		FfmFocus:        true,
+		FfmRaise:        false,
+		FfmStartupFocus: false,
+		Workspaces:      []string{"1", "2", "3", "4"},
+		PopupTime:       500,
+		ShowFyi:         true,
+		ShowErrors:      true,
+		AudioProgram:    "aplay",
 
 		mouse: map[string][]mouseCommand{},
 		key:   map[string][]keyCommand{},
@@ -172,6 +178,12 @@ func (conf *Configuration) loadOptionsConfigSection(
 			setString(key, &conf.DefaultLayout)
 		case "focus_follows_mouse":
 			setBool(key, &conf.Ffm)
+		case "focus_follows_mouse_focus":
+			setBool(key, &conf.FfmFocus)
+		case "focus_follows_mouse_raise":
+			setBool(key, &conf.FfmRaise)
+		case "focus_follows_mouse_startup_focus":
+			setBool(key, &conf.FfmStartupFocus)
 		case "popup_time":
 			setInt(key, &conf.PopupTime)
 		case "show_popup_fyi":

@@ -75,7 +75,9 @@ func New(id xproto.Window) *Client {
 	if !c.iconified {
 		c.Map()
 		if !wm.Startup && c.PrimaryType() == TypeNormal {
-			c.Focus()
+			if !wm.Config.Ffm || wm.Config.FfmStartupFocus {
+				c.Focus()
+			}
 		}
 	}
 

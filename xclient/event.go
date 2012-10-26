@@ -195,8 +195,12 @@ func ignoreFocus(modeByte, detailByte byte) bool {
 
 func (c *Client) cbEnterNotify() xevent.EnterNotifyFun {
 	f := func(X *xgbutil.XUtil, ev xevent.EnterNotifyEvent) {
-		c.Focus()
-		c.Raise()
+		if wm.Config.FfmFocus {
+			c.Focus()
+		}
+		if wm.Config.FfmRaise {
+			c.Raise()
+		}
 	}
 	return xevent.EnterNotifyFun(f)
 }

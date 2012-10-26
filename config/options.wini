@@ -18,6 +18,19 @@ default_layout := Floating
 # should work. If I've messed up, file a bug report.
 focus_follows_mouse := no
 
+# If "focus_follows_mouse" is enabled, then this setting will focus a window
+# whenever the pointer moves into the window.
+focus_follows_mouse_focus := yes
+
+# If "focus_follows_mouse" is enabled, then this setting will raise a window
+# whenever the pointer moves into the window.
+focus_follows_mouse_raise := no
+
+# If "focus_follows_mouse" is enabled, then this setting will focus a new
+# window when it has been created. (Otherwise, a new window will be raised
+# but not focused.)
+focus_follows_mouse_startup_focus := no
+
 # Whether error messages should be shown or not. Error messages typically
 # show up when you've tried to do something illegal with one of Wingo's
 # commands.
