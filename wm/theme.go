@@ -6,9 +6,9 @@ import (
 
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
-	"github.com/BurntSushi/wingo/bindata"
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/prompt"
 	"github.com/BurntSushi/wingo/render"
 	"github.com/BurntSushi/wingo/wini"
@@ -192,18 +192,18 @@ func newTheme() *ThemeConfig {
 			aBorderColor: render.NewColor(0x3366ff),
 			iBorderColor: render.NewColor(0xdfdcdf),
 
-			aCloseButton: builtInButton(bindata.ClosePng),
-			iCloseButton: builtInButton(bindata.ClosePng),
+			aCloseButton: builtInButton(misc.ClosePng),
+			iCloseButton: builtInButton(misc.ClosePng),
 			aCloseColor:  render.NewColor(0xffffff),
 			iCloseColor:  render.NewColor(0x000000),
 
-			aMaximizeButton: builtInButton(bindata.MaximizePng),
-			iMaximizeButton: builtInButton(bindata.MaximizePng),
+			aMaximizeButton: builtInButton(misc.MaximizePng),
+			iMaximizeButton: builtInButton(misc.MaximizePng),
 			aMaximizeColor:  render.NewColor(0xffffff),
 			iMaximizeColor:  render.NewColor(0x000000),
 
-			aMinimizeButton: builtInButton(bindata.MinimizePng),
-			iMinimizeButton: builtInButton(bindata.MinimizePng),
+			aMinimizeButton: builtInButton(misc.MinimizePng),
+			iMinimizeButton: builtInButton(misc.MinimizePng),
 			aMinimizeColor:  render.NewColor(0xffffff),
 			iMinimizeColor:  render.NewColor(0x000000),
 		},
@@ -243,7 +243,7 @@ func newTheme() *ThemeConfig {
 func loadTheme() (*ThemeConfig, error) {
 	theme := newTheme()
 
-	tdata, err := wini.Parse(ConfigFile("theme.wini"))
+	tdata, err := wini.Parse(misc.ConfigFile("theme.wini"))
 	if err != nil {
 		return nil, err
 	}
@@ -433,7 +433,7 @@ func loadPromptOption(theme *ThemeConfig, k wini.Key) {
 }
 
 func builtInIcon() *xgraphics.Image {
-	img, err := xgraphics.NewBytes(X, bindata.WingoPng)
+	img, err := xgraphics.NewBytes(X, misc.WingoPng)
 	if err != nil {
 		logger.Warning.Printf("Could not get built in icon image because: %v",
 			err)
@@ -454,7 +454,7 @@ func builtInButton(builtInData []byte) *xgraphics.Image {
 }
 
 func builtInFont() *truetype.Font {
-	font, err := freetype.ParseFont(bindata.DejavusansTtf)
+	font, err := freetype.ParseFont(misc.DejavusansTtf)
 	if err != nil {
 		logger.Warning.Printf("Could not parse default font because: %v", err)
 		return nil

@@ -21,7 +21,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xgraphics"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
-	"github.com/BurntSushi/wingo/bindata"
+	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/render"
 	"github.com/BurntSushi/wingo/text"
 )
@@ -29,7 +29,7 @@ import (
 var (
 	// A near guaranteed font. If parsing fails, MustFont wll panic.
 	font = xgraphics.MustFont(xgraphics.ParseFont(
-		bytes.NewBuffer(bindata.FreemonoTtf())))
+		bytes.NewBuffer(misc.DataFile("DejaVuSans.ttf"))))
 	fontSize = 30.0
 	fontColor = render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff})
 	bgColor = render.NewImageColor(color.RGBA{0xff, 0xff, 0xff, 0xff})

@@ -25,6 +25,7 @@ import (
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/hook"
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/stack"
 	"github.com/BurntSushi/wingo/wm"
 	"github.com/BurntSushi/wingo/xclient"
@@ -36,6 +37,7 @@ var (
 	flagLogColors      = false
 	flagReplace        = false
 	flagConfigDir      = ""
+	flagDataDir        = ""
 	flagWriteConfig    = false
 	flagCpuProfile     = ""
 	flagWingoRestarted = false
@@ -56,8 +58,13 @@ func init() {
 	flag.StringVar(&flagConfigDir, "config-dir", flagConfigDir,
 		"Override the location of the configuration files. When this\n"+
 			"is not set, the following paths (roughly) will be checked\n"+
-			"in order: $XDG_CONFIG_DIR/.config/wingo, /etc/xdg/wingo,\n"+
+			"in order: $XDG_CONFIG_DIR/wingo, /etc/xdg/wingo,\n"+
 			"$GOPATH/src/github.com/BurntSushi/wingo/config")
+	flag.StringVar(&flagDataDir, "data-dir", flagDataDir,
+		"Override the location of the data files (images/fonts). When this\n"+
+			"is not set, the following paths (roughly) will be checked\n"+
+			"in order: $XDG_DATA_HOME/wingo, /usr/local/share, /usr/share,\n"+
+			"$GOPATH/src/github.com/BurntSushi/wingo/data")
 	flag.BoolVar(&flagWriteConfig, "write-config", flagWriteConfig,
 		"Writes a fresh set of configuration files to $XDG_CONFIG_HOME/wingo\n"+
 			"if XDG_CONFIG_HOME is set. Otherwise, configuration files\n"+
@@ -107,13 +114,21 @@ func main() {
 			"Could not establish window manager ownership: %s", err)
 	}
 
+	if len(flagConfigDir) > 0 {
+		misc.ConfigPaths.Override = flagConfigDir
+	}
+	if len(flagDataDir) > 0 {
+		misc.DataPaths.Override = flagDataDir
+	}
+	misc.ReadData()
+
 	keybind.Initialize(X)
 	mousebind.Initialize(X)
 	focus.Initialize(X)
 	stack.Initialize(X)
 	cursors.Initialize(X)
-	wm.Initialize(X, commands.Env, newHacks(), flagConfigDir)
-	hook.Initialize(commands.Env, wm.ConfigFile("hooks.wini"))
+	wm.Initialize(X, commands.Env, newHacks())
+	hook.Initialize(commands.Env, misc.ConfigFile("hooks.wini"))
 
 	// Listen to Root. It is all-important.
 	err = xwindow.New(X, X.RootWin()).Listen(

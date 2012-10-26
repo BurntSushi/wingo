@@ -15,9 +15,9 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xrect"
 
-	"github.com/BurntSushi/wingo/bindata"
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/wm"
 	"github.com/BurntSushi/wingo/workspace"
 	"github.com/BurntSushi/wingo/xclient"
@@ -192,7 +192,7 @@ func (cmd Dale) Run() gribble.Value {
 
 		c := exec.Command(program)
 		c.Stderr = &stderr
-		c.Stdin = bytes.NewReader(bindata.WingoWav)
+		c.Stdin = bytes.NewReader(misc.WingoWav)
 		if err := c.Run(); err != nil {
 			if stderr.Len() > 0 {
 				logger.Warning.Printf("%s failed: %s", program, stderr.String())

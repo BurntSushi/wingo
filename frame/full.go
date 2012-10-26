@@ -11,7 +11,6 @@ import (
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
-	"github.com/BurntSushi/wingo/bindata"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/render"
@@ -416,7 +415,7 @@ type FullTheme struct {
 func DefaultFullTheme(X *xgbutil.XUtil) *FullTheme {
 	return &FullTheme{
 		Font: xgraphics.MustFont(xgraphics.ParseFont(
-			bytes.NewBuffer(bindata.DejavusansTtf))),
+			bytes.NewBuffer(misc.DejavusansTtf))),
 		FontSize:   15,
 		AFontColor: render.NewColor(0xffffff),
 		IFontColor: render.NewColor(0x000000),
@@ -425,14 +424,14 @@ func DefaultFullTheme(X *xgbutil.XUtil) *FullTheme {
 		ATitleColor: render.NewColor(0x3366ff),
 		ITitleColor: render.NewColor(0xdfdcdf),
 
-		ACloseButton: builtInButton(X, bindata.ClosePng),
-		ICloseButton: builtInButton(X, bindata.ClosePng),
+		ACloseButton: builtInButton(X, misc.ClosePng),
+		ICloseButton: builtInButton(X, misc.ClosePng),
 
-		AMaximizeButton: builtInButton(X, bindata.MaximizePng),
-		IMaximizeButton: builtInButton(X, bindata.MaximizePng),
+		AMaximizeButton: builtInButton(X, misc.MaximizePng),
+		IMaximizeButton: builtInButton(X, misc.MaximizePng),
 
-		AMinimizeButton: builtInButton(X, bindata.MinimizePng),
-		IMinimizeButton: builtInButton(X, bindata.MinimizePng),
+		AMinimizeButton: builtInButton(X, misc.MinimizePng),
+		IMinimizeButton: builtInButton(X, misc.MinimizePng),
 
 		BorderSize:   10,
 		ABorderColor: render.NewColor(0x3366ff),

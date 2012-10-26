@@ -27,7 +27,6 @@ var (
 	Heads      *heads.Heads
 	Prompts    AllPrompts
 	Config     *Configuration
-	ConfigDir  string
 	Theme      *ThemeConfig
 	StickyWrk  *workspace.Sticky
 	gribbleEnv *gribble.Environment
@@ -37,13 +36,12 @@ var (
 )
 
 func Initialize(x *xgbutil.XUtil,
-	cmdEnv *gribble.Environment, hacks CommandHacks, configDir string) {
+	cmdEnv *gribble.Environment, hacks CommandHacks) {
 
 	var err error
 
 	X = x
 	Startup = true
-	ConfigDir = configDir
 
 	gribbleEnv = cmdEnv
 	cmdHacks = hacks

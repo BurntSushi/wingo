@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/wm"
+	"github.com/BurntSushi/wingo/misc"
 )
 
 func writeConfigFiles() {
@@ -45,7 +45,7 @@ func writeConfigFiles() {
 	}
 	for _, f := range files {
 		dst := path.Join(configDir, f)
-		if err := copyFile(dst, wm.ConfigFile(f)); err != nil {
+		if err := copyFile(dst, misc.ConfigFile(f)); err != nil {
 			logger.Error.Fatalf("Could not copy file '%s' to '%s': %s",
 				f, dst, err)
 		}

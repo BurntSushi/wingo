@@ -6,6 +6,7 @@ import (
 	"github.com/BurntSushi/xgbutil/ewmh"
 
 	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/wini"
 )
 
@@ -58,9 +59,18 @@ func loadConfig() (*Configuration, error) {
 		loadSection func(*Configuration, *wini.Data, string)
 	}
 	cfiles := []confFile{
-		{ConfigFile("mouse.wini"), (*Configuration).loadMouseConfigSection},
-		{ConfigFile("key.wini"), (*Configuration).loadKeyConfigSection},
-		{ConfigFile("options.wini"), (*Configuration).loadOptionsConfigSection},
+		{
+			misc.ConfigFile("mouse.wini"),
+			(*Configuration).loadMouseConfigSection,
+		},
+		{
+			misc.ConfigFile("key.wini"),
+			(*Configuration).loadKeyConfigSection,
+		},
+		{
+			misc.ConfigFile("options.wini"),
+			(*Configuration).loadOptionsConfigSection,
+		},
 		// FYI hooks.wini is loaded in the hook package.
 	}
 	for _, cfile := range cfiles {

@@ -15,7 +15,6 @@ import (
 	"github.com/BurntSushi/xgbutil/xrect"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
-	"github.com/BurntSushi/wingo/bindata"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/render"
@@ -399,7 +398,7 @@ var DefaultCycleTheme = &CycleTheme{
 	BorderColor: render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
 	Padding:     10,
 	Font: xgraphics.MustFont(xgraphics.ParseFont(
-		bytes.NewBuffer(bindata.DejavusansTtf))),
+		bytes.NewBuffer(misc.DataFile("DejaVuSans.ttf")))),
 	FontSize:         20.0,
 	FontColor:        render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
 	IconSize:         100,
