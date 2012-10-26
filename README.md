@@ -240,6 +240,7 @@ to the authors (well, the ones that aren't me anyway).
 * gribble             http://github.com/BurntSushi/gribble
 * xgb                 http://github.com/BurntSushi/xgb
 * xgbutil             http://github.com/BurntSushi/xgbutil
+* xdg                 http://github.com/BurntSushi/xdg
 
 
 Inspiration
