@@ -152,6 +152,30 @@ func (c *Client) maybeInitPlace(presumedWorkspace workspace.Workspacer) {
 				frame:     c.frame,
 				maximized: c.maximized,
 			}
+		} else if wm.Startup {
+			// This is a bit tricky. If the window manager is starting up and
+			// has to manage existing clients, then we need to find which
+			// head the client is on and save its state. This is so future
+			// workspace switches will be able to place the client
+			// appropriately.
+			// (This is most common on a Wingo restart.)
+			// We refer to detected workspace as "fake" because the client
+			// isn't on a visible workspace (see above), and therefore the
+			// visible workspace returned by FindMostOverlap *cannot* contain
+			// this client. Therefore, we're only using the fake workspace
+			// to get the geometry.
+			// (This would make more sense if FindMostOverlap returned a head
+			// geometry, but it turns out that a workspace geometry is more
+			// useful.)
+			cgeom := c.frame.Geom()
+			if fakeWrk := wm.Heads.FindMostOverlap(cgeom); fakeWrk != nil {
+				c.states["last-floating"] = clientState{
+					geom:      xrect.New(xrect.Pieces(c.frame.Geom())),
+					headGeom:  xrect.New(xrect.Pieces(fakeWrk.HeadGeom())),
+					frame:     c.frame,
+					maximized: c.maximized,
+				}
+			}
 		}
 	}()
 
