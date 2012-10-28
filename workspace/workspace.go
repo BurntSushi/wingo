@@ -371,7 +371,6 @@ func (wrk *Workspace) SetLayout(name string) {
 	default:
 		panic(fmt.Sprintf("Unknown layout state '%d'.", state))
 	}
-	panic("unreachable")
 }
 
 func (wrk *Workspace) findLayout(name string) (state int, index int) {
