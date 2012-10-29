@@ -160,8 +160,8 @@ func SetWorkspace(wrk *workspace.Workspace, greedy bool) {
 		FYI("%s", wrk)
 	}
 
-	ewmhCurrentDesktop()
 	ewmhVisibleDesktops()
+	ewmhCurrentDesktop()
 	Heads.EwmhWorkarea()
 }
 
