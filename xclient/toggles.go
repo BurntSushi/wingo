@@ -156,12 +156,12 @@ func (c *Client) Fullscreened() {
 		wrk.CheckFloatingStatus(c)
 	}
 
+	c.addState("_NET_WM_STATE_FULLSCREEN")
+
 	// Resize outside of the constraints of a layout.
 	g := c.Workspace().HeadGeom()
 	c.FrameNada()
 	c.MoveResize(g.X(), g.Y(), g.Width(), g.Height())
-
-	c.addState("_NET_WM_STATE_FULLSCREEN")
 
 	c.layer = stack.LayerFullscreen
 	c.Raise()

@@ -94,10 +94,14 @@ func (c *Client) cbUnmapNotify() xevent.UnmapNotifyFun {
 
 func (c *Client) cbConfigureRequest() xevent.ConfigureRequestFun {
 	f := func(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
-		if c.frame.Moving() || c.frame.Resizing() || c.maximized {
+		if c.frame.Moving() ||
+			c.frame.Resizing() ||
+			c.maximized ||
+			c.fullscreen {
+
 			logger.Lots.Printf("Denying ConfigureRequest from client because " +
 				"the client is in the processing of moving/resizing, or is " +
-				"maximized.")
+				"maximized/fullscreen.")
 
 			// As per ICCCM 4.1.5, a window that has not been moved or resized
 			// must receive a synthetic ConfigureNotify event.
