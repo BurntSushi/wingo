@@ -141,6 +141,20 @@ func (cmd Input) Run() gribble.Value {
 	return <-inputted
 }
 
+type Message struct {
+	Text string `param:"1"`
+	Help string `
+Shows a centered prompt window with the text specified by Text. The message
+will not disappear until it loses focus or when the confirm or cancel key
+is pressed.
+`
+}
+
+func (cmd Message) Run() gribble.Value {
+	wm.PopupError("%s", cmd.Text)
+	return nil
+}
+
 type SelectClient struct {
 	TabCompletion       string `param:"1"`
 	OnlyActiveWorkspace string `param:"2"`
