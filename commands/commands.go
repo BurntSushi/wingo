@@ -88,6 +88,7 @@ var Env = gribble.New([]gribble.Command{
 	&CycleClientNext{},
 	&CycleClientPrev{},
 	&Input{},
+	&Message{},
 	&SelectClient{},
 	&SelectWorkspace{},
 
@@ -758,7 +759,7 @@ Sets the opacity of the window specified by Client to the opacity level
 specified by Opacity.
 
 This command won't have any effect unless you're running a compositing manager
-like xcompmgr or cairo-compmgr.
+like compton or cairo-compmgr.
 
 Client may be the window id or a substring that matches a window name.
 

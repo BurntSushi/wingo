@@ -210,7 +210,7 @@ them.
 -  _NET_WM_PING                 *
 -  _NET_WM_SYNC_REQUEST         This trades drawing glitches for window
                                 jitteryness. I'll stick with my drawing 
-                                glitches. (xcompmgr seems to make things a
+                                glitches. (compton seems to make things a
                                 little smoother.)
 -  _NET_WM_FULLSCREEN_MONITORS
 -  _NET_WM_FULL_PLACEMENT
