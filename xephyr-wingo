@@ -1,20 +1,9 @@
 #!/bin/sh
 
-# export PWD="/home/andrew/data/projects/wingo" 
-
-# Build first. if we fail, stop everything.
-# cd $PWD 
-
-if [ "$1" != "--no-compile" ]; then
-  go build
-  if [ ! $? = 0 ]; then
-    exit
-  fi
+go build
+if [ ! $? = 0 ]; then
+  exit
 fi
-
-# Before launching Xephyr,
-# we have to create a temporary xauth file to get XGB to connect.
-# echo "add :10 . $(mcookie)" | xauth -f /tmp/xeph.auth 
 
 Xephyr :11 -ac -screen 1600x900 \
        -br -once -reset -terminate -zap &
@@ -23,16 +12,14 @@ xemu=$!
 sleep 0.5
 export DISPLAY=:11
 
-DISPLAY=:11 thunar &
+thunar &
 
 if [ -n "$*" ]; then
-  DISPLAY=:11 ./wingo $* &
+  ./wingo $* &
 else
-  DISPLAY=:11 ./wingo --log-colors --log-level 3 -p 1 --config-dir config &
+  ./wingo --log-colors --log-level 3 -p 1 --config-dir config &
 fi
 
-# DISPLAY=:11 openbox & 
-# go run $PWD/wingo.go & 
 wingo=$!
 
 sleep 0.5
@@ -44,6 +31,4 @@ DISPLAY=:0 xdotool key ctrl+shift
 
 wait $wingo
 kill $xemu
-
-# sleep 1 ; DISPLAY=:0 xdotool key Return 
 
