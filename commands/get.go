@@ -157,7 +157,28 @@ Returns the name of the current workspace.
 }
 
 func (cmd GetWorkspace) Run() gribble.Value {
-	return wm.Workspace().Name
+	return syncRun(func() gribble.Value {
+		return wm.Workspace().Name
+	})
+}
+
+type GetWorkspaceId struct {
+	Workspace   gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns the id (the index) of the workspace specified by Workspace.
+
+Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+`
+}
+
+func (cmd GetWorkspaceId) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		ind := -1
+		withWorkspace(cmd.Workspace, func(wrk *workspace.Workspace) {
+			ind = wm.Heads.GlobalIndex(wrk)
+		})
+		return ind
+	})
 }
 
 type GetWorkspaceList struct {

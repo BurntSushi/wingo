@@ -99,6 +99,7 @@ var Env = gribble.New([]gribble.Command{
 	&GetClientWorkspace{},
 	&GetLayout{},
 	&GetWorkspace{},
+	&GetWorkspaceId{},
 	&GetWorkspaceList{},
 	&GetWorkspaceNext{},
 	&GetWorkspacePrefix{},
