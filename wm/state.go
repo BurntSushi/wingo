@@ -10,9 +10,9 @@ import (
 
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/ewmh"
+	"github.com/BurntSushi/xgbutil/mousebind"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xwindow"
-	"github.com/BurntSushi/xgbutil/mousebind"
 
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/heads"
@@ -155,7 +155,9 @@ func Workspace() *workspace.Workspace {
 }
 
 func SetWorkspace(wrk *workspace.Workspace, greedy bool) {
-	mousebind.GrabPointer(X,Root.Id,Root.Id,0)
+	mousebind.GrabPointer(X, Root.Id, Root.Id, 0)
+	defer mousebind.UngrabPointer(X)
+
 	old := Workspace()
 	wrk.Activate(greedy)
 	if old != Workspace() {
@@ -165,7 +167,6 @@ func SetWorkspace(wrk *workspace.Workspace, greedy bool) {
 	ewmhVisibleDesktops()
 	ewmhCurrentDesktop()
 	Heads.EwmhWorkarea()
-	mousebind.UngrabPointer(X)
 }
 
 func AddWorkspace(name string) error {
