@@ -68,29 +68,29 @@ func (hds *Heads) Initialize(clients Clients) {
 }
 
 func (hds *Heads) Reload(clients Clients) {
-	hds.geom = query(hds.X)
+	newGeom := query(hds.X)
 
 	// Check if the number of workspaces is less than the number of heads.
-	if len(hds.Workspaces.Wrks) < len(hds.geom) {
+	if len(hds.Workspaces.Wrks) < len(newGeom) {
 		logger.Error.Fatalf(
 			"There must be at least %d workspaces (one for each head).",
-			len(hds.geom))
+			len(newGeom))
 	}
 
 	logger.Message.Printf("Root window geometry had changed. Mirgrating "+
-		"from %d heads to %d heads.", len(hds.visibles), len(hds.geom))
+		"from %d heads to %d heads.", len(hds.visibles), len(newGeom))
 
 	// Here comes the tricky part. We may have more, less or the same number
 	// of heads. But we'd like there to be as much of an overlap as possible
 	// between the heads that were visible before and the heads that will
 	// be visible. If we have the same number of heads as before, then we
 	// don't much care about this.
-	if len(hds.visibles) < len(hds.geom) {
+	if len(hds.visibles) < len(newGeom) {
 		// We have more heads than we had before. So let's just expand our
 		// visibles with some new workspaces. Remember, we're guaranteed to
 		// have at least as many workspaces as heads.
 		// We also leave the currently active workspace alone.
-		for i := len(hds.visibles); i < len(hds.geom); i++ {
+		for i := len(hds.visibles); i < len(newGeom); i++ {
 			// Find an available (i.e., hidden) workspace.
 			for _, wrk := range hds.Workspaces.Wrks {
 				if hds.visibleIndex(wrk) == -1 {
@@ -99,14 +99,15 @@ func (hds *Heads) Reload(clients Clients) {
 				}
 			}
 		}
-	} else if len(hds.visibles) > len(hds.geom) {
+		hds.geom = newGeom
+	} else if len(hds.visibles) > len(newGeom) {
 		// We now have fewer heads than we had before, so we'll reconstruct
 		// our list of visibles, with care to keep the same ordering and to
 		// keep the currently workspace still visible. (I believe this behavior
 		// to be the least surprising to the user.)
 		oldActive := hds.visibles[hds.active]
 		oldvis := hds.visibles
-		newvis := make([]*workspace.Workspace, len(hds.geom))
+		newvis := make([]*workspace.Workspace, len(newGeom))
 		newActive := -1
 		newi := 0
 		for oldi := 0; oldi < len(oldvis) && newi < len(newvis); oldi++ {
@@ -132,6 +133,7 @@ func (hds *Heads) Reload(clients Clients) {
 			wrk.Hide()
 		}
 		hds.visibles = newvis
+		hds.geom = newGeom
 		hds.ActivateWorkspace(hds.visibles[newActive])
 
 		if oldActive != hds.visibles[hds.active] {
