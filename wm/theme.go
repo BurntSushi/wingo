@@ -28,6 +28,7 @@ type ThemeFull struct {
 	aFontColor, iFontColor render.Color
 
 	titleSize                int
+	titleTopMargin           int
 	aTitleColor, iTitleColor render.Color
 
 	borderSize                 int
@@ -50,6 +51,7 @@ func (tf ThemeFull) FrameTheme() *frame.FullTheme {
 		AFontColor:      tf.aFontColor,
 		IFontColor:      tf.iFontColor,
 		TitleSize:       tf.titleSize,
+		TitleTopMargin:  tf.titleTopMargin,
 		ATitleColor:     tf.aTitleColor,
 		ITitleColor:     tf.iTitleColor,
 		BorderSize:      tf.borderSize,
@@ -184,9 +186,10 @@ func newTheme() *ThemeConfig {
 			aFontColor: render.NewColor(0xffffff),
 			iFontColor: render.NewColor(0x000000),
 
-			titleSize:   25,
-			aTitleColor: render.NewColor(0x3366ff),
-			iTitleColor: render.NewColor(0xdfdcdf),
+			titleSize:      25,
+			titleTopMargin: 0,
+			aTitleColor:    render.NewColor(0x3366ff),
+			iTitleColor:    render.NewColor(0xdfdcdf),
 
 			borderSize:   10,
 			aBorderColor: render.NewColor(0x3366ff),
@@ -325,6 +328,8 @@ func loadFullOption(theme *ThemeConfig, k wini.Key) {
 		setNoGradient(k, &theme.Full.iFontColor)
 	case "title_size":
 		setInt(k, &theme.Full.titleSize)
+	case "title_top_margin":
+		setInt(k, &theme.Full.titleTopMargin)
 	case "a_title_color":
 		setGradient(k, &theme.Full.aTitleColor)
 	case "i_title_color":

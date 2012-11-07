@@ -402,6 +402,7 @@ type FullTheme struct {
 	AFontColor, IFontColor render.Color
 
 	TitleSize                int
+	TitleTopMargin           int
 	ATitleColor, ITitleColor render.Color
 
 	BorderSize                 int
