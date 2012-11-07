@@ -251,7 +251,7 @@ var DefaultInputTheme = &InputTheme{
 		bytes.NewBuffer(misc.DataFile("DejaVuSans.ttf")))),
 	FontSize:   20.0,
 	FontColor:  render.NewImageColor(color.RGBA{0x0, 0x0, 0x0, 0xff}),
-	InputWidth: 400,
+	InputWidth: 500,
 }
 
 type InputConfig struct {

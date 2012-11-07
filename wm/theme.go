@@ -159,7 +159,7 @@ func (tp ThemePrompt) InputTheme() *prompt.InputTheme {
 		Font:        tp.font,
 		FontSize:    tp.fontSize,
 		FontColor:   tp.fontColor,
-		InputWidth:  400,
+		InputWidth:  500,
 	}
 }
 
