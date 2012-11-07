@@ -199,6 +199,11 @@ func ignoreFocus(modeByte, detailByte byte) bool {
 
 func (c *Client) cbEnterNotify() xevent.EnterNotifyFun {
 	f := func(X *xgbutil.XUtil, ev xevent.EnterNotifyEvent) {
+		// If the client is already active, then we don't want to do anything.
+		// This is slightly a hack to fix issue #29.
+		if c.IsActive() {
+			return
+		}
 		if c.IsMapped() {
 			if wm.Config.FfmFocus {
 				c.Focus()
