@@ -115,6 +115,7 @@ func (ci *CycleItem) show(x, y int) {
 // hide simply unmaps the parent window for this item.
 func (ci *CycleItem) hide() {
 	ci.win.Unmap()
+	ci.text.Unmap()
 }
 
 // choose selects this choice.
