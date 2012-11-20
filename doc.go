@@ -1,7 +1,7 @@
 /*
 wingo is an X window manager written in pure Go that supports floating and
-tiling window placement policies. It is mostly EWMH and ICCCM compliant. Its 
-"unique" features are per-monitor workspaces and support for both floating and 
+tiling window placement policies. It is mostly EWMH and ICCCM compliant. Its
+"unique" features are per-monitor workspaces and support for both floating and
 automatic placement policies (where neither is an after thought).
 
 There is more documentation/guides/compliance in the project directory.

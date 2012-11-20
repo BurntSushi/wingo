@@ -9,7 +9,7 @@ import (
 // Transient is a wrapper around transient that type switches an empty interface
 // to a *Client type. This is used to satisfy Client interfaces is various
 // sub-packages.
-// 
+//
 // Currently, only values that have type *Client can be transient to each other.
 func (c *Client) Transient(test stack.Client) bool {
 	if testClient, ok := test.(*Client); ok {

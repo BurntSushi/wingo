@@ -28,8 +28,8 @@ func (hds *Heads) SwitchWorkspaces(wk1, wk2 *workspace.Workspace) {
 		wk1.Hide()
 		wk2.Hide()
 		hds.visibles[v1], hds.visibles[v2] = hds.visibles[v2], hds.visibles[v1]
-		// wk1.Place() 
-		// wk2.Place() 
+		// wk1.Place()
+		// wk2.Place()
 		wk1.Show()
 		wk2.Show()
 	case v1 > -1 && v2 == -1:

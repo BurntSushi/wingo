@@ -1,6 +1,6 @@
 /*
 wingo-cmd uses Wingo's IPC mechanism to send commands and output the response
-to stdout. wingo-cmd can also be used to view documentation on all available 
+to stdout. wingo-cmd can also be used to view documentation on all available
 commands.
 
 Usage:

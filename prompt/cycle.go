@@ -132,9 +132,9 @@ func (cycle *Cycle) Id() xproto.Window {
 // is true).
 // If CancelKey is empty, then no cancel key functionality is provided.
 // If AutoChoose is false, then releasing the modifiers will have no effect.
-// 
+//
 // For thos interested in the X details:
-// The prompt cycle dialog needs to choose the selection when the 
+// The prompt cycle dialog needs to choose the selection when the
 // modifiers (i.e., "alt" in "alt-tab") are released.
 // The only way to do this (generally) is to check the raw KeyRelease event.
 // Namely, if the keycode *released* is a modifier, we have to and-out

@@ -243,7 +243,7 @@ func (c *Client) cbShapeNotify() xevent.ShapeNotifyFun {
 	f := func(X *xgbutil.XUtil, ev xevent.ShapeNotifyEvent) {
 		// Many thanks to Openbox. I'll followed their lead.
 		xoff, yoff := int16(c.frame.Left()), int16(c.frame.Top())
-		// var xoff, yoff int16 = 0, 0 
+		// var xoff, yoff int16 = 0, 0
 
 		// Update the client's shaped status.
 		c.shaped = ev.Shaped
@@ -273,19 +273,19 @@ func (c *Client) cbShapeNotify() xevent.ShapeNotifyFun {
 		// decorations, make sure it has "nada" instead of "slim".
 		// We do this on startup, but maybe the client didn't say anything
 		// about shaping then...
-		// if !c.shouldDecor() { 
-		// c.FrameNada() 
-		// } 
+		// if !c.shouldDecor() {
+		// c.FrameNada()
+		// }
 
-		// We don't even bother with shaping the frame if the client has any 
-		// kind of decoration. Unless I'm mistaken, shaping Wingo's decorations 
+		// We don't even bother with shaping the frame if the client has any
+		// kind of decoration. Unless I'm mistaken, shaping Wingo's decorations
 		// to fit client shaping really isn't going to do anything...
 		if _, ok := c.frame.(*frame.Nada); ok {
 			return
 		}
 
 		// So this is only done with Slim/Borders/Full frames. It basically
-		// negates the effects of shaping since we use one monolithic 
+		// negates the effects of shaping since we use one monolithic
 		// rectangle.
 		rect := xproto.Rectangle{
 			X:      0,

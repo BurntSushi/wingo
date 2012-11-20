@@ -82,7 +82,7 @@ func SetFocus(c Client) {
 // specified client. This is the appropriate function to call whenever you
 // want to focus any particular client.
 //
-// Focus has no effect if this is called on a client that was not added to the 
+// Focus has no effect if this is called on a client that was not added to the
 // focus stack with InitialAdd. Focus also has no effect if the client cannot
 // handle input focus (like `xclock` or `xeyes`).
 func Focus(c Client) {

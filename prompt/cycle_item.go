@@ -12,9 +12,9 @@ import (
 
 // CycleChoice is any value capable of being shown in a prompt cycle.
 type CycleChoice interface {
-	// CycleIsActive should return whether the particular choice is "active" or 
-	// not. This is called every time the cycle prompt is displayed. In the 
-	// typical "alt-tab" example, this returns false when the window is 
+	// CycleIsActive should return whether the particular choice is "active" or
+	// not. This is called every time the cycle prompt is displayed. In the
+	// typical "alt-tab" example, this returns false when the window is
 	// iconified (minimized). When this is false, the an "inactive" image is
 	// used instead. (Which is a image with transparency equal to the
 	// IconTransparency CycleTheme option.)
@@ -31,7 +31,7 @@ type CycleChoice interface {
 	// CycleText returns the text representing this choice. It can be empty.
 	CycleText() string
 
-	// CycleSelected is a hook that is called when this choice is chosen in the 
+	// CycleSelected is a hook that is called when this choice is chosen in the
 	// cycle prompt.
 	CycleSelected()
 

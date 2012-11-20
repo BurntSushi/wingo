@@ -211,26 +211,26 @@ func (hds *Heads) ApplyStruts(clients Clients) {
 // absolutely bonkers. I'm not sure if there is another sensible interpretation,
 // so just don't set it.
 func (hds *Heads) EwmhWorkarea() {
-	// areas := make([]ewmh.Workarea, len(hds.Workspaces.Wrks)) 
-	// for i, wrk := range hds.Workspaces.Wrks { 
-	// if wrk.IsVisible() { 
-	// geom := wrk.Geom() 
-	// areas[i] = ewmh.Workarea{ 
-	// X:      geom.X(), 
-	// Y:      geom.Y(), 
-	// Width:  geom.Width(), 
-	// Height: geom.Height(), 
-	// } 
-	// } else { 
-	// areas[i] = ewmh.Workarea{ 
-	// X:      0, 
-	// Y:      0, 
-	// Width:  0, 
-	// Height: 0, 
-	// } 
-	// } 
-	// } 
-	// ewmh.WorkareaSet(hds.X, areas) 
+	// areas := make([]ewmh.Workarea, len(hds.Workspaces.Wrks))
+	// for i, wrk := range hds.Workspaces.Wrks {
+	// if wrk.IsVisible() {
+	// geom := wrk.Geom()
+	// areas[i] = ewmh.Workarea{
+	// X:      geom.X(),
+	// Y:      geom.Y(),
+	// Width:  geom.Width(),
+	// Height: geom.Height(),
+	// }
+	// } else {
+	// areas[i] = ewmh.Workarea{
+	// X:      0,
+	// Y:      0,
+	// Width:  0,
+	// Height: 0,
+	// }
+	// }
+	// }
+	// ewmh.WorkareaSet(hds.X, areas)
 }
 
 // Convert takes a source and a destination rect, along with a rect

@@ -187,7 +187,7 @@ func (s *split) AddNode(n node, last bool) {
 
 	// Now push everything else over by an even amount.
 	if len(s.children) > 0 {
-		// chop := newProp / proportion(len(s.children)) 
+		// chop := newProp / proportion(len(s.children))
 		for _, child := range s.children {
 			child.SetProportion(
 				child.Proportion() - (child.Proportion() * newProp))
@@ -243,18 +243,18 @@ func (s *split) SetChildProportion(n node, newProp proportion) {
 	chops := diff / proportion(s.Size()-1)
 
 	// Normalize proportions that don't include the 'n' node.
-	// normalized := make([]proportion, 0, s.Size() - 1) 
-	// sum := proportion(0) 
-	// for _, child := range s.children { 
-	// if child != n { 
-	// sum += child.Proportion() 
-	// } 
-	// } 
-	// for _, child := range s.children { 
-	// if child != n { 
-	// normalized = append(normalized, child.Proportion() / sum) 
-	// } 
-	// } 
+	// normalized := make([]proportion, 0, s.Size() - 1)
+	// sum := proportion(0)
+	// for _, child := range s.children {
+	// if child != n {
+	// sum += child.Proportion()
+	// }
+	// }
+	// for _, child := range s.children {
+	// if child != n {
+	// normalized = append(normalized, child.Proportion() / sum)
+	// }
+	// }
 
 	for _, child := range s.children {
 		if child != n {

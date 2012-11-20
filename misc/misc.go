@@ -43,7 +43,7 @@ func Round(n float64) int {
 //
 // XXX: I tried using runtime.Stack, but I couldn't get it to work...
 func StackTrace() string {
-	// var pc uintptr 
+	// var pc uintptr
 	var fname string
 	var line int
 	var ok bool = true
