@@ -74,23 +74,28 @@ func (c *Client) refreshIcon() {
 }
 
 func (c *Client) refreshName() {
+	var newName string
+
 	defer func() {
-		c.frames.full.UpdateTitle()
-		c.prompts.updateName()
+		if newName != c.name {
+			c.name = newName
+			c.frames.full.UpdateTitle()
+			c.prompts.updateName()
+			ewmh.WmVisibleNameSet(wm.X, c.Id(), c.name)
+		}
 	}()
 
-	c.name, _ = ewmh.WmNameGet(wm.X, c.Id())
-	if len(c.name) > 0 {
+	newName, _ = ewmh.WmNameGet(wm.X, c.Id())
+	if len(newName) > 0 {
 		return
 	}
 
-	c.name, _ = icccm.WmNameGet(wm.X, c.Id())
-	if len(c.name) > 0 {
+	newName, _ = icccm.WmNameGet(wm.X, c.Id())
+	if len(newName) > 0 {
 		return
 	}
 
-	c.name = "Unnamed Window"
-	ewmh.WmVisibleNameSet(wm.X, c.Id(), c.name)
+	newName = "Unnamed Window"
 }
 
 func (c *Client) maybeApplyStruts() {
