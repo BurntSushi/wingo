@@ -95,8 +95,15 @@ Mod4-Shift-l := SetLayout (GetWorkspace) (Input "Layout name:")
 # Add and remove workspaces.
 # Note that a workspace MUST be empty before it can be removed. (Don't worry,
 # Wingo won't let you do it even if you try :P)
-Mod4-shift-a := AddWorkspace (Input "New workspace name:")
+Mod4-Shift-a := AddWorkspace (Input "New workspace name:")
 Mod4-BackSpace := RemoveWorkspace (GetWorkspace)
+
+# An alternative version of AddWorkspace that will add a new workspace given
+# some input, and then automatically switch to it. This shows an undocumented
+# feature where some commands return relevant values that can be re-used in
+# other commands. In this case, `AddWorkspace` returns the name of the
+# workspace added.
+# Mod4-Shift-a := Workspace (AddWorkspace (Input "New workspace name:")) 
 
 # Your basic Workspace commands.
 # Note that these commands become extremely awkward in a multi-head setup,
