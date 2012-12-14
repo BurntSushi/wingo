@@ -125,11 +125,9 @@ func (f *Full) newIcon() *piece {
 	return newPiece(win, nil, nil)
 }
 
-//
 // What follows is a simplified version of 'frame_borders_pieces.go'.
 // The major simplifying difference is that we don't support gradients
 // on the borders of a 'full' frame.
-//
 
 func (f *Full) borderImages(
 	width, height int) (*xgraphics.Image, *xgraphics.Image) {

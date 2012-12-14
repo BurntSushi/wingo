@@ -384,9 +384,10 @@ func (f *Full) UpdateTitle() {
 			"because: %v", f.client, err)
 	}
 
+	width, height := x2, imgA.Bounds().Max.Y
 	f.titleText.Create(
-		imgA.SubImage(image.Rect(0, 0, x2, imgA.Bounds().Max.Y)),
-		imgI.SubImage(image.Rect(0, 0, x2, imgI.Bounds().Max.Y)))
+		imgA.SubImage(image.Rect(0, 0, width, height)),
+		imgI.SubImage(image.Rect(0, 0, width, height)))
 
 	f.titleText.MROpt(fW, 0, 0, x2, 0)
 	if f.client.State() == Active {
