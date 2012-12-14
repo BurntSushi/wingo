@@ -53,6 +53,7 @@ var Env = gribble.New([]gribble.Command{
 	&MovePointerRelative{},
 	&Raise{},
 	&RemoveWorkspace{},
+	&RenameWorkspace{},
 	&Resize{},
 	&Restart{},
 	&Quit{},
@@ -806,6 +807,32 @@ func (cmd RemoveWorkspace) Run() gribble.Value {
 
 			wm.FYI("Workspace %s removed.", wrk)
 			wm.FocusFallback()
+		})
+		return nil
+	})
+}
+
+type RenameWorkspace struct {
+	Workspace gribble.Any `param:"1" types:"int,string"`
+	NewName string `param:"2"`
+	Help string `
+Renames the workspace specified by Workspace to the name in NewName.
+
+Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+NewName can only be a string.
+`
+}
+
+func (cmd RenameWorkspace) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withWorkspace(cmd.Workspace, func(wrk *workspace.Workspace) {
+			oldName := wrk.String()
+			if err := wm.RenameWorkspace(wrk, cmd.NewName); err != nil {
+				wm.PopupError("Could not rename workspace '%s': %s", wrk, err)
+				return
+			}
+
+			wm.FYI("Workspace %s renamed to %s.", oldName, cmd.NewName)
 		})
 		return nil
 	})

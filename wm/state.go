@@ -167,10 +167,10 @@ func SetWorkspace(wrk *workspace.Workspace, greedy bool) {
 
 func AddWorkspace(name string) error {
 	if len(name) == 0 {
-		return fmt.Errorf("Workspaces must have a name of length at least one.")
+		return fmt.Errorf("workspaces must have a name of length at least one.")
 	}
 	if Heads.Workspaces.Find(name) != nil {
-		return fmt.Errorf("A workspace with name '%s' already exists.", name)
+		return fmt.Errorf("a workspace with name '%s' already exists.", name)
 	}
 	wrk := Heads.NewWorkspace(name)
 	wrk.PromptSlctGroup = Prompts.Slct.AddGroup(wrk)
@@ -198,6 +198,19 @@ func RemoveWorkspace(wrk *workspace.Workspace) error {
 	ewmhNumberOfDesktops()
 	ewmhVisibleDesktops()
 	Heads.EwmhWorkarea()
+	return nil
+}
+
+func RenameWorkspace(wrk *workspace.Workspace, newName string) error {
+	if len(newName) == 0 {
+		return fmt.Errorf("workspaces must have a name of length at least one.")
+	}
+	if Heads.Workspaces.Find(newName) != nil {
+		return fmt.Errorf("a workspace with name '%s' already exists.", newName)
+	}
+	wrk.Rename(newName)
+
+	ewmhDesktopNames()
 	return nil
 }
 

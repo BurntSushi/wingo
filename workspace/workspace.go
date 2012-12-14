@@ -193,6 +193,12 @@ func (wrk *Workspace) RemoveAllAndAdd(newWk *Workspace) {
 	newWk.Place()
 }
 
+func (wrk *Workspace) Rename(newName string) {
+	wrk.Name = newName
+	wrk.PromptSlctGroup.UpdateText()
+	wrk.PromptSlctItem.UpdateText()
+}
+
 func (wrk *Workspace) setGeom(geom xrect.Rect) {
 	for _, lay := range wrk.floaters {
 		lay.SetGeom(geom)
