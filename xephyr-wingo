@@ -12,8 +12,6 @@ xemu=$!
 sleep 0.5
 export DISPLAY=:11
 
-thunar &
-
 if [ -n "$*" ]; then
   ./wingo $* &
 else
