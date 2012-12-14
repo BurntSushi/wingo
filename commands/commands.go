@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/BurntSushi/gribble"
 
