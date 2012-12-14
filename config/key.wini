@@ -67,11 +67,14 @@
 # shell commands. In practice, I strongly recommend using `xbindkeys` to
 # configure shortcuts for running programs. It's more mature and will work
 # with *any* window manager.
+#
+# Commands are run with bash like so: `bash -c "{COMMAND}"`. Double quotes can 
+# be escaped with a backslash, e.g., \".
 Mod4-t := Shell "xterm"
 Mod1-F2 := Shell "gmrun"
 
-# You could also use Wingo's Shell command to execute commands, but it
-# isn't recommended since the shell lexer is extremely stupid.
+# You could also use Wingo's Shell command to execute commands on the fly.
+# In all likelihood, you should use a real launcher like `gmrun`.
 # Mod4-r := Shell (Input "Command:") 
 
 # Some basic window manager commands. Closing/maximizing can also be done with

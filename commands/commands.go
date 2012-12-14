@@ -2,6 +2,7 @@ package commands
 
 import (
 	"bytes"
+	"fmt"
 	"os/exec"
 	"strings"
 	"time"
@@ -149,6 +150,8 @@ type AddWorkspace struct {
 	Help string `
 Adds a new workspace to Wingo with a name Name. Note that a workspace name
 must be unique with respect to other workspaces and must have non-zero length.
+
+The name of the workspace that was added is returned.
 `
 }
 
@@ -854,45 +857,6 @@ xbindkeys).
 }
 
 func (cmd Shell) Run() gribble.Value {
-	var stderr bytes.Buffer
-
-	if len(cmd.Command) == 0 {
-		return nil
-	}
-
-	splitCmdName := strings.SplitN(cmd.Command, " ", 2)
-	cmdName := splitCmdName[0]
-	args := make([]string, 0)
-	addArg := func(start, end int) {
-		args = append(args, strings.TrimSpace(splitCmdName[1][start:end]))
-	}
-
-	if len(splitCmdName) > 1 {
-		startArgPos := 0
-		inQuote := false
-		for i, char := range splitCmdName[1] {
-			// Add arguments enclosed in quotes
-			// Yes, this mixes up quotes.
-			if char == '"' || char == '\'' {
-				inQuote = !inQuote
-
-				if !inQuote {
-					addArg(startArgPos, i)
-				}
-				startArgPos = i + 1 // skip the end quote character
-			}
-
-			// Add arguments separated by spaces without quotes
-			if !inQuote && unicode.IsSpace(char) {
-				addArg(startArgPos, i)
-				startArgPos = i
-			}
-		}
-
-		// add anything that's left over
-		addArg(startArgPos, len(splitCmdName[1]))
-	}
-
 	// XXX: This is very weird.
 	// If I don't put this into its own go-routine and wait a small
 	// amount of time, commands that start new X clients fail miserably.
@@ -902,8 +866,22 @@ func (cmd Shell) Run() gribble.Value {
 	// but ungrabbing the keyboard before running this command didn't
 	// change behavior.)
 	go func() {
+		var stderr bytes.Buffer
+
+		// For some reason, Go's text/scanner doesn't unescape escaped quotes
+		// in strings. So we try to be nice and do it here.
+		cmd.Command = strings.Replace(cmd.Command, "\\\"", "\"", -1)
+
+		// BUG(burntsushi): I think there is a bug in text/scanner where if
+		// a string ends with an escaped quote, the quote is cutoff and the
+		// backslash is left intact.
+		if cmd.Command[len(cmd.Command)-1] == '\\' {
+			cmd.Command = fmt.Sprintf("%s\"", cmd.Command[0:len(cmd.Command)-1])
+		}
+
 		time.Sleep(time.Microsecond)
-		shellCmd := exec.Command(cmdName, args...)
+		logger.Message.Printf("bash -c [%s]", cmd.Command)
+		shellCmd := exec.Command("bash", "-c", cmd.Command)
 		shellCmd.Stderr = &stderr
 
 		err := shellCmd.Run()
@@ -915,7 +893,6 @@ func (cmd Shell) Run() gribble.Value {
 			}
 		}
 	}()
-
 	return nil
 }
 
