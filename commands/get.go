@@ -125,6 +125,39 @@ func (cmd GetClientWorkspace) Run() gribble.Value {
 	})
 }
 
+type GetHead struct {
+	Help string `
+Returns the index of the current head. Indexing starts at 0. Heads are ordered 
+by their physical position: left to right and then top to bottom.
+`
+}
+
+func (cmd GetHead) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		return wm.Heads.VisibleIndex(wm.Workspace())
+	})
+}
+
+type GetHeadWorkspace struct {
+	Head int `param:"1"`
+	Help string `
+Returns the name of the workspace currently visible on the monitor indexed by
+Head. Indexing starts at 0. Heads are ordered by their physical position:
+left to right and then top to bottom.
+`
+}
+
+func (cmd GetHeadWorkspace) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		name := ""
+		wm.Heads.WithVisibleWorkspace(cmd.Head,
+			func(wrk *workspace.Workspace) {
+				name = wrk.String()
+			})
+		return name
+	})
+}
+
 type GetLayout struct {
 	Workspace gribble.Any `param:"1" types:"int,string"`
 	Help string `

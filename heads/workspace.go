@@ -15,21 +15,19 @@ import (
 // This only works when "wk" is visible.
 // To activate a hidden workspace, please use SwitchWorkspaces.
 func (hds *Heads) ActivateWorkspace(wk *workspace.Workspace) {
-	wkvi := hds.visibleIndex(wk)
+	wkvi := hds.VisibleIndex(wk)
 	if wkvi > -1 {
 		hds.active = wkvi
 	}
 }
 
 func (hds *Heads) SwitchWorkspaces(wk1, wk2 *workspace.Workspace) {
-	v1, v2 := hds.visibleIndex(wk1), hds.visibleIndex(wk2)
+	v1, v2 := hds.VisibleIndex(wk1), hds.VisibleIndex(wk2)
 	switch {
 	case v1 > -1 && v2 > -1:
 		wk1.Hide()
 		wk2.Hide()
 		hds.visibles[v1], hds.visibles[v2] = hds.visibles[v2], hds.visibles[v1]
-		// wk1.Place()
-		// wk2.Place()
 		wk1.Show()
 		wk2.Show()
 	case v1 > -1 && v2 == -1:
@@ -125,7 +123,7 @@ func (hds *Heads) IsActive(wrk *workspace.Workspace) bool {
 }
 
 func (hds *Heads) Geom(wrk *workspace.Workspace) xrect.Rect {
-	vi := hds.visibleIndex(wrk)
+	vi := hds.VisibleIndex(wrk)
 	if vi >= 0 {
 		return hds.workarea[vi]
 	}
@@ -133,7 +131,7 @@ func (hds *Heads) Geom(wrk *workspace.Workspace) xrect.Rect {
 }
 
 func (hds *Heads) HeadGeom(wrk *workspace.Workspace) xrect.Rect {
-	vi := hds.visibleIndex(wrk)
+	vi := hds.VisibleIndex(wrk)
 	if vi >= 0 {
 		return hds.geom[vi]
 	}
@@ -157,7 +155,7 @@ func (hds *Heads) PrevWorkspace() *workspace.Workspace {
 	panic("bug")
 }
 
-func (hds *Heads) visibleIndex(wk *workspace.Workspace) int {
+func (hds *Heads) VisibleIndex(wk *workspace.Workspace) int {
 	for i, vwk := range hds.visibles {
 		if vwk == wk {
 			return i

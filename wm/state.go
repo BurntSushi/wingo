@@ -165,6 +165,39 @@ func SetWorkspace(wrk *workspace.Workspace, greedy bool) {
 	Heads.EwmhWorkarea()
 }
 
+func WorkspaceToHead(headIndex int, wrk *workspace.Workspace) {
+	if headIndex == Heads.VisibleIndex(wrk) {
+		return
+	}
+
+	// If headIndex is the currently active head, then just activate 'wrk'
+	// greedily.
+	if headIndex == Heads.VisibleIndex(Workspace()) {
+		SetWorkspace(wrk, true)
+		return
+	}
+
+	// Now we know that we're setting the workspace of a head that isn't
+	// active. The last special case to check for is whether the workspace
+	// we're setting is the currently activate workspace. If it is, then we
+	// simply activate the workspace at headIndex greedily.
+	if wrk.IsActive() {
+		Heads.WithVisibleWorkspace(headIndex, func(w *workspace.Workspace) {
+			SetWorkspace(w, true)
+		})
+		return
+	}
+
+	// Finally, we can just swap workspaces now without worrying about the
+	// active workspace changing.
+	Heads.WithVisibleWorkspace(headIndex, func(w *workspace.Workspace) {
+		Heads.SwitchWorkspaces(wrk, w)
+	})
+	ewmhVisibleDesktops()
+	ewmhCurrentDesktop()
+	Heads.EwmhWorkarea()
+}
+
 func AddWorkspace(name string) error {
 	if len(name) == 0 {
 		return fmt.Errorf("workspaces must have a name of length at least one.")

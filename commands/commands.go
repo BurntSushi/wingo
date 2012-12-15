@@ -67,6 +67,7 @@ var Env = gribble.New([]gribble.Command{
 	&Workspace{},
 	&WorkspaceGreedy{},
 	&WorkspaceSendClient{},
+	&WorkspaceToHead{},
 	&WorkspaceWithClient{},
 	&WorkspaceGreedyWithClient{},
 
@@ -98,6 +99,8 @@ var Env = gribble.New([]gribble.Command{
 	&GetClientName{},
 	&GetClientType{},
 	&GetClientWorkspace{},
+	&GetHead{},
+	&GetHeadWorkspace{},
 	&GetLayout{},
 	&GetWorkspace{},
 	&GetWorkspaceId{},
@@ -1056,6 +1059,30 @@ func (cmd WorkspaceSendClient) Run() gribble.Value {
 			withClient(cmd.Client, func(c *xclient.Client) {
 				wrk.Add(c)
 			})
+		})
+		return nil
+	})
+}
+
+type WorkspaceToHead struct {
+	Head int `param:"1"`
+	Workspace gribble.Any `param:"2" types:"int,string"`
+	Help string `
+Sets the workspace specified by Workspace to appear on the head specified by
+the Head index.
+
+Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+
+Head indexing starts at 0. Heads are ordered by their physical position: left 
+to right and then top to bottom.
+`
+}
+
+func (cmd WorkspaceToHead) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withWorkspace(cmd.Workspace, func(wrk *workspace.Workspace) {
+			wm.WorkspaceToHead(cmd.Head, wrk)
+			wm.FocusFallback()
 		})
 		return nil
 	})

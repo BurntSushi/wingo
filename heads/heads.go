@@ -93,7 +93,7 @@ func (hds *Heads) Reload(clients Clients) {
 		for i := len(hds.visibles); i < len(newGeom); i++ {
 			// Find an available (i.e., hidden) workspace.
 			for _, wrk := range hds.Workspaces.Wrks {
-				if hds.visibleIndex(wrk) == -1 {
+				if hds.VisibleIndex(wrk) == -1 {
 					hds.visibles = append(hds.visibles, wrk)
 					break
 				}
