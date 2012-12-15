@@ -14,7 +14,11 @@ func (c *Client) DragGeom() xrect.Rect {
 	return c.dragGeom
 }
 
-func (c *Client) DragMoveBegin(rx, ry, ex, ey int) {
+func (c *Client) DragMoveBegin(rx, ry, ex, ey int) bool {
+	if c.IsMaximized() {
+		return false
+	}
+
 	f := c.frame
 	moving := f.MovingState()
 	moving.Moving = true
@@ -23,10 +27,8 @@ func (c *Client) DragMoveBegin(rx, ry, ex, ey int) {
 	// call for side-effect; makes sure parent window has a valid geometry
 	f.Parent().Geometry()
 
-	// unmax!
-	c.EnsureUnmax()
-
 	c.dragGeom = xrect.New(xrect.Pieces(f.Geom()))
+	return true
 }
 
 func (c *Client) DragMoveStep(rx, ry, ex, ey int) {
@@ -54,6 +56,9 @@ func (c *Client) DragMoveEnd(rx, ry, ex, ey int) {
 func (c *Client) DragResizeBegin(direction uint32,
 	rx, ry, ex, ey int) (bool, xproto.Cursor) {
 
+	if c.IsMaximized() {
+		return false, 0
+	}
 	f := c.frame
 
 	// call for side-effect; makes sure parent window has a valid geometry
@@ -161,8 +166,6 @@ func (c *Client) DragResizeBegin(direction uint32,
 		dir == ewmh.SizeTopRight || dir == ewmh.SizeBottomRight ||
 		dir == ewmh.SizeBottom || dir == ewmh.SizeBottomLeft
 
-	// unmax!
-	c.EnsureUnmax()
 	c.dragGeom = xrect.New(xrect.Pieces(f.Geom()))
 
 	return true, cursor

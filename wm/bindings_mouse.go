@@ -95,8 +95,7 @@ func setupMoveDrag(c Client, dragWin xproto.Window,
 
 	dStart := xgbutil.MouseDragBeginFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) (bool, xproto.Cursor) {
-			c.DragMoveBegin(rx, ry, ex, ey)
-			return true, cursors.Fleur
+			return c.DragMoveBegin(rx, ry, ex, ey), cursors.Fleur
 		})
 	dStep := xgbutil.MouseDragFun(
 		func(X *xgbutil.XUtil, rx, ry, ex, ey int) {

@@ -24,7 +24,7 @@ type Client interface {
 	CycleItem() *prompt.CycleItem
 	SelectItem() *prompt.SelectItem
 
-	DragMoveBegin(rx, ry, ex, ey int)
+	DragMoveBegin(rx, ry, ex, ey int) bool
 	DragMoveStep(rx, ry, ex, ey int)
 	DragMoveEnd(rx, ry, ex, ey int)
 
