@@ -173,9 +173,11 @@ Valid values are "yes" or "no".
 ShowIconified specifies that iconified clients will be shown. Valid values are
 "yes" or "no".
 
-TabCompletetion can be set to either "Prefix" or "Any". When it's set to
-"Prefix", the clients can be searched by a prefix matching string. When it's set
-to "Any", the clients can be searched by a substring matching string.
+TabCompletetion can be set to either "Prefix", "Any" or "Multiple". When it's
+set to "Prefix", the clients can be searched by a prefix matching string. When
+it's set to "Any", the clients can be searched by a substring matching string.
+When it's set to "Multiple", the clients can be searched by multiple space-
+separated substring matching strings.
 
 This command may be used as a sub-command to pass a particular client to
 another command.
@@ -216,9 +218,11 @@ type SelectWorkspace struct {
 	Help string `
 Shows a centered prompt window with a list of all workspaces.
 
-TabCompletetion can be set to either "Prefix" or "Any". When it's set to
-"Prefix", the workspaces can be searched by a prefix matching string. When it's 
-set to "Any", the workspaces can be searched by a substring matching string.
+TabCompletetion can be set to either "Prefix", "Any" or "Multiple". When it's
+set to "Prefix", the clients can be searched by a prefix matching string. When
+it's set to "Any", the clients can be searched by a substring matching string.
+When it's set to "Multiple", the clients can be searched by multiple space-
+separated substring matching strings.
 
 This command may be used as a sub-command to pass a particular workspace to
 another command.

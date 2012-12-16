@@ -25,6 +25,7 @@ import (
 const (
 	TabCompletePrefix = iota
 	TabCompleteAny
+	TabCompleteMultiple
 )
 
 const (
@@ -320,6 +321,19 @@ func (slct *Select) FilterItems(search string) {
 			switch slct.tabComplete {
 			case TabCompleteAny:
 				if !strings.Contains(haystack, needle) {
+					item.hide()
+					continue
+				}
+			case TabCompleteMultiple:
+				words := strings.Fields(needle)
+				match := true
+				for _, word := range words {
+					if !strings.Contains(haystack, word) {
+						match = false
+						break
+					}
+				}
+				if !match {
 					item.hide()
 					continue
 				}
