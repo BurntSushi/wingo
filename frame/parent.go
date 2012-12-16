@@ -1,6 +1,8 @@
 package frame
 
 import (
+	"fmt"
+
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
@@ -37,20 +39,34 @@ func newParent(X *xgbutil.XUtil, cid xproto.Window) (*Parent, error) {
 			"Unfortunately, we must exit.")
 	}
 
-	err = parent.CreateChecked(X.RootWin(), 0, 0, 1, 1,
+	// clientAttrs, err := xproto.GetWindowAttributes(X.Conn(), cid).Reply() 
+	// if err != nil { 
+	// return nil, fmt.Errorf("Could not get window attributes: %s", err) 
+	// } 
+
+	// visual := clientAttrs.Visual 
+	// vdepth := getVisualDepth(X, visual) 
+	visual := X.Screen().RootVisual
+	vdepth := X.Screen().RootDepth
+	logger.Debug.Printf("Visualid: %x, Depth: %d", visual, vdepth)
+	err = xproto.CreateWindowChecked(X.Conn(),
+		vdepth, parent.Id, X.RootWin(),
+		0, 0, 1, 1, 0, xproto.WindowClassInputOutput, visual,
 		xproto.CwEventMask,
-		xproto.EventMaskSubstructureRedirect|
-			xproto.EventMaskButtonPress|
-			xproto.EventMaskButtonRelease|
-			xproto.EventMaskFocusChange)
+		[]uint32{
+			xproto.EventMaskSubstructureRedirect |
+				xproto.EventMaskButtonPress |
+				xproto.EventMaskButtonRelease |
+				xproto.EventMaskFocusChange,
+		}).Check()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Could not create window: %s", err)
 	}
 
 	err = xproto.ReparentWindowChecked(X.Conn(),
 		cid, parent.Id, 0, 0).Check()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Could not reparent window: %s", err)
 	}
 
 	return &Parent{
@@ -77,4 +93,15 @@ func (par *Parent) Map() {
 func (par *Parent) Unmap() {
 	par.Window.Unmap()
 	par.isMapped = false
+}
+
+func getVisualDepth(X *xgbutil.XUtil, vid xproto.Visualid) byte {
+	for _, dinfo := range X.Screen().AllowedDepths {
+		for _, vis := range dinfo.Visuals {
+			if vis.VisualId == vid {
+				return dinfo.Depth
+			}
+		}
+	}
+	panic(fmt.Sprintf("Could not find depth for visual %d", vid))
 }
