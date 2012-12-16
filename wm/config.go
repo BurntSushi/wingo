@@ -19,6 +19,7 @@ type Configuration struct {
 	FfmFocus            bool
 	FfmRaise            bool
 	FfmStartupFocus     bool
+	FfmHead             bool
 	Workspaces          []string
 	DefaultLayout       string
 	PopupTime           int
@@ -42,6 +43,7 @@ func newConfig() *Configuration {
 		FfmFocus:        true,
 		FfmRaise:        false,
 		FfmStartupFocus: false,
+		FfmHead:         false,
 		Workspaces:      []string{"1", "2", "3", "4"},
 		PopupTime:       500,
 		ShowFyi:         true,
@@ -184,6 +186,8 @@ func (conf *Configuration) loadOptionsConfigSection(
 			setBool(key, &conf.FfmRaise)
 		case "focus_follows_mouse_startup_focus":
 			setBool(key, &conf.FfmStartupFocus)
+		case "focus_follows_mouse_head":
+			setBool(key, &conf.FfmHead)
 		case "popup_time":
 			setInt(key, &conf.PopupTime)
 		case "show_popup_fyi":

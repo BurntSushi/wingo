@@ -1,14 +1,82 @@
 package main
 
 import (
+	"github.com/BurntSushi/xgb/xproto"
+
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xprop"
+	"github.com/BurntSushi/xgbutil/xrect"
+	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/wm"
+	"github.com/BurntSushi/wingo/xclient"
 )
+
+func rootInit(X *xgbutil.XUtil) {
+	var err error
+
+	// Listen to Root. It is all-important.
+	evMasks := xproto.EventMaskPropertyChange |
+		xproto.EventMaskFocusChange |
+		xproto.EventMaskButtonPress |
+		xproto.EventMaskButtonRelease |
+		xproto.EventMaskStructureNotify |
+		xproto.EventMaskSubstructureNotify |
+		xproto.EventMaskSubstructureRedirect
+	if wm.Config.FfmHead {
+		evMasks |= xproto.EventMaskPointerMotion
+	}
+	err = xwindow.New(X, X.RootWin()).Listen(evMasks)
+	if err != nil {
+		logger.Error.Fatalf("Could not listen to Root window events: %s", err)
+	}
+
+	// Update state when the root window changes size
+	wm.RootGeomChangeFun().Connect(X, wm.Root.Id)
+
+	// Oblige map request events
+	xevent.MapRequestFun(
+		func(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
+			xclient.New(ev.Window)
+		}).Connect(X, wm.Root.Id)
+
+	// Oblige configure requests from windows we don't manage.
+	xevent.ConfigureRequestFun(
+		func(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
+			// Make sure we aren't managing this client.
+			if wm.FindManagedClient(ev.Window) != nil {
+				return
+			}
+
+			xwindow.New(X, ev.Window).Configure(int(ev.ValueMask),
+				int(ev.X), int(ev.Y), int(ev.Width), int(ev.Height),
+				ev.Sibling, ev.StackMode)
+		}).Connect(X, wm.Root.Id)
+
+	xevent.FocusInFun(
+		func(X *xgbutil.XUtil, ev xevent.FocusInEvent) {
+			if ignoreRootFocus(ev.Mode, ev.Detail) {
+				return
+			}
+			if len(wm.Workspace().Clients) == 0 {
+				return
+			}
+			wm.FocusFallback()
+		}).Connect(X, wm.Root.Id)
+
+	// Listen to Root client message events. This is how we handle all
+	// of the EWMH bullshit.
+	xevent.ClientMessageFun(handleClientMessages).Connect(X, wm.Root.Id)
+
+	// Check where the pointer is on motion events. If it's crossed a monitor
+	// boundary, switch the focus of the head.
+	if wm.Config.FfmHead {
+		xevent.MotionNotifyFun(handleMotionNotify).Connect(X, wm.Root.Id)
+	}
+}
 
 func handleClientMessages(X *xgbutil.XUtil, ev xevent.ClientMessageEvent) {
 	name, err := xprop.AtomName(X, ev.Type)
@@ -41,6 +109,22 @@ func handleClientMessages(X *xgbutil.XUtil, ev xevent.ClientMessageEvent) {
 		}
 	default:
 		logger.Warning.Printf("Unknown root client message: %s", name)
+	}
+}
+
+func handleMotionNotify(X *xgbutil.XUtil, ev xevent.MotionNotifyEvent) {
+	qp, err := xproto.QueryPointer(X.Conn(), X.RootWin()).Reply()
+	if err != nil {
+		logger.Warning.Printf("Could not query pointer: %s", err)
+		return
+	}
+
+	geom := xrect.New(int(qp.RootX), int(qp.RootY), 1, 1)
+	if wrk := wm.Heads.FindMostOverlap(geom); wrk != nil {
+		if wrk != wm.Workspace() {
+			wm.SetWorkspace(wrk, false)
+			wm.FocusFallback()
+		}
 	}
 }
 

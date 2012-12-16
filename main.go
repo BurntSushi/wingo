@@ -18,7 +18,6 @@ import (
 	"github.com/BurntSushi/xgbutil/keybind"
 	"github.com/BurntSushi/xgbutil/mousebind"
 	"github.com/BurntSushi/xgbutil/xevent"
-	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/commands"
 	"github.com/BurntSushi/wingo/cursors"
@@ -130,55 +129,8 @@ func main() {
 	wm.Initialize(X, commands.Env, newHacks())
 	hook.Initialize(commands.Env, misc.ConfigFile("hooks.wini"))
 
-	// Listen to Root. It is all-important.
-	err = xwindow.New(X, X.RootWin()).Listen(
-		xproto.EventMaskPropertyChange |
-			xproto.EventMaskFocusChange |
-			xproto.EventMaskButtonPress |
-			xproto.EventMaskButtonRelease |
-			xproto.EventMaskStructureNotify |
-			xproto.EventMaskSubstructureNotify |
-			xproto.EventMaskSubstructureRedirect)
-	if err != nil {
-		logger.Error.Fatalf("Could not listen to Root window events: %s", err)
-	}
-
-	// Update state when the root window changes size
-	wm.RootGeomChangeFun().Connect(X, wm.Root.Id)
-
-	// Oblige map request events
-	xevent.MapRequestFun(
-		func(X *xgbutil.XUtil, ev xevent.MapRequestEvent) {
-			xclient.New(ev.Window)
-		}).Connect(X, wm.Root.Id)
-
-	// Oblige configure requests from windows we don't manage.
-	xevent.ConfigureRequestFun(
-		func(X *xgbutil.XUtil, ev xevent.ConfigureRequestEvent) {
-			// Make sure we aren't managing this client.
-			if wm.FindManagedClient(ev.Window) != nil {
-				return
-			}
-
-			xwindow.New(X, ev.Window).Configure(int(ev.ValueMask),
-				int(ev.X), int(ev.Y), int(ev.Width), int(ev.Height),
-				ev.Sibling, ev.StackMode)
-		}).Connect(X, wm.Root.Id)
-
-	xevent.FocusInFun(
-		func(X *xgbutil.XUtil, ev xevent.FocusInEvent) {
-			if ignoreRootFocus(ev.Mode, ev.Detail) {
-				return
-			}
-			if len(wm.Workspace().Clients) == 0 {
-				return
-			}
-			wm.FocusFallback()
-		}).Connect(X, wm.Root.Id)
-
-	// Listen to Root client message events. This is how we handle all
-	// of the EWMH bullshit.
-	xevent.ClientMessageFun(handleClientMessages).Connect(X, wm.Root.Id)
+	// Initialize event handlers on the root window.
+	rootInit(X)
 
 	// Tell everyone what we support.
 	setSupported()

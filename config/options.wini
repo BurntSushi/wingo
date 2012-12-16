@@ -31,6 +31,17 @@ focus_follows_mouse_raise := no
 # but not focused.)
 focus_follows_mouse_startup_focus := no
 
+# If enabled, head focus will follow the mouse. That is, moving the mouse to
+# another monitor will move the focus to the workspace on that monitor.
+# Note that this does not require that "focus_follows_mouse" be enabled;
+# however this only works when the mouse is directly over the root window.
+# (So enabling this option might be weight if "focus_follows_mouse" is
+# disabled.)
+#
+# N.B. It is possible that this could have an effect on performance, since
+# most pointer motion events on the root window must be inspected.
+focus_follows_mouse_head := no
+
 # Whether error messages should be shown or not. Error messages typically
 # show up when you've tried to do something illegal with one of Wingo's
 # commands.
