@@ -3,7 +3,7 @@ package text
 import (
 	"image"
 
-	"code.google.com/p/freetype-go/freetype/truetype"
+	"code.google.com/p/jamslam-freetype-go/freetype/truetype"
 
 	"github.com/BurntSushi/xgb/xproto"
 
@@ -13,7 +13,6 @@ import (
 	"github.com/BurntSushi/xgbutil/xwindow"
 
 	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/render"
 )
 
@@ -48,8 +47,7 @@ func NewInput(X *xgbutil.XUtil, parent xproto.Window, width int, padding int,
 	font *truetype.Font, fontSize float64,
 	fontColor, bgColor render.Color) *Input {
 
-	_, height := xgraphics.TextMaxExtents(font, fontSize, "M")
-	height += misc.TextBreathe
+	_, height := xgraphics.Extents(font, fontSize, "M")
 
 	width, height = width+2*padding, height+2*padding
 

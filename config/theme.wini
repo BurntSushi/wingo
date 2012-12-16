@@ -82,7 +82,6 @@ a_font_color := 0xffffff
 i_font_color := 0x000000
 
 title_size := 27
-title_top_margin := 0
 a_title_color := 0xd66b00 0xff9123
 i_title_color := 0xffffff
 

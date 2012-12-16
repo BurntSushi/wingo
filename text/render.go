@@ -3,12 +3,11 @@ package text
 import (
 	"image"
 
-	"code.google.com/p/freetype-go/freetype/truetype"
+	"code.google.com/p/jamslam-freetype-go/freetype/truetype"
 
 	"github.com/BurntSushi/xgbutil/xgraphics"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
-	"github.com/BurntSushi/wingo/misc"
 	"github.com/BurntSushi/wingo/render"
 )
 
@@ -33,8 +32,7 @@ func DrawText(win *xwindow.Window, font *truetype.Font, size float64,
 	fontClr, bgClr render.Color, text string) error {
 
 	// Over estimate the extents.
-	ew, eh := xgraphics.TextMaxExtents(font, size, text)
-	eh += misc.TextBreathe // <-- this is the bug
+	ew, eh := xgraphics.Extents(font, size, text)
 
 	// Create an image using the over estimated extents.
 	img := xgraphics.New(win.X, image.Rect(0, 0, ew, eh))
@@ -42,20 +40,19 @@ func DrawText(win *xwindow.Window, font *truetype.Font, size float64,
 
 	// Now draw the text, grab the (x, y) position advanced by the text, and
 	// check for an error in rendering.
-	x, y, err := img.Text(0, 0, fontClr.ImageColor(), size, font, text)
+	_, _, err := img.Text(0, 0, fontClr.ImageColor(), size, font, text)
 	if err != nil {
 		return err
 	}
 
 	// Resize the window to the geometry determined by (x, y).
-	w, h := x, y+misc.TextBreathe // <-- also part of the bug
-	win.Resize(w, h)
+	win.Resize(ew, eh)
 
 	// Now draw the image to the window and destroy it.
 	img.XSurfaceSet(win.Id)
-	subimg := img.SubImage(image.Rect(0, 0, w, h))
-	subimg.XDraw()
-	subimg.XPaint(win.Id)
+	// subimg := img.SubImage(image.Rect(0, 0, ew, eh)) 
+	img.XDraw()
+	img.XPaint(win.Id)
 	img.Destroy()
 
 	return nil

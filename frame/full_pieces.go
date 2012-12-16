@@ -112,7 +112,7 @@ func (f *Full) newTitleText() *piece {
 	win := f.newPieceWindow("titletext", 0)
 	win.MROpt(fX|fY|fH,
 		f.theme.BorderSize+f.theme.TitleSize,
-		f.theme.BorderSize+f.theme.TitleTopMargin,
+		f.theme.BorderSize,
 		0, f.theme.TitleSize)
 	return newPiece(win, nil, nil)
 }

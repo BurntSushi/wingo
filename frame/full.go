@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"image"
 
-	"code.google.com/p/freetype-go/freetype/truetype"
+	"code.google.com/p/jamslam-freetype-go/freetype/truetype"
 
 	"github.com/BurntSushi/xgb/xproto"
 
@@ -360,8 +360,7 @@ func (f *Full) UpdateTitle() {
 	aFontColor := f.theme.AFontColor.ImageColor()
 	iFontColor := f.theme.IFontColor.ImageColor()
 
-	ew, eh := xgraphics.TextMaxExtents(font, fontSize, title)
-	eh += misc.TextBreathe
+	ew, eh := xgraphics.Extents(font, fontSize, title)
 
 	imgA := render.NewBorder(f.X, 0, render.NoColor, f.theme.ATitleColor,
 		ew, f.theme.TitleSize,
@@ -370,9 +369,9 @@ func (f *Full) UpdateTitle() {
 		ew, f.theme.TitleSize,
 		render.GradientVert, render.GradientRegular)
 
-	y := (f.theme.TitleSize-eh)/2 - 1
+	y := (f.theme.TitleSize - eh) / 2
 
-	x2, _, err := imgA.Text(0, y, aFontColor, fontSize, font, title)
+	_, _, err := imgA.Text(0, y, aFontColor, fontSize, font, title)
 	if err != nil {
 		logger.Warning.Printf("Could not draw window title for window %s "+
 			"because: %v", f.client, err)
@@ -384,12 +383,12 @@ func (f *Full) UpdateTitle() {
 			"because: %v", f.client, err)
 	}
 
-	width, height := x2, imgA.Bounds().Max.Y
+	width, height := ew, imgA.Bounds().Max.Y
 	f.titleText.Create(
 		imgA.SubImage(image.Rect(0, 0, width, height)),
 		imgI.SubImage(image.Rect(0, 0, width, height)))
 
-	f.titleText.MROpt(fW, 0, 0, x2, 0)
+	f.titleText.MROpt(fW, 0, 0, width, 0)
 	if f.client.State() == Active {
 		f.titleText.Active()
 	} else {
@@ -403,7 +402,6 @@ type FullTheme struct {
 	AFontColor, IFontColor render.Color
 
 	TitleSize                int
-	TitleTopMargin           int
 	ATitleColor, ITitleColor render.Color
 
 	BorderSize                 int

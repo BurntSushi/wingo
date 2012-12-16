@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"image/color"
 
-	"code.google.com/p/freetype-go/freetype/truetype"
+	"code.google.com/p/jamslam-freetype-go/freetype/truetype"
 
 	"github.com/BurntSushi/xgb/xproto"
 
@@ -97,9 +97,8 @@ func NewCycle(X *xgbutil.XUtil, theme *CycleTheme, config CycleConfig) *Cycle {
 	cycle.keyResponse().Connect(X, X.Dummy())
 
 	// Guess the maximum font height.
-	_, cycle.fontHeight = xgraphics.TextMaxExtents(
+	_, cycle.fontHeight = xgraphics.Extents(
 		cycle.theme.Font, cycle.theme.FontSize, "A")
-	cycle.fontHeight += misc.TextBreathe
 
 	return cycle
 }

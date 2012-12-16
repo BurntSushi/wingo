@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"strings"
 
-	"code.google.com/p/freetype-go/freetype/truetype"
+	"code.google.com/p/jamslam-freetype-go/freetype/truetype"
 
 	"github.com/BurntSushi/xgb/xproto"
 
@@ -25,6 +25,11 @@ import (
 const (
 	TabCompletePrefix = iota
 	TabCompleteAny
+)
+
+const (
+	itemTopSpace = 4
+	itemBotSpace = 4
 )
 
 type Select struct {
@@ -263,7 +268,7 @@ func (slct *Select) Show(workarea xrect.Rect, tabCompleteType int,
 		}
 		for _, item := range group.items {
 			maxFontWidth = misc.Max(maxFontWidth, item.regular.Geom.Width())
-			height += item.regular.Geom.Height()
+			height += item.regular.Geom.Height() + itemTopSpace + itemBotSpace
 		}
 	}
 
@@ -325,8 +330,9 @@ func (slct *Select) FilterItems(search string) {
 				}
 			}
 
+			y += itemTopSpace
 			item.show(x, y)
-			y += item.regular.Geom.Height()
+			y += item.regular.Geom.Height() + itemBotSpace
 			slct.items = append(slct.items, item)
 			shown = true
 		}
