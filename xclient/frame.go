@@ -7,9 +7,9 @@ import (
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xrect"
 
-	"github.com/BurntSushi/wingo/frame"
-	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/wm"
+	"github.com/cshapeshifter/wingo/frame"
+	"github.com/cshapeshifter/wingo/logger"
+	"github.com/cshapeshifter/wingo/wm"
 )
 
 // refreshExtents sets the _NET_FRAME_EXTENTS property whenever the frame

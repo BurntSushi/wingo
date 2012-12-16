@@ -5,8 +5,8 @@ import (
 
 	"github.com/BurntSushi/xgbutil/xwindow"
 
-	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/text"
+	"github.com/cshapeshifter/wingo/logger"
+	"github.com/cshapeshifter/wingo/text"
 )
 
 type SelectChoice interface {

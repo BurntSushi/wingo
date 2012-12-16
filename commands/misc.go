@@ -10,11 +10,11 @@ import (
 
 	"github.com/BurntSushi/xgbutil/xrect"
 
-	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/prompt"
-	"github.com/BurntSushi/wingo/workspace"
-	"github.com/BurntSushi/wingo/wm"
-	"github.com/BurntSushi/wingo/xclient"
+	"github.com/cshapeshifter/wingo/logger"
+	"github.com/cshapeshifter/wingo/prompt"
+	"github.com/cshapeshifter/wingo/workspace"
+	"github.com/cshapeshifter/wingo/wm"
+	"github.com/cshapeshifter/wingo/xclient"
 )
 
 // parsePos takes a string and parses an x or y position from it.

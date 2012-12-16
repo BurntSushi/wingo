@@ -8,7 +8,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xprop"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
-	"github.com/BurntSushi/wingo/logger"
+	"github.com/cshapeshifter/wingo/logger"
 )
 
 var (

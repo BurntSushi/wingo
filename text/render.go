@@ -8,7 +8,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xgraphics"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
-	"github.com/BurntSushi/wingo/render"
+	"github.com/cshapeshifter/wingo/render"
 )
 
 // BUG(burntsushi): I don't think freetype-go has a way to compute text extents
