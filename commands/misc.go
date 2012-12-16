@@ -91,13 +91,16 @@ func intToBool(n int) bool {
 }
 
 // stringTabComp takes a string and converts it to a tab completion constant
-// defined in the prompt package. Valid values are "Prefix" and "Any."
+// defined in the prompt package. Valid values are "Prefix", "Any" and
+// "Multiple"
 func stringTabComp(s string) int {
 	switch s {
 	case "Prefix":
 		return prompt.TabCompletePrefix
 	case "Any":
 		return prompt.TabCompleteAny
+	case "Multiple":
+		return prompt.TabCompleteMultiple
 	default:
 		logger.Warning.Printf(
 			"Tab completion mode '%s' not supported.", s)
