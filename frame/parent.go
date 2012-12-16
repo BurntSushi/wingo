@@ -48,7 +48,7 @@ func newParent(X *xgbutil.XUtil, cid xproto.Window) (*Parent, error) {
 	// vdepth := getVisualDepth(X, visual) 
 	visual := X.Screen().RootVisual
 	vdepth := X.Screen().RootDepth
-	logger.Debug.Printf("Visualid: %x, Depth: %d", visual, vdepth)
+	// logger.Debug.Printf("Visualid: %x, Depth: %d", visual, vdepth) 
 	err = xproto.CreateWindowChecked(X.Conn(),
 		vdepth, parent.Id, X.RootWin(),
 		0, 0, 1, 1, 0, xproto.WindowClassInputOutput, visual,
