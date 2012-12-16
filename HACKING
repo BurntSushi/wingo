@@ -1,0 +1,19 @@
+Some general tips/advice/guidelines on hacking Wingo.
+
+Setting up your own fork
+========================
+Aftering forking Wingo on github, the first thing you'll have to do is switch 
+all of the Wingo imports from my repository to your own. So for instance, let's 
+say your github username is 'plato', then the following sed command in the 
+Wingo project root will do the trick:
+
+  find ./ -name '*.go' -print0 | xargs -0 \
+    sed -i 's#github.com/BurntSushi/wingo#github.com/plato/wingo#g'
+
+Note here that you will only want to replace github.com/BurntSushi/wingo import 
+paths and not all github.com/BurntSushi import paths, since the xgb and xgbutil 
+packages are also owned by me. (Unless you plan on forking those too.)
+
+This command will touch the vast majority of files in the Wingo tree, so make 
+sure you commit the changes right afterwards.
+
