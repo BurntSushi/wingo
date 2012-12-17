@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BurntSushi/wingo/commands"
+	"github.com/cshapeshifter/wingo/commands"
 )
 
 var (

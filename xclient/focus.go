@@ -3,11 +3,11 @@ package xclient
 import (
 	"github.com/BurntSushi/xgbutil/ewmh"
 
-	"github.com/BurntSushi/wingo/focus"
-	"github.com/BurntSushi/wingo/frame"
-	"github.com/BurntSushi/wingo/hook"
-	"github.com/BurntSushi/wingo/wm"
-	"github.com/BurntSushi/wingo/workspace"
+	"github.com/cshapeshifter/wingo/focus"
+	"github.com/cshapeshifter/wingo/frame"
+	"github.com/cshapeshifter/wingo/hook"
+	"github.com/cshapeshifter/wingo/wm"
+	"github.com/cshapeshifter/wingo/workspace"
 )
 
 func (c *Client) Focus() {

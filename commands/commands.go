@@ -15,12 +15,12 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xrect"
 
-	"github.com/BurntSushi/wingo/focus"
-	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/misc"
-	"github.com/BurntSushi/wingo/wm"
-	"github.com/BurntSushi/wingo/workspace"
-	"github.com/BurntSushi/wingo/xclient"
+	"github.com/cshapeshifter/wingo/focus"
+	"github.com/cshapeshifter/wingo/logger"
+	"github.com/cshapeshifter/wingo/misc"
+	"github.com/cshapeshifter/wingo/wm"
+	"github.com/cshapeshifter/wingo/workspace"
+	"github.com/cshapeshifter/wingo/xclient"
 )
 
 // Env declares all available commands. Any command not in

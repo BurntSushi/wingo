@@ -15,9 +15,9 @@ import (
 	"github.com/BurntSushi/xgbutil/xrect"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
-	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/misc"
-	"github.com/BurntSushi/wingo/render"
+	"github.com/cshapeshifter/wingo/logger"
+	"github.com/cshapeshifter/wingo/misc"
+	"github.com/cshapeshifter/wingo/render"
 )
 
 // Cycle represents a single cycle prompt. A new cycle prompt can be created by:

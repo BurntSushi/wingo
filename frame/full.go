@@ -11,9 +11,9 @@ import (
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xgraphics"
 
-	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/misc"
-	"github.com/BurntSushi/wingo/render"
+	"github.com/cshapeshifter/wingo/logger"
+	"github.com/cshapeshifter/wingo/misc"
+	"github.com/cshapeshifter/wingo/render"
 )
 
 type Full struct {

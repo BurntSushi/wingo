@@ -7,8 +7,8 @@ import (
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xrect"
 
-	"github.com/BurntSushi/wingo/layout"
-	"github.com/BurntSushi/wingo/prompt"
+	"github.com/cshapeshifter/wingo/layout"
+	"github.com/cshapeshifter/wingo/prompt"
 )
 
 type Workspace struct {

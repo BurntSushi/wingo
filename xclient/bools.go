@@ -6,9 +6,9 @@ import (
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/motif"
 
-	"github.com/BurntSushi/wingo/frame"
-	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/wm"
+	"github.com/cshapeshifter/wingo/frame"
+	"github.com/cshapeshifter/wingo/logger"
+	"github.com/cshapeshifter/wingo/wm"
 )
 
 func (c *Client) IsActive() bool {
