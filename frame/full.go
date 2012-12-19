@@ -368,8 +368,6 @@ func (f *Full) UpdateTitle() {
 		ew, f.theme.TitleSize, render.GradientVert, render.GradientRegular)
 
 	y := (f.theme.TitleSize - eh) / 2
-	logger.Debug.Printf("TitleSize: %d, Extents height: %d, Y: %d",
-		f.theme.TitleSize, eh, y)
 
 	_, _, err := imgA.Text(0, y, aFontColor, fontSize, font, title)
 	if err != nil {
