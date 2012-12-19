@@ -363,13 +363,13 @@ func (f *Full) UpdateTitle() {
 	ew, eh := xgraphics.Extents(font, fontSize, title)
 
 	imgA := render.NewBorder(f.X, 0, render.NoColor, f.theme.ATitleColor,
-		ew, f.theme.TitleSize,
-		render.GradientVert, render.GradientRegular)
+		ew, f.theme.TitleSize, render.GradientVert, render.GradientRegular)
 	imgI := render.NewBorder(f.X, 0, render.NoColor, f.theme.ITitleColor,
-		ew, f.theme.TitleSize,
-		render.GradientVert, render.GradientRegular)
+		ew, f.theme.TitleSize, render.GradientVert, render.GradientRegular)
 
 	y := (f.theme.TitleSize - eh) / 2
+	logger.Debug.Printf("TitleSize: %d, Extents height: %d, Y: %d",
+		f.theme.TitleSize, eh, y)
 
 	_, _, err := imgA.Text(0, y, aFontColor, fontSize, font, title)
 	if err != nil {
