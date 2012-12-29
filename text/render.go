@@ -50,7 +50,7 @@ func DrawText(win *xwindow.Window, font *truetype.Font, size float64,
 
 	// Now draw the image to the window and destroy it.
 	img.XSurfaceSet(win.Id)
-	// subimg := img.SubImage(image.Rect(0, 0, ew, eh)) 
+	// subimg := img.SubImage(image.Rect(0, 0, ew, eh))
 	img.XDraw()
 	img.XPaint(win.Id)
 	img.Destroy()

@@ -39,16 +39,16 @@ func newParent(X *xgbutil.XUtil, cid xproto.Window) (*Parent, error) {
 			"Unfortunately, we must exit.")
 	}
 
-	// clientAttrs, err := xproto.GetWindowAttributes(X.Conn(), cid).Reply() 
-	// if err != nil { 
-	// return nil, fmt.Errorf("Could not get window attributes: %s", err) 
-	// } 
+	// clientAttrs, err := xproto.GetWindowAttributes(X.Conn(), cid).Reply()
+	// if err != nil {
+	// return nil, fmt.Errorf("Could not get window attributes: %s", err)
+	// }
 
-	// visual := clientAttrs.Visual 
-	// vdepth := getVisualDepth(X, visual) 
+	// visual := clientAttrs.Visual
+	// vdepth := getVisualDepth(X, visual)
 	visual := X.Screen().RootVisual
 	vdepth := X.Screen().RootDepth
-	// logger.Debug.Printf("Visualid: %x, Depth: %d", visual, vdepth) 
+	// logger.Debug.Printf("Visualid: %x, Depth: %d", visual, vdepth)
 	err = xproto.CreateWindowChecked(X.Conn(),
 		vdepth, parent.Id, X.RootWin(),
 		0, 0, 1, 1, 0, xproto.WindowClassInputOutput, visual,
