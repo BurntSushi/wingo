@@ -196,7 +196,7 @@ func (d *Data) GetKey(section, keyName string) *Key {
 		if _, ok := keys[keyName]; ok {
 			return &Key{
 				data:        d,
-				section:     section,
+				section:     skey,
 				key:         keyName,
 				niceSection: section,
 			}
