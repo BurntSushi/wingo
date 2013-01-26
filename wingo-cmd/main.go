@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BurntSushi/xdg"
+
 	"github.com/BurntSushi/wingo/commands"
 )
 
@@ -57,7 +59,7 @@ func main() {
 	cmds := getCommands()
 
 	// Connect to the Wingo command server.
-	conn, err := net.Dial("unix", path.Join(os.TempDir(), "wingo-ipc"))
+	conn, err := net.Dial("unix", socketFilePath())
 	if err != nil {
 		log.Fatalf("Could not connect to Wingo IPC: %s", err)
 	}
@@ -86,6 +88,18 @@ func main() {
 			time.Sleep(time.Duration(flagPoll) * time.Millisecond)
 		}
 	}
+}
+
+func socketFilePath() string {
+	dispStr := os.Getenv("DISPLAY")
+	if len(dispStr) == 0 {
+		log.Fatalf("DISPLAY environment variable not set.")
+	}
+	fpath, err := xdg.Paths{XDGSuffix: "wingo"}.RuntimeFile(dispStr)
+	if err != nil {
+		log.Fatalf("Could not find Wingo socket '%s': %s", dispStr, err)
+	}
+	return fpath
 }
 
 // getCommands inspects the arguments to extra a series of commands. If the

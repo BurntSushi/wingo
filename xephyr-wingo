@@ -5,12 +5,12 @@ if [ ! $? = 0 ]; then
   exit
 fi
 
-Xephyr :11 -ac -screen 1600x900 \
+Xephyr :11.0 -ac -screen 1600x900 \
        -br -once -reset -terminate -zap &
 xemu=$!
 
 sleep 0.5
-export DISPLAY=:11
+export DISPLAY=:11.0
 
 if [ -n "$*" ]; then
   ./wingo $* &

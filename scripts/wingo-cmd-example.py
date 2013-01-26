@@ -1,7 +1,11 @@
+import os
+import os.path
 import socket
 
 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-sock.connect("/tmp/wingo-ipc")
+f = os.path.join(os.getenv('XDG_RUNTIME_DIR'), 'wingo', os.getenv('DISPLAY'))
+sock.connect(f)
+
 
 def recv(sock):
     data = ''
@@ -9,11 +13,12 @@ def recv(sock):
         data += sock.recv(4096)
     return data
 
+
 def gribble(cmd):
     sock.send("%s%s" % (cmd, chr(0)))
     return recv(sock)
 
+
 print gribble("GetClientName (GetActive)")
 
 sock.close()
-

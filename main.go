@@ -136,7 +136,7 @@ func main() {
 	setSupported()
 
 	// Start up the IPC command listener.
-	go ipc()
+	go ipc(X)
 
 	// Just before starting the main event loop, check to see if there are
 	// any clients that already exist that we should manage.

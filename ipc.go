@@ -8,6 +8,8 @@ import (
 	"os"
 	"path"
 
+	"github.com/BurntSushi/xgbutil"
+
 	"github.com/BurntSushi/wingo/commands"
 	"github.com/BurntSushi/wingo/logger"
 )
@@ -19,8 +21,8 @@ import (
 //
 // Note that every message between the server and client MUST be null
 // terminated.
-func ipc() {
-	fpath := path.Join(os.TempDir(), "wingo-ipc")
+func ipc(X *xgbutil.XUtil) {
+	fpath := socketFilePath(X)
 
 	// Remove the domain socket if it already exists.
 	os.Remove(fpath) // don't care if there's an error
@@ -42,6 +44,26 @@ func ipc() {
 		// null-terminated.
 		go handleClient(conn)
 	}
+}
+
+func socketFilePath(X *xgbutil.XUtil) string {
+	xc := X.Conn()
+	name := fmt.Sprintf(":%d.%d", xc.DisplayNumber, xc.DefaultScreen)
+
+	var runtimeDir string
+	xdgRuntime := os.Getenv("XDG_RUNTIME_DIR")
+	if len(xdgRuntime) > 0 {
+		runtimeDir = path.Join(xdgRuntime, "wingo")
+	} else {
+		runtimeDir = path.Join(os.TempDir(), "wingo")
+	}
+
+	if err := os.MkdirAll(runtimeDir, 0777); err != nil {
+		logger.Error.Fatalf("Could not create directory '%s': %s",
+			runtimeDir, err)
+	}
+
+	return path.Join(runtimeDir, name)
 }
 
 func handleClient(conn net.Conn) {
