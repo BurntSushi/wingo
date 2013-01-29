@@ -77,6 +77,7 @@ func own(X *xgbutil.XUtil, replace bool) error {
 		}
 	}
 
+	logger.Message.Printf("Setting selection owner...")
 	err = xproto.SetSelectionOwnerChecked(
 		X.Conn(), X.Dummy(), selAtom, xTime).Check()
 	if err != nil {
@@ -84,6 +85,7 @@ func own(X *xgbutil.XUtil, replace bool) error {
 	}
 
 	// Now we've got to make sure that we *actually* got ownership.
+	logger.Message.Printf("Getting selection owner...")
 	reply, err = xproto.GetSelectionOwner(X.Conn(), selAtom).Reply()
 	if err != nil {
 		return err
@@ -112,10 +114,12 @@ func own(X *xgbutil.XUtil, replace bool) error {
 						"that the current window manager had shut down.",
 					otherWmName)
 			default:
+				logger.Message.Printf("Polling for event...")
 				ev, err := X.Conn().PollForEvent()
 				if err != nil {
 					continue
 				}
+				logger.Message.Printf("Got event, error: %s -- %s", ev, err)
 				if destNotify, ok := ev.(xproto.DestroyNotifyEvent); ok {
 					if destNotify.Window == otherWmOwner {
 						break OTHER_WM_SHUTDOWN
