@@ -52,6 +52,8 @@ type Client struct {
 	skipTaskbar bool
 	skipPager   bool
 
+	gtkMaximizeNada bool // When maximized, we should have a nada frame.
+
 	primaryType  int // one of Type[...]
 	winTypes     []string
 	winStates    []string

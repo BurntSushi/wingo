@@ -6,6 +6,7 @@ import (
 
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
+	"github.com/BurntSushi/xgbutil/xprop"
 	"github.com/BurntSushi/xgbutil/xrect"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
@@ -274,6 +275,14 @@ func (c *Client) fetchXProperties() {
 		}
 	} else if transCli := wm.FindManagedClient(trans); transCli != nil {
 		c.transientFor = transCli.(*Client)
+	}
+
+	tmp, err := xprop.PropValNum(
+		xprop.GetProperty(wm.X, c.Id(), "_GTK_HIDE_TITLEBAR_WHEN_MAXIMIZED"))
+	if err == nil {
+		c.gtkMaximizeNada = (tmp == 1)
+	} else {
+		c.gtkMaximizeNada = false
 	}
 
 	c.setShaped()

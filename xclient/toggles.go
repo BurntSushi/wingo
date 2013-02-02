@@ -230,6 +230,11 @@ func (c *Client) maximize() {
 		return
 	}
 
+	if c.gtkMaximizeNada {
+		// This will get unset when we step out of the maximized state.
+		c.frames.set(c.frames.nada)
+	}
+
 	c.maximized = true
 	c.addState("_NET_WM_STATE_MAXIMIZE_HORZ")
 	c.addState("_NET_WM_STATE_MAXIMIZE_VERT")
