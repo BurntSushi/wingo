@@ -41,6 +41,104 @@ func (cmd GetActive) Run() gribble.Value {
 	return 0
 }
 
+type GetClientX struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns the relative X position of the window specified by Client, where the X
+position refers to the left-most region of the window, including
+decorations. Note that "relative" in this case refers to the workspace
+that the client is on.
+
+Relative positions can be used as arguments to MoveRelative.
+
+If the client id is invalid, or the client is not visible, -9999 is returned.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd GetClientX) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		x := -9999
+		withClient(cmd.Client, func(c *xclient.Client) {
+			if c.IsMapped() {
+				origin := c.Workspace().Geom()
+				x = c.Geom().X() - origin.X()
+			}
+		})
+		return x
+	})
+}
+
+type GetClientY struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns the relative Y position of the window specified by Client, where the Y
+position refers to the left-most region of the window, including
+decorations. Note that "relative" in this case refers to the workspace
+that the client is on.
+
+Relative positions can be used as arguments to MoveRelative.
+
+If the client id is invalid, or the client is not visible, -9999 is returned.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd GetClientY) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		y := -9999
+		withClient(cmd.Client, func(c *xclient.Client) {
+			if c.IsMapped() {
+				origin := c.Workspace().Geom()
+				y = c.Geom().Y() - origin.Y()
+			}
+		})
+		return y
+	})
+}
+
+type GetClientHeight struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns the height of the window specified by Client, including
+decorations. If the client id is invalid, 0 is returned.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd GetClientHeight) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		height := 0
+		withClient(cmd.Client, func(c *xclient.Client) {
+			height = c.Geom().Height()
+		})
+		return height
+	})
+}
+
+type GetClientWidth struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns the width of the window specified by Client, including
+decorations. If the client id is invalid, 0 is returned.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd GetClientWidth) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		width := 0
+		withClient(cmd.Client, func(c *xclient.Client) {
+			width = c.Geom().Width()
+		})
+		return width
+	})
+}
+
 type GetClientList struct {
 	Workspace   gribble.Any `param:"1" types:"int,string"`
 	Help string `
@@ -138,6 +236,48 @@ func (cmd GetHead) Run() gribble.Value {
 	})
 }
 
+type GetHeadHeight struct {
+	Head int `param:"1"`
+	Help string `
+Gets the workable height of the head indexed at Head. If the head specified
+is not visible, then 0 is returned.
+
+Indexing starts at 0. Heads are ordered by their physical position: left to 
+right and then top to bottom.
+`
+}
+
+func (cmd GetHeadHeight) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		height := 0
+		wm.Heads.WithVisibleWorkspace(cmd.Head, func(wrk *workspace.Workspace) {
+			height = wm.Heads.Geom(wrk).Height()
+		})
+		return height
+	})
+}
+
+type GetHeadWidth struct {
+	Head int `param:"1"`
+	Help string `
+Gets the workable width of the head indexed at Head. If the head specified
+is not visible, then 0 is returned.
+
+Indexing starts at 0. Heads are ordered by their physical position: left to 
+right and then top to bottom.
+`
+}
+
+func (cmd GetHeadWidth) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		width := 0
+		wm.Heads.WithVisibleWorkspace(cmd.Head, func(wrk *workspace.Workspace) {
+			width = wm.Heads.Geom(wrk).Width()
+		})
+		return width
+	})
+}
+
 type GetHeadWorkspace struct {
 	Head int `param:"1"`
 	Help string `
@@ -150,8 +290,7 @@ left to right and then top to bottom.
 func (cmd GetHeadWorkspace) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		name := ""
-		wm.Heads.WithVisibleWorkspace(cmd.Head,
-			func(wrk *workspace.Workspace) {
+		wm.Heads.WithVisibleWorkspace(cmd.Head, func(wrk *workspace.Workspace) {
 				name = wrk.String()
 			})
 		return name

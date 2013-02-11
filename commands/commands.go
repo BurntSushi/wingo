@@ -66,6 +66,7 @@ var Env = gribble.New([]gribble.Command{
 	&WingoHelp{},
 	&Workspace{},
 	&WorkspaceGreedy{},
+	&WorkspaceHead{},
 	&WorkspaceSendClient{},
 	&WorkspaceToHead{},
 	&WorkspaceWithClient{},
@@ -95,11 +96,17 @@ var Env = gribble.New([]gribble.Command{
 	&SelectWorkspace{},
 
 	&GetActive{},
+	&GetClientX{},
+	&GetClientY{},
+	&GetClientHeight{},
+	&GetClientWidth{},
 	&GetClientList{},
 	&GetClientName{},
 	&GetClientType{},
 	&GetClientWorkspace{},
 	&GetHead{},
+	&GetHeadHeight{},
+	&GetHeadWidth{},
 	&GetHeadWorkspace{},
 	&GetLayout{},
 	&GetWorkspace{},
@@ -1038,6 +1045,29 @@ func (cmd WorkspaceGreedy) Run() gribble.Value {
 			wm.FocusFallback()
 		})
 		return nil
+	})
+}
+
+type WorkspaceHead struct {
+	Workspace gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Retrieves the head index of the workspace specified by Workspace. If the
+workspace is not visible, then -1 is returned.
+
+Head indexing starts at 0. Heads are ordered by their physical position: left 
+to right and then top to bottom.
+
+Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+`
+}
+
+func (cmd WorkspaceHead) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		index := -1
+		withWorkspace(cmd.Workspace, func(wrk *workspace.Workspace) {
+			index = wm.Heads.VisibleIndex(wrk)
+		})
+		return index
 	})
 }
 
