@@ -2,19 +2,18 @@ package layout
 
 import (
 	"container/list"
-	"fmt"
 
 	"github.com/BurntSushi/xgbutil/xrect"
 )
 
 type Maximized struct {
-	clients	*list.List
-	geom	xrect.Rect
+	clients *list.List
+	geom    xrect.Rect
 }
 
 func NewMaximized() *Maximized {
 	return &Maximized{
-		clients:	list.New(),
+		clients: list.New(),
 	}
 }
 
@@ -27,9 +26,8 @@ func (m *Maximized) SetGeom(geom xrect.Rect) {
 }
 
 func (m *Maximized) Place() {
-	e := m.clients.Front()
-	if e != nil {
-		c := e.Value.(Client)
+	for el := m.clients.Front(); el != nil; el = el.Next() {
+		c := el.Value.(Client)
 		x, y, w, h := m.geom.X(), m.geom.Y(), m.geom.Width(), m.geom.Height()
 		c.FrameTile()
 		c.MoveResize(x, y, w, h)
