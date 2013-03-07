@@ -49,6 +49,7 @@ func (wrks *Workspaces) NewWorkspace(name string) *Workspace {
 	wrk.autoTilers = []layout.AutoTiler{
 		layout.NewVertical(),
 		layout.NewHorizontal(),
+		layout.NewMaximized(),
 	}
 
 	if state, index := wrk.findLayout(wrks.defaultLayout); state != -1 {
