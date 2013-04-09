@@ -64,6 +64,10 @@ func (f *Borders) cornerImages(borderTypes,
 }
 
 func (f *Borders) newTopSide() *piece {
+	if f.theme.BorderSize == 0 {
+		return newEmptyPiece()
+	}
+
 	pixA, pixI := f.pieceImages(render.BorderTop,
 		render.GradientVert, render.GradientRegular,
 		1, f.theme.BorderSize)
@@ -74,6 +78,10 @@ func (f *Borders) newTopSide() *piece {
 }
 
 func (f *Borders) newBottomSide() *piece {
+	if f.theme.BorderSize == 0 {
+		return newEmptyPiece()
+	}
+
 	pixA, pixI := f.pieceImages(render.BorderBottom,
 		render.GradientVert, render.GradientReverse,
 		1, f.theme.BorderSize)
@@ -84,6 +92,10 @@ func (f *Borders) newBottomSide() *piece {
 }
 
 func (f *Borders) newLeftSide() *piece {
+	if f.theme.BorderSize == 0 {
+		return newEmptyPiece()
+	}
+
 	pixA, pixI := f.pieceImages(render.BorderLeft,
 		render.GradientHorz, render.GradientRegular,
 		f.theme.BorderSize, 1)
@@ -94,6 +106,10 @@ func (f *Borders) newLeftSide() *piece {
 }
 
 func (f *Borders) newRightSide() *piece {
+	if f.theme.BorderSize == 0 {
+		return newEmptyPiece()
+	}
+
 	pixA, pixI := f.pieceImages(render.BorderRight,
 		render.GradientHorz, render.GradientReverse,
 		f.theme.BorderSize, 1)
@@ -104,6 +120,10 @@ func (f *Borders) newRightSide() *piece {
 }
 
 func (f *Borders) newTopLeft() *piece {
+	if f.theme.BorderSize == 0 {
+		return newEmptyPiece()
+	}
+
 	pixA, pixI := f.cornerImages(render.BorderTop|render.BorderLeft,
 		render.DiagTopLeft)
 	win := f.newPieceWindow("topleft", cursors.TopLeftCorner)
@@ -113,6 +133,10 @@ func (f *Borders) newTopLeft() *piece {
 }
 
 func (f *Borders) newTopRight() *piece {
+	if f.theme.BorderSize == 0 {
+		return newEmptyPiece()
+	}
+
 	pixA, pixI := f.cornerImages(render.BorderTop|render.BorderRight,
 		render.DiagTopRight)
 	win := f.newPieceWindow("topright", cursors.TopRightCorner)
@@ -122,6 +146,10 @@ func (f *Borders) newTopRight() *piece {
 }
 
 func (f *Borders) newBottomLeft() *piece {
+	if f.theme.BorderSize == 0 {
+		return newEmptyPiece()
+	}
+
 	pixA, pixI := f.cornerImages(render.BorderBottom|render.BorderLeft,
 		render.DiagBottomLeft)
 	win := f.newPieceWindow("bottomleft", cursors.BottomLeftCorner)
@@ -131,6 +159,10 @@ func (f *Borders) newBottomLeft() *piece {
 }
 
 func (f *Borders) newBottomRight() *piece {
+	if f.theme.BorderSize == 0 {
+		return newEmptyPiece()
+	}
+
 	pixA, pixI := f.cornerImages(render.BorderBottom|render.BorderRight,
 		render.DiagBottomRight)
 	win := f.newPieceWindow("bottomright", cursors.BottomRightCorner)
