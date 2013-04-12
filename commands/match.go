@@ -148,7 +148,7 @@ func (cmd True) Run() gribble.Value {
 
 type False struct {
 	Help string `
-Always returns 1.
+Always returns 0.
 `
 }
 
