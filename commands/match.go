@@ -6,7 +6,6 @@ import (
 	"github.com/BurntSushi/gribble"
 
 	"github.com/BurntSushi/wingo/logger"
-	// "github.com/BurntSushi/wingo/wm" 
 	"github.com/BurntSushi/wingo/xclient"
 )
 
@@ -14,8 +13,8 @@ type MatchClientClass struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	Class string `param:"2"`
 	Help string `
-Returns 1 if the "class" part of the WM_CLASS property on the window 
-specified by Client contains the substring specified by Class, and otherwise 
+Returns 1 if the "class" part of the WM_CLASS property on the window
+specified by Client contains the substring specified by Class, and otherwise
 returns 0. The search is done case insensitively.
 
 Client may be the window id or a substring that matches a window name.
@@ -40,8 +39,8 @@ type MatchClientInstance struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	Instance string `param:"2"`
 	Help string `
-Returns 1 if the "instance" part of the WM_CLASS property on the window 
-specified by Client contains the substring specified by Instance, and otherwise 
+Returns 1 if the "instance" part of the WM_CLASS property on the window
+specified by Client contains the substring specified by Instance, and otherwise
 returns 0. The search is done case insensitively.
 
 Client may be the window id or a substring that matches a window name.
@@ -65,7 +64,7 @@ func (cmd MatchClientInstance) Run() gribble.Value {
 type MatchClientIsTransient struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	Help string `
-Returns 1 if the window specified by Client is a transient window, and 
+Returns 1 if the window specified by Client is a transient window, and
 otherwise returns 0. A transient window usually corresponds to some kind of
 dialog window.
 

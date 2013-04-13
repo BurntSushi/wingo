@@ -392,7 +392,7 @@ type HeadFocusWithClient struct {
 	Client gribble.Any `param:"2" types:"int,string"`
 	Help string `
 Focuses the head indexed at Head, and move the Client specified by client to
-that head. Indexing of heads starts at 0. Heads are ordered by their physical 
+that head. Indexing of heads starts at 0. Heads are ordered by their physical
 position: left to right and then top to bottom.
 
 Client may be the window id or a substring that matches a window name.
@@ -435,7 +435,7 @@ func (cmd ToggleFloating) Run() gribble.Value {
 type ToggleIconify struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	Help string `
-Iconifies (minimizes) or deiconifies (unminimizes) the window specified by 
+Iconifies (minimizes) or deiconifies (unminimizes) the window specified by
 Client.
 
 Client may be the window id or a substring that matches a window name.
@@ -754,7 +754,8 @@ no effect.
 
 Note that this command has no effect if the workspace is not visible.
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 `
 }
 
@@ -806,7 +807,8 @@ type RemoveWorkspace struct {
 Removes the workspace specified by Workspace. Note that a workspace can *only*
 be removed if it is empty (i.e., does not contain any windows).
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 `
 }
 
@@ -831,7 +833,8 @@ type RenameWorkspace struct {
 	Help string `
 Renames the workspace specified by Workspace to the name in NewName.
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 NewName can only be a string.
 `
 }
@@ -856,7 +859,7 @@ type Resize struct {
 	Width  gribble.Any `param:"2" types:"int,float"`
 	Height gribble.Any `param:"3" types:"int,float"`
 	Help string `
-Resizes the window specified by Client to some width and height specified by 
+Resizes the window specified by Client to some width and height specified by
 Width and Height.
 
 Width and Height may either be pixels (integers) or ratios in the range 0.0 to
@@ -1013,7 +1016,8 @@ type Workspace struct {
 	Help string `
 Sets the current workspace to the one specified by Workspace.
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 `
 }
 
@@ -1037,7 +1041,8 @@ A greedy switch *always* brings the specified workspace to the
 currently focused head. (N.B. Greedy is only different when switching between
 two visible workspaces.)
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 `
 }
 
@@ -1057,10 +1062,11 @@ type WorkspaceHead struct {
 Retrieves the head index of the workspace specified by Workspace. If the
 workspace is not visible, then -1 is returned.
 
-Head indexing starts at 0. Heads are ordered by their physical position: left 
+Head indexing starts at 0. Heads are ordered by their physical position: left
 to right and then top to bottom.
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 `
 }
 
@@ -1080,7 +1086,8 @@ type WorkspaceSendClient struct {
 	Help string `
 Sends the window specified by Client to the workspace specified by Workspace.
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 
 Client may be the window id or a substring that matches a window name.
 `
@@ -1104,9 +1111,10 @@ type WorkspaceToHead struct {
 Sets the workspace specified by Workspace to appear on the head specified by
 the Head index.
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 
-Head indexing starts at 0. Heads are ordered by their physical position: left 
+Head indexing starts at 0. Heads are ordered by their physical position: left
 to right and then top to bottom.
 `
 }
@@ -1128,7 +1136,8 @@ type WorkspaceWithClient struct {
 Sets the current workspace to the workspace specified by Workspace, and moves
 the window specified by Client to that workspace.
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 
 Client may be the window id or a substring that matches a window name.
 `
@@ -1159,7 +1168,8 @@ A greedy switch *always* brings the specified workspace to the
 currently focused head. (N.B. Greedy is only different when switching between
 two visible workspaces.)
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 
 Client may be the window id or a substring that matches a window name.
 `

@@ -163,7 +163,8 @@ Returns a list of client ids separated by new lines on the workspace specified
 by Workspace. Clients are listed in their focus orderering, from most recently
 focused to least recently focused.
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 `
 }
 
@@ -242,7 +243,7 @@ func (cmd GetClientWorkspace) Run() gribble.Value {
 
 type GetHead struct {
 	Help string `
-Returns the index of the current head. Indexing starts at 0. Heads are ordered 
+Returns the index of the current head. Indexing starts at 0. Heads are ordered
 by their physical position: left to right and then top to bottom.
 `
 }
@@ -284,7 +285,7 @@ type GetHeadHeight struct {
 Gets the workable height of the head indexed at Head. If the head specified
 is not visible, then 0 is returned.
 
-Indexing starts at 0. Heads are ordered by their physical position: left to 
+Indexing starts at 0. Heads are ordered by their physical position: left to
 right and then top to bottom.
 `
 }
@@ -305,7 +306,7 @@ type GetHeadWidth struct {
 Gets the workable width of the head indexed at Head. If the head specified
 is not visible, then 0 is returned.
 
-Indexing starts at 0. Heads are ordered by their physical position: left to 
+Indexing starts at 0. Heads are ordered by their physical position: left to
 right and then top to bottom.
 `
 }
@@ -346,7 +347,8 @@ Returns the name of the currently active (or "default") layout on the workspace
 specified by Workspace. Note that when a workspace is set to a tiling layout,
 it is still possible for clients to be floating.
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 `
 }
 
@@ -381,7 +383,8 @@ type GetWorkspaceId struct {
 	Help string `
 Returns the id (the index) of the workspace specified by Workspace.
 
-Workspace may be a workspace index (integer) starting at 0, or a workspace name.
+Workspace may be a workspace index (integer) starting at 0, or a workspace
+name.
 `
 }
 
@@ -428,8 +431,8 @@ func (cmd GetWorkspaceNext) Run() gribble.Value {
 type GetWorkspacePrefix struct {
 	Prefix string `param:"1"`
 	Help   string `
-Returns the first non-visible workspace starting with Prefix. If the current 
-workspace starts with Prefix, then the first workspace *after* the current 
+Returns the first non-visible workspace starting with Prefix. If the current
+workspace starts with Prefix, then the first workspace *after* the current
 workspace starting with Prefix will be returned.
 `
 }
