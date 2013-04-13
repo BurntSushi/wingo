@@ -8,6 +8,7 @@ import (
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
+	"github.com/BurntSushi/wingo/event"
 	"github.com/BurntSushi/wingo/workspace"
 )
 
@@ -25,6 +26,7 @@ func ewmhNumberOfDesktops() {
 
 func ewmhCurrentDesktop() {
 	ewmh.CurrentDesktopSet(X, uint(workspaceIndex(Workspace())))
+	event.Notify(event.ChangedWorkspace{})
 }
 
 func ewmhVisibleDesktops() {
@@ -34,6 +36,8 @@ func ewmhVisibleDesktops() {
 		desks[i] = uint(workspaceIndex(wrk))
 	}
 	ewmh.VisibleDesktopsSet(X, desks)
+
+	event.Notify(event.ChangedVisibleWorkspace{})
 }
 
 func ewmhDesktopNames() {
@@ -42,6 +46,8 @@ func ewmhDesktopNames() {
 		names[i] = wrk.Name
 	}
 	ewmh.DesktopNamesSet(X, names)
+
+	event.Notify(event.ChangedWorkspaceNames{})
 }
 
 func ewmhDesktopGeometry() {

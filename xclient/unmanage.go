@@ -6,6 +6,7 @@ import (
 	"github.com/BurntSushi/xgbutil/icccm"
 	"github.com/BurntSushi/xgbutil/xevent"
 
+	"github.com/BurntSushi/wingo/event"
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/stack"
@@ -38,6 +39,8 @@ func (c *Client) unmanage() {
 	if c.hadStruts {
 		wm.Heads.ApplyStruts(wm.Clients)
 	}
+
+	event.Notify(event.UnmanagedClient{c.Id()})
 }
 
 func (c *Client) ImminentDestruction() bool {

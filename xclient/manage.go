@@ -10,6 +10,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xrect"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
+	"github.com/BurntSushi/wingo/event"
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/heads"
@@ -71,6 +72,7 @@ func New(id xproto.Window) *Client {
 	// If someone really wants it, we can add a new "startup_managed" hook
 	// or something.
 	if !wm.Startup {
+		event.Notify(event.ManagedClient{c.Id()})
 		c.FireHook(hook.Managed)
 	}
 	if !c.iconified {

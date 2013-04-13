@@ -21,6 +21,7 @@ import (
 
 	"github.com/BurntSushi/wingo/commands"
 	"github.com/BurntSushi/wingo/cursors"
+	"github.com/BurntSushi/wingo/event"
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/hook"
 	"github.com/BurntSushi/wingo/logger"
@@ -137,6 +138,9 @@ func main() {
 
 	// Start up the IPC command listener.
 	go ipc(X)
+
+	// And start up the IPC event notifier.
+	go event.Notifier(X, socketFilePath(X))
 
 	// Just before starting the main event loop, check to see if there are
 	// any clients that already exist that we should manage.

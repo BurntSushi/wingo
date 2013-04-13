@@ -7,7 +7,9 @@ import (
 	"github.com/BurntSushi/xgbutil"
 	"github.com/BurntSushi/xgbutil/xrect"
 
+	"github.com/BurntSushi/wingo/event"
 	"github.com/BurntSushi/wingo/layout"
+	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/prompt"
 )
 
@@ -349,6 +351,8 @@ func (wrk *Workspace) AutoCycle() {
 	if wrk.State == AutoTiling {
 		wrk.curAutoTiler = (wrk.curAutoTiler + 1) % len(wrk.autoTilers)
 		wrk.LayoutAutoTiler().Place()
+
+		event.Notify(event.ChangedLayout{wrk.Name})
 	}
 }
 
@@ -374,6 +378,7 @@ func (wrk *Workspace) SetLayout(name string) {
 		wrk.curAutoTiler = index
 		wrk.LayoutStateSet(AutoTiling)
 	case -1: // couldn't find layout with name 'name'
+		logger.Warning.Printf("Unknown layout '%s'.", name)
 		return
 	default:
 		panic(fmt.Sprintf("Unknown layout state '%d'.", state))
@@ -459,6 +464,8 @@ func (wrk *Workspace) LayoutStateSet(state int) {
 	default:
 		panic("Layout state not implemented.")
 	}
+
+	event.Notify(event.ChangedLayout{wrk.Name})
 }
 
 func (wrk *Workspace) SelectGroupText() string {

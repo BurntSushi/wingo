@@ -3,6 +3,7 @@ package xclient
 import (
 	"github.com/BurntSushi/xgbutil/ewmh"
 
+	"github.com/BurntSushi/wingo/event"
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/hook"
@@ -23,16 +24,22 @@ func (c *Client) Focused() {
 	ewmh.ActiveWindowSet(wm.X, c.Id())
 	c.addState("_NET_WM_STATE_FOCUSED")
 
+	event.Notify(event.FocusedClient{c.Id()})
 	c.FireHook(hook.Focused)
 }
 
 func (c *Client) Unfocused() {
+	wasFocused := c.state == frame.Active
+
 	c.frame.Inactive()
 	c.state = frame.Inactive
 	ewmh.ActiveWindowSet(wm.X, 0)
 	c.removeState("_NET_WM_STATE_FOCUSED")
 
-	c.FireHook(hook.Unfocused)
+	if wasFocused {
+		event.Notify(event.UnfocusedClient{c.Id()})
+		c.FireHook(hook.Unfocused)
+	}
 }
 
 func (c *Client) PrepareForFocus() {

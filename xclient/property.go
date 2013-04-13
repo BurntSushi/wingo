@@ -6,6 +6,7 @@ import (
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/icccm"
 
+	"github.com/BurntSushi/wingo/event"
 	"github.com/BurntSushi/wingo/layout"
 	"github.com/BurntSushi/wingo/wm"
 )
@@ -82,6 +83,8 @@ func (c *Client) refreshName() {
 			c.frames.full.UpdateTitle()
 			c.prompts.updateName()
 			ewmh.WmVisibleNameSet(wm.X, c.Id(), c.name)
+
+			event.Notify(event.ChangedClientName{c.Id()})
 		}
 	}()
 

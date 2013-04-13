@@ -11,6 +11,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xrect"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
+	"github.com/BurntSushi/wingo/event"
 	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/hook"
 	"github.com/BurntSushi/wingo/logger"
@@ -87,6 +88,8 @@ func (c *Client) Map() {
 	c.win.Map()
 	c.frame.Map()
 	icccm.WmStateSet(wm.X, c.Id(), &icccm.WmState{State: icccm.StateNormal})
+
+	event.Notify(event.MappedClient{c.Id()})
 }
 
 func (c *Client) Unmap() {
@@ -97,6 +100,8 @@ func (c *Client) Unmap() {
 	c.frame.Unmap()
 	c.win.Unmap()
 	icccm.WmStateSet(wm.X, c.Id(), &icccm.WmState{State: icccm.StateIconic})
+
+	event.Notify(event.UnmappedClient{c.Id()})
 }
 
 func (c *Client) Close() {

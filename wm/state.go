@@ -13,6 +13,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xevent"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
+	"github.com/BurntSushi/wingo/event"
 	"github.com/BurntSushi/wingo/focus"
 	"github.com/BurntSushi/wingo/heads"
 	"github.com/BurntSushi/wingo/logger"
@@ -215,6 +216,8 @@ func AddWorkspace(name string) error {
 	ewmhNumberOfDesktops()
 	ewmhVisibleDesktops()
 	Heads.EwmhWorkarea()
+
+	event.Notify(event.AddedWorkspace{wrk.Name})
 	return nil
 }
 
@@ -231,6 +234,7 @@ func RemoveWorkspace(wrk *workspace.Workspace) error {
 	ewmhNumberOfDesktops()
 	ewmhVisibleDesktops()
 	Heads.EwmhWorkarea()
+	event.Notify(event.RemovedWorkspace{wrk.Name})
 	return nil
 }
 
