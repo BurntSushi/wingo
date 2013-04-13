@@ -8,6 +8,10 @@ type Event interface{}
 
 type Noop struct{}
 
+type Restarting struct{}
+
+type Subscribed struct{}
+
 type (
 	ChangedWorkspace        struct{}
 	ChangedVisibleWorkspace struct{}
