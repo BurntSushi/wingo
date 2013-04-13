@@ -53,24 +53,30 @@ func handleSubscriber(conn net.Conn) {
 	logger.Message.Printf("Accepted new event subscriber (id: %d).", id)
 
 	encoder := json.NewEncoder(conn)
+	writeEvent := func(ev Event) error {
+		if err := encoder.Encode(eventToMap(ev)); err != nil {
+			return err
+		}
+		if _, err := fmt.Fprintf(conn, "%c", 0); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if err := writeEvent(Subscribed{}); err != nil {
+		logger.Warning.Printf("Error sending initial subscription: %s", err)
+		return
+	}
 	for {
 		select {
 		case <-time.After(5 * time.Second):
-			if err := encoder.Encode(eventToMap(Noop{})); err != nil {
-				logger.Message.Printf("Subscriber timed out: %s", err)
-				return
-			}
-			if _, err := fmt.Fprintf(conn, "%c", 0); err != nil {
-				logger.Message.Printf("Subscriber timed out: %s", err)
+			if err := writeEvent(Noop{}); err != nil {
+				logger.Warning.Printf("Subscriber timed out: %s", err)
 				return
 			}
 		case ev := <-events:
-			if err := encoder.Encode(eventToMap(ev)); err != nil {
-				logger.Message.Printf("Error sending event: %s", err)
-				return
-			}
-			if _, err := fmt.Fprintf(conn, "%c", 0); err != nil {
-				logger.Message.Printf("Error sending event: %s", err)
+			if err := writeEvent(ev); err != nil {
+				logger.Warning.Printf("Error sending event: %s", err)
 				return
 			}
 		}
