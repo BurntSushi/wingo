@@ -9,6 +9,7 @@ import (
 	"runtime/pprof"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/BurntSushi/xgb"
 	"github.com/BurntSushi/xgb/xproto"
@@ -188,6 +189,9 @@ EVENTLOOP:
 		}
 	}
 	if wm.Restart {
+		event.Notify(event.Restarting{})
+		time.Sleep(1 * time.Second)
+
 		// We need to tell the next invocation of Wingo that it is being
 		// *restarted*. (So that we don't refire the startup hook.)
 		// Thus, search os.Args for "--wingo-restarted". If it doesn't exist,
