@@ -44,6 +44,9 @@ type (
 	ChangedClientName struct {
 		Id xproto.Window
 	}
+	ChangedActiveClient struct {
+		Id xproto.Window
+	}
 )
 
 type ChangedLayout struct {

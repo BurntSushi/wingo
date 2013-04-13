@@ -25,6 +25,7 @@ func (c *Client) Focused() {
 	c.addState("_NET_WM_STATE_FOCUSED")
 
 	event.Notify(event.FocusedClient{c.Id()})
+	event.Notify(event.ChangedActiveClient{c.Id()})
 	c.FireHook(hook.Focused)
 }
 
@@ -38,6 +39,7 @@ func (c *Client) Unfocused() {
 
 	if wasFocused {
 		event.Notify(event.UnfocusedClient{c.Id()})
+		event.Notify(event.ChangedActiveClient{0})
 		c.FireHook(hook.Unfocused)
 	}
 }
