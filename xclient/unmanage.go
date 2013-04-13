@@ -24,6 +24,11 @@ func (c *Client) unmanage() {
 
 	logger.Message.Printf("Unmanaging client: %s", c)
 
+	infoWorkspace := c.workspace.String()
+	infoClass := c.Class().Class
+	infoInstance := c.Class().Instance
+	infoName := c.Name()
+
 	c.frame.Unmap()
 	c.win.Detach()
 	icccm.WmStateSet(wm.X, c.Id(), &icccm.WmState{State: icccm.StateWithdrawn})
@@ -40,7 +45,13 @@ func (c *Client) unmanage() {
 		wm.Heads.ApplyStruts(wm.Clients)
 	}
 
-	event.Notify(event.UnmanagedClient{c.Id()})
+	event.Notify(event.UnmanagedClient{
+		Id:        c.Id(),
+		Name:      infoName,
+		Workspace: infoWorkspace,
+		Class:     infoClass,
+		Instance:  infoInstance,
+	})
 }
 
 func (c *Client) ImminentDestruction() bool {
