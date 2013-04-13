@@ -139,6 +139,23 @@ func (cmd GetClientWidth) Run() gribble.Value {
 	})
 }
 
+type GetAllClients struct {
+	Help string `
+Returns a list of all client ids separated by new lines. Clients are listed
+in the order in which they were managed, starting with the oldest client.
+`
+}
+
+func (cmd GetAllClients) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		cids := make([]string, len(wm.Clients))
+		for i, client := range wm.Clients {
+			cids[i] = fmt.Sprintf("%d", client.Id())
+		}
+		return strings.Join(cids, "\n")
+	})
+}
+
 type GetClientList struct {
 	Workspace   gribble.Any `param:"1" types:"int,string"`
 	Help string `

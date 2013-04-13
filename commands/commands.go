@@ -96,6 +96,7 @@ var Env = gribble.New([]gribble.Command{
 	&SelectWorkspace{},
 
 	&GetActive{},
+	&GetAllClients{},
 	&GetClientX{},
 	&GetClientY{},
 	&GetClientHeight{},
