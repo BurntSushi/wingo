@@ -253,6 +253,31 @@ func (cmd GetHead) Run() gribble.Value {
 	})
 }
 
+type GetNumHeads struct {
+	Help string `
+Returns the number of active Heads.
+`
+}
+
+func (cmd GetNumHeads) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		return wm.Heads.NumHeads()
+	})
+}
+
+type GetNumHeadsConnected struct {
+	Help string `
+Returns the number of Heads connected. This number may be greater
+than the number returned by GetNumHeads.
+`
+}
+
+func (cmd GetNumHeadsConnected) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		return wm.Heads.NumConnected()
+	})
+}
+
 type GetHeadHeight struct {
 	Head int `param:"1"`
 	Help string `

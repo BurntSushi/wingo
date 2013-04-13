@@ -106,6 +106,8 @@ var Env = gribble.New([]gribble.Command{
 	&GetClientType{},
 	&GetClientWorkspace{},
 	&GetHead{},
+	&GetNumHeads{},
+	&GetNumHeadsConnected{},
 	&GetHeadHeight{},
 	&GetHeadWidth{},
 	&GetHeadWorkspace{},
