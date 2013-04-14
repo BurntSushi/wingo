@@ -121,6 +121,7 @@ var Env = gribble.New([]gribble.Command{
 
 	&True{},
 	&False{},
+	&MatchClientMapped{},
 	&MatchClientClass{},
 	&MatchClientInstance{},
 	&MatchClientIsTransient{},

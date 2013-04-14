@@ -9,6 +9,25 @@ import (
 	"github.com/BurntSushi/wingo/xclient"
 )
 
+type MatchClientMapped struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns 1 if the window specified by Client is mapped or not.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd MatchClientMapped) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		matched := false
+		withClient(cmd.Client, func(c *xclient.Client) {
+			matched = c.IsMapped()
+		})
+		return boolToInt(matched)
+	})
+}
+
 type MatchClientClass struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	Class string `param:"2"`
