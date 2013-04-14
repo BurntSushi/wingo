@@ -898,6 +898,7 @@ may include arguments.
 func (cmd Script) Run() gribble.Value {
 	if len(cmd.Command) == 0 {
 		logger.Warning.Printf("Cannot execute empty script.")
+		return nil
 	}
 
 	go func() {
@@ -940,6 +941,7 @@ it will be logged to Wingo's stderr.
 func (cmd Shell) Run() gribble.Value {
 	if len(cmd.Command) == 0 {
 		logger.Warning.Printf("Cannot execute empty command.")
+		return nil
 	}
 
 	// XXX: This is very weird.
