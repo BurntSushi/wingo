@@ -59,6 +59,7 @@ var Env = gribble.New([]gribble.Command{
 	&Quit{},
 	&SetLayout{},
 	&SetOpacity{},
+	&Script{},
 	&Shell{},
 	&Unfloat{},
 	&Unmaximize{},
@@ -886,20 +887,61 @@ func (cmd Resize) Run() gribble.Value {
 	})
 }
 
+type Script struct {
+	Command string `param:"1"`
+	Help string `
+Executes a script in $XDG_CONFIG_HOME/wingo/scripts. The command
+may include arguments.
+`
+}
+
+func (cmd Script) Run() gribble.Value {
+	if len(cmd.Command) == 0 {
+		logger.Warning.Printf("Cannot execute empty script.")
+	}
+
+	go func() {
+		var stderr bytes.Buffer
+		time.Sleep(time.Microsecond)
+
+		c := fixScannerBugs(cmd.Command)
+		fields := strings.Split(c, " ")
+		script := misc.ScriptPath(fields[0])
+		if len(script) == 0 {
+			return
+		}
+		c = strings.Join(append([]string{script}, fields[1:]...), " ")
+
+		logger.Message.Printf("%s -c [%s]", wm.Config.Shell, c)
+		shellCmd := exec.Command(wm.Config.Shell, "-c", c)
+		shellCmd.Stderr = &stderr
+
+		err := shellCmd.Run()
+		if err != nil {
+			logger.Warning.Printf("Error running script '%s': %s",
+				cmd.Command, err)
+			if stderr.Len() > 0 {
+				logger.Warning.Printf("Error running script '%s': %s",
+					cmd.Command, stderr.String())
+			}
+		}
+	}()
+	return nil
+}
+
 type Shell struct {
 	Command string `param:"1"`
 	Help string `
 Attempts to execute the shell command specified by Command. If an error occurs,
 it will be logged to Wingo's stderr.
-
-Note that the parser for translating shell commands to something acceptable
-for Go's os/exec package is fairly primitive. Therefore, this should not be
-considered as a suitable replacement for similar utilities (like gmrun or
-xbindkeys).
 `
 }
 
 func (cmd Shell) Run() gribble.Value {
+	if len(cmd.Command) == 0 {
+		logger.Warning.Printf("Cannot execute empty command.")
+	}
+
 	// XXX: This is very weird.
 	// If I don't put this into its own go-routine and wait a small
 	// amount of time, commands that start new X clients fail miserably.
@@ -911,16 +953,7 @@ func (cmd Shell) Run() gribble.Value {
 	go func() {
 		var stderr bytes.Buffer
 
-		// For some reason, Go's text/scanner doesn't unescape escaped quotes
-		// in strings. So we try to be nice and do it here.
-		cmd.Command = strings.Replace(cmd.Command, "\\\"", "\"", -1)
-
-		// BUG(burntsushi): I think there is a bug in text/scanner where if
-		// a string ends with an escaped quote, the quote is cutoff and the
-		// backslash is left intact.
-		if cmd.Command[len(cmd.Command)-1] == '\\' {
-			cmd.Command = fmt.Sprintf("%s\"", cmd.Command[0:len(cmd.Command)-1])
-		}
+		cmd.Command = fixScannerBugs(cmd.Command)
 
 		time.Sleep(time.Microsecond)
 		logger.Message.Printf("%s -c [%s]", wm.Config.Shell, cmd.Command)
@@ -937,6 +970,21 @@ func (cmd Shell) Run() gribble.Value {
 		}
 	}()
 	return nil
+}
+
+func fixScannerBugs(s string) string {
+	// For some reason, Go's text/scanner doesn't unescape escaped quotes
+	// in strings. So we try to be nice and do it here.
+	s = strings.Replace(s, "\\\"", "\"", -1)
+
+	// BUG(burntsushi): I think there is a bug in text/scanner where if
+	// a string ends with an escaped quote, the quote is cutoff and the
+	// backslash is left intact.
+	if s[len(s)-1] == '\\' {
+		s = fmt.Sprintf("%s\"", s[0:len(s)-1])
+	}
+
+	return s
 }
 
 type Unfloat struct {

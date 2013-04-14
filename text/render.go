@@ -31,6 +31,11 @@ import (
 func DrawText(win *xwindow.Window, font *truetype.Font, size float64,
 	fontClr, bgClr render.Color, text string) error {
 
+	// BUG(burntsushi): If `text` is zero-length, very bad things happen.
+	if len(text) == 0 {
+		text = " "
+	}
+
 	// Over estimate the extents.
 	ew, eh := xgraphics.Extents(font, size, text)
 

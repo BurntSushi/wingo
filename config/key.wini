@@ -92,6 +92,10 @@ Mod4-Shift-r := WingoExec (Input "Wingo command:")
 # any of Wingo's commands.
 Mod4-Shift-h := WingoHelp (Input "Wingo command name:")
 
+# Execute a script from an input prompt.
+# Scripts are executable files in your $XDG_CONFIG_HOME/wingo/scripts directory.
+Mod4-Shift-s := Script (Input "Script command:")
+
 # Allows you to specify precisely which layout you want to be active.
 Mod4-Shift-l := SetLayout (GetWorkspace) (Input "Layout name:")
 

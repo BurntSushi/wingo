@@ -2,6 +2,7 @@ package misc
 
 import (
 	"io/ioutil"
+	"path"
 
 	"github.com/BurntSushi/xdg"
 
@@ -18,6 +19,12 @@ var DataPaths = xdg.Paths{
 	Override:     "",
 	XDGSuffix:    "wingo",
 	GoImportPath: "github.com/BurntSushi/wingo/data",
+}
+
+var ScriptPaths = xdg.Paths{
+	Override:     "",
+	XDGSuffix:    "wingo",
+	GoImportPath: "github.com/BurntSushi/wingo/config",
 }
 
 func ConfigFile(name string) string {
@@ -38,4 +45,12 @@ func DataFile(name string) []byte {
 		logger.Error.Fatalf("Could not read %s: %s", fpath, err)
 	}
 	return bs
+}
+
+func ScriptPath(name string) string {
+	fpath, err := ScriptPaths.ConfigFile(path.Join("scripts", name))
+	if err != nil {
+		logger.Warning.Println(err)
+	}
+	return fpath
 }
