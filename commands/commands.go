@@ -923,8 +923,8 @@ func (cmd Shell) Run() gribble.Value {
 		}
 
 		time.Sleep(time.Microsecond)
-		logger.Message.Printf("bash -c [%s]", cmd.Command)
-		shellCmd := exec.Command("bash", "-c", cmd.Command)
+		logger.Message.Printf("%s -c [%s]", wm.Config.Shell, cmd.Command)
+		shellCmd := exec.Command(wm.Config.Shell, "-c", cmd.Command)
 		shellCmd.Stderr = &stderr
 
 		err := shellCmd.Run()

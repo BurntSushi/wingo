@@ -68,6 +68,9 @@ confirm := Return
 # the cancel key is pressed, the prompt disappears and no action occurs.
 cancel := Escape
 
+# The shell to be used to launch commands.
+shell := bash
+
 # The program to use to play a wav file. This is only used with the "Dale"
 # command, which is an easter egg.
 audio_play_cmd := aplay

@@ -24,6 +24,7 @@ type Configuration struct {
 	DefaultLayout       string
 	PopupTime           int
 	ShowFyi, ShowErrors bool
+	Shell               string
 	AudioProgram        string
 
 	mouse map[string][]mouseCommand
@@ -48,6 +49,7 @@ func newConfig() *Configuration {
 		PopupTime:       500,
 		ShowFyi:         true,
 		ShowErrors:      true,
+		Shell:           "bash",
 		AudioProgram:    "aplay",
 
 		mouse: map[string][]mouseCommand{},
@@ -198,6 +200,8 @@ func (conf *Configuration) loadOptionsConfigSection(
 			setString(key, &conf.CancelKey)
 		case "confirm":
 			setString(key, &conf.ConfirmKey)
+		case "shell":
+			setString(key, &conf.Shell)
 		case "audio_play_cmd":
 			setString(key, &conf.AudioProgram)
 		}
