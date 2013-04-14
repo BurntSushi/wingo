@@ -80,7 +80,7 @@ func handleClient(conn net.Conn) {
 		}
 		msg = msg[:len(msg)-1] // get rid of null terminator
 
-		logger.Message.Printf("Running command from IPC: '%s'.", msg)
+		logger.Lots.Printf("Running command from IPC: '%s'.", msg)
 
 		// Run the command. We set the error reporting to verbose. Be kind!
 		// If the command resulted in an error, we stop and send the error back
