@@ -280,11 +280,13 @@ func usage() {
 func showSocketPath(X *xgbutil.XUtil) {
 	currentWM, err := ewmh.GetEwmhWM(X)
 	if err != nil {
-		logger.Error.Fatal(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 	if strings.ToLower(currentWM) != "wingo" {
-		logger.Error.Fatalf("Could not detect a Wingo instance. "+
-			"(Found '%s' instead.)", currentWM)
+		fmt.Fprintf(os.Stderr, "Could not detect a Wingo instance. "+
+			"(Found '%s' instead.)\n", currentWM)
+		os.Exit(1)
 	}
 	fmt.Println(socketFilePath(X))
 }
