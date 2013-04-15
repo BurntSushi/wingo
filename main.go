@@ -42,6 +42,7 @@ var (
 	flagWriteConfig    = false
 	flagCpuProfile     = ""
 	flagWingoRestarted = false
+	flagShowSocket     = false
 )
 
 func init() {
@@ -77,6 +78,10 @@ func init() {
 	flag.BoolVar(&flagWingoRestarted, "wingo-restarted", flagWingoRestarted,
 		"DO NOT USE. INTERNAL WINGO USE ONLY.")
 
+	flag.BoolVar(&flagShowSocket, "show-socket", flagShowSocket,
+		"When set, the command will detect if Wingo is already running,\n"+
+			"and if so, outputs the file path to the current socket.")
+
 	flag.StringVar(&flagCpuProfile, "cpuprofile", flagCpuProfile,
 		"When set, a CPU profile will be written to the file specified.")
 
@@ -105,6 +110,11 @@ func main() {
 		logger.Error.Fatalln("Error connecting to X, quitting...")
 	}
 	defer X.Conn().Close()
+
+	if flagShowSocket {
+		showSocketPath(X)
+		return
+	}
 
 	// Do this first! Attempt to retrieve window manager ownership.
 	// This includes waiting for any existing window manager to die.
@@ -265,4 +275,16 @@ func usage() {
 			strings.Replace(fg.Usage, "\n", "\n\t", -1))
 	})
 	os.Exit(1)
+}
+
+func showSocketPath(X *xgbutil.XUtil) {
+	currentWM, err := ewmh.GetEwmhWM(X)
+	if err != nil {
+		logger.Error.Fatal(err)
+	}
+	if strings.ToLower(currentWM) != "wingo" {
+		logger.Error.Fatalf("Could not detect a Wingo instance. "+
+			"(Found '%s' instead.)", currentWM)
+	}
+	fmt.Println(socketFilePath(X))
 }

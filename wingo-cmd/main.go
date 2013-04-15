@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BurntSushi/xdg"
+	"github.com/BurntSushi/cmd"
 
 	"github.com/BurntSushi/wingo/commands"
 )
@@ -91,15 +91,11 @@ func main() {
 }
 
 func socketFilePath() string {
-	dispStr := os.Getenv("DISPLAY")
-	if len(dispStr) == 0 {
-		log.Fatalf("DISPLAY environment variable not set.")
+	c := cmd.New("wingo", "--show-socket")
+	if err := c.Run(); err != nil {
+		log.Fatal(err)
 	}
-	fpath, err := xdg.Paths{XDGSuffix: "wingo"}.RuntimeFile(dispStr)
-	if err != nil {
-		log.Fatalf("Could not find Wingo socket '%s': %s", dispStr, err)
-	}
-	return fpath
+	return strings.TrimSpace(c.BufStdout.String())
 }
 
 // getCommands inspects the arguments to extra a series of commands. If the
