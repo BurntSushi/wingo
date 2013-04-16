@@ -289,4 +289,5 @@ func showSocketPath(X *xgbutil.XUtil) {
 		os.Exit(1)
 	}
 	fmt.Println(socketFilePath(X))
+	os.Exit(0)
 }
