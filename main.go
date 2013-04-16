@@ -93,7 +93,7 @@ func init() {
 	logger.LevelSet(flagLogLevel)
 
 	// If the log level is 0, don't show XGB log output either.
-	if flagLogLevel == 0 {
+	if flagLogLevel == 0 || flagShowSocket {
 		xgb.PrintLog = false
 	}
 }
