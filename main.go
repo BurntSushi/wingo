@@ -24,6 +24,7 @@ import (
 	"github.com/BurntSushi/wingo/cursors"
 	"github.com/BurntSushi/wingo/event"
 	"github.com/BurntSushi/wingo/focus"
+	"github.com/BurntSushi/wingo/frame"
 	"github.com/BurntSushi/wingo/hook"
 	"github.com/BurntSushi/wingo/logger"
 	"github.com/BurntSushi/wingo/misc"
@@ -200,6 +201,13 @@ EVENTLOOP:
 	}
 	if wm.Restart {
 		event.Notify(event.Restarting{})
+		for _, client := range wm.Clients {
+			c := client.(*xclient.Client)
+
+			if _, ok := c.Frame().(*frame.Full); ok {
+				c.FrameNada()
+			}
+		}
 		time.Sleep(1 * time.Second)
 
 		// We need to tell the next invocation of Wingo that it is being
