@@ -148,28 +148,29 @@ func (wrk *Workspace) Add(c Client) {
 		wrk.addToFloaters(c)
 		wrk.addToTilers(c)
 		wrk.Place()
-	}
-	if _, ok := c.Layout().(layout.Floater); ok {
-		// If the workspace is visible, reload a state now.
-		// Otherwise, we get a little hacky and copy the state into
-		// workspace-switch, which will be invoked then the workspace
-		// becomes visible...
-		if wrk.IsVisible() {
-			c.LoadState("last-floating")
-		} else {
-			c.CopyState("last-floating", "workspace-switch")
-		}
-	}
 
-	// If the old and new workspace have different visibilities, adjust the
-	// client appropriately.
-	if current != nil {
-		if current.IsVisible() && !wrk.IsVisible() {
-			c.SaveState("workspace-switch")
-			c.Unmap()
-		} else if !current.IsVisible() && wrk.IsVisible() {
-			c.LoadState("workspace-switch")
-			c.Map()
+		if _, ok := c.Layout().(layout.Floater); ok {
+			// If the workspace is visible, reload a state now.
+			// Otherwise, we get a little hacky and copy the state into
+			// workspace-switch, which will be invoked then the workspace
+			// becomes visible...
+			if wrk.IsVisible() {
+				c.LoadState("last-floating")
+			} else {
+				c.CopyState("last-floating", "workspace-switch")
+			}
+		}
+
+		// If the old and new workspace have different visibilities, adjust the
+		// client appropriately.
+		if current != nil {
+			if current.IsVisible() && !wrk.IsVisible() {
+				c.SaveState("workspace-switch")
+				c.Unmap()
+			} else if !current.IsVisible() && wrk.IsVisible() {
+				c.LoadState("workspace-switch")
+				c.Map()
+			}
 		}
 	}
 }
