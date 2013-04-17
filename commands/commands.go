@@ -42,6 +42,8 @@ var Env = gribble.New([]gribble.Command{
 	&HeadFocusWithClient{},
 	&ToggleFloating{},
 	&ToggleIconify{},
+	&Iconify{},
+	&Deiconify{},
 	&ToggleMaximize{},
 	&ToggleStackAbove{},
 	&ToggleStackBelow{},
@@ -459,6 +461,44 @@ func (cmd ToggleIconify) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		withClient(cmd.Client, func(c *xclient.Client) {
 			c.IconifyToggle()
+		})
+		return nil
+	})
+}
+
+type Iconify struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Iconifies (minimizes) the window specified by Client. If the window
+is already iconified, this command has no effect.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd Iconify) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.Iconify()
+		})
+		return nil
+	})
+}
+
+type Deiconify struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Deiconifies (unminimizes) the window specified by Client. If the window
+is already deiconified, this command has no effect.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd Deiconify) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.Deiconify()
 		})
 		return nil
 	})

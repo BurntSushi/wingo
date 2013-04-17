@@ -49,6 +49,20 @@ func (c *Client) IconifyToggle() {
 	}
 }
 
+func (c *Client) Iconify() {
+	if c.Iconified() {
+		return
+	}
+	c.IconifyToggle()
+}
+
+func (c *Client) Deiconify() {
+	if !c.Iconified() {
+		return
+	}
+	c.IconifyToggle()
+}
+
 func (c *Client) IconifiedSet(iconified bool) {
 	c.iconified = iconified
 }
