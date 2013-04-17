@@ -270,6 +270,26 @@ func (c *Client) canMaxUnmax() bool {
 	return true
 }
 
+func (c *Client) SkipTaskbarSet(yes bool) {
+	if yes {
+		c.skipTaskbar = true
+		c.addState("_NET_WM_STATE_SKIP_TASKBAR")
+	} else {
+		c.skipTaskbar = false
+		c.removeState("_NET_WM_STATE_SKIP_TASKBAR")
+	}
+}
+
+func (c *Client) SkipPagerSet(yes bool) {
+	if yes {
+		c.skipPager = true
+		c.addState("_NET_WM_STATE_SKIP_PAGER")
+	} else {
+		c.skipPager = false
+		c.removeState("_NET_WM_STATE_SKIP_PAGER")
+	}
+}
+
 func (c *Client) attnStart() {
 	if c.demanding {
 		return

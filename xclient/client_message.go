@@ -110,34 +110,20 @@ func (c *Client) updateState(action, prop string) {
 	case "_NET_WM_STATE_SKIP_TASKBAR":
 		switch action {
 		case "remove":
-			c.skipTaskbar = false
-			c.removeState("_NET_WM_STATE_SKIP_TASKBAR")
+			c.SkipTaskbarSet(false)
 		case "add":
-			c.skipTaskbar = true
-			c.addState("_NET_WM_STATE_SKIP_TASKBAR")
+			c.SkipTaskbarSet(true)
 		case "toggle":
-			c.skipTaskbar = !c.skipTaskbar
-			if c.skipTaskbar {
-				c.addState("_NET_WM_STATE_SKIP_TASKBAR")
-			} else {
-				c.removeState("_NET_WM_STATE_SKIP_TASKBAR")
-			}
+			c.SkipTaskbarSet(!c.skipTaskbar)
 		}
 	case "_NET_WM_STATE_SKIP_PAGER":
 		switch action {
 		case "remove":
-			c.skipPager = false
-			c.removeState("_NET_WM_STATE_SKIP_PAGER")
+			c.SkipPagerSet(false)
 		case "add":
-			c.skipPager = true
-			c.addState("_NET_WM_STATE_SKIP_PAGER")
+			c.SkipPagerSet(true)
 		case "toggle":
-			c.skipPager = !c.skipPager
-			if c.skipPager {
-				c.addState("_NET_WM_STATE_SKIP_PAGER")
-			} else {
-				c.removeState("_NET_WM_STATE_SKIP_PAGER")
-			}
+			c.SkipPagerSet(!c.skipPager)
 		}
 	case "_NET_WM_STATE_HIDDEN":
 		switch action {
@@ -213,6 +199,10 @@ func (c *Client) removeState(name string) {
 		c.winStates = append(c.winStates[:i], c.winStates[i+1:]...)
 		ewmh.WmStateSet(wm.X, c.Id(), c.winStates)
 	}
+}
+
+func (c *Client) WmStates() []string {
+	return c.winStates
 }
 
 func (c *Client) refreshState() {

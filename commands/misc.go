@@ -176,3 +176,7 @@ func withWorkspace(wArg gribble.Any, f func(wrk *workspace.Workspace)) {
 		}
 	}
 }
+
+func cmdError(format string, v ...interface{}) string {
+	return fmt.Sprintf("ERROR: %s", fmt.Sprintf(format, v...))
+}

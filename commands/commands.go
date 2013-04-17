@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xevent"
+	"github.com/BurntSushi/xgbutil/xprop"
 	"github.com/BurntSushi/xgbutil/xrect"
 
 	"github.com/BurntSushi/wingo/focus"
@@ -119,6 +121,12 @@ var Env = gribble.New([]gribble.Command{
 	&GetWorkspaceNext{},
 	&GetWorkspacePrefix{},
 	&GetWorkspacePrev{},
+	&GetClientStatesList{},
+	&HideClientFromPanels{},
+	&ShowClientInPanels{},
+
+	&TagGet{},
+	&TagSet{},
 
 	&True{},
 	&False{},
@@ -144,6 +152,9 @@ var (
 	// command is synchronously returned with respext to the X main event loop.
 	// See SafeExec.
 	SafeReturn = make(chan gribble.Value, 0)
+
+	// Regex for enforcing tag name constraints.
+	validTagName = regexp.MustCompile("^[-a-zA-Z0-9_]+$")
 )
 
 func init() {
@@ -1235,6 +1246,107 @@ func (cmd WorkspaceGreedyWithClient) Run() gribble.Value {
 				wm.SetWorkspace(wrk, true)
 				wm.FocusFallback()
 			})
+		})
+		return nil
+	})
+}
+
+type TagGet struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Name string `param:"2"`
+	Help string `
+Retrieves the tag with name Name for the client specified by Client.
+
+Client may be the window id or a substring that matches a window name.
+
+Tag names may only contain the following characters: [-a-zA-Z0-9_].
+`
+}
+
+func (cmd TagGet) Run() gribble.Value {
+	if !validTagName.MatchString(cmd.Name) {
+		return cmdError("Tag names must match %s.", validTagName.String())
+	}
+
+	tval := ""
+	withClient(cmd.Client, func(c *xclient.Client) {
+		var err error
+
+		tagName := fmt.Sprintf("_WINGO_TAG_%s", cmd.Name)
+		tval, err = xprop.PropValStr(xprop.GetProperty(wm.X, c.Id(), tagName))
+		if err != nil {
+			// Log the error, but give the caller an empty string.
+			logger.Warning.Println(err)
+		}
+	})
+	return tval
+}
+
+type TagSet struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Name string `param:"2"`
+	Value string `param:"3"`
+	Help string `
+Sets the tag with name Name to value Value for the client specified by Client.
+
+Client may be the window id or a substring that matches a window name.
+
+Tag names may only contain the following characters: [-a-zA-Z0-9_].
+`
+}
+
+func (cmd TagSet) Run() gribble.Value {
+	if !validTagName.MatchString(cmd.Name) {
+		return cmdError("Tag names must match %s.", validTagName.String())
+	}
+
+	var err error
+	withClient(cmd.Client, func(c *xclient.Client) {
+		tagName := fmt.Sprintf("_WINGO_TAG_%s", cmd.Name)
+		err = xprop.ChangeProp(wm.X, c.Id(), 8, tagName, "UTF8_STRING",
+			[]byte(cmd.Value))
+	})
+	if err != nil {
+		return cmdError(err.Error())
+	}
+	return ""
+}
+
+type HideClientFromPanels struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Sets the appropriate flags so that the window specified by Client is
+hidden from panels and pagers.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd HideClientFromPanels) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.SkipTaskbarSet(true)
+			c.SkipPagerSet(true)
+		})
+		return nil
+	})
+}
+
+type ShowClientInPanels struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Sets the appropriate flags so that the window specified by Client is
+shown on panels and pagers.
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd ShowClientInPanels) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			c.SkipTaskbarSet(false)
+			c.SkipPagerSet(false)
 		})
 		return nil
 	})

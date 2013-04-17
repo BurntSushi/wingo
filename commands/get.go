@@ -493,3 +493,35 @@ multi-head setups, since multiple workspaces can be viewable at one time.
 func (cmd GetWorkspacePrev) Run() gribble.Value {
 	return wm.Heads.PrevWorkspace().Name
 }
+
+type GetClientStatesList struct {
+	Client gribble.Any `param:"1" types:"int,string"`
+	Help string `
+Returns a list of states that the client is in. These states are in
+correspondence with the possible values of the _NET_WM_STATE property.
+The following states may appear in the list: STICKY, MAXIMIZED_VERT,
+MAXIMIZED_HORZ, SKIP_TASKBAR, SKIP_PAGER, HIDDEN, FULLSCREEN,
+ABOVE, BELOW, DEMANDS_ATTENTION and FOCUSED.
+
+More details can be found here: http://goo.gl/FHdjl
+
+Client may be the window id or a substring that matches a window name.
+`
+}
+
+func (cmd GetClientStatesList) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		states := make([]string, 0, 2)
+		prefix := "_NET_WM_STATE_"
+		withClient(cmd.Client, func(c *xclient.Client) {
+			for _, s := range c.WmStates() {
+				if !strings.HasPrefix(s, prefix) {
+					logger.Warning.Printf("Unknown WM state: %s", s)
+					continue
+				}
+				states = append(states, s[len(prefix):])
+			}
+		})
+		return strings.Join(states, "\n")
+	})
+}
