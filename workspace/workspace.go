@@ -263,30 +263,49 @@ func (wrk *Workspace) Place() {
 }
 
 func (wrk *Workspace) IconifyToggle(c Client) {
-	// If it's not the current workspace, a window cannot toggle iconification.
-	if wrk != wrk.all.Active() {
-		return
-	}
-	if c.Iconified() {
-		if _, ok := c.Layout().(layout.Floater); ok {
-			c.LoadState("last-floating")
-		}
-		wrk.addToFloaters(c)
-		wrk.addToTilers(c)
-		c.IconifiedSet(false)
+	// If the workspace isn't visible, we need to do some trickery
+	// with copying client geometry states.
+	if !wrk.IsVisible() {
+		if c.Iconified() {
+			if c.HasState("last-floating") {
+				c.CopyState("last-floating", "workspace-switch")
+			}
 
-		wrk.Place()
-		c.Map()
+			wrk.addToFloaters(c)
+			wrk.addToTilers(c)
+			c.IconifiedSet(false)
+		} else {
+			_, floating := wrk.Layout(c).(layout.Floater)
+			if c.HasState("workspace-switch") && floating {
+				c.CopyState("workspace-switch", "last-floating")
+			}
+
+			wrk.removeFromFloaters(c)
+			wrk.removeFromTilers(c)
+			c.IconifiedSet(true)
+		}
 	} else {
-		if _, ok := c.Layout().(layout.Floater); ok {
-			c.SaveState("last-floating")
-		}
-		wrk.removeFromFloaters(c)
-		wrk.removeFromTilers(c)
-		c.IconifiedSet(true)
+		if c.Iconified() {
+			if _, ok := c.Layout().(layout.Floater); ok {
+				c.LoadState("last-floating")
+			}
+			wrk.addToFloaters(c)
+			wrk.addToTilers(c)
+			c.IconifiedSet(false)
 
-		c.Unmap()
-		wrk.Place()
+			wrk.Place()
+			c.Map()
+		} else {
+			if _, ok := c.Layout().(layout.Floater); ok {
+				c.SaveState("last-floating")
+			}
+			wrk.removeFromFloaters(c)
+			wrk.removeFromTilers(c)
+			c.IconifiedSet(true)
+
+			c.Unmap()
+			wrk.Place()
+		}
 	}
 }
 
