@@ -38,6 +38,7 @@ var Env = gribble.New([]gribble.Command{
 	&FrameFull{},
 	&FrameNada{},
 	&FrameSlim{},
+	&HeadCycle{},
 	&HeadFocus{},
 	&HeadFocusWithClient{},
 	&ToggleFloating{},
@@ -379,6 +380,26 @@ func (cmd FrameSlim) Run() gribble.Value {
 		withClient(cmd.Client, func(c *xclient.Client) {
 			c.FrameSlim()
 		})
+		return nil
+	})
+}
+
+type HeadCycle struct {
+	Help string `
+Cycles focus to the next head, ordered by index. Heads are ordered
+by their physical position: left to right and then top to bottom.
+`
+}
+
+func (cmd HeadCycle) Run() gribble.Value {
+	return syncRun(func() gribble.Value {
+		cur := wm.Heads.VisibleIndex(wm.Workspace())
+		next := misc.Mod(cur + 1, wm.Heads.NumHeads())
+		wm.Heads.WithVisibleWorkspace(next,
+			func(wrk *workspace.Workspace) {
+				wm.SetWorkspace(wrk, false)
+			})
+		wm.FocusFallback()
 		return nil
 	})
 }
