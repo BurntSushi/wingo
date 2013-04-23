@@ -71,18 +71,20 @@ func New(id xproto.Window) *Client {
 	// unintuitive state changes.
 	// If someone really wants it, we can add a new "startup_managed" hook
 	// or something.
-	if !wm.Startup {
-		event.Notify(event.ManagedClient{c.Id()})
-		c.FireHook(hook.Managed)
-	}
-	if !c.iconified {
-		c.Map()
-		if !wm.Startup && c.PrimaryType() == TypeNormal {
-			if !wm.Config.Ffm || wm.Config.FfmStartupFocus {
-				c.Focus()
+	go func() {
+		if !wm.Startup {
+			event.Notify(event.ManagedClient{c.Id()})
+			<-c.FireHook(hook.Managed)
+		}
+		if !c.iconified {
+			c.Map()
+			if !wm.Startup && c.PrimaryType() == TypeNormal {
+				if !wm.Config.Ffm || wm.Config.FfmStartupFocus {
+					c.Focus()
+				}
 			}
 		}
-	}
+	}()
 
 	return c
 }

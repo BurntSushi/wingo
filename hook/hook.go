@@ -85,8 +85,10 @@ func Initialize(env *gribble.Environment, fpath string) {
 // of the consequences. If any of the match conditions are false, we stop
 // and condinue on to the next hook.
 //
-// Note that Fire immediately returns, as it executes in its own goroutine.
-func Fire(hk Type, args Args) {
+// Note that Fire immediately return a channel, as it executes in its own
+// goroutine. The channel can be used to block until Fire has finished.
+func Fire(hk Type, args Args) chan struct{} {
+	wait := make(chan struct{})
 	go func() {
 		if _, ok := groups[hk]; !ok {
 			logger.Warning.Printf("Unknown hook group '%s'.", hk)
@@ -149,7 +151,9 @@ func Fire(hk Type, args Args) {
 				}
 			}
 		}
+		wait <- struct{}{}
 	}()
+	return wait
 }
 
 // gribbleBool translates a value returned by a Gribble command to a boolean
