@@ -152,11 +152,11 @@ func (c *Client) TopWin() *xwindow.Window {
 	return c.frame.Parent().Window
 }
 
-func (c *Client) FireHook(hk hook.Type) chan struct{} {
+func (c *Client) FireHook(hk hook.Type) {
 	args := hook.Args{
 		Client: fmt.Sprintf("%d", c.Id()),
 	}
-	return hook.Fire(hk, args)
+	hook.Fire(hk, args)
 }
 
 func (c *Client) Layer() int {
