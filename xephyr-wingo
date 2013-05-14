@@ -13,9 +13,9 @@ sleep 0.5
 export DISPLAY=:11.0
 
 if [ -n "$*" ]; then
-  ./wingo $* &
+  ./wingo-conc $* &
 else
-  ./wingo --log-colors --log-level 3 -p 1 --config-dir config &
+  ./wingo-conc --log-colors --log-level 3 -p 1 --config-dir config &
 fi
 
 wingo=$!
