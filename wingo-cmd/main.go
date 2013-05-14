@@ -16,7 +16,7 @@ import (
 
 	"github.com/BurntSushi/cmd"
 
-	"github.com/BurntSushi/wingo/commands"
+	"github.com/BurntSushi/wingo-conc/commands"
 )
 
 var (

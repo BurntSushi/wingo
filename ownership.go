@@ -12,7 +12,7 @@ import (
 	"github.com/BurntSushi/xgbutil/xprop"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
-	"github.com/BurntSushi/wingo/logger"
+	"github.com/BurntSushi/wingo-conc/logger"
 )
 
 // This file is responsible for implementing all the crud around getting

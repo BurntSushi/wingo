@@ -6,8 +6,8 @@ import (
 	"github.com/BurntSushi/xgbutil/ewmh"
 	"github.com/BurntSushi/xgbutil/xrect"
 
-	"github.com/BurntSushi/wingo/cursors"
-	"github.com/BurntSushi/wingo/frame"
+	"github.com/BurntSushi/wingo-conc/cursors"
+	"github.com/BurntSushi/wingo-conc/frame"
 )
 
 func (c *Client) DragGeom() xrect.Rect {

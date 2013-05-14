@@ -6,8 +6,8 @@ import (
 
 	"github.com/BurntSushi/gribble"
 
-	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/wini"
+	"github.com/BurntSushi/wingo-conc/logger"
+	"github.com/BurntSushi/wingo-conc/wini"
 )
 
 // All available hook groups. Each hook group corresponds to some action in

@@ -21,9 +21,9 @@ import (
 	"github.com/BurntSushi/xgbutil/xgraphics"
 	"github.com/BurntSushi/xgbutil/xwindow"
 
-	"github.com/BurntSushi/wingo/misc"
-	"github.com/BurntSushi/wingo/render"
-	"github.com/BurntSushi/wingo/text"
+	"github.com/BurntSushi/wingo-conc/misc"
+	"github.com/BurntSushi/wingo-conc/render"
+	"github.com/BurntSushi/wingo-conc/text"
 )
 
 var (
