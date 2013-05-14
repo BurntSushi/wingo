@@ -20,17 +20,17 @@ import (
 	"github.com/BurntSushi/xgbutil/mousebind"
 	"github.com/BurntSushi/xgbutil/xevent"
 
-	"github.com/BurntSushi/wingo/commands"
-	"github.com/BurntSushi/wingo/cursors"
-	"github.com/BurntSushi/wingo/event"
-	"github.com/BurntSushi/wingo/focus"
-	"github.com/BurntSushi/wingo/frame"
-	"github.com/BurntSushi/wingo/hook"
-	"github.com/BurntSushi/wingo/logger"
-	"github.com/BurntSushi/wingo/misc"
-	"github.com/BurntSushi/wingo/stack"
-	"github.com/BurntSushi/wingo/wm"
-	"github.com/BurntSushi/wingo/xclient"
+	"github.com/BurntSushi/wingo-conc/commands"
+	"github.com/BurntSushi/wingo-conc/cursors"
+	"github.com/BurntSushi/wingo-conc/event"
+	"github.com/BurntSushi/wingo-conc/focus"
+	"github.com/BurntSushi/wingo-conc/frame"
+	"github.com/BurntSushi/wingo-conc/hook"
+	"github.com/BurntSushi/wingo-conc/logger"
+	"github.com/BurntSushi/wingo-conc/misc"
+	"github.com/BurntSushi/wingo-conc/stack"
+	"github.com/BurntSushi/wingo-conc/wm"
+	"github.com/BurntSushi/wingo-conc/xclient"
 )
 
 var (
@@ -62,12 +62,12 @@ func init() {
 		"Override the location of the configuration files. When this\n"+
 			"is not set, the following paths (roughly) will be checked\n"+
 			"in order: $XDG_CONFIG_DIR/wingo, /etc/xdg/wingo,\n"+
-			"$GOPATH/src/github.com/BurntSushi/wingo/config")
+			"$GOPATH/src/github.com/BurntSushi/wingo-conc/config")
 	flag.StringVar(&flagDataDir, "data-dir", flagDataDir,
 		"Override the location of the data files (images/fonts). When this\n"+
 			"is not set, the following paths (roughly) will be checked\n"+
 			"in order: $XDG_DATA_HOME/wingo, /usr/local/share, /usr/share,\n"+
-			"$GOPATH/src/github.com/BurntSushi/wingo/data")
+			"$GOPATH/src/github.com/BurntSushi/wingo-conc/data")
 	flag.BoolVar(&flagWriteConfig, "write-config", flagWriteConfig,
 		"Writes a fresh set of configuration files to $XDG_CONFIG_HOME/wingo\n"+
 			"if XDG_CONFIG_HOME is set. Otherwise, configuration files\n"+
