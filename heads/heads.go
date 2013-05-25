@@ -165,7 +165,7 @@ func (hds *Heads) Reload(clients Clients) {
 
 func (hds *Heads) ApplyStruts(clients Clients) {
 	hds.workarea = make(xinerama.Heads, len(hds.geom))
-	for i, hd := range hds.geom {
+	for i, hd := range query(hds.X) {
 		hds.workarea[i] = xrect.New(hd.X(), hd.Y(), hd.Width(), hd.Height())
 	}
 
