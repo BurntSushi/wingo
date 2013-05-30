@@ -11,6 +11,9 @@
 #
 # A hook is started with some label like "[MyHookName]". The label can be
 # anything, and is used in the Wingo logs when you need to debug your hook.
+# (This requires running wingo with `--log-level 4`, which generates a lot
+# of noise in the logs. But grep'ing for your hook name should cut through
+# the noise quite nicely.)
 #
 # Every hook also needs a "match" option set. A hook that always matches
 # can be specified with "match := True". A hook that never matches can be

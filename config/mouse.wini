@@ -5,7 +5,7 @@
 # Basically, each distinct region of a window can have its own mouse commands
 # defined. Regions are defined as "[ ... ]" sections below. And just like
 # in the key configuration, more than one command can be assigned to a
-# particular button combination just be successive definitions.
+# particular button combination by using successive definitions.
 #
 # The default mouse configuration isn't that interesting, and is clearly
 # intended to work well with a regular floating window manager. However, since

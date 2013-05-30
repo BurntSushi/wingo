@@ -70,11 +70,13 @@
 #
 # Commands are run with bash like so: `bash -c "{COMMAND}"`. Double quotes can 
 # be escaped with a backslash, e.g., \".
+#
+# N.B. The shell used can be changed in `options.wini`.
 Mod4-t := Shell "xterm"
 Mod1-F2 := Shell "gmrun"
 
 # You could also use Wingo's Shell command to execute commands on the fly.
-# In all likelihood, you should use a real launcher like `gmrun`.
+# In all likelihood, you should use a real launcher like `gmrun` or `dmenu`.
 # Mod4-r := Shell (Input "Command:") 
 
 # Some basic window manager commands. Closing/maximizing can also be done with
@@ -88,7 +90,7 @@ Mod1-s := ToggleSticky (GetActive)
 # WingoExec will allow you to execute *any* Wingo command.
 Mod4-Shift-r := WingoExec (Input "Wingo command:")
 
-# WingoHelp will show you everything you'd could possible want to know about
+# WingoHelp will show you everything you could possibly want to know about
 # any of Wingo's commands.
 Mod4-Shift-h := WingoHelp (Input "Wingo command name:")
 
@@ -106,7 +108,7 @@ Mod4-Shift-a := AddWorkspace (Input "New workspace name:")
 Mod4-BackSpace := RemoveWorkspace (GetWorkspace)
 
 # An alternative version of AddWorkspace that will add a new workspace given
-# some input, and then automatically switch to it. This shows an undocumented
+# some input, and then automatically switch to it. This shows a lesser known
 # feature where some commands return relevant values that can be re-used in
 # other commands. In this case, `AddWorkspace` returns the name of the
 # workspace added.
@@ -121,7 +123,7 @@ Mod4-Shift-left := WorkspaceWithClient (GetWorkspacePrev) (GetActive)
 Mod4-Shift-right := WorkspaceWithClient (GetWorkspaceNext) (GetActive)
 
 # Switch to a particular workspace "greedily". A greedy workspace switch
-# *always* brings the workspace specified to the current workspace. When the
+# *always* brings the workspace specified to the current monitor. When the
 # workspace is hidden, there is no difference between a regular switch and
 # a greedy switch. But when the workspace is visible on another monitor,
 # a greedy switch will flip the workspaces whereas a regular switch will

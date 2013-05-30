@@ -35,7 +35,7 @@ focus_follows_mouse_startup_focus := no
 # another monitor will move the focus to the workspace on that monitor.
 # Note that this does not require that "focus_follows_mouse" be enabled;
 # however this only works when the mouse is directly over the root window.
-# (So enabling this option might be weight if "focus_follows_mouse" is
+# (So enabling this option might be weird if "focus_follows_mouse" is
 # disabled.)
 #
 # N.B. It is possible that this could have an effect on performance, since
@@ -69,6 +69,10 @@ confirm := Return
 cancel := Escape
 
 # The shell to be used to launch commands.
+# It is used like so: `SHELL -c "{COMMAND}"`.
+# If you need to pass additional arguments to the shell invocation, then
+# you'll need to make a wrapper script.
+# (Make sure it can handle the `-c` flag!)
 shell := bash
 
 # The program to use to play a wav file. This is only used with the "Dale"
