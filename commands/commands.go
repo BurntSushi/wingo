@@ -65,6 +65,7 @@ var Env = gribble.New([]gribble.Command{
 	&SetLayout{},
 	&SetOpacity{},
 	&Script{},
+	&ScriptConfig{},
 	&Shell{},
 	&Unfloat{},
 	&Unmaximize{},
@@ -1000,6 +1001,21 @@ func (cmd Script) Run() gribble.Value {
 		}
 	}()
 	return nil
+}
+
+type ScriptConfig struct {
+	ScriptName string `param:"1"`
+	Help string `
+Returns the path to a script's configuration file.
+`
+}
+
+func (cmd ScriptConfig) Run() gribble.Value {
+	if len(cmd.ScriptName) == 0 {
+		logger.Warning.Printf("Cannot find config file for empty script name.")
+		return nil
+	}
+	return misc.ScriptConfigPath(cmd.ScriptName)
 }
 
 type Shell struct {

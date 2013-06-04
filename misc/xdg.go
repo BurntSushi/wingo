@@ -1,6 +1,7 @@
 package misc
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path"
 
@@ -48,9 +49,23 @@ func DataFile(name string) []byte {
 }
 
 func ScriptPath(name string) string {
-	fpath, err := ScriptPaths.ConfigFile(path.Join("scripts", name))
+	fpath, err := ScriptPaths.ConfigFile(path.Join("scripts", name, name))
 	if err != nil {
-		logger.Warning.Println(err)
+		fpath, err = ScriptPaths.ConfigFile(path.Join("scripts", name))
+		if err != nil {
+			logger.Warning.Println(err)
+			return ""
+		}
 	}
 	return fpath
+}
+
+func ScriptConfigPath(name string) string {
+	fname := fmt.Sprintf("%s.cfg", name)
+	fp, err := ScriptPaths.ConfigFile(path.Join("scripts", name, fname))
+	if err != nil {
+		logger.Warning.Println(err)
+		return ""
+	}
+	return fp
 }
