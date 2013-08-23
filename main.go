@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"runtime"
@@ -95,7 +97,7 @@ func init() {
 
 	// If the log level is 0, don't show XGB log output either.
 	if flagLogLevel == 0 || flagShowSocket {
-		xgb.PrintLog = false
+		xgb.Logger = log.New(ioutil.Discard, "", 0)
 	}
 }
 
