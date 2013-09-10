@@ -90,6 +90,7 @@ func handleClient(conn net.Conn) {
 		val, err := commands.Env.RunMany(msg)
 		commands.Env.Verbose = false
 		if err != nil {
+			logger.Lots.Printf("ERROR running command: '%s'.", err)
 			fmt.Fprintf(conn, "ERROR: %s%c", err, 0)
 
 			// One command failing doesn't mean we should close the conn.
