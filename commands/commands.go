@@ -1335,6 +1335,8 @@ type TagGet struct {
 Retrieves the tag with name Name for the client specified by Client.
 
 Client may be the window id or a substring that matches a window name.
+Or, it may be zero and the property will be retrieved from the root
+window.
 
 Tag names may only contain the following characters: [-a-zA-Z0-9_].
 `
@@ -1345,17 +1347,21 @@ func (cmd TagGet) Run() gribble.Value {
 		return cmdError("Tag names must match %s.", validTagName.String())
 	}
 
-	tval := ""
-	withClient(cmd.Client, func(c *xclient.Client) {
-		var err error
-
-		tagName := fmt.Sprintf("_WINGO_TAG_%s", cmd.Name)
-		tval, err = xprop.PropValStr(xprop.GetProperty(wm.X, c.Id(), tagName))
-		if err != nil {
-			// Log the error, but give the caller an empty string.
-			logger.Warning.Println(err)
-		}
-	})
+	var cid xproto.Window
+	tagName := fmt.Sprintf("_WINGO_TAG_%s", cmd.Name)
+	if n, ok := cmd.Client.(int); ok && n == 0 {
+		cid = wm.Root.Id
+	} else {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			cid = c.Id()
+		})
+	}
+	tval, err := xprop.PropValStr(xprop.GetProperty(wm.X, cid, tagName))
+	if err != nil {
+		// Log the error, but give the caller an empty string.
+		logger.Warning.Println(err)
+		return ""
+	}
 	return tval
 }
 
@@ -1367,6 +1373,7 @@ type TagSet struct {
 Sets the tag with name Name to value Value for the client specified by Client.
 
 Client may be the window id or a substring that matches a window name.
+Or, it may be zero and the property will be set on the root window.
 
 Tag names may only contain the following characters: [-a-zA-Z0-9_].
 `
@@ -1377,12 +1384,17 @@ func (cmd TagSet) Run() gribble.Value {
 		return cmdError("Tag names must match %s.", validTagName.String())
 	}
 
-	var err error
-	withClient(cmd.Client, func(c *xclient.Client) {
-		tagName := fmt.Sprintf("_WINGO_TAG_%s", cmd.Name)
-		err = xprop.ChangeProp(wm.X, c.Id(), 8, tagName, "UTF8_STRING",
-			[]byte(cmd.Value))
-	})
+	var cid xproto.Window
+	tagName := fmt.Sprintf("_WINGO_TAG_%s", cmd.Name)
+	if n, ok := cmd.Client.(int); ok && n == 0 {
+		cid = wm.Root.Id
+	} else {
+		withClient(cmd.Client, func(c *xclient.Client) {
+			cid = c.Id()
+		})
+	}
+	err := xprop.ChangeProp(wm.X, cid, 8, tagName, "UTF8_STRING",
+		[]byte(cmd.Value))
 	if err != nil {
 		return cmdError(err.Error())
 	}
