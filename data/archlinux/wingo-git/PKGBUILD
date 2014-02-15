@@ -2,7 +2,7 @@
 # Maintainer: Andrew Gallant
 pkgname=wingo-git
 pkgver=20121022
-pkgrel=1
+pkgrel=2
 pkgdesc="An X window manager featuring per-monitor workspaces with floating and tiling placement policies."
 arch=('any')
 url="https://github.com/BurntSushi/wingo"
