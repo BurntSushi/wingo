@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Wingo
+Comment=Log in using Wingo
+Exec=/usr/bin/wingo
+TryExec=/usr/bin/wingo
+Icon=/usr/share/wingo/wingo.png
+Type=Application
