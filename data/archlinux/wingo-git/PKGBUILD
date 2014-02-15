@@ -53,4 +53,8 @@ build() {
   install -Dm644 close.png "$pkgdir/usr/share/wingo/close.png"
   install -Dm644 minimize.png "$pkgdir/usr/share/wingo/minimize.png"
   install -Dm644 maximize.png "$pkgdir/usr/share/wingo/maximize.png"
+
+  # Install Wingo xsession file to /usr/share/xsessions
+  cd "$srcdir/src/github.com/BurntSushi/wingo/data/archlinux/wingo-git"
+  install -Dm644 wingo.desktop "$pkgdir/usr/share/xsessions/wingo.desktop"
 }
