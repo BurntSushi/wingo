@@ -57,8 +57,8 @@
 #
 # If you don't have `wingo-cmd` available on your system, and you installed
 # Wingo with `go get`, then `go get github.com/BurntSushi/wingo/wingo-cmd`
-# should install wingo-cmd for you. If you *didn't* install Wingo with `go 
-# get`, then presumably you need to speak to the package maintainer in charge 
+# should install wingo-cmd for you. If you *didn't* install Wingo with `go
+# get`, then presumably you need to speak to the package maintainer in charge
 # of the package.
 
 
@@ -68,7 +68,7 @@
 # configure shortcuts for running programs. It's more mature and will work
 # with *any* window manager.
 #
-# Commands are run with bash like so: `bash -c "{COMMAND}"`. Double quotes can 
+# Commands are run with bash like so: `bash -c "{COMMAND}"`. Double quotes can
 # be escaped with a backslash, e.g., \".
 #
 # N.B. The shell used can be changed in `options.wini`.
@@ -77,7 +77,7 @@ Mod1-F2 := Shell "gmrun"
 
 # You could also use Wingo's Shell command to execute commands on the fly.
 # In all likelihood, you should use a real launcher like `gmrun` or `dmenu`.
-# Mod4-r := Shell (Input "Command:") 
+# Mod4-r := Shell (Input "Command:")
 
 # Some basic window manager commands. Closing/maximizing can also be done with
 # buttons on fully decorated windows.
@@ -112,7 +112,7 @@ Mod4-BackSpace := RemoveWorkspace (GetWorkspace)
 # feature where some commands return relevant values that can be re-used in
 # other commands. In this case, `AddWorkspace` returns the name of the
 # workspace added.
-# Mod4-Shift-a := Workspace (AddWorkspace (Input "New workspace name:")) 
+# Mod4-Shift-a := Workspace (AddWorkspace (Input "New workspace name:"))
 
 # Your basic Workspace commands.
 # Note that these commands become extremely awkward in a multi-head setup,

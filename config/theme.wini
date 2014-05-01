@@ -1,5 +1,5 @@
 # This file contains all theme information for Wingo. For the most part, this
-# includes changing colors, fonts, font sizes, border and icon sizes. This is 
+# includes changing colors, fonts, font sizes, border and icon sizes. This is
 # enough to completely configure your own color scheme for Wingo, but you won't
 # be able to make any structural changes to the window decorations.
 #
@@ -14,7 +14,7 @@
 # separately, and many different kinds of prompts that all use the same theme
 # configuration. The sections "Full", "Borders", and "Slim" correspond
 # to three of the four frame decorations (the fourth is "Nada" and does not
-# have any appearance, and therefore has no theme), and the "Prompt" section 
+# have any appearance, and therefore has no theme), and the "Prompt" section
 # corresponds to the prompt theme information.
 #
 # Here is a brief description of each kind of window decoration:
@@ -52,8 +52,8 @@
 # There are several options below that require you to specify a file path,
 # like fonts and images. These should always be absolute paths.
 #
-# Note that if a path is incorrect, Wingo will log a warning to stderr. More 
-# importantly, none of these paths *must* be correct for Wingo to operate. 
+# Note that if a path is incorrect, Wingo will log a warning to stderr. More
+# importantly, none of these paths *must* be correct for Wingo to operate.
 # Wingo will fall back to embedded defaults.
 #
 # N.B. Several file paths below are relative. They are meant to serve as
