@@ -1,7 +1,7 @@
 # Hooks are a way to run arbitrary Wingo commands whenever a certain event
-# occurs. The idea is to specify a set of match conditions and a set of 
-# commands that are executed for some particular event. Match conditions are 
-# run when the event occurs, and if the match conditions executes successfully, 
+# occurs. The idea is to specify a set of match conditions and a set of
+# commands that are executed for some particular event. Match conditions are
+# run when the event occurs, and if the match conditions executes successfully,
 # the associated commands are executed.
 #
 # The following hooks are allowed:
@@ -40,28 +40,28 @@
 # substitution will occur on the "startup" hook.)
 #
 # Let's walk through an example that, in simple terms, tries to match a
-# terminal window and then maximize it and removes its decorations 
+# terminal window and then maximize it and removes its decorations
 # when it's first managed.
 #
 # -------------------------------------------------------
-# [MaximizeTerminals] 
-# match := MatchClientClass ":client:" "lxterminal" 
-# match := MatchClientClass ":client:" "konsole" 
-# match := MatchClientClass ":client:" "urxvt" 
-# match := MatchClientClass ":client:" "xterm" 
-# match := MatchClientClass ":client:" "gnome-terminal" 
-#  
-# conjunction := no 
-#  
+# [MaximizeTerminals]
+# match := MatchClientClass ":client:" "lxterminal"
+# match := MatchClientClass ":client:" "konsole"
+# match := MatchClientClass ":client:" "urxvt"
+# match := MatchClientClass ":client:" "xterm"
+# match := MatchClientClass ":client:" "gnome-terminal"
+#
+# conjunction := no
+#
 # managed := FrameSlim ":client:"
-# managed := Maximize ":client:" 
+# managed := Maximize ":client:"
 # -------------------------------------------------------
 #
 # Here we name our hook "MaximizeTerminals". (You'll see this name if there was
 # problem setting up your hook.) We specify 5 different command match
-# conditions, and disable conjunctive evaluation, so that only ONE of the match 
-# commands needs to return true in order for the managed hook to fire. If we 
-# didn't disable conjuctive evaluation, then no window would ever be able to 
+# conditions, and disable conjunctive evaluation, so that only ONE of the match
+# commands needs to return true in order for the managed hook to fire. If we
+# didn't disable conjuctive evaluation, then no window would ever be able to
 # match our conditions.
 #
 # Finally, we set the "managed" hook to run the commands 'FrameSlim ":client:"'
