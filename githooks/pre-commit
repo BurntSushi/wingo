@@ -14,10 +14,10 @@ if [ $(echo "$nofmted" | wc -w) != 0 ]; then
   exit 1
 fi
 
-no80cols=$(colcheck $files)
+no80cols=$(colcheck -c 80 $files)
 if [ $(echo "$no80cols" | wc -w) != 0 ]; then
   echo "Some files do not fit in 80 columns:"
-  colcheck $files
+  colcheck -c 80 $files
   exit 1
 fi
 
