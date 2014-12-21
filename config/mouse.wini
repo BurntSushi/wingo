@@ -34,7 +34,7 @@
 # ---------
 # Modifiers for mouse buttons work just like modifiers for key bindings.
 # See the "Modifiers" section in key.wini for the full scoop.
-# 
+#
 # TL;DR - Run `xmodmap` and use the names in the left column which line up
 #         to the actual keys you want to use. Mod1 is usually "alt" and Mod4
 #         is usually "Super" (the windows key). "Shift" and "Control" usually
@@ -63,8 +63,8 @@
 1 := Focus ":mouse:"
 
 # Here's an example of changing the workspace with your scroll wheel.
-# Mod4-4 := Workspace (GetWorkspaceNext) 
-# Mod4-5 := Workspace (GetWorkspacePrev) 
+# Mod4-4 := Workspace (GetWorkspaceNext)
+# Mod4-5 := Workspace (GetWorkspacePrev)
 
 [Client]
 1 := FocusRaise ":mouse:"
@@ -76,8 +76,8 @@ Mod4-3 := MouseResize "Infer"
 # Here's an example of binding to the mouse scroll wheel.
 # (If a compositing manager is running, this will allow you to adjust the
 # opacity of a window with your scroll wheel.)
-# Mod4-4 := Shell "transset-df -p --max 1.0 --inc 0.05" 
-# Mod4-5 := Shell "transset-df -p --min 0.1 --dec 0.05" 
+# Mod4-4 := Shell "transset-df -p --max 1.0 --inc 0.05"
+# Mod4-5 := Shell "transset-df -p --min 0.1 --dec 0.05"
 
 [FullIcon]
 1 := MouseMove

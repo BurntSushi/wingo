@@ -9,7 +9,7 @@ workspaces := 1 2 3 4 browser mail
 
 # The default layout that is used for all workspaces. Currently, the
 # only available layouts are: Floating, Vertical or Horizontal.
-# Setting this to something other than a Floating layout effectively turns 
+# Setting this to something other than a Floating layout effectively turns
 # Wingo into a tiling window manager.
 default_layout := Floating
 
