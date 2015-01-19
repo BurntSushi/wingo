@@ -22,6 +22,10 @@ build() {
 
   msg "go getting wingo-cmd..."
   GOPATH="$srcdir" go get -u -f -v -x github.com/BurntSushi/wingo/wingo-cmd
+}
+
+package() {
+  cd "$srcdir"
 
   # Install the wingo executables.
   install -Dm755 bin/wingo "$pkgdir/usr/bin/wingo"
