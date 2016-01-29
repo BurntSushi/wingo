@@ -337,8 +337,8 @@ func (f *Full) UpdateIcon() {
 	img := f.client.Icon(size-4, size-4)
 
 	sub := image.Rect(2, 2, size-2, size-2)
-	xgraphics.Blend(imgA.SubImage(sub), img, image.ZP)
-	xgraphics.Blend(imgI.SubImage(sub), img, image.ZP)
+	xgraphics.Blend(imgA.SubImage(sub).(*xgraphics.Image), img, image.ZP)
+	xgraphics.Blend(imgI.SubImage(sub).(*xgraphics.Image), img, image.ZP)
 
 	f.icon.Create(imgA.Image, imgI.Image)
 
@@ -383,8 +383,8 @@ func (f *Full) UpdateTitle() {
 
 	width, height := ew, imgA.Bounds().Max.Y
 	f.titleText.Create(
-		imgA.SubImage(image.Rect(0, 0, width, height)),
-		imgI.SubImage(image.Rect(0, 0, width, height)))
+		imgA.SubImage(image.Rect(0, 0, width, height)).(*xgraphics.Image),
+		imgI.SubImage(image.Rect(0, 0, width, height)).(*xgraphics.Image))
 
 	f.titleText.MROpt(fW, 0, 0, width, 0)
 	if f.client.State() == Active {
