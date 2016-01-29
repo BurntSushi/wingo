@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"code.google.com/p/jamslam-freetype-go/freetype"
-	"code.google.com/p/jamslam-freetype-go/freetype/truetype"
+	"github.com/BurntSushi/freetype-go/freetype"
+	"github.com/BurntSushi/freetype-go/freetype/truetype"
 
 	"github.com/BurntSushi/xgbutil/xgraphics"
 

@@ -3,7 +3,7 @@ package text
 import (
 	"image"
 
-	"code.google.com/p/jamslam-freetype-go/freetype/truetype"
+	"github.com/BurntSushi/freetype-go/freetype/truetype"
 
 	"github.com/BurntSushi/xgbutil/xgraphics"
 	"github.com/BurntSushi/xgbutil/xwindow"
