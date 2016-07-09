@@ -43,7 +43,7 @@ func (cmd GetActive) Run() gribble.Value {
 
 type GetClientX struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Returns the relative X position of the window specified by Client, where the X
 position refers to the left-most region of the window, including
 decorations. Note that "relative" in this case refers to the workspace
@@ -72,7 +72,7 @@ func (cmd GetClientX) Run() gribble.Value {
 
 type GetClientY struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Returns the relative Y position of the window specified by Client, where the Y
 position refers to the left-most region of the window, including
 decorations. Note that "relative" in this case refers to the workspace
@@ -101,7 +101,7 @@ func (cmd GetClientY) Run() gribble.Value {
 
 type GetClientHeight struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Returns the height of the window specified by Client, including
 decorations. If the client id is invalid, 0 is returned.
 
@@ -121,7 +121,7 @@ func (cmd GetClientHeight) Run() gribble.Value {
 
 type GetClientWidth struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Returns the width of the window specified by Client, including
 decorations. If the client id is invalid, 0 is returned.
 
@@ -157,8 +157,8 @@ func (cmd GetAllClients) Run() gribble.Value {
 }
 
 type GetClientList struct {
-	Workspace   gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Workspace gribble.Any `param:"1" types:"int,string"`
+	Help      string      `
 Returns a list of client ids separated by new lines on the workspace specified
 by Workspace. Clients are listed in their focus orderering, from most recently
 focused to least recently focused.
@@ -182,7 +182,7 @@ func (cmd GetClientList) Run() gribble.Value {
 
 type GetClientName struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Returns the name of the window specified by Client active window.
 
 Client may be the window id or a substring that matches a window name.
@@ -201,7 +201,7 @@ func (cmd GetClientName) Run() gribble.Value {
 
 type GetClientType struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Returns the type of the window specified by Client active window. A window
 type will either be "desktop", "dock" or "normal".
 
@@ -221,7 +221,7 @@ func (cmd GetClientType) Run() gribble.Value {
 
 type GetClientWorkspace struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Returns the workspace of the window specified by Client active window.
 
 Client may be the window id or a substring that matches a window name.
@@ -280,7 +280,7 @@ func (cmd GetNumHeadsConnected) Run() gribble.Value {
 }
 
 type GetHeadHeight struct {
-	Head int `param:"1"`
+	Head int    `param:"1"`
 	Help string `
 Gets the workable height of the head indexed at Head. If the head specified
 is not visible, then 0 is returned.
@@ -301,7 +301,7 @@ func (cmd GetHeadHeight) Run() gribble.Value {
 }
 
 type GetHeadWidth struct {
-	Head int `param:"1"`
+	Head int    `param:"1"`
 	Help string `
 Gets the workable width of the head indexed at Head. If the head specified
 is not visible, then 0 is returned.
@@ -322,7 +322,7 @@ func (cmd GetHeadWidth) Run() gribble.Value {
 }
 
 type GetHeadWorkspace struct {
-	Head int `param:"1"`
+	Head int    `param:"1"`
 	Help string `
 Returns the name of the workspace currently visible on the monitor indexed by
 Head. Indexing starts at 0. Heads are ordered by their physical position:
@@ -334,15 +334,15 @@ func (cmd GetHeadWorkspace) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		name := ""
 		wm.Heads.WithVisibleWorkspace(cmd.Head, func(wrk *workspace.Workspace) {
-				name = wrk.String()
-			})
+			name = wrk.String()
+		})
 		return name
 	})
 }
 
 type GetLayout struct {
 	Workspace gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help      string      `
 Returns the name of the currently active (or "default") layout on the workspace
 specified by Workspace. Note that when a workspace is set to a tiling layout,
 it is still possible for clients to be floating.
@@ -365,7 +365,6 @@ func (cmd GetLayout) Run() gribble.Value {
 	})
 }
 
-
 type GetWorkspace struct {
 	Help string `
 Returns the name of the current workspace.
@@ -379,8 +378,8 @@ func (cmd GetWorkspace) Run() gribble.Value {
 }
 
 type GetWorkspaceId struct {
-	Workspace   gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Workspace gribble.Any `param:"1" types:"int,string"`
+	Help      string      `
 Returns the id (the index) of the workspace specified by Workspace.
 
 Workspace may be a workspace index (integer) starting at 0, or a workspace
@@ -496,7 +495,7 @@ func (cmd GetWorkspacePrev) Run() gribble.Value {
 
 type GetClientStatesList struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Returns a list of states that the client is in. These states are in
 correspondence with the possible values of the _NET_WM_STATE property.
 The following states may appear in the list: STICKY, MAXIMIZED_VERT,

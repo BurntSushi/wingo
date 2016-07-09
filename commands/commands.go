@@ -150,7 +150,7 @@ var (
 	// sent and executed synchronously with respect to the X main event loop.
 	// This is necessary to allow asynchronous prompts to run and return
 	// values without locking up the rest of the window manager.
-	SafeExec   = make(chan func() gribble.Value, 1)
+	SafeExec = make(chan func() gribble.Value, 1)
 
 	// SafeReturn is the means through which a return value from a Gribble
 	// command is synchronously returned with respext to the X main event loop.
@@ -197,7 +197,7 @@ func (cmd AddWorkspace) Run() gribble.Value {
 
 type Close struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Closes the window specified by Client.
 
 Client may be the window id or a substring that matches a window name.
@@ -240,7 +240,7 @@ func (cmd Dale) Run() gribble.Value {
 
 type Float struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Floats the window specified by Client. If the window is already floating,
 this command has no effect.
 
@@ -259,7 +259,7 @@ func (cmd Float) Run() gribble.Value {
 
 type Focus struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Focuses the window specified by Client.
 
 Client may be the window id or a substring that matches a window name.
@@ -296,7 +296,7 @@ func (cmd Focus) Run() gribble.Value {
 
 type FocusRaise struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Focuses and raises the window specified by Client.
 
 Client may be the window id or a substring that matches a window name.
@@ -315,7 +315,7 @@ func (cmd FocusRaise) Run() gribble.Value {
 
 type FrameBorders struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Set the decorations of the window specified by Client to the "Borders" frame.
 
 Client may be the window id or a substring that matches a window name.
@@ -333,7 +333,7 @@ func (cmd FrameBorders) Run() gribble.Value {
 
 type FrameFull struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Set the decorations of the window specified by Client to the "Full" frame.
 
 Client may be the window id or a substring that matches a window name.
@@ -351,7 +351,7 @@ func (cmd FrameFull) Run() gribble.Value {
 
 type FrameNada struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Set the decorations of the window specified by Client to the "Nada" frame.
 
 Client may be the window id or a substring that matches a window name.
@@ -369,7 +369,7 @@ func (cmd FrameNada) Run() gribble.Value {
 
 type FrameSlim struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Set the decorations of the window specified by Client to the "Slim" frame.
 
 Client may be the window id or a substring that matches a window name.
@@ -395,7 +395,7 @@ by their physical position: left to right and then top to bottom.
 func (cmd HeadCycle) Run() gribble.Value {
 	return syncRun(func() gribble.Value {
 		cur := wm.Heads.VisibleIndex(wm.Workspace())
-		next := misc.Mod(cur + 1, wm.Heads.NumHeads())
+		next := misc.Mod(cur+1, wm.Heads.NumHeads())
 		wm.Heads.WithVisibleWorkspace(next,
 			func(wrk *workspace.Workspace) {
 				wm.SetWorkspace(wrk, false)
@@ -406,7 +406,7 @@ func (cmd HeadCycle) Run() gribble.Value {
 }
 
 type HeadFocus struct {
-	Head int `param:"1"`
+	Head int    `param:"1"`
 	Help string `
 Focuses the head indexed at Head. Indexing starts at 0. Heads are ordered
 by their physical position: left to right and then top to bottom.
@@ -427,7 +427,7 @@ func (cmd HeadFocus) Run() gribble.Value {
 type HeadFocusWithClient struct {
 	Head   int         `param:"1"`
 	Client gribble.Any `param:"2" types:"int,string"`
-	Help string `
+	Help   string      `
 Focuses the head indexed at Head, and move the Client specified by client to
 that head. Indexing of heads starts at 0. Heads are ordered by their physical
 position: left to right and then top to bottom.
@@ -452,7 +452,7 @@ func (cmd HeadFocusWithClient) Run() gribble.Value {
 
 type ToggleFloating struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Toggles whether the window specified by Client should be forced into the
 floating layout. A window forced into the floating layout CANNOT be tiled.
 
@@ -471,7 +471,7 @@ func (cmd ToggleFloating) Run() gribble.Value {
 
 type ToggleIconify struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Iconifies (minimizes) or deiconifies (unminimizes) the window specified by
 Client.
 
@@ -490,7 +490,7 @@ func (cmd ToggleIconify) Run() gribble.Value {
 
 type Iconify struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Iconifies (minimizes) the window specified by Client. If the window
 is already iconified, this command has no effect.
 
@@ -509,7 +509,7 @@ func (cmd Iconify) Run() gribble.Value {
 
 type Deiconify struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Deiconifies (unminimizes) the window specified by Client. If the window
 is already deiconified, this command has no effect.
 
@@ -528,7 +528,7 @@ func (cmd Deiconify) Run() gribble.Value {
 
 type ToggleMaximize struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Maximizes or restores the window specified by Client.
 
 Client may be the window id or a substring that matches a window name.
@@ -546,7 +546,7 @@ func (cmd ToggleMaximize) Run() gribble.Value {
 
 type ToggleStackAbove struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Toggles the layer of the window specified by Client from normal to above. When
 a window is in the "above" layer, it will always be above other (normal)
 clients.
@@ -566,7 +566,7 @@ func (cmd ToggleStackAbove) Run() gribble.Value {
 
 type ToggleStackBelow struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Toggles the layer of the window specified by Client from normal to below. When
 a window is in the "below" layer, it will always be below other (normal)
 clients.
@@ -586,7 +586,7 @@ func (cmd ToggleStackBelow) Run() gribble.Value {
 
 type ToggleSticky struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Toggles the sticky status of the window specified by Client. When a window is
 sticky, it will always be visible unless iconified. (i.e., it does not belong
 to any particular workspace.)
@@ -606,7 +606,7 @@ func (cmd ToggleSticky) Run() gribble.Value {
 
 type Maximize struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Maximizes the window specified by Client. If the window is already maximized,
 this command has no effect.
 
@@ -623,7 +623,7 @@ func (cmd Maximize) Run() gribble.Value {
 	})
 }
 
-type MouseMove struct{
+type MouseMove struct {
 	Help string `
 Initiates a drag that allows a window to be moved with the mouse.
 
@@ -633,14 +633,14 @@ configuration file. Invoking this command in any other way has no effect.
 }
 
 func (cmd MouseMove) Run() gribble.Value {
-	logger.Warning.Printf("The MouseMove command can only be invoked from "+
+	logger.Warning.Printf("The MouseMove command can only be invoked from " +
 		"the Wingo mouse configuration file.")
 	return nil
 }
 
 type MouseResize struct {
 	Direction string `param:"1"`
-	Help string `
+	Help      string `
 Initiates a drag that allows a window to be resized with the mouse.
 
 Direction specifies how the window should be resized, and what the pointer
@@ -658,14 +658,14 @@ configuration file. Invoking this command in any other way has no effect.
 }
 
 func (cmd MouseResize) Run() gribble.Value {
-	logger.Warning.Printf("The MouseResize command can only be invoked from "+
+	logger.Warning.Printf("The MouseResize command can only be invoked from " +
 		"the Wingo mouse configuration file.")
 	return nil
 }
 
 type Raise struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Raises the window specified by Client to the top of its layer.
 
 Client may be the window id or a substring that matches a window name.
@@ -685,7 +685,7 @@ type Move struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	X      gribble.Any `param:"2" types:"int,float"`
 	Y      gribble.Any `param:"3" types:"int,float"`
-	Help string `
+	Help   string      `
 Moves the window specified by Client to the x and y position specified by
 X and Y. Note that the origin is located in the top left corner.
 
@@ -716,7 +716,7 @@ type MoveRelative struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	X      gribble.Any `param:"2" types:"int,float"`
 	Y      gribble.Any `param:"3" types:"int,float"`
-	Help string `
+	Help   string      `
 Moves the window specified by Client to the x and y position specified by
 X and Y, relative to its workspace. Note that the origin is located in the top
 left corner of the client's workspace.
@@ -739,15 +739,15 @@ func (cmd MoveRelative) Run() gribble.Value {
 		}
 		withClient(cmd.Client, func(c *xclient.Client) {
 			c.EnsureUnmax()
-			c.LayoutMove(geom.X() + x, geom.Y() + y)
+			c.LayoutMove(geom.X()+x, geom.Y()+y)
 		})
 		return nil
 	})
 }
 
 type MovePointer struct {
-	X int `param:"1"`
-	Y int `param:"2"`
+	X    int    `param:"1"`
+	Y    int    `param:"2"`
 	Help string `
 Moves the pointer to the x and y position specified by X and Y. Note the the
 origin is located in the top left corner.
@@ -763,9 +763,9 @@ func (cmd MovePointer) Run() gribble.Value {
 }
 
 type MovePointerRelative struct {
-	X gribble.Any `param:"1" types:"int,float"`
-	Y gribble.Any `param:"2" types:"int,float"`
-	Help string `
+	X    gribble.Any `param:"1" types:"int,float"`
+	Y    gribble.Any `param:"2" types:"int,float"`
+	Help string      `
 Moves the pointer to the x and y position specified by X and Y relative to the
 current workspace. Note the the origin is located in the top left corner of
 the current workspace.
@@ -821,8 +821,8 @@ func (cmd Quit) Run() gribble.Value {
 
 type SetLayout struct {
 	Workspace gribble.Any `param:"1" types:"int,string"`
-	Name string `param:"2"`
-	Help string `
+	Name      string      `param:"2"`
+	Help      string      `
 Sets the current layout of the workspace specified by Workspace to the layout
 named by Name. If a layout with name Name does not exist, this command has
 no effect.
@@ -843,11 +843,10 @@ func (cmd SetLayout) Run() gribble.Value {
 	})
 }
 
-
 type SetOpacity struct {
-	Client gribble.Any `param:"1" types:"int,string"`
-	Opacity float64 `param:"2"`
-	Help string `
+	Client  gribble.Any `param:"1" types:"int,string"`
+	Opacity float64     `param:"2"`
+	Help    string      `
 Sets the opacity of the window specified by Client to the opacity level
 specified by Opacity.
 
@@ -878,7 +877,7 @@ func (cmd SetOpacity) Run() gribble.Value {
 
 type RemoveWorkspace struct {
 	Workspace gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help      string      `
 Removes the workspace specified by Workspace. Note that a workspace can *only*
 be removed if it is empty (i.e., does not contain any windows).
 
@@ -904,8 +903,8 @@ func (cmd RemoveWorkspace) Run() gribble.Value {
 
 type RenameWorkspace struct {
 	Workspace gribble.Any `param:"1" types:"int,string"`
-	NewName string `param:"2"`
-	Help string `
+	NewName   string      `param:"2"`
+	Help      string      `
 Renames the workspace specified by Workspace to the name in NewName.
 
 Workspace may be a workspace index (integer) starting at 0, or a workspace
@@ -933,7 +932,7 @@ type Resize struct {
 	Client gribble.Any `param:"1" types:"int,string"`
 	Width  gribble.Any `param:"2" types:"int,float"`
 	Height gribble.Any `param:"3" types:"int,float"`
-	Help string `
+	Help   string      `
 Resizes the window specified by Client to some width and height specified by
 Width and Height.
 
@@ -962,7 +961,7 @@ func (cmd Resize) Run() gribble.Value {
 
 type Script struct {
 	Command string `param:"1"`
-	Help string `
+	Help    string `
 Executes a script in $XDG_CONFIG_HOME/wingo/scripts. The command
 may include arguments.
 `
@@ -1005,7 +1004,7 @@ func (cmd Script) Run() gribble.Value {
 
 type ScriptConfig struct {
 	ScriptName string `param:"1"`
-	Help string `
+	Help       string `
 Returns the path to a script's configuration file.
 `
 }
@@ -1020,7 +1019,7 @@ func (cmd ScriptConfig) Run() gribble.Value {
 
 type Shell struct {
 	Command string `param:"1"`
-	Help string `
+	Help    string `
 Attempts to execute the shell command specified by Command. If an error occurs,
 it will be logged to Wingo's stderr.
 `
@@ -1079,7 +1078,7 @@ func fixScannerBugs(s string) string {
 
 type Unfloat struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Unfloats the window specified by Client. If the window is not floating,
 this command has no effect.
 
@@ -1098,7 +1097,7 @@ func (cmd Unfloat) Run() gribble.Value {
 
 type Unmaximize struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Unmaximizes the window specified by Client. If the window is not maximized,
 this command has no effect.
 
@@ -1117,7 +1116,7 @@ func (cmd Unmaximize) Run() gribble.Value {
 
 type WingoExec struct {
 	Commands string `param:"1"`
-	Help string `
+	Help     string `
 Executes a series of Wingo commands specified by Commands. If an error occurs
 while executing the command, it will be shown in a popup message.
 `
@@ -1135,7 +1134,7 @@ func (cmd WingoExec) Run() gribble.Value {
 
 type WingoHelp struct {
 	CommandName string `param:"1"`
-	Help string `
+	Help        string `
 Shows the usage information for a particular command specified by CommandName.
 `
 }
@@ -1152,7 +1151,7 @@ func (cmd WingoHelp) Run() gribble.Value {
 
 type Workspace struct {
 	Workspace gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help      string      `
 Sets the current workspace to the one specified by Workspace.
 
 Workspace may be a workspace index (integer) starting at 0, or a workspace
@@ -1172,7 +1171,7 @@ func (cmd Workspace) Run() gribble.Value {
 
 type WorkspaceGreedy struct {
 	Workspace gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help      string      `
 Sets the current workspace to the one specified by Workspace in a greedy
 fashion.
 
@@ -1197,7 +1196,7 @@ func (cmd WorkspaceGreedy) Run() gribble.Value {
 
 type WorkspaceHead struct {
 	Workspace gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help      string      `
 Retrieves the head index of the workspace specified by Workspace. If the
 workspace is not visible, then -1 is returned.
 
@@ -1220,9 +1219,9 @@ func (cmd WorkspaceHead) Run() gribble.Value {
 }
 
 type WorkspaceSendClient struct {
-	Workspace   gribble.Any `param:"1" types:"int,string"`
-	Client gribble.Any `param:"2" types:"int,string"`
-	Help string `
+	Workspace gribble.Any `param:"1" types:"int,string"`
+	Client    gribble.Any `param:"2" types:"int,string"`
+	Help      string      `
 Sends the window specified by Client to the workspace specified by Workspace.
 
 Workspace may be a workspace index (integer) starting at 0, or a workspace
@@ -1244,9 +1243,9 @@ func (cmd WorkspaceSendClient) Run() gribble.Value {
 }
 
 type WorkspaceToHead struct {
-	Head int `param:"1"`
+	Head      int         `param:"1"`
 	Workspace gribble.Any `param:"2" types:"int,string"`
-	Help string `
+	Help      string      `
 Sets the workspace specified by Workspace to appear on the head specified by
 the Head index.
 
@@ -1269,9 +1268,9 @@ func (cmd WorkspaceToHead) Run() gribble.Value {
 }
 
 type WorkspaceWithClient struct {
-	Workspace   gribble.Any `param:"1" types:"int,string"`
-	Client gribble.Any `param:"2" types:"int,string"`
-	Help string `
+	Workspace gribble.Any `param:"1" types:"int,string"`
+	Client    gribble.Any `param:"2" types:"int,string"`
+	Help      string      `
 Sets the current workspace to the workspace specified by Workspace, and moves
 the window specified by Client to that workspace.
 
@@ -1297,9 +1296,9 @@ func (cmd WorkspaceWithClient) Run() gribble.Value {
 }
 
 type WorkspaceGreedyWithClient struct {
-	Workspace   gribble.Any `param:"1" types:"int,string"`
-	Client gribble.Any `param:"2" types:"int,string"`
-	Help string `
+	Workspace gribble.Any `param:"1" types:"int,string"`
+	Client    gribble.Any `param:"2" types:"int,string"`
+	Help      string      `
 Sets the current workspace to the workspace specified by Workspace in a greedy
 fashion, and moves the window specified by Client to that workspace.
 
@@ -1330,8 +1329,8 @@ func (cmd WorkspaceGreedyWithClient) Run() gribble.Value {
 
 type TagGet struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Name string `param:"2"`
-	Help string `
+	Name   string      `param:"2"`
+	Help   string      `
 Retrieves the tag with name Name for the client specified by Client.
 
 Client may be the window id or a substring that matches a window name.
@@ -1367,9 +1366,9 @@ func (cmd TagGet) Run() gribble.Value {
 
 type TagSet struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Name string `param:"2"`
-	Value string `param:"3"`
-	Help string `
+	Name   string      `param:"2"`
+	Value  string      `param:"3"`
+	Help   string      `
 Sets the tag with name Name to value Value for the client specified by Client.
 
 Client may be the window id or a substring that matches a window name.
@@ -1403,7 +1402,7 @@ func (cmd TagSet) Run() gribble.Value {
 
 type HideClientFromPanels struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Sets the appropriate flags so that the window specified by Client is
 hidden from panels and pagers.
 
@@ -1423,7 +1422,7 @@ func (cmd HideClientFromPanels) Run() gribble.Value {
 
 type ShowClientInPanels struct {
 	Client gribble.Any `param:"1" types:"int,string"`
-	Help string `
+	Help   string      `
 Sets the appropriate flags so that the window specified by Client is
 shown on panels and pagers.
 
