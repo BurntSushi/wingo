@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/BurntSushi/gribble"
@@ -168,9 +169,14 @@ func init() {
 	Env.Verbose = false
 }
 
+var syncLock = new(sync.Mutex)
+
 // syncRun should wrap the execution of most Gribble commands to ensure
 // synchronous execution with respect to the main X event loop.
 func syncRun(f func() gribble.Value) gribble.Value {
+	syncLock.Lock()
+	defer syncLock.Unlock()
+
 	SafeExec <- f
 	return <-SafeReturn
 }
