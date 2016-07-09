@@ -16,7 +16,7 @@ gofmt:
 		heads/*.go hook/*.go layout/*.go logger/*.go misc/*.go prompt/*.go \
 		render/*.go stack/*.go text/*.go wingo-cmd/*.go wini/*.go wm/*.go \
 		workspace/*.go xclient/*.go
-	colcheck *.go */*.go
+	colcheck -c 80 *.go */*.go
 
 cmd:
 	go install github.com/BurntSushi/wingo/wingo-cmd
