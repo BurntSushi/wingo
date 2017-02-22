@@ -9,10 +9,14 @@ sock.connect(f)
 
 def recv(sock):
     data = ''
-    while chr(0) not in data:
-        data += sock.recv(4096)
-    if chr(0) in data:
-        data = data[0:data.index(chr(0))]
+    packet = ''
+    while True:
+        packet = sock.recv(4096)
+        if chr(0) in packet:
+            break
+        data += packet
+    if chr(0) in packet:
+        data = packet[0:packet.index(chr(0))]
     return data
 
 
