@@ -9,6 +9,7 @@ import (
 	"path"
 	"runtime"
 	"runtime/pprof"
+	"sort"
 	"strings"
 	"syscall"
 	"time"
@@ -226,7 +227,18 @@ EVENTLOOP:
 			os.Args = append(os.Args, "--wingo-restarted")
 		}
 		logger.Message.Println("The user has told us to restart...\n\n\n")
-		if err := syscall.Exec(os.Args[0], os.Args, os.Environ()); err != nil {
+		execPath, err := os.Executable()
+		if err != nil {
+			logger.Warning.Printf("could not find executable: %s\n", err)
+			logger.Warning.Printf("falling back to: %s\n", os.Args[0])
+			execPath = os.Args[0]
+		}
+		if err := syscall.Exec(execPath, os.Args, os.Environ()); err != nil {
+			env := os.Environ()
+			sort.Strings(env)
+			for _, e := range env {
+				logger.Error.Println(e)
+			}
 			logger.Error.Fatalf("Could not exec '%s': %s",
 				strings.Join(os.Args, " "), err)
 		}
