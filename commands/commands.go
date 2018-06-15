@@ -24,6 +24,8 @@ import (
 	"github.com/BurntSushi/wingo/wm"
 	"github.com/BurntSushi/wingo/workspace"
 	"github.com/BurntSushi/wingo/xclient"
+
+	shell "github.com/mattn/go-shellwords"
 )
 
 // Env declares all available commands. Any command not in
@@ -167,6 +169,9 @@ func init() {
 	// When a command is executed via IPC, we temporarily turn it on so we
 	// can give the user better error messages.
 	Env.Verbose = false
+
+	shell.ParseEnv = true
+	shell.ParseBacktick = false
 }
 
 var syncLock = new(sync.Mutex)
@@ -983,16 +988,35 @@ func (cmd Script) Run() gribble.Value {
 		var stderr bytes.Buffer
 		time.Sleep(time.Microsecond)
 
-		c := fixScannerBugs(cmd.Command)
-		fields := strings.Split(c, " ")
+		cmd.Command = fixGribbleParserBugs(cmd.Command)
+		cmd.Command = unescapeQuotes(cmd.Command)
+
+		fields := strings.SplitN(cmd.Command, "", 2)
 		script := misc.ScriptPath(fields[0])
 		if len(script) == 0 {
 			return
 		}
-		c = strings.Join(append([]string{script}, fields[1:]...), " ")
+		fields[0] = script
+		cmd.Command = strings.Join(fields, " ")
 
-		logger.Message.Printf("%s -c [%s]", wm.Config.Shell, c)
-		shellCmd := exec.Command(wm.Config.Shell, "-c", c)
+		args := []string{}
+		if wm.Config.Shell != "" {
+			args = []string{wm.Config.Shell, "-c", cmd.Command}
+		} else {
+			argv, err := shell.Parse(cmd.Command)
+			if err != nil {
+				logger.Message.Println(
+					"Error parsing command %q: %s",
+					cmd.Command, err)
+				return
+			}
+			if len(args) < 1 {
+				return
+			}
+			args = argv
+		}
+		logger.Message.Println(strings.Join(args, " "))
+		shellCmd := exec.Command(args[0], args[1:]...)
 		shellCmd.Stderr = &stderr
 
 		err := shellCmd.Run()
@@ -1047,12 +1071,29 @@ func (cmd Shell) Run() gribble.Value {
 	// change behavior.)
 	go func() {
 		var stderr bytes.Buffer
-
-		cmd.Command = fixScannerBugs(cmd.Command)
-
 		time.Sleep(time.Microsecond)
-		logger.Message.Printf("%s -c [%s]", wm.Config.Shell, cmd.Command)
-		shellCmd := exec.Command(wm.Config.Shell, "-c", cmd.Command)
+
+		cmd.Command = fixGribbleParserBugs(cmd.Command)
+		cmd.Command = unescapeQuotes(cmd.Command)
+
+		args := []string{}
+		if wm.Config.Shell != "" {
+			args = []string{wm.Config.Shell, "-c", cmd.Command}
+		} else {
+			argv, err := shell.Parse(cmd.Command)
+			if err != nil {
+				logger.Message.Println(
+					"Error parsing command %q: %s",
+					cmd.Command, err)
+				return
+			}
+			if len(argv) < 1 {
+				return
+			}
+			args = argv
+		}
+		logger.Message.Println(strings.Join(args, " "))
+		shellCmd := exec.Command(args[0], args[1:]...)
 		shellCmd.Stderr = &stderr
 
 		err := shellCmd.Run()
@@ -1067,19 +1108,23 @@ func (cmd Shell) Run() gribble.Value {
 	return nil
 }
 
-func fixScannerBugs(s string) string {
-	// For some reason, Go's text/scanner doesn't unescape escaped quotes
-	// in strings. So we try to be nice and do it here.
-	s = strings.Replace(s, "\\\"", "\"", -1)
-
+func fixGribbleParserBugs(s string) string {
 	// BUG(burntsushi): I think there is a bug in text/scanner where if
 	// a string ends with an escaped quote, the quote is cutoff and the
 	// backslash is left intact.
+	// BUG(b1narykid): it's not a bug with text/scanner, it's
+	// strings.Trim(p.TokenText(), "\"`") in gribble/parser.go
+	// But, well, it's still a bug.
 	if s[len(s)-1] == '\\' {
-		s = fmt.Sprintf("%s\"", s[0:len(s)-1])
+		return s + `"`
 	}
-
 	return s
+}
+
+func unescapeQuotes(s string) string {
+	// For some reason, Go's text/scanner doesn't unescape escaped quotes
+	// in strings. So we try to be nice and do it here.
+	return strings.Replace(s, `\"`, `"`, -1)
 }
 
 type Unfloat struct {

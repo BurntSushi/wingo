@@ -49,7 +49,7 @@ func newConfig() *Configuration {
 		PopupTime:       500,
 		ShowFyi:         true,
 		ShowErrors:      true,
-		Shell:           "bash",
+		Shell:           "",
 		AudioProgram:    "aplay",
 
 		mouse: map[string][]mouseCommand{},

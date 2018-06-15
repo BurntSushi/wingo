@@ -236,15 +236,16 @@ You really should be using the 'go' tool to install Wingo, and therefore
 shouldn't care about dependencies. But I'll list them anyway---with many thanks
 to the authors (well, the ones that aren't me anyway).
 
-* go                  http://golang.org
-* graphics-go         http://code.google.com/p/graphics-go
-* freetype-go         http://code.google.com/p/freetype-go
-* ansi                http://github.com/str1ngs/ansi
-* go-bindata          http://github.com/jteeuwen/go-bindata (build dependency)
-* gribble             http://github.com/BurntSushi/gribble
-* xgb                 http://github.com/BurntSushi/xgb
-* xgbutil             http://github.com/BurntSushi/xgbutil
-* xdg                 http://github.com/BurntSushi/xdg
+* go                  https://golang.org
+* graphics-go         https://code.google.com/p/graphics-go
+* freetype-go         https://code.google.com/p/freetype-go
+* ansi                https://github.com/str1ngs/ansi
+* go-shellwords       https://github.com/mattn/go-shellwords
+* go-bindata          https://github.com/jteeuwen/go-bindata (build dependency)
+* gribble             https://github.com/BurntSushi/gribble
+* xgb                 https://github.com/BurntSushi/xgb
+* xgbutil             https://github.com/BurntSushi/xgbutil
+* xdg                 https://github.com/BurntSushi/xdg
 
 
 Inspiration
@@ -306,5 +307,5 @@ My past X work
 ==============
 There's too much. The highlights are pytyle and Openbox Multihead.
 
-For more: http://burntsushi.net/x11/
+For more: https://burntsushi.net/x11/
 
