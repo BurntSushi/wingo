@@ -336,7 +336,7 @@ func (cycle *Cycle) Prev() {
 	cycle.highlight()
 }
 
-// AddItem should be thought of as a *CycleItem constructor. Its main role is
+// AddChoice: should be thought of as a *CycleItem constructor. Its main role is
 // to adapt a CycleChoice value to a value that is suitable for the cycle
 // prompt to paint onto its window. The resulting CycleItem value can be used
 // to update the image/text.

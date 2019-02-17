@@ -58,7 +58,7 @@ type hook struct {
 	consequences []string
 }
 
-// Initializes the hooks package with a Gribble execution environment and
+// Initialize: Initializes the hooks package with a Gribble execution environment and
 // a file path to a wini formatted hooks configuration file. If the
 // initialization fails, only a warning is logged since hooks are not
 // essential for Wingo to run.

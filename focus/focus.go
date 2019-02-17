@@ -30,7 +30,7 @@ func Initialize(xu *xgbutil.XUtil) {
 	clientSet = make(map[xproto.Window]bool, 100)
 }
 
-// Returns the currently focused client, or nil if no client has focus.
+// Current returns the currently focused client, or nil if no client has focus.
 func Current() Client {
 	if len(Clients) == 0 {
 		return nil

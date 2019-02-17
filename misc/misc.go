@@ -21,7 +21,7 @@ func Min(a, b int) int {
 	return b
 }
 
-// This exists because '%' isn't really modulus; it's *remainder*.
+// Mod: This exists because '%' isn't really modulus; it's *remainder*.
 // e.g., (-1) % 2 = -1 but (-1) mod 2 = 1.
 func Mod(x, m int) int {
 	r := x % m
@@ -39,7 +39,7 @@ func Round(n float64) int {
 	return int(ceil) - 1
 }
 
-// Prints a simple stack trace without panicing.
+// StackTrace: Prints a simple stack trace without panicing.
 //
 // XXX: I tried using runtime.Stack, but I couldn't get it to work...
 func StackTrace() string {

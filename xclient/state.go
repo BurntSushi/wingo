@@ -36,7 +36,7 @@ func (c *Client) HasState(name string) bool {
 	return ok
 }
 
-// Don't save when moving or resizing.
+// SaveState: Don't save when moving or resizing.
 // Also don't save when client's workspace isn't visible.
 func (c *Client) SaveState(name string) {
 	if c.workspace == nil {
@@ -54,7 +54,7 @@ func (c *Client) CopyState(src, dest string) {
 	}
 }
 
-// Don't revert to regular geometry when moving/resizing. We can still revert
+// LoadState: Don't revert to regular geometry when moving/resizing. We can still revert
 // the frame or the maximized state, though.
 // Also don't load *ever* when client's workspace isn't visible.
 func (c *Client) LoadState(name string) {

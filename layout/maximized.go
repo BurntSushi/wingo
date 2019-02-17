@@ -84,11 +84,11 @@ func (m *Maximized) Prev() {
 	}
 }
 
-// This is useful, but can be implemented later
+// SwitchNext is useful, but can be implemented later
 func (m *Maximized) SwitchNext() {
 }
 
-// This is useful, but can be implemented later
+// SwitchPrev is useful, but can be implemented later
 func (m *Maximized) SwitchPrev() {
 }
 
