@@ -1,6 +1,8 @@
 package xclient
 
 import (
+	"strings"
+
 	"github.com/BurntSushi/xgb/shape"
 	"github.com/BurntSushi/xgb/xproto"
 
@@ -89,7 +91,9 @@ func New(id xproto.Window) *Client {
 
 func (c *Client) manage() {
 	c.refreshName()
-	logger.Message.Printf("Managing new client: %s", c)
+	if !strings.Contains(c.String(), "Private Browsing") {
+		logger.Message.Printf("Managing new client: %s", c)
+	}
 
 	promptDone := make(chan struct{}, 0)
 	go func() {
