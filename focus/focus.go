@@ -1,6 +1,8 @@
 package focus
 
 import (
+	"sync"
+
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil"
@@ -15,29 +17,50 @@ var (
 	// A global representing the X connection.
 	X *xgbutil.XUtil
 
-	// All of the clients tracked by the focus package.
-	Clients []Client
-
-	// Set of clients being tracked to avoid too many O(n) operations.
-	clientSet map[xproto.Window]bool
+	// All of the clients tracked by the focus package, along
+	// with a set representation for efficiency.
+	clients     []Client
+	clientSet   map[xproto.Window]bool
+	clientsLock sync.Mutex
 )
 
 // Initialize sets up the state for the focus package. It MUST be called
 // before any other functions in the package are used.
 func Initialize(xu *xgbutil.XUtil) {
+	clientsLock.Lock()
+	defer clientsLock.Unlock()
+
 	X = xu
-	Clients = make([]Client, 0, 100)
+	clients = make([]Client, 0, 100)
 	clientSet = make(map[xproto.Window]bool, 100)
+}
+
+// Returns all the clients currently tracked by this package.
+//
+// Note that this returns a copy of snapshot of the clients, so it is safe to
+// access concurrently.
+func Clients() []Client {
+	clientsLock.Lock()
+	defer clientsLock.Unlock()
+
+	// It's been so long since I've touched this code that I can't remember
+	// if clients themselves are goroutine safe. Sadly, it looks like they
+	// are not. Sigh.
+	snapshot := make([]Client, len(clients))
+	copy(snapshot, clients)
+	return snapshot
 }
 
 // Returns the currently focused client, or nil if no client has focus.
 func Current() Client {
-	if len(Clients) == 0 {
+	snapshot := Clients()
+
+	if len(snapshot) == 0 {
 		return nil
 	}
 
 	// It's technically possible for no client to have focus.
-	possible := Clients[len(Clients)-1]
+	possible := snapshot[len(clients)-1]
 	if possible.IsActive() {
 		return possible
 	}
@@ -46,9 +69,12 @@ func Current() Client {
 
 // Remove removes the specified client from the focus stack.
 func Remove(c Client) {
-	for i, c2 := range Clients {
+	clientsLock.Lock()
+	defer clientsLock.Unlock()
+
+	for i, c2 := range clients {
 		if c.Id() == c2.Id() {
-			Clients = append(Clients[:i], Clients[i+1:]...)
+			clients = append(clients[:i], clients[i+1:]...)
 			delete(clientSet, c.Id())
 			break
 		}
@@ -56,14 +82,20 @@ func Remove(c Client) {
 }
 
 func add(c Client) {
-	Clients = append(Clients, c)
+	clientsLock.Lock()
+	defer clientsLock.Unlock()
+
+	clients = append(clients, c)
 	clientSet[c.Id()] = true
 }
 
 // InitialAdd should be used whenever a client is being entered into the
 // focus stack for the first time. It does NOT focus the client.
 func InitialAdd(c Client) {
-	Clients = append([]Client{c}, Clients...)
+	clientsLock.Lock()
+	defer clientsLock.Unlock()
+
+	clients = append([]Client{c}, clients...)
 	clientSet[c.Id()] = true
 }
 
@@ -86,7 +118,7 @@ func SetFocus(c Client) {
 // focus stack with InitialAdd. Focus also has no effect if the client cannot
 // handle input focus (like `xclock` or `xeyes`).
 func Focus(c Client) {
-	if !clientSet[c.Id()] {
+	if !isClientSet(c.Id()) {
 		return
 	}
 
@@ -127,7 +159,7 @@ func Focus(c Client) {
 // N.B. Technically, a special off-screen window maintained by Wingo gets
 // focus, but you won't be able to tell the difference. (I hope.)
 func Root() {
-	for _, c := range Clients {
+	for _, c := range Clients() {
 		c.Unfocused()
 	}
 	xwindow.New(X, X.Dummy()).Focus()
@@ -154,11 +186,19 @@ func Fallback(focusable func(c Client) bool) {
 // the active window. (It's a hack to work around the fact that prompts can
 // steal focus, which makes the GetActive command not work properly.)
 func LastFocused(focusable func(c Client) bool) Client {
-	for i := len(Clients) - 1; i >= 0; i-- {
-		c := Clients[i]
-		if clientSet[c.Id()] && focusable(c) {
+	snapshot := Clients()
+	for i := len(snapshot) - 1; i >= 0; i-- {
+		c := snapshot[i]
+		if isClientSet(c.Id()) && focusable(c) {
 			return c
 		}
 	}
 	return nil
+}
+
+func isClientSet(id xproto.Window) bool {
+	clientsLock.Lock()
+	defer clientsLock.Unlock()
+
+	return clientSet[id]
 }

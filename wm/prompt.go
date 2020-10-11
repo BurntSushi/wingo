@@ -91,9 +91,10 @@ func FYI(format string, vals ...interface{}) {
 }
 
 func ShowCycleClient(keyStr string, activeWrk, visible, iconified bool) {
-	items := make([]*prompt.CycleItem, 0, len(focus.Clients))
-	for i := len(focus.Clients) - 1; i >= 0; i-- {
-		client := focus.Clients[i].(Client)
+	clients := focus.Clients()
+	items := make([]*prompt.CycleItem, 0, len(clients))
+	for i := len(clients) - 1; i >= 0; i-- {
+		client := clients[i].(Client)
 		if !filterClient(client, activeWrk, visible, iconified) {
 			continue
 		}
@@ -109,9 +110,10 @@ func ShowSelectClient(tabComp int, activeWrk, visible, iconified bool,
 
 	groups := make([]*prompt.SelectShowGroup, len(allWrks))
 	for i, wrk := range allWrks {
-		items := make([]*prompt.SelectItem, 0, len(focus.Clients))
-		for i := len(focus.Clients) - 1; i >= 0; i-- {
-			client := focus.Clients[i].(Client)
+		clients := focus.Clients()
+		items := make([]*prompt.SelectItem, 0, len(clients))
+		for i := len(clients) - 1; i >= 0; i-- {
+			client := clients[i].(Client)
 			if client.Workspace() != wrk {
 				continue
 			}
