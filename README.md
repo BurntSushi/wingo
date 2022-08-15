@@ -9,7 +9,7 @@ mostly ICCCM and EWMH compliant (see COMPLIANCE).
 If you have Go installed and configured on your machine, all you need to do is:
 (For Archlinux users, Wingo is in the AUR.)
 
-    go get github.com/BurntSushi/wingo
+    go install github.com/BurntSushi/wingo@latest
 
 And in your $HOME/.xinitrc:
 
