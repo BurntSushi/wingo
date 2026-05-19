@@ -80,7 +80,7 @@ func (c *Client) shouldDecor() bool {
 
 	// This is a terrible hack, but I'm not really sure
 	// how else to detect that Chrome really doesn't want
-	// decorations. So just do a total hack.
+	// decorations.
 	//
 	// I used to think this mattered because other people
 	// might be using Wingo and this clearly won't work in
@@ -88,9 +88,14 @@ func (c *Client) shouldDecor() bool {
 	// any serious capacity other than me. And I'm likely
 	// to give it up anyway in favor of something in Wayland.
 	//
+	// Plus, things like Google Chrome themselves have a some
+	// WM-specific logic. So it's only fair that we have the
+	// same. Lol.
+	//
 	// (I will never write another x11 WM or its spiritual
 	// Wayland equivalent ever again.)
-	if strings.Contains(c.String(), "- Google Chrome") {
+	if c.class.Instance == "google-chrome" ||
+		c.class.Class == "Google-chrome" {
 		return false
 	}
 
