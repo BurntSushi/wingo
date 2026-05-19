@@ -78,7 +78,19 @@ func (c *Client) shouldDecor() bool {
 		return false
 	}
 
-	if strings.Contains(c.String(), "Google Chrome") {
+	// This is a terrible hack, but I'm not really sure
+	// how else to detect that Chrome really doesn't want
+	// decorations. So just do a total hack.
+	//
+	// I used to think this mattered because other people
+	// might be using Wingo and this clearly won't work in
+	// all cases. But really now, nobody is using this in
+	// any serious capacity other than me. And I'm likely
+	// to give it up anyway in favor of something in Wayland.
+	//
+	// (I will never write another x11 WM or its spiritual
+	// Wayland equivalent ever again.)
+	if strings.Contains(c.String(), "- Google Chrome") {
 		return false
 	}
 
