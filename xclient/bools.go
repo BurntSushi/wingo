@@ -1,6 +1,8 @@
 package xclient
 
 import (
+	"strings"
+
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/icccm"
@@ -73,6 +75,10 @@ func (c *Client) shouldDecor() bool {
 
 	mh, err := motif.WmHintsGet(wm.X, c.Id())
 	if err == nil && !motif.Decor(mh) {
+		return false
+	}
+
+	if strings.Contains(c.String(), "Google Chrome") {
 		return false
 	}
 
