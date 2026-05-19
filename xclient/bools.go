@@ -1,8 +1,6 @@
 package xclient
 
 import (
-	"strings"
-
 	"github.com/BurntSushi/xgb/xproto"
 
 	"github.com/BurntSushi/xgbutil/icccm"
