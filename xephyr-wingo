@@ -5,8 +5,7 @@ if [ ! $? = 0 ]; then
   exit
 fi
 
-Xephyr :11.0 -ac -screen 1600x900 \
-       -br -once -reset -terminate -zap &
+Xephyr :11.0 -ac -screen 1600x900 -br -once -reset -terminate &
 xemu=$!
 
 sleep 0.5
@@ -21,11 +20,12 @@ fi
 wingo=$!
 
 sleep 0.5
-xbindkeys -f ~/.xbindkeysrc
+xbindkeys
 xsetroot -solid white
 xsetroot -cursor_name left_ptr
-xmodmap /home/andrew/.Pmodmap
-DISPLAY=:0 xdotool key ctrl+shift 
+setxkbmap -option terminate:ctrl_alt_bksp
+xmodmap "$HOME/.xmodmaprc"
+DISPLAY=:0 xdotool key ctrl+shift
 
 wait $wingo
 kill $xemu
